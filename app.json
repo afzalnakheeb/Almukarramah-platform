@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Al Mukarramah",
+    "slug": "almukarramah",
+    "scheme": "almukarramah",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/logo.png",
+    "userInterfaceStyle": "light",
+    "extra": {
+      "supportsRTL": true
+    },
+    "ios": {
+      "bundleIdentifier": "com.almukarramah.app",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.almukarramah.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/logo.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-localization"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

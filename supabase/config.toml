@@ -1,0 +1,15 @@
+# Supabase CLI settings for this project (used by `supabase link` and `supabase functions deploy`).
+project_id = "almukarramah"
+
+# Webhooks and scheduled jobs check their own secrets, so Supabase's JWT check is turned off for them.
+[functions.moyasar-webhook]
+verify_jwt = false
+
+[functions.revenuecat-webhook]
+verify_jwt = false
+
+[functions.zatca-report]
+verify_jwt = false
+
+[functions.charge-subscriptions]
+verify_jwt = false

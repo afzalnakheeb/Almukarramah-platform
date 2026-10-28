@@ -1,0 +1,41 @@
+{
+  "name": "almukarramah-platform",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "web": "expo start --web",
+    "ios": "expo run:ios",
+    "android": "expo run:android",
+    "build:web": "expo export --platform web",
+    "typecheck": "tsc --noEmit",
+    "fix-deps": "expo install --fix",
+    "vercel-install": "npm install --legacy-peer-deps && npx expo install --fix -- --legacy-peer-deps"
+  },
+  "dependencies": {
+    "expo": "~57.0.0",
+    "expo-router": "*",
+    "expo-constants": "*",
+    "expo-linking": "*",
+    "expo-localization": "*",
+    "expo-status-bar": "*",
+    "expo-web-browser": "*",
+    "expo-image": "*",
+    "react": "*",
+    "react-dom": "*",
+    "react-native": "*",
+    "react-native-web": "*",
+    "react-native-safe-area-context": "*",
+    "react-native-screens": "*",
+    "@react-native-async-storage/async-storage": "*",
+    "@supabase/supabase-js": "^2",
+    "react-native-url-polyfill": "*",
+    "react-native-purchases": "*",
+    "@expo/metro-runtime": "*"
+  },
+  "devDependencies": {
+    "typescript": "*",
+    "@types/react": "*"
+  }
+}
