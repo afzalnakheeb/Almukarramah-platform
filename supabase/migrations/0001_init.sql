@@ -237,10 +237,10 @@ returns void language sql security definer set search_path = public as $$
   update invoice_counter set last_hash = p_hash where id = 1;
 $$;
 
-create or replace function set_last_invoice_hash(p_hash text)
-returns void language sql security definer set search_path = public as $$
-  update invoice_counter set last_hash = p_hash where id = 1;
-$$;
+-- Only server functions (service role) may touch the invoice counter and hash chain.
+revoke execute on function next_invoice_slot() from public, anon, authenticated;
+revoke execute on function last_invoice_hash() from public, anon, authenticated;
+revoke execute on function set_last_invoice_hash(text) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------- shipping
 create table shipping_zones (
