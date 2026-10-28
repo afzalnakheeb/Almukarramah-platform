@@ -42,7 +42,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setLines((prev) => {
         const found = prev.find((l) => l.productId === p.id);
         if (found) return prev.map((l) => (l.productId === p.id ? { ...l, quantity: l.quantity + qty } : l));
-        return [...prev, { productId: p.id, slug: p.slug, name_en: p.name_en, name_ar: p.name_ar, unitPriceSar: p.base_price_sar, quantity: qty }];
+        return [...prev, { productId: p.id, slug: p.slug, name_en: p.name_en, name_ar: p.name_ar, unitPriceSar: p.base_price_sar, quantity: qty, image: p.images[0] ?? null }];
       }),
     setQty: (productId, qty) =>
       setLines((prev) => (qty <= 0 ? prev.filter((l) => l.productId !== productId) : prev.map((l) => (l.productId === productId ? { ...l, quantity: qty } : l)))),

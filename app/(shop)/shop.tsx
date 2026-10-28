@@ -5,10 +5,10 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
 import { Breadcrumb, Button, Card, Chip, Grid, H1, Loading, ProductTile, Serif, T, useWide } from '@/components/ui';
-import { getProducts, getTags } from '@/lib/catalogue';
+import { getCategories, getProducts, getTags } from '@/lib/catalogue';
 import { useI18n } from '@/lib/i18n';
 import { convertFromSar, formatWhole, priceIn } from '@/lib/money';
-import type { Product, Tag } from '@/lib/types';
+import type { Category, Product, Tag } from '@/lib/types';
 import { colors } from '@/theme';
 
 type Sort = 'rec' | 'low' | 'high';
@@ -16,26 +16,30 @@ const BANDS: [number, number][] = [[0, 0], [0, 20000], [20000, 50000], [50000, 1
 
 export default function Shop() {
   const wide = useWide();
-  const params = useLocalSearchParams<{ tag?: string; min?: string; max?: string }>();
+  const params = useLocalSearchParams<{ tag?: string; cat?: string; min?: string; max?: string }>();
   const { t, pick, currency, lang } = useI18n();
   const [occasions, setOccasions] = useState<Tag[]>([]);
   const [recipients, setRecipients] = useState<Tag[]>([]);
   const [tag, setTag] = useState<string | undefined>(params.tag);
+  const [cat, setCat] = useState<string | undefined>(params.cat);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [band, setBand] = useState<[number, number]>([Number(params.min ?? 0), Number(params.max ?? 0)]);
   const [sort, setSort] = useState<Sort>('rec');
   const [hideOos, setHideOos] = useState(false);
   const [products, setProducts] = useState<Product[] | null>(null);
 
   useEffect(() => setTag(params.tag), [params.tag]);
+  useEffect(() => setCat(params.cat), [params.cat]);
   useEffect(() => setBand([Number(params.min ?? 0), Number(params.max ?? 0)]), [params.min, params.max]);
   useEffect(() => {
     getTags('occasion').then(setOccasions).catch(() => undefined);
     getTags('recipient').then(setRecipients).catch(() => undefined);
+    getCategories().then(setCategories).catch(() => undefined);
   }, []);
   useEffect(() => {
     setProducts(null);
-    getProducts({ tag, minSar: band[0] || undefined, maxSar: band[1] || undefined }).then(setProducts).catch(() => setProducts([]));
-  }, [tag, band[0], band[1]]);
+    getProducts({ tag, category: cat, minSar: band[0] || undefined, maxSar: band[1] || undefined }).then(setProducts).catch(() => setProducts([]));
+  }, [tag, cat, band[0], band[1]]);
 
   const shown = useMemo(() => {
     let rows = products ?? [];
@@ -45,14 +49,17 @@ export default function Shop() {
   }, [products, hideOos, sort, currency]);
 
   const activeTag = [...occasions, ...recipients].find((g) => g.slug === tag);
-  const title = activeTag ? pick(activeTag, 'name') : t('allGifts');
+  const activeCat = categories.find((c) => c.slug === cat);
+  const title = activeCat ? pick(activeCat, 'name') : activeTag ? pick(activeTag, 'name') : t('allGifts');
+  const blurb = activeCat ? pick(activeCat, 'blurb') : '';
   const f = (v: number) => formatWhole(convertFromSar(v, currency), currency, lang);
   const bandLabel = ([a, b]: [number, number]) => (!a && !b ? t('all') : !a ? `${t('under')} ${f(b)}` : !b ? `${f(a)}+` : `${f(a)}–${f(b)}`);
   const clear = () => {
     setTag(undefined);
+    setCat(undefined);
     setBand([0, 0]);
     setHideOos(false);
-    router.setParams({ tag: undefined, min: undefined, max: undefined });
+    router.setParams({ tag: undefined, cat: undefined, min: undefined, max: undefined });
   };
 
   const chips = (list: Tag[]) => (
@@ -85,11 +92,11 @@ export default function Shop() {
 
   return (
     <Screen>
-      <Breadcrumb items={[{ label: t('home'), href: '/' }, { label: t('shop'), href: activeTag ? '/shop' : undefined }, ...(activeTag ? [{ label: title }] : [])]} />
+      <Breadcrumb items={[{ label: t('home'), href: '/' }, { label: t('shop'), href: activeTag || activeCat ? '/shop' : undefined }, ...(activeTag || activeCat ? [{ label: title }] : [])]} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, marginBottom: 22 }}>
         <View style={{ maxWidth: 700 }}>
           <H1>{title}</H1>
-          <T size={16} lh={1.6} color={colors.body}>{t('listingBody')}</T>
+          <T size={16} lh={1.6} color={colors.body}>{blurb || t('listingBody')}</T>
         </View>
         {wide && sortControl}
       </View>
@@ -97,6 +104,15 @@ export default function Shop() {
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 32 : 14, alignItems: 'flex-start' }}>
         {wide ? (
           <View accessibilityLabel={t('filters')} style={{ width: 280, gap: 14 }}>
+            {categories.length > 0 && (
+              <Card pad={16} style={{ gap: 10 }}>
+                <T w={700} size={14}>{t('categoriesTitle')}</T>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  <Chip label={t('all')} active={!cat} onPress={() => setCat(undefined)} />
+                  {categories.map((c) => <Chip key={c.id} label={pick(c, 'name')} active={cat === c.slug} onPress={() => setCat(cat === c.slug ? undefined : c.slug)} />)}
+                </View>
+              </Card>
+            )}
             <Card pad={16} style={{ gap: 10 }}><T w={700} size={14}>{t('occasion')}</T>{chips(occasions)}</Card>
             <Card pad={16} style={{ gap: 10 }}><T w={700} size={14}>{t('recipient')}</T>{chips(recipients)}</Card>
             <Card pad={16} style={{ gap: 10 }}><T w={700} size={14}>{t('price')}</T>{bandChips}</Card>
@@ -104,6 +120,11 @@ export default function Shop() {
           </View>
         ) : (
           <View style={{ gap: 10, alignSelf: 'stretch' }}>
+            {categories.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                {categories.map((c) => <Chip key={c.id} label={pick(c, 'name')} active={cat === c.slug} onPress={() => setCat(cat === c.slug ? undefined : c.slug)} />)}
+              </ScrollView>
+            )}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               {[...occasions, ...recipients].map((g) => <Chip key={g.id} label={pick(g, 'name')} active={tag === g.slug} onPress={() => setTag(tag === g.slug ? undefined : g.slug)} />)}
             </ScrollView>

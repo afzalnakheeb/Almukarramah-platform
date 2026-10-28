@@ -48,12 +48,12 @@ export default function ProductScreen() {
 
   const gallery = (
     <View style={{ gap: 12 }}>
-      <Photo uri={product.images[image]} tone={toneFor(product.slug)} style={{ borderRadius: wide ? 26 : 0 }} motif={wide ? 200 : 150} label={pick(product, 'name')} />
+      <Photo uri={product.images[image]} tone={product.images[0] ? colors.white : toneFor(product.slug)} fit="contain" style={{ borderRadius: wide ? 26 : 0 }} motif={wide ? 200 : 150} label={pick(product, 'name')} />
       {product.images.length > 1 && (
         <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: wide ? 0 : 16 }}>
           {product.images.slice(0, 5).map((u, i) => (
             <Pressable key={u} accessibilityRole="button" accessibilityLabel={`${i + 1}`} onPress={() => setImage(i)} style={{ flex: 1, maxWidth: 110 }}>
-              <Photo uri={u} ratio={1} style={[{ borderRadius: 14 }, i === image && { borderWidth: 2, borderColor: colors.navy }]} />
+              <Photo uri={u} ratio={1} tone={colors.white} fit="contain" style={[{ borderRadius: 14 }, i === image && { borderWidth: 2, borderColor: colors.navy }]} />
             </Pressable>
           ))}
         </View>
@@ -139,7 +139,7 @@ export default function ProductScreen() {
               {others.map((o) => (
                 <Card key={o.id} pad={14} style={{ flexDirection: 'row', gap: 14, alignItems: 'center', borderRadius: 18 }}>
                   <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/product/[slug]', params: { slug: o.slug } })} style={{ width: 84 }}>
-                    <Photo uri={o.images[0]} ratio={1} tone={toneFor(o.slug)} style={{ borderRadius: 14 }} />
+                    <Photo uri={o.images[0]} ratio={1} tone={o.images[0] ? colors.white : toneFor(o.slug)} fit="contain" style={{ borderRadius: 14 }} />
                   </Pressable>
                   <View style={{ flex: 1, gap: 3 }}>
                     <T w={700} size={14} numberOfLines={2}>{pick(o, 'name')}</T>

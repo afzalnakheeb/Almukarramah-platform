@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useI18n } from '@/lib/i18n';
 import { formatMoney, priceIn } from '@/lib/money';
+import { imageUrl } from '@/lib/images';
 import type { Product } from '@/lib/types';
 import { colors, MAX_WIDTH, radius, sans, serif, space, toneFor, WIDE, type Weight } from '@/theme';
 import { ArchMotif, Icon } from './icons';
@@ -163,8 +164,8 @@ export function Tag({ label, tone = 'mute' }: { label: string; tone?: keyof type
 }
 
 /** Photograph slot: product image when there is one, otherwise a soft tone (optionally with the arch motif). */
-export function Photo({ uri, tone, shape = 'rounded', ratio = 4 / 5, style, motif, label }: {
-  uri?: string | null; tone?: string; shape?: 'rounded' | 'arch' | 'tall-arch'; ratio?: number; style?: StyleProp<ViewStyle>; motif?: number; label?: string;
+export function Photo({ uri, tone, shape = 'rounded', ratio = 4 / 5, style, motif, label, fit = 'cover' }: {
+  uri?: string | null; tone?: string; shape?: 'rounded' | 'arch' | 'tall-arch'; ratio?: number; style?: StyleProp<ViewStyle>; motif?: number; label?: string; fit?: 'cover' | 'contain';
 }) {
   const r = shape === 'rounded' ? { borderRadius: 20 } : { borderTopLeftRadius: 999, borderTopRightRadius: 999, borderBottomLeftRadius: 18, borderBottomRightRadius: 18 };
   return (
@@ -172,7 +173,7 @@ export function Photo({ uri, tone, shape = 'rounded', ratio = 4 / 5, style, moti
       accessible={!!label}
       accessibilityLabel={label}
       style={[{ width: '100%', aspectRatio: ratio, backgroundColor: tone ?? colors.sand, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }, r, style]}>
-      {uri ? <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} /> : motif ? <ArchMotif width={motif} /> : null}
+      {uri ? <Image source={{ uri: imageUrl(uri) }} style={StyleSheet.absoluteFill} contentFit={fit} transition={200} /> : motif ? <ArchMotif width={motif} /> : null}
     </View>
   );
 }
@@ -185,12 +186,12 @@ export function Price({ product, style, size = 17 }: { product: Product; style?:
 /** Product card from the listing design: 4:5 image, eyebrow, name, price, availability. */
 export function ProductTile({ product, compact }: { product: Product; compact?: boolean }) {
   const { pick, t } = useI18n();
-  const tag = product.product_tags?.[0]?.tags;
+  const tag = product.categories ?? product.product_tags?.[0]?.tags;
   const soldOut = product.stock <= 0;
   return (
     <Link href={{ pathname: '/product/[slug]', params: { slug: product.slug } }} asChild>
       <Pressable accessibilityRole="link" style={({ hovered }: { hovered?: boolean }) => [{ gap: compact ? 5 : 10, opacity: soldOut ? 0.6 : 1 }, hovered && { opacity: 0.9 }]}>
-        <Photo uri={product.images[0]} tone={toneFor(product.slug)} motif={compact ? 54 : 80} />
+        <Photo uri={product.images[0]} tone={product.images[0] ? colors.white : toneFor(product.slug)} fit="contain" motif={compact ? 54 : 80} style={product.images[0] ? { borderWidth: 1, borderColor: colors.line } : null} />
         <View style={{ gap: compact ? 3 : 4, paddingHorizontal: 2 }}>
           {tag && !compact ? <Eyebrow size={12}>{pick(tag, 'name')}</Eyebrow> : null}
           <T w={700} size={compact ? 13.5 : 16} lh={1.35} numberOfLines={2}>{pick(product, 'name')}</T>

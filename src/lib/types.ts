@@ -14,6 +14,19 @@ export type Product = {
   is_featured: boolean;
   product_prices?: { currency: string; amount_minor: number }[];
   product_tags?: { tags: Tag }[];
+  category_id?: string | null;
+  categories?: Pick<Category, 'slug' | 'name_en' | 'name_ar'> | null;
+};
+
+export type Category = {
+  id: string;
+  slug: string;
+  name_en: string;
+  name_ar: string;
+  sort: number;
+  image: string | null;
+  blurb_en: string | null;
+  blurb_ar: string | null;
 };
 
 export type Tag = {
@@ -32,6 +45,7 @@ export type CartLine = {
   name_ar: string;
   unitPriceSar: number; // halalas
   quantity: number;
+  image?: string | null;
 };
 
 export type ShipTo = {

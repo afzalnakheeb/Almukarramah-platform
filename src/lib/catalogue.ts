@@ -1,9 +1,9 @@
 import { demoPlans, demoProducts, demoTags } from './demo';
 import { setRates } from './money';
 import { isConfigured, supabase } from './supabase';
-import type { Plan, Product, Tag } from './types';
+import type { Category, Plan, Product, Tag } from './types';
 
-const PRODUCT_FIELDS = '*, product_prices(currency, amount_minor), product_tags(tags(*))';
+const PRODUCT_FIELDS = '*, categories(slug, name_en, name_ar), product_prices(currency, amount_minor), product_tags(tags(*))';
 
 export async function loadRates() {
   if (!isConfigured) return;
@@ -25,18 +25,26 @@ export async function getFeatured(): Promise<Product[]> {
   return data as Product[];
 }
 
-export async function getProducts(filter: { tag?: string; minSar?: number; maxSar?: number }): Promise<Product[]> {
+export async function getCategories(): Promise<Category[]> {
+  if (!isConfigured) return [];
+  const { data, error } = await supabase.from('categories').select('*').eq('is_active', true).order('sort');
+  if (error) throw error;
+  return data as Category[];
+}
+
+export async function getProducts(filter: { tag?: string; category?: string; minSar?: number; maxSar?: number }): Promise<Product[]> {
   let rows: Product[];
   if (!isConfigured) {
     rows = demoProducts;
   } else {
-    let q = supabase.from('products').select(PRODUCT_FIELDS).eq('is_active', true).order('created_at', { ascending: false });
+    let q = supabase.from('products').select(PRODUCT_FIELDS).eq('is_active', true).order('is_featured', { ascending: false }).order('created_at', { ascending: false });
     if (filter.minSar) q = q.gte('base_price_sar', filter.minSar);
     if (filter.maxSar) q = q.lt('base_price_sar', filter.maxSar);
     const { data, error } = await q;
     if (error) throw error;
     rows = data as Product[];
   }
+  if (filter.category) rows = rows.filter((p) => p.categories?.slug === filter.category);
   if (filter.minSar) rows = rows.filter((p) => p.base_price_sar >= filter.minSar!);
   if (filter.maxSar) rows = rows.filter((p) => p.base_price_sar < filter.maxSar!);
   return filter.tag ? rows.filter((p) => p.product_tags?.some((pt) => pt.tags.slug === filter.tag)) : rows;

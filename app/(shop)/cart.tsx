@@ -61,7 +61,7 @@ export default function CartScreen() {
           {lines.map((l) => (
             <Card key={l.productId} pad={16} style={{ flexDirection: 'row', gap: 16, borderRadius: 20 }}>
               <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/product/[slug]', params: { slug: l.slug } })} style={{ width: wide ? 120 : 84 }}>
-                <Photo ratio={4 / 5} tone={toneFor(l.slug)} style={{ borderRadius: 14 }} />
+                <Photo uri={l.image} ratio={4 / 5} tone={l.image ? colors.white : toneFor(l.slug)} fit="contain" style={{ borderRadius: 14, borderWidth: 1, borderColor: colors.line }} />
               </Pressable>
               <View style={{ flex: 1, gap: 6 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
