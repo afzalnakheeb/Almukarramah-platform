@@ -8,6 +8,8 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AssistantDock } from '@/components/assistant';
+import { AssistantProvider } from '@/lib/assistant';
 import { CartProvider } from '@/lib/cart';
 import { loadRates } from '@/lib/catalogue';
 import { I18nProvider } from '@/lib/i18n';
@@ -50,6 +52,7 @@ export default function RootLayout() {
         <PrefsProvider>
           <SessionProvider>
             <CartProvider>
+              <AssistantProvider>
               <Boot />
               <StatusBar style="dark" />
               <Stack
@@ -64,6 +67,8 @@ export default function RootLayout() {
                 <Stack.Screen name="(shop)" options={{ headerShown: false }} />
                 <Stack.Screen name="admin" options={{ headerShown: false }} />
               </Stack>
+              <AssistantDock />
+              </AssistantProvider>
             </CartProvider>
           </SessionProvider>
         </PrefsProvider>

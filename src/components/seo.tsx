@@ -2,6 +2,7 @@
 // Rendered into the static HTML at build time (expo-router/head), so crawlers and AI assistants see it.
 import Head from 'expo-router/head';
 import React from 'react';
+import { Platform } from 'react-native';
 import { SITE_URL } from '@/lib/images';
 
 export const BRAND = 'Al Mukarramah';
@@ -17,6 +18,7 @@ export function Seo({ title, description, path, image, type = 'website', noindex
   const img = abs(image) ?? `${SITE_URL}/images/hero.jpg`;
   const blocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
   return (
+    <>
     <Head>
       <title>{title}</title>
       <meta name="description" content={description} />
@@ -34,10 +36,13 @@ export function Seo({ title, description, path, image, type = 'website', noindex
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={img} />
-      {blocks.map((b, i) => (
-        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(b) }} />
-      ))}
     </Head>
+    {Platform.OS === 'web' &&
+      blocks.map((b, i) =>
+        // Plain DOM <script> in the body: the head manager drops script bodies, React DOM renders them into the static HTML.
+        React.createElement('script', { key: i, type: 'application/ld+json', dangerouslySetInnerHTML: { __html: JSON.stringify(b).replace(/</g, '\\u003c') } }),
+      )}
+    </>
   );
 }
 

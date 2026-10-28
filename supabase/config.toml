@@ -13,3 +13,7 @@ verify_jwt = false
 
 [functions.charge-subscriptions]
 verify_jwt = false
+
+# The shop assistant is used by guests too; it applies its own per-visitor and store-wide daily limits.
+[functions.concierge]
+verify_jwt = false

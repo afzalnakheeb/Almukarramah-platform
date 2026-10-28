@@ -17,6 +17,8 @@ import { callFunction } from '@/lib/supabase';
 import type { ShippingQuote, ShipTo } from '@/lib/types';
 import { colors } from '@/theme';
 import { Seo } from '@/components/seo';
+import { AskAssistant } from '@/components/assistant';
+import { useAssistantFill } from '@/lib/assistant';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -43,6 +45,12 @@ export default function Checkout() {
   const [checkoutOpen, setCheckoutOpen] = useState(true);
 
   useEffect(() => setShipTo(initial), [initial]);
+  // The assistant can fill in the delivery form from what the shopper types; nothing is sent until they press Pay.
+  useAssistantFill((f) => {
+    setShipTo((s) => ({ ...s, ...f, country: (f.country ?? s.country).toUpperCase().slice(0, 2) }));
+    setQuotes(null);
+    setChosen(null);
+  });
   useEffect(() => {
     if (session?.user.email) setEmail((e) => e || session.user.email!);
   }, [session?.user.email]);
@@ -138,6 +146,7 @@ export default function Checkout() {
 
           {section(t('whereTitle'), (
             <>
+              <AskAssistant label={t('fillWithAssistant')} />
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                 {(['hotel', 'home', 'office'] as const).map((k) => (
                   <OptionCard key={k} selected={shipTo.kind === k} onPress={() => set('kind')(k)} title={t(k === 'home' ? 'home_' : k)}

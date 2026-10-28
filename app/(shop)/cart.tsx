@@ -11,6 +11,7 @@ import { usePrefs } from '@/lib/prefs';
 import { useSession } from '@/lib/session';
 import { colors, toneFor } from '@/theme';
 import { Seo } from '@/components/seo';
+import { AskAssistant } from '@/components/assistant';
 
 export default function CartScreen() {
   const wide = useWide();
@@ -88,6 +89,7 @@ export default function CartScreen() {
               <Tag label={t('optional')} />
             </View>
             <Field label={t('giftMessage')} hint={`${t('giftMessageHint')} · ${giftMessage.length}/200`} value={giftMessage} onChangeText={(v) => setGiftMessage(v.slice(0, 200))} multiline maxLength={200} />
+            <AskAssistant label={t('writeForMe')} />
           </Card>
         </View>
         <View style={{ width: wide ? 380 : '100%' }}>{summary}</View>
