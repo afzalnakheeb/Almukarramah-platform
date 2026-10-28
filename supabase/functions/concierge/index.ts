@@ -130,9 +130,11 @@ STORE: ${JSON.stringify({ open: settings?.store_open ?? true, checkout_open: set
 ${user ? `SIGNED_IN_ORDERS (this shopper only): ${JSON.stringify(orders)}` : 'SHOPPER: guest (for order status, ask them to sign in under Account)'}
 TODAY: ${new Date().toISOString().slice(0, 10)}`;
 
+  // Tolerate stray spaces, quotes or line breaks pasted with the key.
+  const apiKey = env('ANTHROPIC_API_KEY').trim().replace(/^["']|["']$/g, '');
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'x-api-key': env('ANTHROPIC_API_KEY'), 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+    headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
     body: JSON.stringify({
       model: Deno.env.get('CONCIERGE_MODEL') ?? 'claude-haiku-5-5',
       max_tokens: 700,
@@ -146,7 +148,8 @@ TODAY: ${new Date().toISOString().slice(0, 10)}`;
     }),
   });
   if (!res.ok) {
-    console.error('Claude API', res.status, await res.text());
+    // Format check only; the key itself is never logged.
+    console.error('Claude API', res.status, await res.text(), { keyLooksLikeApiKey: apiKey.startsWith('sk-ant-api'), keyType: apiKey.split('-').slice(0, 3).join('-').slice(0, 14), length: apiKey.length });
     throw new Error('assistant_unavailable');
   }
   const out = await res.json();
