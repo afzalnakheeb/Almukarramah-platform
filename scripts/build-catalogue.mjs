@@ -66,23 +66,25 @@ Disallow: /account
 Disallow: /checkout
 Disallow: /cart
 
-# AI assistants and answer engines may read and cite the catalogue
+# AI assistants and answer engines may read and cite the catalogue (same private areas excluded)
 User-agent: GPTBot
-Allow: /
 User-agent: OAI-SearchBot
-Allow: /
 User-agent: ChatGPT-User
-Allow: /
 User-agent: ClaudeBot
-Allow: /
 User-agent: Claude-SearchBot
-Allow: /
+User-agent: Claude-User
 User-agent: PerplexityBot
-Allow: /
+User-agent: Perplexity-User
 User-agent: Google-Extended
-Allow: /
 User-agent: Applebot-Extended
+User-agent: CCBot
 Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin
+Disallow: /account
+Disallow: /checkout
+Disallow: /cart
 
 Sitemap: ${SITE}/sitemap.xml
 `);
@@ -95,7 +97,7 @@ const llms = `# Al Mukarramah (المكرمة)
 
 - Website: ${SITE}
 - Languages: Arabic and English
-- Customer help: the gift assistant at ${SITE}/concierge
+- Customer help: the Al Mukarramah assistant on every page, or ${SITE}/concierge
 - Full catalogue for AI assistants: ${SITE}/llms-full.txt
 
 ## Collections
