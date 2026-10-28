@@ -6,13 +6,14 @@ import { Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
 import { Button, Card, Eyebrow, Notice, Serif, T, useWide } from '@/components/ui';
 import { getPlans } from '@/lib/catalogue';
-import { useI18n } from '@/lib/i18n';
+import { strings, useI18n, type Key } from '@/lib/i18n';
 import { convertFromSar, formatMoney } from '@/lib/money';
 import { buyMembership, purchasesAvailable } from '@/lib/purchases';
 import { useSession } from '@/lib/session';
 import { callFunction } from '@/lib/supabase';
 import type { Plan } from '@/lib/types';
 import { colors } from '@/theme';
+import { faqLd, Seo } from '@/components/seo';
 
 export default function Membership() {
   const wide = useWide();
@@ -52,6 +53,7 @@ export default function Membership() {
 
   return (
     <Screen>
+      <Seo title="Membership | Al Mukarramah" description="Join for the Quran Trail and Seerah Trail and member benefits on gifts, or receive a box of Madinah dates every month." path="/membership" jsonLd={faqLd([1, 2].map((n) => ({ q: strings.en[`faq${n}q` as Key], a: strings.en[`faq${n}a` as Key] })))} />
       <View style={{ alignItems: 'center', maxWidth: 760, alignSelf: 'center', gap: 10, marginBottom: 28, marginTop: wide ? 16 : 0 }}>
         <Eyebrow size={12}>{t('membership')}</Eyebrow>
         <Serif role="h1" size={wide ? 56 : 36} center>{t('memberTitle')}</Serif>

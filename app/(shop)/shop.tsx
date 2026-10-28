@@ -6,7 +6,11 @@ import { Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
 import { Breadcrumb, Button, Card, Chip, Grid, H1, Loading, ProductTile, Serif, T, useWide } from '@/components/ui';
 import { getCategories, getProducts, getTags } from '@/lib/catalogue';
-import { useI18n } from '@/lib/i18n';
+import { Faq } from '@/components/faq';
+import { breadcrumbLd, faqLd, itemListLd, Seo } from '@/components/seo';
+import { strings, useI18n, type Key } from '@/lib/i18n';
+import { SITE_URL } from '@/lib/images';
+import { snapshot } from '@/lib/snapshot';
 import { convertFromSar, formatWhole, priceIn } from '@/lib/money';
 import type { Category, Product, Tag } from '@/lib/types';
 import { colors } from '@/theme';
@@ -15,48 +19,63 @@ type Sort = 'rec' | 'low' | 'high';
 const BANDS: [number, number][] = [[0, 0], [0, 20000], [20000, 50000], [50000, 100000], [100000, 0]];
 
 export default function Shop() {
+  return <ShopView />;
+}
+
+function filterSnapshot(f: { tag?: string; category?: string; minSar?: number; maxSar?: number }): Product[] {
+  return snapshot.products.filter((p) =>
+    (!f.category || p.categories?.slug === f.category) &&
+    (!f.tag || p.product_tags?.some((pt) => pt.tags.slug === f.tag)) &&
+    (!f.minSar || p.base_price_sar >= f.minSar) &&
+    (!f.maxSar || p.base_price_sar < f.maxSar));
+}
+
+/** The listing. Collections pass a fixed category; the shop reads filters from the address. */
+export function ShopView({ fixedCat }: { fixedCat?: string }) {
   const wide = useWide();
-  const params = useLocalSearchParams<{ tag?: string; cat?: string; min?: string; max?: string }>();
+  const params = useLocalSearchParams<{ tag?: string; cat?: string; min?: string; max?: string; q?: string }>();
   const { t, pick, currency, lang } = useI18n();
   const [occasions, setOccasions] = useState<Tag[]>([]);
   const [recipients, setRecipients] = useState<Tag[]>([]);
   const [tag, setTag] = useState<string | undefined>(params.tag);
-  const [cat, setCat] = useState<string | undefined>(params.cat);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [cat, setCat] = useState<string | undefined>(fixedCat ?? params.cat);
+  const [categories, setCategories] = useState<Category[]>(snapshot.categories);
+  const q = (params.q ?? '').trim().toLowerCase();
   const [band, setBand] = useState<[number, number]>([Number(params.min ?? 0), Number(params.max ?? 0)]);
   const [sort, setSort] = useState<Sort>('rec');
   const [hideOos, setHideOos] = useState(false);
-  const [products, setProducts] = useState<Product[] | null>(null);
+  const [products, setProducts] = useState<Product[] | null>(() =>
+    filterSnapshot({ tag: params.tag, category: fixedCat ?? params.cat, minSar: Number(params.min ?? 0) || undefined, maxSar: Number(params.max ?? 0) || undefined }));
 
   useEffect(() => setTag(params.tag), [params.tag]);
-  useEffect(() => setCat(params.cat), [params.cat]);
+  useEffect(() => setCat(fixedCat ?? params.cat), [params.cat, fixedCat]);
   useEffect(() => setBand([Number(params.min ?? 0), Number(params.max ?? 0)]), [params.min, params.max]);
   useEffect(() => {
     getTags('occasion').then(setOccasions).catch(() => undefined);
     getTags('recipient').then(setRecipients).catch(() => undefined);
-    getCategories().then(setCategories).catch(() => undefined);
+    getCategories().then((c) => c.length && setCategories(c)).catch(() => undefined);
   }, []);
   useEffect(() => {
-    setProducts(null);
-    getProducts({ tag, category: cat, minSar: band[0] || undefined, maxSar: band[1] || undefined }).then(setProducts).catch(() => setProducts([]));
+    getProducts({ tag, category: cat, minSar: band[0] || undefined, maxSar: band[1] || undefined }).then(setProducts).catch(() => setProducts((cur) => cur ?? []));
   }, [tag, cat, band[0], band[1]]);
 
   const shown = useMemo(() => {
     let rows = products ?? [];
+    if (q) rows = rows.filter((p) => [p.name_en, p.name_ar, p.description_en, p.description_ar, p.categories?.name_en].some((v) => v?.toLowerCase().includes(q)));
     if (hideOos) rows = rows.filter((p) => p.stock > 0);
     if (sort !== 'rec') rows = [...rows].sort((a, b) => (priceIn(a, currency) - priceIn(b, currency)) * (sort === 'low' ? 1 : -1));
     return rows;
-  }, [products, hideOos, sort, currency]);
+  }, [products, hideOos, sort, currency, q]);
 
   const activeTag = [...occasions, ...recipients].find((g) => g.slug === tag);
   const activeCat = categories.find((c) => c.slug === cat);
-  const title = activeCat ? pick(activeCat, 'name') : activeTag ? pick(activeTag, 'name') : t('allGifts');
+  const title = activeCat ? pick(activeCat, 'name') : activeTag ? pick(activeTag, 'name') : q ? `${t('searchResults')} “${params.q}”` : t('allGifts');
   const blurb = activeCat ? pick(activeCat, 'blurb') : '';
   const f = (v: number) => formatWhole(convertFromSar(v, currency), currency, lang);
   const bandLabel = ([a, b]: [number, number]) => (!a && !b ? t('all') : !a ? `${t('under')} ${f(b)}` : !b ? `${f(a)}+` : `${f(a)}–${f(b)}`);
   const clear = () => {
     setTag(undefined);
-    setCat(undefined);
+    setCat(fixedCat);
     setBand([0, 0]);
     setHideOos(false);
     router.setParams({ tag: undefined, cat: undefined, min: undefined, max: undefined });
@@ -90,8 +109,24 @@ export default function Shop() {
     </View>
   );
 
+  const seoPath = fixedCat ? `/collections/${fixedCat}` : '/shop';
+  const seoTitle = activeCat ? `${activeCat.name_en} | Al Mukarramah` : 'All gifts | Al Mukarramah — Islamic gifts from Madinah';
+  const seoDesc = activeCat?.blurb_en ?? 'Prayer mats, woven prayer rugs, gift sets, Madinah dates and keepsakes, prepared and packed in Madinah. Prices include VAT; delivery to Madinah and Makkah hotels and worldwide.';
   return (
     <Screen>
+      <Seo
+        title={seoTitle}
+        description={seoDesc}
+        path={seoPath}
+        image={activeCat?.image ?? shown[0]?.images[0]}
+        noindex={!fixedCat && Boolean(params.tag || params.cat || params.min || params.max || params.q)}
+        jsonLd={[
+          { '@context': 'https://schema.org', '@type': 'CollectionPage', name: activeCat?.name_en ?? 'All gifts', description: seoDesc, url: `${SITE_URL}${seoPath}` },
+          itemListLd(activeCat?.name_en ?? 'All gifts', shown),
+          breadcrumbLd([{ name: 'Home', path: '/' }, { name: activeCat?.name_en ?? 'Shop', path: seoPath }]),
+          ...(fixedCat ? [faqLd([2, 3, 4].map((n) => ({ q: strings.en[`hfaq${n}q` as Key], a: strings.en[`hfaq${n}a` as Key] })))] : []),
+        ]}
+      />
       <Breadcrumb items={[{ label: t('home'), href: '/' }, { label: t('shop'), href: activeTag || activeCat ? '/shop' : undefined }, ...(activeTag || activeCat ? [{ label: title }] : [])]} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, marginBottom: 22 }}>
         <View style={{ maxWidth: 700 }}>
@@ -104,7 +139,7 @@ export default function Shop() {
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 32 : 14, alignItems: 'flex-start' }}>
         {wide ? (
           <View accessibilityLabel={t('filters')} style={{ width: 280, gap: 14 }}>
-            {categories.length > 0 && (
+            {categories.length > 0 && !fixedCat && (
               <Card pad={16} style={{ gap: 10 }}>
                 <T w={700} size={14}>{t('categoriesTitle')}</T>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -120,7 +155,7 @@ export default function Shop() {
           </View>
         ) : (
           <View style={{ gap: 10, alignSelf: 'stretch' }}>
-            {categories.length > 0 && (
+            {categories.length > 0 && !fixedCat && (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
                 {categories.map((c) => <Chip key={c.id} label={pick(c, 'name')} active={cat === c.slug} onPress={() => setCat(cat === c.slug ? undefined : c.slug)} />)}
               </ScrollView>
@@ -154,6 +189,11 @@ export default function Shop() {
           )}
         </View>
       </View>
+      {fixedCat && (
+        <View style={{ marginTop: 48, maxWidth: 860 }}>
+          <Faq title={t('faqTitle')} items={[2, 3, 4].map((n) => ({ q: t(`hfaq${n}q` as Key), a: t(`hfaq${n}a` as Key) }))} />
+        </View>
+      )}
     </Screen>
   );
 }

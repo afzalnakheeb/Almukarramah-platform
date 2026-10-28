@@ -287,6 +287,37 @@ const en = {
   back: 'Back',
   day: 'Day',
   quranSource: 'Quran text: Quran Foundation',
+
+  // Product facts and answers (also used for search engines and AI assistants)
+  quickFacts: 'Quick facts',
+  factCategory: 'Category',
+  factSku: 'Reference',
+  factOrigin: 'Prepared in',
+  factOriginValue: 'Madinah, Saudi Arabia',
+  factPrice: 'Price',
+  factAvailability: 'Availability',
+  factDelivery: 'Delivery',
+  factDeliveryValue: 'Madinah and Makkah hotels, across Saudi Arabia, international',
+  faqTitle: 'Questions and answers',
+  pfaq1q: 'Can it be delivered to my hotel in Madinah or Makkah?',
+  pfaq1a: 'Yes. Choose hotel delivery at checkout and enter your hotel and stay dates. The delivery charge and timing are shown before you pay.',
+  pfaq2q: 'Does the price include VAT?',
+  pfaq2a: 'Yes. All prices include 15% VAT, and every order comes with a tax invoice.',
+  pfaq3q: 'Can I send it as a gift with a message?',
+  pfaq3a: 'Yes. Add a gift message in your bag and it is printed on a card. Prices never appear on anything the recipient sees.',
+  pfaq4q: 'Do you ship outside Saudi Arabia?',
+  pfaq4a: 'Yes, to the countries we currently ship to. The charge for your country is shown at checkout.',
+  pfaq5q: 'Who prepares the order?',
+  pfaq5a: 'Every order is prepared and packed by Al Mukarramah in Madinah.',
+  hfaq1q: 'What does Al Mukarramah sell?',
+  hfaq1a: 'Premium Islamic gifts prepared in Madinah: prayer mats and woven prayer rugs inspired by the Haramain, matching gift sets, Madinah dates and keepsakes.',
+  hfaq2q: 'Where do you deliver?',
+  hfaq2a: 'To hotels in Madinah and Makkah during your stay, to homes and offices across Saudi Arabia, and internationally.',
+  hfaq3q: 'How do I pay?',
+  hfaq3a: 'Securely through Moyasar with mada, Apple Pay, STC Pay or card. Al Mukarramah never sees or stores your card details.',
+  hfaq4q: 'Can I get help choosing a gift?',
+  hfaq4a: 'Yes. The gift assistant suggests gifts from the current catalogue by occasion, recipient and budget.',
+  searchResults: 'Results for',
   seerahExternal: 'Seerah Trail is open on its own site, seerahtrails.com, until it joins the membership.',
   openSeerah: 'Open Seerah Trail',
 };
@@ -564,11 +595,44 @@ const ar: typeof en = {
   back: 'رجوع',
   day: 'اليوم',
   quranSource: 'نص القرآن: مؤسسة القرآن',
+
+  quickFacts: 'معلومات سريعة',
+  factCategory: 'الفئة',
+  factSku: 'الرمز',
+  factOrigin: 'يُجهَّز في',
+  factOriginValue: 'المدينة المنورة، السعودية',
+  factPrice: 'السعر',
+  factAvailability: 'التوفر',
+  factDelivery: 'التوصيل',
+  factDeliveryValue: 'فنادق المدينة ومكة، جميع أنحاء السعودية، دولي',
+  faqTitle: 'أسئلة وأجوبة',
+  pfaq1q: 'هل يمكن توصيلها إلى فندقي في المدينة أو مكة؟',
+  pfaq1a: 'نعم. اختر التوصيل إلى الفندق عند إتمام الطلب وأدخل اسم الفندق وتواريخ الإقامة، وتظهر رسوم التوصيل ومدته قبل الدفع.',
+  pfaq2q: 'هل يشمل السعر ضريبة القيمة المضافة؟',
+  pfaq2a: 'نعم. جميع الأسعار تشمل ضريبة القيمة المضافة ١٥٪، ويصلك مع كل طلب فاتورة ضريبية.',
+  pfaq3q: 'هل يمكنني إرسالها هدية مع رسالة؟',
+  pfaq3a: 'نعم. أضف رسالة الهدية من حقيبتك لتُطبع على بطاقة، ولا تظهر الأسعار على ما يصل إلى المستلم.',
+  pfaq4q: 'هل تشحنون خارج السعودية؟',
+  pfaq4a: 'نعم، إلى الدول التي نشحن إليها حاليًا، وتظهر رسوم دولتك عند إتمام الطلب.',
+  pfaq5q: 'من يجهّز الطلب؟',
+  pfaq5a: 'تُجهِّز المكرمة كل طلب وتغلّفه في المدينة المنورة.',
+  hfaq1q: 'ماذا تبيع المكرمة؟',
+  hfaq1a: 'هدايا إسلامية فاخرة تُجهَّز في المدينة المنورة: سجادات صلاة وسجادات منسوجة مستوحاة من الحرمين، وأطقم هدايا، وتمور المدينة، وتذكارات.',
+  hfaq2q: 'إلى أين توصلون؟',
+  hfaq2a: 'إلى الفنادق في المدينة ومكة خلال إقامتك، وإلى المنازل والمكاتب في جميع أنحاء السعودية، وإلى خارجها.',
+  hfaq3q: 'كيف أدفع؟',
+  hfaq3a: 'بأمان عبر ميسر بمدى أو Apple Pay أو STC Pay أو البطاقة، ولا تطّلع المكرمة على بيانات بطاقتك ولا تخزّنها.',
+  hfaq4q: 'هل يمكنني الحصول على مساعدة في اختيار هدية؟',
+  hfaq4a: 'نعم. يقترح مساعد الهدايا هدايا من التشكيلة الحالية حسب المناسبة والمستلم والميزانية.',
+  searchResults: 'نتائج البحث عن',
   seerahExternal: 'رحلة السيرة متاحة على موقعها الخاص seerahtrails.com إلى أن تنضم إلى العضوية.',
   openSeerah: 'افتح رحلة السيرة',
 };
 
 export type Key = keyof typeof en;
+
+/** Raw dictionaries, for text that must not depend on the visitor's language (e.g. structured data). */
+export const strings = { en, ar };
 
 type I18n = {
   lang: Lang;
@@ -584,7 +648,13 @@ type I18n = {
 const Ctx = createContext<I18n | null>(null);
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const device = getLocales()[0]?.languageCode === 'ar' ? 'ar' : 'en';
+  let device: Lang = 'en';
+  try {
+    // During pre-rendering there is no browser; English is the default and Arabic is applied in the browser.
+    if (typeof window !== 'undefined' && getLocales()[0]?.languageCode === 'ar') device = 'ar';
+  } catch {
+    device = 'en';
+  }
   const [lang, setLangState] = useState<Lang>(device);
   const [currency, setCurrencyState] = useState('SAR');
 

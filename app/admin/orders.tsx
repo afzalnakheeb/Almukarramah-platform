@@ -5,6 +5,7 @@ import { Button, Chip, H1, Notice, T } from '@/components/ui';
 import { formatMoney } from '@/lib/money';
 import { callFunction, supabase } from '@/lib/supabase';
 import { colors, radius, space, type } from '@/theme';
+import { Seo } from '@/components/seo';
 
 type Order = {
   id: string; number: number; status: string; currency: string; total_minor: number; created_at: string; email: string | null;
@@ -50,6 +51,7 @@ export default function AdminOrders() {
 
   return (
     <Screen chrome="none" style={{ maxWidth: 1180 }}>
+      <Seo title="Admin | Al Mukarramah" description="Staff only." path="/admin" noindex />
       <H1>Orders</H1>
       <View style={{ flexDirection: 'row', gap: space(1), flexWrap: 'wrap', marginBottom: space(2) }}>
         {[...STATUSES, 'pending_payment', 'refunded'].map((s) => <Chip key={s} label={s} active={filter === s} onPress={() => setFilter(s)} />)}

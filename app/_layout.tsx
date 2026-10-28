@@ -40,7 +40,8 @@ export default function RootLayout() {
     const id = setTimeout(() => setTimedOut(true), 2500);
     return () => clearTimeout(id);
   }, []);
-  if (!fontsLoaded && !fontError && !timedOut) return <View style={{ flex: 1, backgroundColor: colors.ivory }} />;
+  // On the website the page renders straight away (pre-rendered HTML must never be blank); the apps wait briefly for fonts.
+  if (Platform.OS !== 'web' && !fontsLoaded && !fontError && !timedOut) return <View style={{ flex: 1, backgroundColor: colors.ivory }} />;
 
   const web = Platform.OS === 'web';
   return (

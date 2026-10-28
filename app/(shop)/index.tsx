@@ -6,8 +6,11 @@ import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { DestinationSheet, destIcon, Logo, Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
 import { Button, Card, Container, Eyebrow, Grid, Loading, OptionCard, Photo, ProductTile, SectionHead, Serif, T, useWide } from '@/components/ui';
+import { Faq } from '@/components/faq';
+import { faqLd, itemListLd, organizationLd, Seo, websiteLd } from '@/components/seo';
 import { getCategories, getFeatured } from '@/lib/catalogue';
-import { useI18n, type Key } from '@/lib/i18n';
+import { snapshot, snapshotFeatured } from '@/lib/snapshot';
+import { strings, useI18n, type Key } from '@/lib/i18n';
 import { imageUrl } from '@/lib/images';
 import { convertFromSar, formatWhole } from '@/lib/money';
 import { DESTINATIONS, usePrefs } from '@/lib/prefs';
@@ -48,13 +51,13 @@ export default function Home() {
   const { session } = useSession();
   const { destination, setDestination } = usePrefs();
   const params = useLocalSearchParams<{ s?: string }>();
-  const [featured, setFeatured] = useState<Product[] | null>(null);
-  const [cats, setCats] = useState<Category[]>([]);
+  const [featured, setFeatured] = useState<Product[] | null>(() => snapshotFeatured());
+  const [cats, setCats] = useState<Category[]>(snapshot.categories);
   const [destOpen, setDestOpen] = useState(false);
 
   useEffect(() => {
-    getFeatured().then(setFeatured).catch(() => setFeatured([]));
-    getCategories().then(setCats).catch(() => undefined);
+    getFeatured().then((f) => f.length && setFeatured(f)).catch(() => undefined);
+    getCategories().then((c) => c.length && setCats(c)).catch(() => undefined);
   }, []);
   useEffect(() => {
     if (Platform.OS === 'web' && params.s && typeof document !== 'undefined') {
@@ -70,8 +73,21 @@ export default function Home() {
   };
   const gap = wide ? 72 : 32;
 
+  const homeFaqs = [1, 2, 3, 4].map((n) => ({ q: t(`hfaq${n}q` as Key), a: t(`hfaq${n}a` as Key) }));
   return (
     <Screen padded={false}>
+      <Seo
+        title="Al Mukarramah | Premium Islamic Gifts from Madinah"
+        description="Prayer mats and woven prayer rugs inspired by the Haramain, gift sets, Madinah dates and keepsakes, prepared in Madinah. Delivery to Madinah and Makkah hotels, across Saudi Arabia and worldwide."
+        path="/"
+        image="/images/hero.jpg"
+        jsonLd={[
+          organizationLd,
+          websiteLd,
+          itemListLd('Featured gifts', featured ?? []),
+          faqLd([1, 2, 3, 4].map((n) => ({ q: strings.en[`hfaq${n}q` as Key], a: strings.en[`hfaq${n}a` as Key] }))),
+        ]}
+      />
       {/* Phones in the app: logo and delivery chip (AppHome design). The website has the full header. */}
       {Platform.OS !== 'web' && (
         <Container style={{ paddingTop: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -168,7 +184,7 @@ export default function Home() {
         {cats.length > 0 ? (
           <Grid cols={wide ? Math.min(cats.length, 6) : 2} gap={wide ? 18 : 10}>
             {cats.map((c) => (
-              <Link key={c.id} href={shop({ cat: c.slug })} asChild>
+              <Link key={c.id} href={{ pathname: '/collections/[slug]', params: { slug: c.slug } }} asChild>
                 <Pressable accessibilityRole="link" style={{ gap: wide ? 12 : 6 }}>
                   <Photo ratio={wide ? 4 / 5 : 4 / 3} uri={c.image} tone={colors.sand} style={{ borderRadius: wide ? 20 : 14 }} label={pick(c, 'name')} />
                   <T w={700} size={wide ? 16 : 13.5} color={colors.navy}>{pick(c, 'name')}</T>
@@ -287,6 +303,13 @@ export default function Home() {
           ))}
         </View>
         <Button label={t('helpChoose')} kind="secondary" href="/concierge" style={{ marginTop: wide ? 22 : 12, alignSelf: wide ? 'flex-start' : 'stretch' }} />
+      </Container>
+
+      {/* Answers (also read by search engines and AI assistants) */}
+      <Container style={{ paddingTop: gap }}>
+        <View style={{ maxWidth: 860 }}>
+          <Faq title={t('faqTitle')} items={homeFaqs} />
+        </View>
       </Container>
 
       {/* 8 · Reassurance */}

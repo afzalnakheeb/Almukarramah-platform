@@ -11,6 +11,7 @@ import { formatMoney } from '@/lib/money';
 import { useSession } from '@/lib/session';
 import { isConfigured, supabase } from '@/lib/supabase';
 import { colors, toneFor } from '@/theme';
+import { Seo } from '@/components/seo';
 
 type OrderRow = { id: string; number: number; status: string; currency: string; total_minor: number; created_at: string; invoices: { id: string; number: string }[] };
 
@@ -41,6 +42,7 @@ export default function Account() {
   if (!session) {
     return (
       <Screen>
+      <Seo title="Your account | Al Mukarramah" description="Orders, tax invoices and membership." path="/account" noindex />
         <View style={{ alignItems: 'center', paddingVertical: wide ? 32 : 8 }}>
           <Card pad={28} style={{ width: '100%', maxWidth: 460, borderRadius: 24, gap: 14 }}>
             <Logo height={36} />
@@ -81,6 +83,7 @@ export default function Account() {
 
   return (
     <Screen>
+      <Seo title="Your account | Al Mukarramah" description="Orders, tax invoices and membership." path="/account" noindex />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginBottom: 4 }}>
         <H1 size={wide ? 44 : 32}>{t('greeting')}</H1>
       </View>

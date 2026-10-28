@@ -1,0 +1,400 @@
+# Al Mukarramah — full catalogue
+
+Generated 2026-10-29T00:00:00Z. Prices in SAR including 15% VAT.
+
+## Prayer Mats (سجادات الصلاة)
+
+Embroidered calligraphy and Haramain designs, prepared and packed in Madinah.
+
+### Prophet’s Mosque Mihrab Prayer Mat
+- Arabic name: سجادة صلاة محراب المسجد النبوي
+- URL: https://almukarramah-platform.vercel.app/product/prophets-mosque-mihrab-prayer-mat
+- Price: SAR 189.00 (VAT included)
+- Availability: in stock
+- SKU: 1401
+- Occasions and recipients: Hajj, Umrah, Ramadan, Corporate
+- Description: Prayer mat woven with the Mihrab of the Prophet’s Mosque in cream, black, olive and gold.
+- الوصف: سجادة صلاة تحمل تصميم محراب المسجد النبوي بألوان الكريمي والأسود والزيتوني والذهبي.
+
+### Kaaba Door Prayer Mat, Black and Gold
+- Arabic name: سجادة صلاة باب الكعبة، أسود وذهبي
+- URL: https://almukarramah-platform.vercel.app/product/kaaba-door-prayer-mat
+- Price: SAR 189.00 (VAT included)
+- Availability: in stock
+- SKU: 1404
+- Occasions and recipients: Hajj, Umrah, For him, Corporate
+- Description: Black prayer mat patterned after the door of the Kaaba, with gold and silver ornamental panels and gold fringes.
+- الوصف: سجادة صلاة سوداء مستوحاة من باب الكعبة المشرفة، بزخارف ذهبية وفضية وأهداب ذهبية.
+
+### Rawdah Mihrab Prayer Mat, Red
+- Arabic name: سجادة صلاة محراب الروضة، أحمر
+- URL: https://almukarramah-platform.vercel.app/product/rawdah-mihrab-prayer-mat-red
+- Price: SAR 169.00 (VAT included)
+- Availability: in stock
+- SKU: 13977
+- Occasions and recipients: Ramadan, For her
+- Description: Burgundy and cream prayer mat with a mihrab arch over a floral field, inspired by Al Rawdah.
+- الوصف: سجادة صلاة باللونين العنابي والكريمي بمحراب فوق حقل من الزخارف النباتية، مستوحاة من الروضة الشريفة.
+
+### Calligraphy Prayer Mat, Navy
+- Arabic name: سجادة صلاة بالخط العربي، كحلي
+- URL: https://almukarramah-platform.vercel.app/product/calligraphy-prayer-mat-navy
+- Price: SAR 149.00 (VAT included)
+- Availability: in stock
+- SKU: 98022
+- Occasions and recipients: Eid, For him
+- Description: Embroidered prayer mat with a bold Arabic calligraphy band in cream and gold across the top and cream fringes.
+- الوصف: سجادة صلاة مطرّزة بشريط من الخط العربي باللونين الكريمي والذهبي في أعلاها، بأهداب كريمية.
+
+### Black Stone Prayer Mat, Black and Gold
+- Arabic name: سجادة صلاة الحجر الأسود، أسود وذهبي
+- URL: https://almukarramah-platform.vercel.app/product/black-stone-prayer-mat
+- Price: SAR 189.00 (VAT included)
+- Availability: in stock
+- SKU: 1403
+- Occasions and recipients: Hajj, Umrah
+- Description: Black prayer mat featuring the silver frame of the Black Stone, finished with gold fringes.
+- الوصف: سجادة صلاة سوداء تتوسطها صورة الإطار الفضي للحجر الأسود، بأهداب ذهبية.
+
+### Al Baraka Rawdah Prayer Mat, Olive Green
+- Arabic name: سجادة صلاة البركة الروضة، أخضر زيتوني
+- URL: https://almukarramah-platform.vercel.app/product/al-baraka-rawdah-prayer-mat-green
+- Price: SAR 169.00 (VAT included)
+- Availability: in stock
+- SKU: 98002
+- Occasions and recipients: Ramadan, For him
+- Description: Olive-green and cream prayer mat with the arch and floral field of Al Rawdah.
+- الوصف: سجادة صلاة بالأخضر الزيتوني والكريمي بتصميم قوس الروضة الشريفة وزخارفها النباتية.
+
+### Rawdah Mihrab Prayer Mat, Green
+- Arabic name: سجادة صلاة محراب الروضة، أخضر
+- URL: https://almukarramah-platform.vercel.app/product/rawdah-mihrab-prayer-mat-green
+- Price: SAR 169.00 (VAT included)
+- Availability: in stock
+- SKU: 13976
+- Occasions and recipients: Ramadan
+- Description: Green and cream prayer mat with a mihrab arch over a floral field, inspired by Al Rawdah.
+- الوصف: سجادة صلاة باللونين الأخضر والكريمي بمحراب فوق حقل من الزخارف النباتية، مستوحاة من الروضة الشريفة.
+
+### Floral Mihrab Prayer Mat, Cream
+- Arabic name: سجادة صلاة المحراب المزهر، كريمي
+- URL: https://almukarramah-platform.vercel.app/product/floral-mihrab-prayer-mat-cream
+- Price: SAR 169.00 (VAT included)
+- Availability: in stock
+- SKU: 1402
+- Occasions and recipients: Nikah, For her
+- Description: Cream prayer mat with a plain arch framed by a fine floral border.
+- الوصف: سجادة صلاة كريمية بقوس هادئ يحيط به إطار من الزخارف النباتية الدقيقة.
+
+### Floral Vine Prayer Mat, Cream
+- Arabic name: سجادة صلاة الأغصان المزهرة، كريمي
+- URL: https://almukarramah-platform.vercel.app/product/floral-vine-prayer-mat-cream
+- Price: SAR 149.00 (VAT included)
+- Availability: in stock
+- SKU: 1400
+- Occasions and recipients: New baby, For her
+- Description: Cream prayer mat with flowering vines and birds in soft colours.
+- الوصف: سجادة صلاة كريمية تزيّنها أغصان مزهرة وطيور بألوان هادئة.
+
+### Geometric Star Prayer Mat, Navy
+- Arabic name: سجادة صلاة النجمة الهندسية، كحلي
+- URL: https://almukarramah-platform.vercel.app/product/geometric-star-prayer-mat-navy
+- Price: SAR 139.00 (VAT included)
+- Availability: in stock
+- SKU: 98049
+- Occasions and recipients: For him
+- Description: Navy prayer mat with a cream interlaced star pattern.
+- الوصف: سجادة صلاة كحلية بنقش نجمي هندسي متشابك باللون الكريمي.
+
+### Kaaba Kiswah Prayer Mat, Black and Gold
+- Arabic name: سجادة صلاة كسوة الكعبة، أسود وذهبي
+- URL: https://almukarramah-platform.vercel.app/product/kaaba-kiswah-prayer-mat
+- Price: SAR 189.00 (VAT included)
+- Availability: in stock
+- SKU: 13989
+- Occasions and recipients: Hajj, Umrah, For him
+- Description: Black prayer mat in the style of the Kaaba kiswah, with a gold calligraphy belt, gold medallions and gold fringes.
+- الوصف: سجادة صلاة سوداء على طراز كسوة الكعبة، بحزام من الخط الذهبي وزخارف ذهبية وأهداب ذهبية.
+
+### Calligraphy Prayer Mat, Teal Blue
+- Arabic name: سجادة صلاة بالخط العربي، أزرق فيروزي
+- URL: https://almukarramah-platform.vercel.app/product/calligraphy-prayer-mat-blue
+- Price: SAR 149.00 (VAT included)
+- Availability: in stock
+- SKU: 98020
+- Occasions and recipients: Eid, For her
+- Description: Embroidered prayer mat with a bold Arabic calligraphy band in cream and gold across the top and cream fringes.
+- الوصف: سجادة صلاة مطرّزة بشريط من الخط العربي باللونين الكريمي والذهبي في أعلاها، بأهداب كريمية.
+
+### Calligraphy Prayer Mat, Olive Green
+- Arabic name: سجادة صلاة بالخط العربي، أخضر زيتوني
+- URL: https://almukarramah-platform.vercel.app/product/calligraphy-prayer-mat-green
+- Price: SAR 149.00 (VAT included)
+- Availability: in stock
+- SKU: 98019
+- Occasions and recipients: Eid, For him
+- Description: Embroidered prayer mat with a bold Arabic calligraphy band in cream and gold across the top and cream fringes.
+- الوصف: سجادة صلاة مطرّزة بشريط من الخط العربي باللونين الكريمي والذهبي في أعلاها، بأهداب كريمية.
+
+### Calligraphy Prayer Mat, Burgundy
+- Arabic name: سجادة صلاة بالخط العربي، عنابي
+- URL: https://almukarramah-platform.vercel.app/product/calligraphy-prayer-mat-burgundy
+- Price: SAR 149.00 (VAT included)
+- Availability: in stock
+- SKU: 98018
+- Occasions and recipients: Eid, For her
+- Description: Embroidered prayer mat with a bold Arabic calligraphy band in cream and gold across the top and cream fringes.
+- الوصف: سجادة صلاة مطرّزة بشريط من الخط العربي باللونين الكريمي والذهبي في أعلاها، بأهداب كريمية.
+
+### Calligraphy Prayer Mat, Cream and Olive
+- Arabic name: سجادة صلاة بالخط العربي، كريمي وزيتوني
+- URL: https://almukarramah-platform.vercel.app/product/calligraphy-prayer-mat-cream
+- Price: SAR 149.00 (VAT included)
+- Availability: in stock
+- SKU: 98021
+- Occasions and recipients: Nikah, For her
+- Description: Embroidered cream prayer mat with a large olive-green Arabic calligraphy band across the top and cream fringes.
+- الوصف: سجادة صلاة كريمية مطرّزة بشريط كبير من الخط العربي باللون الأخضر الزيتوني في أعلاها، بأهداب كريمية.
+
+## Gift Sets (أطقم الهدايا)
+
+Matching large and small prayer mats — for parent and child, or husband and wife.
+
+### Calligraphy Prayer Mat Set, Teal Blue (Large and Small)
+- Arabic name: طقم سجادتي صلاة بالخط العربي، أزرق فيروزي (كبيرة وصغيرة)
+- URL: https://almukarramah-platform.vercel.app/product/calligraphy-prayer-mat-set-blue
+- Price: SAR 249.00 (VAT included)
+- Availability: in stock
+- SKU: 98043
+- Occasions and recipients: Eid, New baby, For kids
+- Description: A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child.
+- الوصف: سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل.
+
+### Calligraphy Prayer Mat Set, Olive Green (Large and Small)
+- Arabic name: طقم سجادتي صلاة بالخط العربي، أخضر زيتوني (كبيرة وصغيرة)
+- URL: https://almukarramah-platform.vercel.app/product/calligraphy-prayer-mat-set-green
+- Price: SAR 249.00 (VAT included)
+- Availability: in stock
+- SKU: 98045
+- Occasions and recipients: Eid, For kids
+- Description: A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child.
+- الوصف: سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل.
+
+### Calligraphy Prayer Mat Set, Burgundy (Large and Small)
+- Arabic name: طقم سجادتي صلاة بالخط العربي، عنابي (كبيرة وصغيرة)
+- URL: https://almukarramah-platform.vercel.app/product/calligraphy-prayer-mat-set-burgundy
+- Price: SAR 249.00 (VAT included)
+- Availability: in stock
+- SKU: 98044
+- Occasions and recipients: Eid, Nikah, For kids
+- Description: A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child.
+- الوصف: سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل.
+
+### Calligraphy Prayer Mat Set, Navy (Large and Small)
+- Arabic name: طقم سجادتي صلاة بالخط العربي، كحلي (كبيرة وصغيرة)
+- URL: https://almukarramah-platform.vercel.app/product/calligraphy-prayer-mat-set-navy
+- Price: SAR 249.00 (VAT included)
+- Availability: in stock
+- SKU: 98047
+- Occasions and recipients: Eid, For him, For kids
+- Description: A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child.
+- الوصف: سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل.
+
+### Calligraphy Prayer Mat Set, Cream and Green (Large and Small)
+- Arabic name: طقم سجادتي صلاة بالخط العربي، كريمي وأخضر (كبيرة وصغيرة)
+- URL: https://almukarramah-platform.vercel.app/product/calligraphy-prayer-mat-set-cream
+- Price: SAR 249.00 (VAT included)
+- Availability: in stock
+- SKU: 98046
+- Occasions and recipients: Nikah, New baby
+- Description: A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child.
+- الوصف: سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل.
+
+## Rawdah Woven Rugs (سجادات الروضة المنسوجة)
+
+Thick woven prayer rugs inspired by the arches and columns of Al Rawdah.
+
+### Kaaba and Clock Tower Woven Prayer Rug, Gold
+- Arabic name: سجادة الكعبة وبرج الساعة المنسوجة، ذهبي
+- URL: https://almukarramah-platform.vercel.app/product/kaaba-clock-tower-woven-rug-gold
+- Price: SAR 229.00 (VAT included)
+- Availability: in stock
+- SKU: 337-G
+- Occasions and recipients: Hajj, Umrah
+- Description: Woven prayer rug showing the Kaaba and the Makkah clock tower over a mustard-gold field with a navy border.
+- الوصف: سجادة صلاة منسوجة تُظهر الكعبة المشرفة وبرج ساعة مكة فوق حقل ذهبي بإطار كحلي.
+
+### Mihrab an-Nabi 3D Woven Prayer Rug
+- Arabic name: سجادة محراب النبي ثلاثية الأبعاد المنسوجة
+- URL: https://almukarramah-platform.vercel.app/product/mihrab-an-nabi-3d-woven-rug
+- Price: SAR 259.00 (VAT included)
+- Availability: in stock
+- SKU: 338
+- Occasions and recipients: Hajj, Umrah, Corporate
+- Description: Woven prayer rug showing the Mihrab of the Prophet’s Mosque in depth, in cream, black, blue, olive and gold.
+- الوصف: سجادة صلاة منسوجة تُظهر محراب المسجد النبوي بعمق ثلاثي الأبعاد، بألوان الكريمي والأسود والأزرق والزيتوني والذهبي.
+
+### Rawdah Woven Prayer Rug, Red with Columns
+- Arabic name: سجادة الروضة المنسوجة، أحمر بالأعمدة
+- URL: https://almukarramah-platform.vercel.app/product/rawdah-woven-rug-red-columns
+- Price: SAR 229.00 (VAT included)
+- Availability: in stock
+- SKU: 330-2
+- Occasions and recipients: Ramadan, For her
+- Description: Woven red prayer rug with the black-and-white arch and columns of Al Rawdah and a broad border.
+- الوصف: سجادة صلاة منسوجة حمراء بقوس الروضة الأبيض والأسود وأعمدتها، بإطار عريض.
+
+### Rawdah Woven Prayer Rug, Sage Green with Columns
+- Arabic name: سجادة الروضة المنسوجة، أخضر بالأعمدة
+- URL: https://almukarramah-platform.vercel.app/product/rawdah-woven-rug-green-columns
+- Price: SAR 229.00 (VAT included)
+- Availability: in stock
+- SKU: 330-3
+- Occasions and recipients: For him
+- Description: Woven sage-green prayer rug with the black-and-white arch and columns of Al Rawdah and a broad border.
+- الوصف: سجادة صلاة منسوجة بالأخضر الهادئ بقوس الروضة الأبيض والأسود وأعمدتها، بإطار عريض.
+
+### Imam’s Mihrab Woven Prayer Rug, Green
+- Arabic name: سجادة محراب الإمام المنسوجة، أخضر
+- URL: https://almukarramah-platform.vercel.app/product/imams-mihrab-woven-rug-green
+- Price: SAR 229.00 (VAT included)
+- Availability: in stock
+- SKU: 332-1
+- Occasions and recipients: Ramadan, For him
+- Description: Woven green prayer rug with the fluted arch of the imam’s mihrab and a floral field.
+- الوصف: سجادة صلاة منسوجة خضراء بقوس محراب الإمام وحقل من الزخارف النباتية.
+
+### Rawdah Arch Woven Prayer Rug, Red and Gold
+- Arabic name: سجادة قوس الروضة المنسوجة، أحمر وذهبي
+- URL: https://almukarramah-platform.vercel.app/product/rawdah-arch-woven-rug-red-gold
+- Price: SAR 229.00 (VAT included)
+- Availability: in stock
+- SKU: 336
+- Occasions and recipients: For her
+- Description: Woven red prayer rug with a striped arch framed in beige-gold.
+- الوصف: سجادة صلاة منسوجة حمراء بقوس مخطط وإطار بلون ذهبي فاتح.
+
+### Rawdah Floral Woven Prayer Rug, Red
+- Arabic name: سجادة الروضة المنسوجة المزهرة، أحمر
+- URL: https://almukarramah-platform.vercel.app/product/rawdah-floral-woven-rug-red
+- Price: SAR 229.00 (VAT included)
+- Availability: in stock
+- SKU: 331
+- Occasions and recipients: For her
+- Description: Woven red prayer rug with a dense floral field and a cream border.
+- الوصف: سجادة صلاة منسوجة حمراء بحقل كثيف من الزهور وإطار كريمي.
+
+### Haram Window Woven Prayer Rug, Green
+- Arabic name: سجادة نافذة الحرم المنسوجة، أخضر
+- URL: https://almukarramah-platform.vercel.app/product/haram-window-woven-rug-green
+- Price: SAR 229.00 (VAT included)
+- Availability: in stock
+- SKU: 331-W
+- Occasions and recipients: For him
+- Description: Woven sage-green prayer rug with an arched window of the Haram above a floral field.
+- الوصف: سجادة صلاة منسوجة بالأخضر الهادئ تعلوها نافذة مقوّسة من الحرم فوق حقل من الزهور.
+
+### Children’s Rawdah Prayer Rug, Green
+- Arabic name: سجادة الروضة للأطفال، أخضر
+- URL: https://almukarramah-platform.vercel.app/product/kids-rawdah-woven-rug-green
+- Price: SAR 99.00 (VAT included)
+- Availability: in stock
+- SKU: 335-G
+- Occasions and recipients: New baby, For kids
+- Description: A smaller woven Rawdah prayer rug in green, sized for children.
+- الوصف: سجادة صلاة منسوجة من تصميم الروضة بمقاس أصغر للأطفال، باللون الأخضر.
+
+### Children’s Rawdah Prayer Rug, Red
+- Arabic name: سجادة الروضة للأطفال، أحمر
+- URL: https://almukarramah-platform.vercel.app/product/kids-rawdah-woven-rug-red
+- Price: SAR 99.00 (VAT included)
+- Availability: in stock
+- SKU: 335-R
+- Occasions and recipients: For kids
+- Description: A smaller woven Rawdah prayer rug in red, sized for children.
+- الوصف: سجادة صلاة منسوجة من تصميم الروضة بمقاس أصغر للأطفال، باللون الأحمر.
+
+### Kaaba and Clock Tower Woven Prayer Rug, Rose
+- Arabic name: سجادة الكعبة وبرج الساعة المنسوجة، وردي
+- URL: https://almukarramah-platform.vercel.app/product/kaaba-clock-tower-woven-rug-rose
+- Price: SAR 229.00 (VAT included)
+- Availability: in stock
+- SKU: 337-R
+- Occasions and recipients: Hajj, Umrah, For her
+- Description: Woven prayer rug showing the Kaaba and the Makkah clock tower over a rose floral field with a navy border.
+- الوصف: سجادة صلاة منسوجة تُظهر الكعبة المشرفة وبرج ساعة مكة فوق حقل وردي مزهر بإطار كحلي.
+
+### Kaaba and Clock Tower Woven Prayer Rug, Mint
+- Arabic name: سجادة الكعبة وبرج الساعة المنسوجة، نعناعي
+- URL: https://almukarramah-platform.vercel.app/product/kaaba-clock-tower-woven-rug-mint
+- Price: SAR 229.00 (VAT included)
+- Availability: in stock
+- SKU: 337-M
+- Occasions and recipients: Hajj, Umrah
+- Description: Woven prayer rug showing the Kaaba and the Makkah clock tower over a mint-green field with a navy border.
+- الوصف: سجادة صلاة منسوجة تُظهر الكعبة المشرفة وبرج ساعة مكة فوق حقل أخضر نعناعي بإطار كحلي.
+
+## Madinah Dates (تمور المدينة)
+
+Ajwa and Sukkari dates from Madinah under our own Ajwati label.
+
+### Ajwati Ajwa Al Madinah Dates, 500 g
+- Arabic name: عجوتي، تمر عجوة المدينة، ٥٠٠ غ
+- URL: https://almukarramah-platform.vercel.app/product/ajwati-ajwa-dates-500g
+- Price: SAR 69.00 (VAT included)
+- Availability: in stock
+- Occasions and recipients: Hajj, Umrah, Ramadan, Corporate
+- Description: Ajwa dates from Madinah in a sealed 500 g tub under our Ajwati label.
+- الوصف: تمر عجوة المدينة المنورة في عبوة محكمة ٥٠٠ غ بعلامتنا "عجوتي".
+
+### Ajwati Sukkari Dates
+- Arabic name: عجوتي، تمر سكري
+- URL: https://almukarramah-platform.vercel.app/product/ajwati-sukkari-dates
+- Price: SAR 49.00 (VAT included)
+- Availability: in stock
+- Occasions and recipients: Ramadan, Eid, Corporate
+- Description: Soft amber Sukkari dates in a sealed tub under our Ajwati label.
+- الوصف: تمر سكري طري بلون كهرماني في عبوة محكمة بعلامتنا "عجوتي".
+
+## Madinah Keepsakes (تذكارات المدينة)
+
+Small gifts that carry the Prophet’s Mosque and Madinah home with you.
+
+### Prophet’s Mosque Door Seal Magnet
+- Arabic name: مغناطيس ختم باب المسجد النبوي
+- URL: https://almukarramah-platform.vercel.app/product/prophets-mosque-door-seal-magnet
+- Price: SAR 39.00 (VAT included)
+- Availability: in stock
+- SKU: 98042
+- Occasions and recipients: Hajj, Umrah, Corporate
+- Description: Copper-tone magnet in the shape of the seal on the doors of the Prophet’s Mosque, in its gift card.
+- الوصف: مغناطيس بلون النحاس على شكل ختم أبواب المسجد النبوي، في بطاقة هدية.
+
+### Prophet’s Mosque Door Seal Keepsake, Gift Box
+- Arabic name: تذكار ختم باب المسجد النبوي في علبة هدية
+- URL: https://almukarramah-platform.vercel.app/product/prophets-mosque-door-seal-gift-box
+- Price: SAR 79.00 (VAT included)
+- Availability: in stock
+- SKU: 98001
+- Occasions and recipients: Hajj, Umrah, Corporate
+- Description: The seal of the Prophet’s Mosque door in rose-gold tone, presented in a window gift box.
+- الوصف: ختم باب المسجد النبوي بلون الذهب الوردي، في علبة هدية بنافذة.
+
+### Masjid Quba Metal Magnet
+- Arabic name: مغناطيس معدني لمسجد قباء
+- URL: https://almukarramah-platform.vercel.app/product/masjid-quba-metal-magnet
+- Price: SAR 35.00 (VAT included)
+- Availability: in stock
+- Occasions and recipients: Umrah
+- Description: Silver-tone metal magnet of Masjid Quba, the first mosque built in Islam, on its card.
+- الوصف: مغناطيس معدني فضي لمسجد قباء، أول مسجد بُني في الإسلام، على بطاقته.
+
+### Sadu Pattern Coasters
+- Arabic name: قواعد أكواب بنقش السدو
+- URL: https://almukarramah-platform.vercel.app/product/sadu-pattern-coasters
+- Price: SAR 59.00 (VAT included)
+- Availability: in stock
+- SKU: 98029
+- Occasions and recipients: Corporate
+- Description: Coasters printed with traditional Sadu weaving patterns in red, pink and blue.
+- الوصف: قواعد أكواب مطبوعة بنقوش السدو التقليدية بالأحمر والوردي والأزرق.

@@ -8,6 +8,7 @@ import { Card, H1, Notice, Photo, T, useWide } from '@/components/ui';
 import { useI18n } from '@/lib/i18n';
 import { callFunction } from '@/lib/supabase';
 import { colors, sans, toneFor } from '@/theme';
+import { Seo } from '@/components/seo';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 type Reply = { reply: string; products: { slug: string; name: string }[] };
@@ -47,6 +48,7 @@ export default function Concierge() {
 
   return (
     <Screen>
+      <Seo title="Gift assistant | Al Mukarramah" description="Tell us who the gift is for, the occasion and your budget, and the assistant suggests gifts from the current Al Mukarramah catalogue." path="/concierge" />
       <View style={{ maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         <H1 size={wide ? 48 : 34}>{t('concierge')}</H1>
         <T color={colors.muted} style={{ marginBottom: 20 }}>{t('conciergeSub')}</T>

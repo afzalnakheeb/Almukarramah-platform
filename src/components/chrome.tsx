@@ -2,7 +2,7 @@
 import { Image } from 'expo-image';
 import { Link, router, type Href } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCart } from '@/lib/cart';
 import { getSettings } from '@/lib/catalogue';
@@ -10,7 +10,7 @@ import { useI18n, type Key } from '@/lib/i18n';
 import { CURRENCIES } from '@/lib/money';
 import { openExternal, SEERAH_TRAIL_URL } from '@/lib/links';
 import { DESTINATIONS, usePrefs, type Destination } from '@/lib/prefs';
-import { colors, space } from '@/theme';
+import { colors, sans, space } from '@/theme';
 import { Icon, type IconName } from './icons';
 import { Container, Notice, OptionCard, Sheet, styles as ui, T, useWide } from './ui';
 
@@ -113,12 +113,7 @@ export function SiteHeader() {
           <View style={{ backgroundColor: colors.white, borderBottomWidth: 1, borderColor: colors.line }}>
             <Container style={{ paddingVertical: 14, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 18 }}>
               <Link href="/" accessibilityLabel={t('home')}><Logo height={44} /></Link>
-              <Link href="/shop" asChild>
-                <Pressable accessibilityRole="search" style={styles.search}>
-                  <Icon name="search" size={18} color={colors.muted} />
-                  <T size={15} color={colors.muted}>{t('searchPlaceholder')}</T>
-                </Pressable>
-              </Link>
+              <SearchBox />
               <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} style={styles.destPill}>
                 <Icon name={destIcon(destination)} size={18} />
                 <View>
@@ -182,6 +177,28 @@ export function SiteHeader() {
           <T w={700} size={16} color={colors.navy}>{t('language')}</T>
         </Pressable>
       </Sheet>
+    </View>
+  );
+}
+
+/** Header search: goes to the shop with ?q=, which also powers the WebSite search action for Google. */
+function SearchBox() {
+  const { t, isRTL } = useI18n();
+  const [q, setQ] = useState('');
+  const go = () => q.trim() && router.push({ pathname: '/shop', params: { q: q.trim() } });
+  return (
+    <View accessibilityRole="search" style={styles.search}>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('searchPlaceholder')} onPress={go}><Icon name="search" size={18} color={colors.muted} /></Pressable>
+      <TextInput
+        value={q}
+        onChangeText={setQ}
+        onSubmitEditing={go}
+        returnKeyType="search"
+        placeholder={t('searchPlaceholder')}
+        placeholderTextColor={colors.muted}
+        accessibilityLabel={t('searchPlaceholder')}
+        style={[sans(400, isRTL), { flex: 1, fontSize: 15, color: colors.ink, minHeight: 44, textAlign: isRTL ? 'right' : 'left', outlineStyle: 'none' } as never]}
+      />
     </View>
   );
 }

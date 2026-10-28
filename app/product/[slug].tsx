@@ -6,12 +6,22 @@ import { destIcon, Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
 import { Breadcrumb, Button, Card, Divider, Eyebrow, Grid, Loading, Notice, Photo, Price, Row, Serif, Stepper, T, useWide } from '@/components/ui';
 import { useCart } from '@/lib/cart';
+import { Facts, Faq } from '@/components/faq';
+import { breadcrumbLd, faqLd, productLd, Seo } from '@/components/seo';
 import { getFeatured, getProduct } from '@/lib/catalogue';
-import { useI18n, type Key } from '@/lib/i18n';
+import { strings, useI18n, type Key } from '@/lib/i18n';
+import { snapshot, snapshotFeatured, snapshotProduct } from '@/lib/snapshot';
 import { formatMoney, priceIn } from '@/lib/money';
 import { usePrefs } from '@/lib/prefs';
 import type { Product } from '@/lib/types';
 import { colors, toneFor } from '@/theme';
+
+/** Pre-render a page for every product in the build-time catalogue. */
+export function generateStaticParams(): { slug: string }[] {
+  return snapshot.products.map((p) => ({ slug: p.slug }));
+}
+
+const FAQ_KEYS = [1, 2, 3, 4, 5] as const;
 
 export default function ProductScreen() {
   const wide = useWide();
@@ -19,22 +29,46 @@ export default function ProductScreen() {
   const { t, pick, currency, lang } = useI18n();
   const { destination } = usePrefs();
   const { add } = useCart();
-  const [product, setProduct] = useState<Product | null | undefined>(undefined);
-  const [others, setOthers] = useState<Product[]>([]);
+  const [product, setProduct] = useState<Product | null | undefined>(() => snapshotProduct(slug) ?? undefined);
+  const [others, setOthers] = useState<Product[]>(() => snapshotFeatured().filter((r) => r.slug !== slug).slice(0, 3));
   const [image, setImage] = useState(0);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState<string | null>(null);
 
   useEffect(() => {
-    setProduct(undefined);
+    setProduct((cur) => (cur?.slug === slug ? cur : snapshotProduct(slug) ?? undefined));
     setImage(0);
     setQty(1);
-    getProduct(slug).then(setProduct).catch(() => setProduct(null));
+    getProduct(slug).then((p) => setProduct(p ?? null)).catch(() => setProduct((cur) => cur ?? null));
     getFeatured().then((rows) => setOthers(rows.filter((r) => r.slug !== slug).slice(0, 3))).catch(() => undefined);
   }, [slug]);
 
   if (product === undefined) return <Screen><Loading /></Screen>;
-  if (product === null) return <Screen><Notice text={t('notFound')} /><Button label={t('allGifts')} href="/shop" style={{ alignSelf: 'flex-start' }} /></Screen>;
+  if (product === null) return <Screen><Seo title="Gift not found | Al Mukarramah" description={t('notFound')} path={`/product/${slug}`} noindex /><Notice text={t('notFound')} /><Button label={t('allGifts')} href="/shop" style={{ alignSelf: 'flex-start' }} /></Screen>;
+
+  // Search engines and AI assistants: one stable English set of answers; visitors see their own language.
+  const en = strings.en;
+  const faqs = FAQ_KEYS.map((n) => ({ q: t(`pfaq${n}q` as Key), a: t(`pfaq${n}a` as Key) }));
+  const faqsEn = FAQ_KEYS.map((n) => ({ q: en[`pfaq${n}q` as Key], a: en[`pfaq${n}a` as Key] }));
+  const catName = product.categories ? pick(product.categories, 'name') : '';
+  const seo = (
+    <Seo
+      title={product.seo_title_en || `${product.name_en} | Al Mukarramah`}
+      description={product.seo_description_en || product.description_en || product.name_en}
+      path={`/product/${product.slug}`}
+      image={product.images[0]}
+      type="product"
+      jsonLd={[
+        productLd(product),
+        breadcrumbLd([
+          { name: 'Home', path: '/' },
+          ...(product.categories ? [{ name: product.categories.name_en, path: `/collections/${product.categories.slug}` }] : [{ name: 'Shop', path: '/shop' }]),
+          { name: product.name_en, path: `/product/${product.slug}` },
+        ]),
+        faqLd(faqsEn),
+      ]}
+    />
+  );
 
   const soldOut = product.stock <= 0;
   const unit = priceIn(product, currency);
@@ -96,6 +130,18 @@ export default function ProductScreen() {
 
       {wide && <Button size="lg" label={addLabel} disabled={soldOut} onPress={addToBag} />}
 
+      <Facts
+        title={t('quickFacts')}
+        rows={[
+          ...(catName ? [[t('factCategory'), catName] as [string, string]] : []),
+          ...(product.sku ? [[t('factSku'), product.sku] as [string, string]] : []),
+          [t('factOrigin'), t('factOriginValue')],
+          [t('factPrice'), `${formatMoney(unit, currency, lang)} · ${t('vatIncluded')}`],
+          [t('factAvailability'), soldOut ? t('outOfStock') : t('inStock')],
+          [t('factDelivery'), t('factDeliveryValue')],
+        ]}
+      />
+
       <View style={{ borderTopWidth: 1, borderColor: colors.line }}>
         {pick(product, 'description') ? (
           <View style={{ borderBottomWidth: 1, borderColor: colors.line, paddingVertical: 14, gap: 8 }}>
@@ -103,6 +149,11 @@ export default function ProductScreen() {
             <T size={14} lh={1.7} color={colors.body}>{pick(product, 'description')}</T>
           </View>
         ) : null}
+        <View style={{ borderBottomWidth: 1, borderColor: colors.line, paddingVertical: 14, gap: 6 }}>
+          <T w={700}>{t('language')}</T>
+          <T size={14.5} w={600} lh={1.5} style={{ writingDirection: lang === 'ar' ? 'ltr' : 'rtl', textAlign: lang === 'ar' ? 'left' : 'right' }}>{lang === 'ar' ? product.name_en : product.name_ar}</T>
+          <T size={14} lh={1.7} color={colors.body} style={{ writingDirection: lang === 'ar' ? 'ltr' : 'rtl', textAlign: lang === 'ar' ? 'left' : 'right' }}>{lang === 'ar' ? product.description_en : product.description_ar}</T>
+        </View>
         <View style={{ paddingVertical: 14, gap: 8 }}>
           <T w={700}>{t('giftCard')}</T>
           <T size={14} lh={1.7} color={colors.body}>{t('giftCardBody')}</T>
@@ -114,10 +165,11 @@ export default function ProductScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.ivory }}>
       <Stack.Screen options={{ title: '' }} />
+      {seo}
       <Screen padded={wide}>
         {wide ? (
           <>
-            <Breadcrumb items={[{ label: t('home'), href: '/' }, { label: t('shop'), href: '/shop' }, { label: pick(product, 'name') }]} />
+            <Breadcrumb items={[{ label: t('home'), href: '/' }, product.categories ? { label: catName, href: { pathname: '/collections/[slug]', params: { slug: product.categories.slug } } } : { label: t('shop'), href: '/shop' }, { label: pick(product, 'name') }]} />
             <View style={{ flexDirection: 'row', gap: 48, alignItems: 'flex-start' }}>
               <View style={{ flex: 1.1 }}>{gallery}</View>
               <View style={{ flex: 1 }}>{details}</View>
@@ -129,6 +181,10 @@ export default function ProductScreen() {
             <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 24 }}>{details}</View>
           </>
         )}
+
+        <View style={{ marginTop: wide ? 56 : 8, paddingHorizontal: wide ? 0 : 16, maxWidth: 860 }}>
+          <Faq title={t('faqTitle')} items={faqs} />
+        </View>
 
         {others.length > 0 && (
           <View style={{ marginTop: wide ? 64 : 0, paddingHorizontal: wide ? 0 : 16, paddingBottom: wide ? 0 : 120 }}>

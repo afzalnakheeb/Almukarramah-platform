@@ -6,6 +6,7 @@ import { Button, Card, Serif, T, Tag, useWide } from '@/components/ui';
 import { formatMoney } from '@/lib/money';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/theme';
+import { Seo } from '@/components/seo';
 
 type Settings = { store_open: boolean; checkout_open: boolean; ads_paused: boolean };
 type Sales = { day: string; currency: string; orders: number; total_minor: number };
@@ -71,6 +72,7 @@ export default function AdminHome() {
 
   return (
     <Screen chrome="none" style={{ maxWidth: 1180 }}>
+      <Seo title="Admin | Al Mukarramah" description="Staff only." path="/admin" noindex />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
         <Serif role="h1" size={wide ? 40 : 32}>Admin</Serif>
       </View>

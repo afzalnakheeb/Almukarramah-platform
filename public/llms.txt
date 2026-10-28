@@ -1,0 +1,31 @@
+# Al Mukarramah (المكرمة)
+
+> Premium Islamic gifts prepared and packed in Madinah, Saudi Arabia: prayer mats and woven prayer rugs inspired by the Haramain, matching gift sets, Madinah dates under the Ajwati label, and Madinah keepsakes. Established 2020. Delivery to hotels in Madinah and Makkah, across Saudi Arabia and internationally. Prices are in Saudi riyals (SAR) and include 15% VAT; every order receives a ZATCA-compliant tax invoice.
+
+- Website: https://almukarramah-platform.vercel.app
+- Languages: Arabic and English
+- Customer help: the gift assistant at https://almukarramah-platform.vercel.app/concierge
+- Full catalogue for AI assistants: https://almukarramah-platform.vercel.app/llms-full.txt
+
+## Collections
+- [Prayer Mats / سجادات الصلاة](https://almukarramah-platform.vercel.app/collections/prayer-mats): Embroidered calligraphy and Haramain designs, prepared and packed in Madinah. (15 products)
+- [Gift Sets / أطقم الهدايا](https://almukarramah-platform.vercel.app/collections/gift-sets): Matching large and small prayer mats — for parent and child, or husband and wife. (5 products)
+- [Rawdah Woven Rugs / سجادات الروضة المنسوجة](https://almukarramah-platform.vercel.app/collections/woven-rugs): Thick woven prayer rugs inspired by the arches and columns of Al Rawdah. (12 products)
+- [Madinah Dates / تمور المدينة](https://almukarramah-platform.vercel.app/collections/dates): Ajwa and Sukkari dates from Madinah under our own Ajwati label. (2 products)
+- [Madinah Keepsakes / تذكارات المدينة](https://almukarramah-platform.vercel.app/collections/keepsakes): Small gifts that carry the Prophet’s Mosque and Madinah home with you. (4 products)
+
+## Featured products
+- [Kaaba and Clock Tower Woven Prayer Rug, Gold](https://almukarramah-platform.vercel.app/product/kaaba-clock-tower-woven-rug-gold): SAR 229.00
+- [Prophet’s Mosque Mihrab Prayer Mat](https://almukarramah-platform.vercel.app/product/prophets-mosque-mihrab-prayer-mat): SAR 189.00
+- [Mihrab an-Nabi 3D Woven Prayer Rug](https://almukarramah-platform.vercel.app/product/mihrab-an-nabi-3d-woven-rug): SAR 259.00
+- [Prophet’s Mosque Door Seal Magnet](https://almukarramah-platform.vercel.app/product/prophets-mosque-door-seal-magnet): SAR 39.00
+- [Calligraphy Prayer Mat Set, Teal Blue (Large and Small)](https://almukarramah-platform.vercel.app/product/calligraphy-prayer-mat-set-blue): SAR 249.00
+- [Kaaba Door Prayer Mat, Black and Gold](https://almukarramah-platform.vercel.app/product/kaaba-door-prayer-mat): SAR 189.00
+- [Rawdah Mihrab Prayer Mat, Red](https://almukarramah-platform.vercel.app/product/rawdah-mihrab-prayer-mat-red): SAR 169.00
+- [Ajwati Ajwa Al Madinah Dates, 500 g](https://almukarramah-platform.vercel.app/product/ajwati-ajwa-dates-500g): SAR 69.00
+- [Calligraphy Prayer Mat, Navy](https://almukarramah-platform.vercel.app/product/calligraphy-prayer-mat-navy): SAR 149.00
+
+## Policies
+- Prices include 15% VAT (Saudi Arabia). Delivery charge is shown at checkout before payment.
+- Gift message printed on a card; prices never appear on anything the recipient sees.
+- Payment through Moyasar: mada, Apple Pay, STC Pay and cards. Card details never reach Al Mukarramah.

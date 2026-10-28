@@ -9,9 +9,14 @@ import { useI18n } from '@/lib/i18n';
 import { openExternal, SEERAH_TRAIL_URL } from '@/lib/links';
 import { callFunction, supabase } from '@/lib/supabase';
 import { colors, fonts } from '@/theme';
+import { Seo } from '@/components/seo';
 
 type Lesson = { id: string; day: number; title_en: string; title_ar: string; body_en: string | null; body_ar: string | null; quran_ref: string | null };
 type Verse = { verse_key: string; text_uthmani: string };
+
+export function generateStaticParams(): { slug: string }[] {
+  return [{ slug: 'quran-trail' }, { slug: 'seerah-trail' }];
+}
 
 export default function Trail() {
   const wide = useWide();
@@ -49,6 +54,7 @@ export default function Trail() {
   if (slug === 'seerah-trail') {
     return (
       <Screen>
+      <Seo title={`${slug === 'quran-trail' ? 'Quran Trail' : 'Seerah Trail'} | Al Mukarramah`} description={slug === 'quran-trail' ? 'Daily Quran lessons for Al Mukarramah members, with the Quran text shown exactly as published by the Quran Foundation.' : 'The Seerah Trail: learn the life of the Prophet ﷺ through the places of Madinah.'} path={`/trail/${slug}`} />
         <View style={{ maxWidth: 820, width: '100%', alignSelf: 'center' }}>
           <Eyebrow size={12}>{t('learning')}</Eyebrow>
           <H1 size={wide ? 52 : 36}>{title}</H1>
@@ -61,11 +67,13 @@ export default function Trail() {
     );
   }
 
-  if (lessons === null) return <Screen><Loading /></Screen>;
+  if (lessons === null) return <Screen>
+      <Seo title={`${slug === 'quran-trail' ? 'Quran Trail' : 'Seerah Trail'} | Al Mukarramah`} description={slug === 'quran-trail' ? 'Daily Quran lessons for Al Mukarramah members, with the Quran text shown exactly as published by the Quran Foundation.' : 'The Seerah Trail: learn the life of the Prophet ﷺ through the places of Madinah.'} path={`/trail/${slug}`} /><Loading /></Screen>;
 
   if (open) {
     return (
       <Screen>
+      <Seo title={`${slug === 'quran-trail' ? 'Quran Trail' : 'Seerah Trail'} | Al Mukarramah`} description={slug === 'quran-trail' ? 'Daily Quran lessons for Al Mukarramah members, with the Quran text shown exactly as published by the Quran Foundation.' : 'The Seerah Trail: learn the life of the Prophet ﷺ through the places of Madinah.'} path={`/trail/${slug}`} />
         <View style={{ maxWidth: 820, width: '100%', alignSelf: 'center' }}>
           <Pressable accessibilityRole="button" onPress={() => setOpen(null)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, alignSelf: 'flex-start' }}>
             <Icon name={isRTL ? 'chevronRight' : 'chevronLeft'} size={18} />
@@ -95,6 +103,7 @@ export default function Trail() {
 
   return (
     <Screen>
+      <Seo title={`${slug === 'quran-trail' ? 'Quran Trail' : 'Seerah Trail'} | Al Mukarramah`} description={slug === 'quran-trail' ? 'Daily Quran lessons for Al Mukarramah members, with the Quran text shown exactly as published by the Quran Foundation.' : 'The Seerah Trail: learn the life of the Prophet ﷺ through the places of Madinah.'} path={`/trail/${slug}`} />
       <View style={{ maxWidth: 820, width: '100%', alignSelf: 'center' }}>
         <Eyebrow size={12}>{t('learning')}</Eyebrow>
         <H1 size={wide ? 52 : 36}>{title}</H1>

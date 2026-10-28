@@ -10,6 +10,7 @@ import { convertFromSar, formatMoney } from '@/lib/money';
 import { usePrefs } from '@/lib/prefs';
 import { useSession } from '@/lib/session';
 import { colors, toneFor } from '@/theme';
+import { Seo } from '@/components/seo';
 
 export default function CartScreen() {
   const wide = useWide();
@@ -22,6 +23,7 @@ export default function CartScreen() {
   if (lines.length === 0) {
     return (
       <Screen chrome="checkout" step={1}>
+      <Seo title="Your bag | Al Mukarramah" description="Your Al Mukarramah gift bag." path="/cart" noindex />
         <View style={{ alignItems: 'center', paddingVertical: 64, gap: 12 }}>
           <Serif role="h1" size={wide ? 44 : 32} center>{t('bagEmpty')}</Serif>
           <T color={colors.muted} center>{t('bagEmptyBody')}</T>
@@ -55,6 +57,7 @@ export default function CartScreen() {
 
   return (
     <Screen chrome="checkout" step={1}>
+      <Seo title="Your bag | Al Mukarramah" description="Your Al Mukarramah gift bag." path="/cart" noindex />
       <H1 size={wide ? 48 : 34}>{t('yourBag')}</H1>
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 32 : 18, alignItems: 'flex-start' }}>
         <View style={{ flex: 1, alignSelf: 'stretch', gap: 14 }}>

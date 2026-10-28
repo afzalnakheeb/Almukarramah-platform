@@ -1,0 +1,2020 @@
+{
+ "categories": [
+  {
+   "id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "slug": "prayer-mats",
+   "name_en": "Prayer Mats",
+   "name_ar": "سجادات الصلاة",
+   "sort": 1,
+   "image": "/images/cat-prayer-mats.jpg",
+   "blurb_en": "Embroidered calligraphy and Haramain designs, prepared and packed in Madinah.",
+   "blurb_ar": "تصاميم مطرّزة بالخط العربي ومستوحاة من الحرمين، تُجهَّز وتُغلَّف في المدينة المنورة."
+  },
+  {
+   "id": "512b0afe-c5c8-4a4b-925b-a8b84e3d1b3f",
+   "slug": "gift-sets",
+   "name_en": "Gift Sets",
+   "name_ar": "أطقم الهدايا",
+   "sort": 2,
+   "image": "/images/cat-gift-sets.jpg",
+   "blurb_en": "Matching large and small prayer mats — for parent and child, or husband and wife.",
+   "blurb_ar": "سجادتان متطابقتان بمقاسين، للوالد والطفل أو للزوجين."
+  },
+  {
+   "id": "21699d38-b129-4a4c-a2f1-1205b0ee7c6a",
+   "slug": "woven-rugs",
+   "name_en": "Rawdah Woven Rugs",
+   "name_ar": "سجادات الروضة المنسوجة",
+   "sort": 3,
+   "image": "/images/cat-woven-rugs.jpg",
+   "blurb_en": "Thick woven prayer rugs inspired by the arches and columns of Al Rawdah.",
+   "blurb_ar": "سجادات صلاة منسوجة سميكة مستوحاة من أقواس الروضة الشريفة وأعمدتها."
+  },
+  {
+   "id": "449df030-a312-46b7-839f-9d06b19b1f23",
+   "slug": "dates",
+   "name_en": "Madinah Dates",
+   "name_ar": "تمور المدينة",
+   "sort": 4,
+   "image": "/images/cat-dates.jpg",
+   "blurb_en": "Ajwa and Sukkari dates from Madinah under our own Ajwati label.",
+   "blurb_ar": "تمور العجوة والسكري من المدينة المنورة بعلامتنا \"عجوتي\"."
+  },
+  {
+   "id": "5afec9e6-bb58-4c97-98a0-3fd7788c2353",
+   "slug": "keepsakes",
+   "name_en": "Madinah Keepsakes",
+   "name_ar": "تذكارات المدينة",
+   "sort": 5,
+   "image": "/images/cat-keepsakes.jpg",
+   "blurb_en": "Small gifts that carry the Prophet’s Mosque and Madinah home with you.",
+   "blurb_ar": "هدايا صغيرة تحمل ذكرى المسجد النبوي والمدينة المنورة."
+  }
+ ],
+ "products": [
+  {
+   "id": "c831dfed-2744-4434-8434-028d26ea7c0d",
+   "slug": "kaaba-clock-tower-woven-rug-gold",
+   "sku": "337-G",
+   "name_en": "Kaaba and Clock Tower Woven Prayer Rug, Gold",
+   "name_ar": "سجادة الكعبة وبرج الساعة المنسوجة، ذهبي",
+   "description_en": "Woven prayer rug showing the Kaaba and the Makkah clock tower over a mustard-gold field with a navy border.",
+   "description_ar": "سجادة صلاة منسوجة تُظهر الكعبة المشرفة وبرج ساعة مكة فوق حقل ذهبي بإطار كحلي.",
+   "base_price_sar": 22900,
+   "stock": 10,
+   "images": [
+    "/products/kaaba-clock-tower-woven-rug-gold-1.jpg",
+    "/products/kaaba-clock-tower-woven-rug-gold-2.jpg"
+   ],
+   "is_featured": true,
+   "restricted_countries": [],
+   "seo_title_en": "Kaaba and Clock Tower Woven Prayer Rug, Gold | Al Mukarramah",
+   "seo_title_ar": "سجادة الكعبة وبرج الساعة المنسوجة، ذهبي | المكرمة",
+   "seo_description_en": "Woven prayer rug showing the Kaaba and the Makkah clock tower over a mustard-gold field with a navy border. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة منسوجة تُظهر الكعبة المشرفة وبرج ساعة مكة فوق حقل ذهبي بإطار كحلي. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "21699d38-b129-4a4c-a2f1-1205b0ee7c6a",
+   "categories": {
+    "slug": "woven-rugs",
+    "name_en": "Rawdah Woven Rugs",
+    "name_ar": "سجادات الروضة المنسوجة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "616c8bc2-8a47-4830-90d3-89b1e5de21b1",
+      "kind": "occasion",
+      "slug": "hajj",
+      "name_en": "Hajj",
+      "name_ar": "الحج",
+      "icon": "kaaba"
+     }
+    },
+    {
+     "tags": {
+      "id": "06a50fe4-5481-4176-a168-2aac154cf524",
+      "kind": "occasion",
+      "slug": "umrah",
+      "name_en": "Umrah",
+      "name_ar": "العمرة",
+      "icon": "mosque"
+     }
+    }
+   ]
+  },
+  {
+   "id": "b2a895e1-c426-4d74-b90f-9b18dbe485c4",
+   "slug": "prophets-mosque-mihrab-prayer-mat",
+   "sku": "1401",
+   "name_en": "Prophet’s Mosque Mihrab Prayer Mat",
+   "name_ar": "سجادة صلاة محراب المسجد النبوي",
+   "description_en": "Prayer mat woven with the Mihrab of the Prophet’s Mosque in cream, black, olive and gold.",
+   "description_ar": "سجادة صلاة تحمل تصميم محراب المسجد النبوي بألوان الكريمي والأسود والزيتوني والذهبي.",
+   "base_price_sar": 18900,
+   "stock": 10,
+   "images": [
+    "/products/prophets-mosque-mihrab-prayer-mat-1.jpg",
+    "/products/prophets-mosque-mihrab-prayer-mat-2.jpg"
+   ],
+   "is_featured": true,
+   "restricted_countries": [],
+   "seo_title_en": "Prophet’s Mosque Mihrab Prayer Mat | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة محراب المسجد النبوي | المكرمة",
+   "seo_description_en": "Prayer mat woven with the Mihrab of the Prophet’s Mosque in cream, black, olive and gold. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة تحمل تصميم محراب المسجد النبوي بألوان الكريمي والأسود والزيتوني والذهبي. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "616c8bc2-8a47-4830-90d3-89b1e5de21b1",
+      "kind": "occasion",
+      "slug": "hajj",
+      "name_en": "Hajj",
+      "name_ar": "الحج",
+      "icon": "kaaba"
+     }
+    },
+    {
+     "tags": {
+      "id": "06a50fe4-5481-4176-a168-2aac154cf524",
+      "kind": "occasion",
+      "slug": "umrah",
+      "name_en": "Umrah",
+      "name_ar": "العمرة",
+      "icon": "mosque"
+     }
+    },
+    {
+     "tags": {
+      "id": "35a28515-7f05-4b76-8584-ebf2765f5535",
+      "kind": "occasion",
+      "slug": "ramadan",
+      "name_en": "Ramadan",
+      "name_ar": "رمضان",
+      "icon": "moon"
+     }
+    },
+    {
+     "tags": {
+      "id": "84b90212-6513-44ab-9c03-308d6fa1c187",
+      "kind": "recipient",
+      "slug": "corporate",
+      "name_en": "Corporate",
+      "name_ar": "للشركات",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "618ccc1b-bf6c-48fe-8012-f8969bce63d8",
+   "slug": "mihrab-an-nabi-3d-woven-rug",
+   "sku": "338",
+   "name_en": "Mihrab an-Nabi 3D Woven Prayer Rug",
+   "name_ar": "سجادة محراب النبي ثلاثية الأبعاد المنسوجة",
+   "description_en": "Woven prayer rug showing the Mihrab of the Prophet’s Mosque in depth, in cream, black, blue, olive and gold.",
+   "description_ar": "سجادة صلاة منسوجة تُظهر محراب المسجد النبوي بعمق ثلاثي الأبعاد، بألوان الكريمي والأسود والأزرق والزيتوني والذهبي.",
+   "base_price_sar": 25900,
+   "stock": 10,
+   "images": [
+    "/products/mihrab-an-nabi-3d-woven-rug-1.jpg",
+    "/products/mihrab-an-nabi-3d-woven-rug-2.jpg"
+   ],
+   "is_featured": true,
+   "restricted_countries": [],
+   "seo_title_en": "Mihrab an-Nabi 3D Woven Prayer Rug | Al Mukarramah",
+   "seo_title_ar": "سجادة محراب النبي ثلاثية الأبعاد المنسوجة | المكرمة",
+   "seo_description_en": "Woven prayer rug showing the Mihrab of the Prophet’s Mosque in depth, in cream, black, blue, olive and gold. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة منسوجة تُظهر محراب المسجد النبوي بعمق ثلاثي الأبعاد، بألوان الكريمي والأسود والأزرق والزيتوني والذهبي. من المدينة المنورة.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "21699d38-b129-4a4c-a2f1-1205b0ee7c6a",
+   "categories": {
+    "slug": "woven-rugs",
+    "name_en": "Rawdah Woven Rugs",
+    "name_ar": "سجادات الروضة المنسوجة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "616c8bc2-8a47-4830-90d3-89b1e5de21b1",
+      "kind": "occasion",
+      "slug": "hajj",
+      "name_en": "Hajj",
+      "name_ar": "الحج",
+      "icon": "kaaba"
+     }
+    },
+    {
+     "tags": {
+      "id": "06a50fe4-5481-4176-a168-2aac154cf524",
+      "kind": "occasion",
+      "slug": "umrah",
+      "name_en": "Umrah",
+      "name_ar": "العمرة",
+      "icon": "mosque"
+     }
+    },
+    {
+     "tags": {
+      "id": "84b90212-6513-44ab-9c03-308d6fa1c187",
+      "kind": "recipient",
+      "slug": "corporate",
+      "name_en": "Corporate",
+      "name_ar": "للشركات",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "c253a7f1-85d1-495f-aad1-855881c36f2d",
+   "slug": "prophets-mosque-door-seal-magnet",
+   "sku": "98042",
+   "name_en": "Prophet’s Mosque Door Seal Magnet",
+   "name_ar": "مغناطيس ختم باب المسجد النبوي",
+   "description_en": "Copper-tone magnet in the shape of the seal on the doors of the Prophet’s Mosque, in its gift card.",
+   "description_ar": "مغناطيس بلون النحاس على شكل ختم أبواب المسجد النبوي، في بطاقة هدية.",
+   "base_price_sar": 3900,
+   "stock": 10,
+   "images": [
+    "/products/prophets-mosque-door-seal-magnet-1.jpg",
+    "/products/prophets-mosque-door-seal-magnet-2.jpg",
+    "/products/prophets-mosque-door-seal-magnet-3.jpg"
+   ],
+   "is_featured": true,
+   "restricted_countries": [],
+   "seo_title_en": "Prophet’s Mosque Door Seal Magnet | Al Mukarramah",
+   "seo_title_ar": "مغناطيس ختم باب المسجد النبوي | المكرمة",
+   "seo_description_en": "Copper-tone magnet in the shape of the seal on the doors of the Prophet’s Mosque, in its gift card. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "مغناطيس بلون النحاس على شكل ختم أبواب المسجد النبوي، في بطاقة هدية. تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "5afec9e6-bb58-4c97-98a0-3fd7788c2353",
+   "categories": {
+    "slug": "keepsakes",
+    "name_en": "Madinah Keepsakes",
+    "name_ar": "تذكارات المدينة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "616c8bc2-8a47-4830-90d3-89b1e5de21b1",
+      "kind": "occasion",
+      "slug": "hajj",
+      "name_en": "Hajj",
+      "name_ar": "الحج",
+      "icon": "kaaba"
+     }
+    },
+    {
+     "tags": {
+      "id": "06a50fe4-5481-4176-a168-2aac154cf524",
+      "kind": "occasion",
+      "slug": "umrah",
+      "name_en": "Umrah",
+      "name_ar": "العمرة",
+      "icon": "mosque"
+     }
+    },
+    {
+     "tags": {
+      "id": "84b90212-6513-44ab-9c03-308d6fa1c187",
+      "kind": "recipient",
+      "slug": "corporate",
+      "name_en": "Corporate",
+      "name_ar": "للشركات",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "390e1e5b-6fdc-4dd0-b89c-ad50967986d7",
+   "slug": "calligraphy-prayer-mat-set-blue",
+   "sku": "98043",
+   "name_en": "Calligraphy Prayer Mat Set, Teal Blue (Large and Small)",
+   "name_ar": "طقم سجادتي صلاة بالخط العربي، أزرق فيروزي (كبيرة وصغيرة)",
+   "description_en": "A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child.",
+   "description_ar": "سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل.",
+   "base_price_sar": 24900,
+   "stock": 10,
+   "images": [
+    "/products/calligraphy-prayer-mat-set-blue-1.jpg",
+    "/products/calligraphy-prayer-mat-set-blue-2.jpg",
+    "/products/calligraphy-prayer-mat-set-blue-3.jpg"
+   ],
+   "is_featured": true,
+   "restricted_countries": [],
+   "seo_title_en": "Calligraphy Prayer Mat Set, Teal Blue (Large and Small)",
+   "seo_title_ar": "طقم سجادتي صلاة بالخط العربي، أزرق فيروزي (كبيرة وصغيرة) | المكرمة",
+   "seo_description_en": "A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child. From Madinah.",
+   "seo_description_ar": "سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "512b0afe-c5c8-4a4b-925b-a8b84e3d1b3f",
+   "categories": {
+    "slug": "gift-sets",
+    "name_en": "Gift Sets",
+    "name_ar": "أطقم الهدايا"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "fbd38cdb-5bda-4d9f-ae96-c6e880a60fc7",
+      "kind": "occasion",
+      "slug": "eid",
+      "name_en": "Eid",
+      "name_ar": "العيد",
+      "icon": "star"
+     }
+    },
+    {
+     "tags": {
+      "id": "9febe39a-34f2-4d19-a858-5045caf221df",
+      "kind": "occasion",
+      "slug": "new-baby",
+      "name_en": "New baby",
+      "name_ar": "مولود جديد",
+      "icon": "baby"
+     }
+    },
+    {
+     "tags": {
+      "id": "21c692d7-cda1-44d7-8f95-734ea7851717",
+      "kind": "recipient",
+      "slug": "kids",
+      "name_en": "For kids",
+      "name_ar": "للأطفال",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "9c7a6c98-83c4-4b1d-9756-8d6e15c6ddb9",
+   "slug": "kaaba-door-prayer-mat",
+   "sku": "1404",
+   "name_en": "Kaaba Door Prayer Mat, Black and Gold",
+   "name_ar": "سجادة صلاة باب الكعبة، أسود وذهبي",
+   "description_en": "Black prayer mat patterned after the door of the Kaaba, with gold and silver ornamental panels and gold fringes.",
+   "description_ar": "سجادة صلاة سوداء مستوحاة من باب الكعبة المشرفة، بزخارف ذهبية وفضية وأهداب ذهبية.",
+   "base_price_sar": 18900,
+   "stock": 10,
+   "images": [
+    "/products/kaaba-door-prayer-mat-1.jpg",
+    "/products/kaaba-door-prayer-mat-2.jpg",
+    "/products/kaaba-door-prayer-mat-3.jpg"
+   ],
+   "is_featured": true,
+   "restricted_countries": [],
+   "seo_title_en": "Kaaba Door Prayer Mat, Black and Gold | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة باب الكعبة، أسود وذهبي | المكرمة",
+   "seo_description_en": "Black prayer mat patterned after the door of the Kaaba, with gold and silver ornamental panels and gold fringes. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة سوداء مستوحاة من باب الكعبة المشرفة، بزخارف ذهبية وفضية وأهداب ذهبية. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "616c8bc2-8a47-4830-90d3-89b1e5de21b1",
+      "kind": "occasion",
+      "slug": "hajj",
+      "name_en": "Hajj",
+      "name_ar": "الحج",
+      "icon": "kaaba"
+     }
+    },
+    {
+     "tags": {
+      "id": "06a50fe4-5481-4176-a168-2aac154cf524",
+      "kind": "occasion",
+      "slug": "umrah",
+      "name_en": "Umrah",
+      "name_ar": "العمرة",
+      "icon": "mosque"
+     }
+    },
+    {
+     "tags": {
+      "id": "930469b7-51b8-4d87-9b05-8c5a3d05ee24",
+      "kind": "recipient",
+      "slug": "him",
+      "name_en": "For him",
+      "name_ar": "له",
+      "icon": null
+     }
+    },
+    {
+     "tags": {
+      "id": "84b90212-6513-44ab-9c03-308d6fa1c187",
+      "kind": "recipient",
+      "slug": "corporate",
+      "name_en": "Corporate",
+      "name_ar": "للشركات",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "6194fa84-4e43-43b6-a557-8bdd66995491",
+   "slug": "rawdah-mihrab-prayer-mat-red",
+   "sku": "13977",
+   "name_en": "Rawdah Mihrab Prayer Mat, Red",
+   "name_ar": "سجادة صلاة محراب الروضة، أحمر",
+   "description_en": "Burgundy and cream prayer mat with a mihrab arch over a floral field, inspired by Al Rawdah.",
+   "description_ar": "سجادة صلاة باللونين العنابي والكريمي بمحراب فوق حقل من الزخارف النباتية، مستوحاة من الروضة الشريفة.",
+   "base_price_sar": 16900,
+   "stock": 10,
+   "images": [
+    "/products/rawdah-mihrab-prayer-mat-red-1.jpg",
+    "/products/rawdah-mihrab-prayer-mat-red-2.jpg"
+   ],
+   "is_featured": true,
+   "restricted_countries": [],
+   "seo_title_en": "Rawdah Mihrab Prayer Mat, Red | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة محراب الروضة، أحمر | المكرمة",
+   "seo_description_en": "Burgundy and cream prayer mat with a mihrab arch over a floral field, inspired by Al Rawdah. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة باللونين العنابي والكريمي بمحراب فوق حقل من الزخارف النباتية، مستوحاة من الروضة الشريفة. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "35a28515-7f05-4b76-8584-ebf2765f5535",
+      "kind": "occasion",
+      "slug": "ramadan",
+      "name_en": "Ramadan",
+      "name_ar": "رمضان",
+      "icon": "moon"
+     }
+    },
+    {
+     "tags": {
+      "id": "f2c31851-edde-4285-9d26-4108bb27aa7a",
+      "kind": "recipient",
+      "slug": "her",
+      "name_en": "For her",
+      "name_ar": "لها",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "43d797d2-b760-4b63-9084-1548f0825275",
+   "slug": "ajwati-ajwa-dates-500g",
+   "sku": null,
+   "name_en": "Ajwati Ajwa Al Madinah Dates, 500 g",
+   "name_ar": "عجوتي، تمر عجوة المدينة، ٥٠٠ غ",
+   "description_en": "Ajwa dates from Madinah in a sealed 500 g tub under our Ajwati label.",
+   "description_ar": "تمر عجوة المدينة المنورة في عبوة محكمة ٥٠٠ غ بعلامتنا \"عجوتي\".",
+   "base_price_sar": 6900,
+   "stock": 10,
+   "images": [
+    "/products/ajwati-ajwa-dates-500g-1.jpg",
+    "/products/ajwati-ajwa-dates-500g-2.jpg"
+   ],
+   "is_featured": true,
+   "restricted_countries": [],
+   "seo_title_en": "Ajwati Ajwa Al Madinah Dates, 500 g | Al Mukarramah",
+   "seo_title_ar": "عجوتي، تمر عجوة المدينة، ٥٠٠ غ | المكرمة",
+   "seo_description_en": "Ajwa dates from Madinah in a sealed 500 g tub under our Ajwati label. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "تمر عجوة المدينة المنورة في عبوة محكمة ٥٠٠ غ بعلامتنا \"عجوتي\". تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "449df030-a312-46b7-839f-9d06b19b1f23",
+   "categories": {
+    "slug": "dates",
+    "name_en": "Madinah Dates",
+    "name_ar": "تمور المدينة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "616c8bc2-8a47-4830-90d3-89b1e5de21b1",
+      "kind": "occasion",
+      "slug": "hajj",
+      "name_en": "Hajj",
+      "name_ar": "الحج",
+      "icon": "kaaba"
+     }
+    },
+    {
+     "tags": {
+      "id": "06a50fe4-5481-4176-a168-2aac154cf524",
+      "kind": "occasion",
+      "slug": "umrah",
+      "name_en": "Umrah",
+      "name_ar": "العمرة",
+      "icon": "mosque"
+     }
+    },
+    {
+     "tags": {
+      "id": "35a28515-7f05-4b76-8584-ebf2765f5535",
+      "kind": "occasion",
+      "slug": "ramadan",
+      "name_en": "Ramadan",
+      "name_ar": "رمضان",
+      "icon": "moon"
+     }
+    },
+    {
+     "tags": {
+      "id": "84b90212-6513-44ab-9c03-308d6fa1c187",
+      "kind": "recipient",
+      "slug": "corporate",
+      "name_en": "Corporate",
+      "name_ar": "للشركات",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "e886de5b-2044-4c86-b7a8-acba4994f46b",
+   "slug": "calligraphy-prayer-mat-navy",
+   "sku": "98022",
+   "name_en": "Calligraphy Prayer Mat, Navy",
+   "name_ar": "سجادة صلاة بالخط العربي، كحلي",
+   "description_en": "Embroidered prayer mat with a bold Arabic calligraphy band in cream and gold across the top and cream fringes.",
+   "description_ar": "سجادة صلاة مطرّزة بشريط من الخط العربي باللونين الكريمي والذهبي في أعلاها، بأهداب كريمية.",
+   "base_price_sar": 14900,
+   "stock": 10,
+   "images": [
+    "/products/calligraphy-prayer-mat-navy-1.jpg",
+    "/products/calligraphy-prayer-mat-navy-2.jpg"
+   ],
+   "is_featured": true,
+   "restricted_countries": [],
+   "seo_title_en": "Calligraphy Prayer Mat, Navy | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة بالخط العربي، كحلي | المكرمة",
+   "seo_description_en": "Embroidered prayer mat with a bold Arabic calligraphy band in cream and gold across the top and cream fringes. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة مطرّزة بشريط من الخط العربي باللونين الكريمي والذهبي في أعلاها، بأهداب كريمية. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "fbd38cdb-5bda-4d9f-ae96-c6e880a60fc7",
+      "kind": "occasion",
+      "slug": "eid",
+      "name_en": "Eid",
+      "name_ar": "العيد",
+      "icon": "star"
+     }
+    },
+    {
+     "tags": {
+      "id": "930469b7-51b8-4d87-9b05-8c5a3d05ee24",
+      "kind": "recipient",
+      "slug": "him",
+      "name_en": "For him",
+      "name_ar": "له",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "a73e06b5-a5b2-4898-9cf0-cf318c1b809c",
+   "slug": "black-stone-prayer-mat",
+   "sku": "1403",
+   "name_en": "Black Stone Prayer Mat, Black and Gold",
+   "name_ar": "سجادة صلاة الحجر الأسود، أسود وذهبي",
+   "description_en": "Black prayer mat featuring the silver frame of the Black Stone, finished with gold fringes.",
+   "description_ar": "سجادة صلاة سوداء تتوسطها صورة الإطار الفضي للحجر الأسود، بأهداب ذهبية.",
+   "base_price_sar": 18900,
+   "stock": 10,
+   "images": [
+    "/products/black-stone-prayer-mat-1.jpg",
+    "/products/black-stone-prayer-mat-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Black Stone Prayer Mat, Black and Gold | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة الحجر الأسود، أسود وذهبي | المكرمة",
+   "seo_description_en": "Black prayer mat featuring the silver frame of the Black Stone, finished with gold fringes. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة سوداء تتوسطها صورة الإطار الفضي للحجر الأسود، بأهداب ذهبية. تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "616c8bc2-8a47-4830-90d3-89b1e5de21b1",
+      "kind": "occasion",
+      "slug": "hajj",
+      "name_en": "Hajj",
+      "name_ar": "الحج",
+      "icon": "kaaba"
+     }
+    },
+    {
+     "tags": {
+      "id": "06a50fe4-5481-4176-a168-2aac154cf524",
+      "kind": "occasion",
+      "slug": "umrah",
+      "name_en": "Umrah",
+      "name_ar": "العمرة",
+      "icon": "mosque"
+     }
+    }
+   ]
+  },
+  {
+   "id": "5de0ebbb-b50c-46e2-865d-a95673543749",
+   "slug": "al-baraka-rawdah-prayer-mat-green",
+   "sku": "98002",
+   "name_en": "Al Baraka Rawdah Prayer Mat, Olive Green",
+   "name_ar": "سجادة صلاة البركة الروضة، أخضر زيتوني",
+   "description_en": "Olive-green and cream prayer mat with the arch and floral field of Al Rawdah.",
+   "description_ar": "سجادة صلاة بالأخضر الزيتوني والكريمي بتصميم قوس الروضة الشريفة وزخارفها النباتية.",
+   "base_price_sar": 16900,
+   "stock": 10,
+   "images": [
+    "/products/al-baraka-rawdah-prayer-mat-green-1.jpg",
+    "/products/al-baraka-rawdah-prayer-mat-green-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Al Baraka Rawdah Prayer Mat, Olive Green | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة البركة الروضة، أخضر زيتوني | المكرمة",
+   "seo_description_en": "Olive-green and cream prayer mat with the arch and floral field of Al Rawdah. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة بالأخضر الزيتوني والكريمي بتصميم قوس الروضة الشريفة وزخارفها النباتية. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "35a28515-7f05-4b76-8584-ebf2765f5535",
+      "kind": "occasion",
+      "slug": "ramadan",
+      "name_en": "Ramadan",
+      "name_ar": "رمضان",
+      "icon": "moon"
+     }
+    },
+    {
+     "tags": {
+      "id": "930469b7-51b8-4d87-9b05-8c5a3d05ee24",
+      "kind": "recipient",
+      "slug": "him",
+      "name_en": "For him",
+      "name_ar": "له",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "ab9c5edf-cc82-45b3-90ac-a2c117c43144",
+   "slug": "rawdah-mihrab-prayer-mat-green",
+   "sku": "13976",
+   "name_en": "Rawdah Mihrab Prayer Mat, Green",
+   "name_ar": "سجادة صلاة محراب الروضة، أخضر",
+   "description_en": "Green and cream prayer mat with a mihrab arch over a floral field, inspired by Al Rawdah.",
+   "description_ar": "سجادة صلاة باللونين الأخضر والكريمي بمحراب فوق حقل من الزخارف النباتية، مستوحاة من الروضة الشريفة.",
+   "base_price_sar": 16900,
+   "stock": 10,
+   "images": [
+    "/products/rawdah-mihrab-prayer-mat-green-1.jpg",
+    "/products/rawdah-mihrab-prayer-mat-green-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Rawdah Mihrab Prayer Mat, Green | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة محراب الروضة، أخضر | المكرمة",
+   "seo_description_en": "Green and cream prayer mat with a mihrab arch over a floral field, inspired by Al Rawdah. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة باللونين الأخضر والكريمي بمحراب فوق حقل من الزخارف النباتية، مستوحاة من الروضة الشريفة. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "35a28515-7f05-4b76-8584-ebf2765f5535",
+      "kind": "occasion",
+      "slug": "ramadan",
+      "name_en": "Ramadan",
+      "name_ar": "رمضان",
+      "icon": "moon"
+     }
+    }
+   ]
+  },
+  {
+   "id": "6d80a932-b4ae-4d41-98de-ef714c171b90",
+   "slug": "floral-mihrab-prayer-mat-cream",
+   "sku": "1402",
+   "name_en": "Floral Mihrab Prayer Mat, Cream",
+   "name_ar": "سجادة صلاة المحراب المزهر، كريمي",
+   "description_en": "Cream prayer mat with a plain arch framed by a fine floral border.",
+   "description_ar": "سجادة صلاة كريمية بقوس هادئ يحيط به إطار من الزخارف النباتية الدقيقة.",
+   "base_price_sar": 16900,
+   "stock": 10,
+   "images": [
+    "/products/floral-mihrab-prayer-mat-cream-1.jpg",
+    "/products/floral-mihrab-prayer-mat-cream-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Floral Mihrab Prayer Mat, Cream | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة المحراب المزهر، كريمي | المكرمة",
+   "seo_description_en": "Cream prayer mat with a plain arch framed by a fine floral border. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة كريمية بقوس هادئ يحيط به إطار من الزخارف النباتية الدقيقة. تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "1a6d8587-675c-4130-87d5-7c2009a6a31e",
+      "kind": "occasion",
+      "slug": "nikah",
+      "name_en": "Nikah",
+      "name_ar": "عقد القران",
+      "icon": "rings"
+     }
+    },
+    {
+     "tags": {
+      "id": "f2c31851-edde-4285-9d26-4108bb27aa7a",
+      "kind": "recipient",
+      "slug": "her",
+      "name_en": "For her",
+      "name_ar": "لها",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "f2057f71-1bb3-464a-b257-be6841168277",
+   "slug": "floral-vine-prayer-mat-cream",
+   "sku": "1400",
+   "name_en": "Floral Vine Prayer Mat, Cream",
+   "name_ar": "سجادة صلاة الأغصان المزهرة، كريمي",
+   "description_en": "Cream prayer mat with flowering vines and birds in soft colours.",
+   "description_ar": "سجادة صلاة كريمية تزيّنها أغصان مزهرة وطيور بألوان هادئة.",
+   "base_price_sar": 14900,
+   "stock": 10,
+   "images": [
+    "/products/floral-vine-prayer-mat-cream-1.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Floral Vine Prayer Mat, Cream | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة الأغصان المزهرة، كريمي | المكرمة",
+   "seo_description_en": "Cream prayer mat with flowering vines and birds in soft colours. Prepared in Madinah; delivered to Madinah and Makkah hotels, across Saudi Arabia and worldwide.",
+   "seo_description_ar": "سجادة صلاة كريمية تزيّنها أغصان مزهرة وطيور بألوان هادئة. تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "9febe39a-34f2-4d19-a858-5045caf221df",
+      "kind": "occasion",
+      "slug": "new-baby",
+      "name_en": "New baby",
+      "name_ar": "مولود جديد",
+      "icon": "baby"
+     }
+    },
+    {
+     "tags": {
+      "id": "f2c31851-edde-4285-9d26-4108bb27aa7a",
+      "kind": "recipient",
+      "slug": "her",
+      "name_en": "For her",
+      "name_ar": "لها",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "aa941a87-5d2c-4361-ae75-1aef0ec97ddb",
+   "slug": "geometric-star-prayer-mat-navy",
+   "sku": "98049",
+   "name_en": "Geometric Star Prayer Mat, Navy",
+   "name_ar": "سجادة صلاة النجمة الهندسية، كحلي",
+   "description_en": "Navy prayer mat with a cream interlaced star pattern.",
+   "description_ar": "سجادة صلاة كحلية بنقش نجمي هندسي متشابك باللون الكريمي.",
+   "base_price_sar": 13900,
+   "stock": 10,
+   "images": [
+    "/products/geometric-star-prayer-mat-navy-1.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Geometric Star Prayer Mat, Navy | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة النجمة الهندسية، كحلي | المكرمة",
+   "seo_description_en": "Navy prayer mat with a cream interlaced star pattern. Prepared in Madinah; delivered to Madinah and Makkah hotels, across Saudi Arabia and worldwide.",
+   "seo_description_ar": "سجادة صلاة كحلية بنقش نجمي هندسي متشابك باللون الكريمي. تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "930469b7-51b8-4d87-9b05-8c5a3d05ee24",
+      "kind": "recipient",
+      "slug": "him",
+      "name_en": "For him",
+      "name_ar": "له",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "91b4281f-22ac-4f6a-a213-8f76c2596f37",
+   "slug": "rawdah-woven-rug-red-columns",
+   "sku": "330-2",
+   "name_en": "Rawdah Woven Prayer Rug, Red with Columns",
+   "name_ar": "سجادة الروضة المنسوجة، أحمر بالأعمدة",
+   "description_en": "Woven red prayer rug with the black-and-white arch and columns of Al Rawdah and a broad border.",
+   "description_ar": "سجادة صلاة منسوجة حمراء بقوس الروضة الأبيض والأسود وأعمدتها، بإطار عريض.",
+   "base_price_sar": 22900,
+   "stock": 10,
+   "images": [
+    "/products/rawdah-woven-rug-red-columns-1.jpg",
+    "/products/rawdah-woven-rug-red-columns-2.jpg",
+    "/products/rawdah-woven-rug-red-columns-3.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Rawdah Woven Prayer Rug, Red with Columns | Al Mukarramah",
+   "seo_title_ar": "سجادة الروضة المنسوجة، أحمر بالأعمدة | المكرمة",
+   "seo_description_en": "Woven red prayer rug with the black-and-white arch and columns of Al Rawdah and a broad border. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة منسوجة حمراء بقوس الروضة الأبيض والأسود وأعمدتها، بإطار عريض. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "21699d38-b129-4a4c-a2f1-1205b0ee7c6a",
+   "categories": {
+    "slug": "woven-rugs",
+    "name_en": "Rawdah Woven Rugs",
+    "name_ar": "سجادات الروضة المنسوجة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "35a28515-7f05-4b76-8584-ebf2765f5535",
+      "kind": "occasion",
+      "slug": "ramadan",
+      "name_en": "Ramadan",
+      "name_ar": "رمضان",
+      "icon": "moon"
+     }
+    },
+    {
+     "tags": {
+      "id": "f2c31851-edde-4285-9d26-4108bb27aa7a",
+      "kind": "recipient",
+      "slug": "her",
+      "name_en": "For her",
+      "name_ar": "لها",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "8591d69d-095e-47f2-859c-c5264c67e89c",
+   "slug": "rawdah-woven-rug-green-columns",
+   "sku": "330-3",
+   "name_en": "Rawdah Woven Prayer Rug, Sage Green with Columns",
+   "name_ar": "سجادة الروضة المنسوجة، أخضر بالأعمدة",
+   "description_en": "Woven sage-green prayer rug with the black-and-white arch and columns of Al Rawdah and a broad border.",
+   "description_ar": "سجادة صلاة منسوجة بالأخضر الهادئ بقوس الروضة الأبيض والأسود وأعمدتها، بإطار عريض.",
+   "base_price_sar": 22900,
+   "stock": 10,
+   "images": [
+    "/products/rawdah-woven-rug-green-columns-1.jpg",
+    "/products/rawdah-woven-rug-green-columns-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Rawdah Woven Prayer Rug, Sage Green with Columns",
+   "seo_title_ar": "سجادة الروضة المنسوجة، أخضر بالأعمدة | المكرمة",
+   "seo_description_en": "Woven sage-green prayer rug with the black-and-white arch and columns of Al Rawdah and a broad border. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة منسوجة بالأخضر الهادئ بقوس الروضة الأبيض والأسود وأعمدتها، بإطار عريض. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "21699d38-b129-4a4c-a2f1-1205b0ee7c6a",
+   "categories": {
+    "slug": "woven-rugs",
+    "name_en": "Rawdah Woven Rugs",
+    "name_ar": "سجادات الروضة المنسوجة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "930469b7-51b8-4d87-9b05-8c5a3d05ee24",
+      "kind": "recipient",
+      "slug": "him",
+      "name_en": "For him",
+      "name_ar": "له",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "10e8530f-feff-4ff2-b8d0-ea24d7cdfdea",
+   "slug": "imams-mihrab-woven-rug-green",
+   "sku": "332-1",
+   "name_en": "Imam’s Mihrab Woven Prayer Rug, Green",
+   "name_ar": "سجادة محراب الإمام المنسوجة، أخضر",
+   "description_en": "Woven green prayer rug with the fluted arch of the imam’s mihrab and a floral field.",
+   "description_ar": "سجادة صلاة منسوجة خضراء بقوس محراب الإمام وحقل من الزخارف النباتية.",
+   "base_price_sar": 22900,
+   "stock": 10,
+   "images": [
+    "/products/imams-mihrab-woven-rug-green-1.jpg",
+    "/products/imams-mihrab-woven-rug-green-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Imam’s Mihrab Woven Prayer Rug, Green | Al Mukarramah",
+   "seo_title_ar": "سجادة محراب الإمام المنسوجة، أخضر | المكرمة",
+   "seo_description_en": "Woven green prayer rug with the fluted arch of the imam’s mihrab and a floral field. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة منسوجة خضراء بقوس محراب الإمام وحقل من الزخارف النباتية. تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "21699d38-b129-4a4c-a2f1-1205b0ee7c6a",
+   "categories": {
+    "slug": "woven-rugs",
+    "name_en": "Rawdah Woven Rugs",
+    "name_ar": "سجادات الروضة المنسوجة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "35a28515-7f05-4b76-8584-ebf2765f5535",
+      "kind": "occasion",
+      "slug": "ramadan",
+      "name_en": "Ramadan",
+      "name_ar": "رمضان",
+      "icon": "moon"
+     }
+    },
+    {
+     "tags": {
+      "id": "930469b7-51b8-4d87-9b05-8c5a3d05ee24",
+      "kind": "recipient",
+      "slug": "him",
+      "name_en": "For him",
+      "name_ar": "له",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "07fb1c1b-46bd-440b-9069-51413ef886ac",
+   "slug": "rawdah-arch-woven-rug-red-gold",
+   "sku": "336",
+   "name_en": "Rawdah Arch Woven Prayer Rug, Red and Gold",
+   "name_ar": "سجادة قوس الروضة المنسوجة، أحمر وذهبي",
+   "description_en": "Woven red prayer rug with a striped arch framed in beige-gold.",
+   "description_ar": "سجادة صلاة منسوجة حمراء بقوس مخطط وإطار بلون ذهبي فاتح.",
+   "base_price_sar": 22900,
+   "stock": 10,
+   "images": [
+    "/products/rawdah-arch-woven-rug-red-gold-1.jpg",
+    "/products/rawdah-arch-woven-rug-red-gold-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Rawdah Arch Woven Prayer Rug, Red and Gold | Al Mukarramah",
+   "seo_title_ar": "سجادة قوس الروضة المنسوجة، أحمر وذهبي | المكرمة",
+   "seo_description_en": "Woven red prayer rug with a striped arch framed in beige-gold. Prepared in Madinah; delivered to Madinah and Makkah hotels, across Saudi Arabia and worldwide.",
+   "seo_description_ar": "سجادة صلاة منسوجة حمراء بقوس مخطط وإطار بلون ذهبي فاتح. تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "21699d38-b129-4a4c-a2f1-1205b0ee7c6a",
+   "categories": {
+    "slug": "woven-rugs",
+    "name_en": "Rawdah Woven Rugs",
+    "name_ar": "سجادات الروضة المنسوجة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "f2c31851-edde-4285-9d26-4108bb27aa7a",
+      "kind": "recipient",
+      "slug": "her",
+      "name_en": "For her",
+      "name_ar": "لها",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "a6f103fe-6e81-49d4-9ec2-0ba45445604b",
+   "slug": "rawdah-floral-woven-rug-red",
+   "sku": "331",
+   "name_en": "Rawdah Floral Woven Prayer Rug, Red",
+   "name_ar": "سجادة الروضة المنسوجة المزهرة، أحمر",
+   "description_en": "Woven red prayer rug with a dense floral field and a cream border.",
+   "description_ar": "سجادة صلاة منسوجة حمراء بحقل كثيف من الزهور وإطار كريمي.",
+   "base_price_sar": 22900,
+   "stock": 10,
+   "images": [
+    "/products/rawdah-floral-woven-rug-red-1.jpg",
+    "/products/rawdah-floral-woven-rug-red-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Rawdah Floral Woven Prayer Rug, Red | Al Mukarramah",
+   "seo_title_ar": "سجادة الروضة المنسوجة المزهرة، أحمر | المكرمة",
+   "seo_description_en": "Woven red prayer rug with a dense floral field and a cream border. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة منسوجة حمراء بحقل كثيف من الزهور وإطار كريمي. تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "21699d38-b129-4a4c-a2f1-1205b0ee7c6a",
+   "categories": {
+    "slug": "woven-rugs",
+    "name_en": "Rawdah Woven Rugs",
+    "name_ar": "سجادات الروضة المنسوجة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "f2c31851-edde-4285-9d26-4108bb27aa7a",
+      "kind": "recipient",
+      "slug": "her",
+      "name_en": "For her",
+      "name_ar": "لها",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "a3e3f0a7-5cbb-44a2-ac99-722f21895d63",
+   "slug": "haram-window-woven-rug-green",
+   "sku": "331-W",
+   "name_en": "Haram Window Woven Prayer Rug, Green",
+   "name_ar": "سجادة نافذة الحرم المنسوجة، أخضر",
+   "description_en": "Woven sage-green prayer rug with an arched window of the Haram above a floral field.",
+   "description_ar": "سجادة صلاة منسوجة بالأخضر الهادئ تعلوها نافذة مقوّسة من الحرم فوق حقل من الزهور.",
+   "base_price_sar": 22900,
+   "stock": 10,
+   "images": [
+    "/products/haram-window-woven-rug-green-1.jpg",
+    "/products/haram-window-woven-rug-green-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Haram Window Woven Prayer Rug, Green | Al Mukarramah",
+   "seo_title_ar": "سجادة نافذة الحرم المنسوجة، أخضر | المكرمة",
+   "seo_description_en": "Woven sage-green prayer rug with an arched window of the Haram above a floral field. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة منسوجة بالأخضر الهادئ تعلوها نافذة مقوّسة من الحرم فوق حقل من الزهور. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "21699d38-b129-4a4c-a2f1-1205b0ee7c6a",
+   "categories": {
+    "slug": "woven-rugs",
+    "name_en": "Rawdah Woven Rugs",
+    "name_ar": "سجادات الروضة المنسوجة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "930469b7-51b8-4d87-9b05-8c5a3d05ee24",
+      "kind": "recipient",
+      "slug": "him",
+      "name_en": "For him",
+      "name_ar": "له",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "0646346b-d298-44c1-b2ca-f02835037d31",
+   "slug": "kids-rawdah-woven-rug-green",
+   "sku": "335-G",
+   "name_en": "Children’s Rawdah Prayer Rug, Green",
+   "name_ar": "سجادة الروضة للأطفال، أخضر",
+   "description_en": "A smaller woven Rawdah prayer rug in green, sized for children.",
+   "description_ar": "سجادة صلاة منسوجة من تصميم الروضة بمقاس أصغر للأطفال، باللون الأخضر.",
+   "base_price_sar": 9900,
+   "stock": 10,
+   "images": [
+    "/products/kids-rawdah-woven-rug-green-1.jpg",
+    "/products/kids-rawdah-woven-rug-green-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Children’s Rawdah Prayer Rug, Green | Al Mukarramah",
+   "seo_title_ar": "سجادة الروضة للأطفال، أخضر | المكرمة",
+   "seo_description_en": "A smaller woven Rawdah prayer rug in green, sized for children. Prepared in Madinah; delivered to Madinah and Makkah hotels, across Saudi Arabia and worldwide.",
+   "seo_description_ar": "سجادة صلاة منسوجة من تصميم الروضة بمقاس أصغر للأطفال، باللون الأخضر. تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "21699d38-b129-4a4c-a2f1-1205b0ee7c6a",
+   "categories": {
+    "slug": "woven-rugs",
+    "name_en": "Rawdah Woven Rugs",
+    "name_ar": "سجادات الروضة المنسوجة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "9febe39a-34f2-4d19-a858-5045caf221df",
+      "kind": "occasion",
+      "slug": "new-baby",
+      "name_en": "New baby",
+      "name_ar": "مولود جديد",
+      "icon": "baby"
+     }
+    },
+    {
+     "tags": {
+      "id": "21c692d7-cda1-44d7-8f95-734ea7851717",
+      "kind": "recipient",
+      "slug": "kids",
+      "name_en": "For kids",
+      "name_ar": "للأطفال",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "c0c49f05-c058-4b5f-ac9e-881adffa58a4",
+   "slug": "kids-rawdah-woven-rug-red",
+   "sku": "335-R",
+   "name_en": "Children’s Rawdah Prayer Rug, Red",
+   "name_ar": "سجادة الروضة للأطفال، أحمر",
+   "description_en": "A smaller woven Rawdah prayer rug in red, sized for children.",
+   "description_ar": "سجادة صلاة منسوجة من تصميم الروضة بمقاس أصغر للأطفال، باللون الأحمر.",
+   "base_price_sar": 9900,
+   "stock": 10,
+   "images": [
+    "/products/kids-rawdah-woven-rug-red-1.jpg",
+    "/products/kids-rawdah-woven-rug-red-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Children’s Rawdah Prayer Rug, Red | Al Mukarramah",
+   "seo_title_ar": "سجادة الروضة للأطفال، أحمر | المكرمة",
+   "seo_description_en": "A smaller woven Rawdah prayer rug in red, sized for children. Prepared in Madinah; delivered to Madinah and Makkah hotels, across Saudi Arabia and worldwide.",
+   "seo_description_ar": "سجادة صلاة منسوجة من تصميم الروضة بمقاس أصغر للأطفال، باللون الأحمر. تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "21699d38-b129-4a4c-a2f1-1205b0ee7c6a",
+   "categories": {
+    "slug": "woven-rugs",
+    "name_en": "Rawdah Woven Rugs",
+    "name_ar": "سجادات الروضة المنسوجة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "21c692d7-cda1-44d7-8f95-734ea7851717",
+      "kind": "recipient",
+      "slug": "kids",
+      "name_en": "For kids",
+      "name_ar": "للأطفال",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "b896d018-6898-43d9-b646-c98f5075fc4d",
+   "slug": "kaaba-clock-tower-woven-rug-rose",
+   "sku": "337-R",
+   "name_en": "Kaaba and Clock Tower Woven Prayer Rug, Rose",
+   "name_ar": "سجادة الكعبة وبرج الساعة المنسوجة، وردي",
+   "description_en": "Woven prayer rug showing the Kaaba and the Makkah clock tower over a rose floral field with a navy border.",
+   "description_ar": "سجادة صلاة منسوجة تُظهر الكعبة المشرفة وبرج ساعة مكة فوق حقل وردي مزهر بإطار كحلي.",
+   "base_price_sar": 22900,
+   "stock": 10,
+   "images": [
+    "/products/kaaba-clock-tower-woven-rug-rose-1.jpg",
+    "/products/kaaba-clock-tower-woven-rug-rose-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Kaaba and Clock Tower Woven Prayer Rug, Rose | Al Mukarramah",
+   "seo_title_ar": "سجادة الكعبة وبرج الساعة المنسوجة، وردي | المكرمة",
+   "seo_description_en": "Woven prayer rug showing the Kaaba and the Makkah clock tower over a rose floral field with a navy border. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة منسوجة تُظهر الكعبة المشرفة وبرج ساعة مكة فوق حقل وردي مزهر بإطار كحلي. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "21699d38-b129-4a4c-a2f1-1205b0ee7c6a",
+   "categories": {
+    "slug": "woven-rugs",
+    "name_en": "Rawdah Woven Rugs",
+    "name_ar": "سجادات الروضة المنسوجة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "616c8bc2-8a47-4830-90d3-89b1e5de21b1",
+      "kind": "occasion",
+      "slug": "hajj",
+      "name_en": "Hajj",
+      "name_ar": "الحج",
+      "icon": "kaaba"
+     }
+    },
+    {
+     "tags": {
+      "id": "06a50fe4-5481-4176-a168-2aac154cf524",
+      "kind": "occasion",
+      "slug": "umrah",
+      "name_en": "Umrah",
+      "name_ar": "العمرة",
+      "icon": "mosque"
+     }
+    },
+    {
+     "tags": {
+      "id": "f2c31851-edde-4285-9d26-4108bb27aa7a",
+      "kind": "recipient",
+      "slug": "her",
+      "name_en": "For her",
+      "name_ar": "لها",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "5f30c25c-e01a-43f3-ab00-9a6387b2cecd",
+   "slug": "kaaba-clock-tower-woven-rug-mint",
+   "sku": "337-M",
+   "name_en": "Kaaba and Clock Tower Woven Prayer Rug, Mint",
+   "name_ar": "سجادة الكعبة وبرج الساعة المنسوجة، نعناعي",
+   "description_en": "Woven prayer rug showing the Kaaba and the Makkah clock tower over a mint-green field with a navy border.",
+   "description_ar": "سجادة صلاة منسوجة تُظهر الكعبة المشرفة وبرج ساعة مكة فوق حقل أخضر نعناعي بإطار كحلي.",
+   "base_price_sar": 22900,
+   "stock": 10,
+   "images": [
+    "/products/kaaba-clock-tower-woven-rug-mint-1.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Kaaba and Clock Tower Woven Prayer Rug, Mint | Al Mukarramah",
+   "seo_title_ar": "سجادة الكعبة وبرج الساعة المنسوجة، نعناعي | المكرمة",
+   "seo_description_en": "Woven prayer rug showing the Kaaba and the Makkah clock tower over a mint-green field with a navy border. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة منسوجة تُظهر الكعبة المشرفة وبرج ساعة مكة فوق حقل أخضر نعناعي بإطار كحلي. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "21699d38-b129-4a4c-a2f1-1205b0ee7c6a",
+   "categories": {
+    "slug": "woven-rugs",
+    "name_en": "Rawdah Woven Rugs",
+    "name_ar": "سجادات الروضة المنسوجة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "616c8bc2-8a47-4830-90d3-89b1e5de21b1",
+      "kind": "occasion",
+      "slug": "hajj",
+      "name_en": "Hajj",
+      "name_ar": "الحج",
+      "icon": "kaaba"
+     }
+    },
+    {
+     "tags": {
+      "id": "06a50fe4-5481-4176-a168-2aac154cf524",
+      "kind": "occasion",
+      "slug": "umrah",
+      "name_en": "Umrah",
+      "name_ar": "العمرة",
+      "icon": "mosque"
+     }
+    }
+   ]
+  },
+  {
+   "id": "ef1a1225-9012-4dd8-b612-8f612df96627",
+   "slug": "prophets-mosque-door-seal-gift-box",
+   "sku": "98001",
+   "name_en": "Prophet’s Mosque Door Seal Keepsake, Gift Box",
+   "name_ar": "تذكار ختم باب المسجد النبوي في علبة هدية",
+   "description_en": "The seal of the Prophet’s Mosque door in rose-gold tone, presented in a window gift box.",
+   "description_ar": "ختم باب المسجد النبوي بلون الذهب الوردي، في علبة هدية بنافذة.",
+   "base_price_sar": 7900,
+   "stock": 10,
+   "images": [
+    "/products/prophets-mosque-door-seal-gift-box-1.jpg",
+    "/products/prophets-mosque-door-seal-gift-box-2.jpg",
+    "/products/prophets-mosque-door-seal-gift-box-3.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Prophet’s Mosque Door Seal Keepsake, Gift Box | Al Mukarramah",
+   "seo_title_ar": "تذكار ختم باب المسجد النبوي في علبة هدية | المكرمة",
+   "seo_description_en": "The seal of the Prophet’s Mosque door in rose-gold tone, presented in a window gift box. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "ختم باب المسجد النبوي بلون الذهب الوردي، في علبة هدية بنافذة. تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "5afec9e6-bb58-4c97-98a0-3fd7788c2353",
+   "categories": {
+    "slug": "keepsakes",
+    "name_en": "Madinah Keepsakes",
+    "name_ar": "تذكارات المدينة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "616c8bc2-8a47-4830-90d3-89b1e5de21b1",
+      "kind": "occasion",
+      "slug": "hajj",
+      "name_en": "Hajj",
+      "name_ar": "الحج",
+      "icon": "kaaba"
+     }
+    },
+    {
+     "tags": {
+      "id": "06a50fe4-5481-4176-a168-2aac154cf524",
+      "kind": "occasion",
+      "slug": "umrah",
+      "name_en": "Umrah",
+      "name_ar": "العمرة",
+      "icon": "mosque"
+     }
+    },
+    {
+     "tags": {
+      "id": "84b90212-6513-44ab-9c03-308d6fa1c187",
+      "kind": "recipient",
+      "slug": "corporate",
+      "name_en": "Corporate",
+      "name_ar": "للشركات",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "1ceac96c-23ce-4016-9bc8-bf928d18901f",
+   "slug": "masjid-quba-metal-magnet",
+   "sku": null,
+   "name_en": "Masjid Quba Metal Magnet",
+   "name_ar": "مغناطيس معدني لمسجد قباء",
+   "description_en": "Silver-tone metal magnet of Masjid Quba, the first mosque built in Islam, on its card.",
+   "description_ar": "مغناطيس معدني فضي لمسجد قباء، أول مسجد بُني في الإسلام، على بطاقته.",
+   "base_price_sar": 3500,
+   "stock": 10,
+   "images": [
+    "/products/masjid-quba-metal-magnet-1.jpg",
+    "/products/masjid-quba-metal-magnet-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Masjid Quba Metal Magnet | Al Mukarramah",
+   "seo_title_ar": "مغناطيس معدني لمسجد قباء | المكرمة",
+   "seo_description_en": "Silver-tone metal magnet of Masjid Quba, the first mosque built in Islam, on its card. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "مغناطيس معدني فضي لمسجد قباء، أول مسجد بُني في الإسلام، على بطاقته. تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "5afec9e6-bb58-4c97-98a0-3fd7788c2353",
+   "categories": {
+    "slug": "keepsakes",
+    "name_en": "Madinah Keepsakes",
+    "name_ar": "تذكارات المدينة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "06a50fe4-5481-4176-a168-2aac154cf524",
+      "kind": "occasion",
+      "slug": "umrah",
+      "name_en": "Umrah",
+      "name_ar": "العمرة",
+      "icon": "mosque"
+     }
+    }
+   ]
+  },
+  {
+   "id": "63ef4aeb-6836-4566-b362-74fc2f0710ec",
+   "slug": "sadu-pattern-coasters",
+   "sku": "98029",
+   "name_en": "Sadu Pattern Coasters",
+   "name_ar": "قواعد أكواب بنقش السدو",
+   "description_en": "Coasters printed with traditional Sadu weaving patterns in red, pink and blue.",
+   "description_ar": "قواعد أكواب مطبوعة بنقوش السدو التقليدية بالأحمر والوردي والأزرق.",
+   "base_price_sar": 5900,
+   "stock": 10,
+   "images": [
+    "/products/sadu-pattern-coasters-1.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Sadu Pattern Coasters | Al Mukarramah",
+   "seo_title_ar": "قواعد أكواب بنقش السدو | المكرمة",
+   "seo_description_en": "Coasters printed with traditional Sadu weaving patterns in red, pink and blue. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "قواعد أكواب مطبوعة بنقوش السدو التقليدية بالأحمر والوردي والأزرق. تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "5afec9e6-bb58-4c97-98a0-3fd7788c2353",
+   "categories": {
+    "slug": "keepsakes",
+    "name_en": "Madinah Keepsakes",
+    "name_ar": "تذكارات المدينة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "84b90212-6513-44ab-9c03-308d6fa1c187",
+      "kind": "recipient",
+      "slug": "corporate",
+      "name_en": "Corporate",
+      "name_ar": "للشركات",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "8caf0757-3a8d-414a-bb15-0875ef2f81d4",
+   "slug": "kaaba-kiswah-prayer-mat",
+   "sku": "13989",
+   "name_en": "Kaaba Kiswah Prayer Mat, Black and Gold",
+   "name_ar": "سجادة صلاة كسوة الكعبة، أسود وذهبي",
+   "description_en": "Black prayer mat in the style of the Kaaba kiswah, with a gold calligraphy belt, gold medallions and gold fringes.",
+   "description_ar": "سجادة صلاة سوداء على طراز كسوة الكعبة، بحزام من الخط الذهبي وزخارف ذهبية وأهداب ذهبية.",
+   "base_price_sar": 18900,
+   "stock": 10,
+   "images": [
+    "/products/kaaba-kiswah-prayer-mat-1.jpg",
+    "/products/kaaba-kiswah-prayer-mat-2.jpg",
+    "/products/kaaba-kiswah-prayer-mat-3.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Kaaba Kiswah Prayer Mat, Black and Gold | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة كسوة الكعبة، أسود وذهبي | المكرمة",
+   "seo_description_en": "Black prayer mat in the style of the Kaaba kiswah, with a gold calligraphy belt, gold medallions and gold fringes. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة سوداء على طراز كسوة الكعبة، بحزام من الخط الذهبي وزخارف ذهبية وأهداب ذهبية. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "616c8bc2-8a47-4830-90d3-89b1e5de21b1",
+      "kind": "occasion",
+      "slug": "hajj",
+      "name_en": "Hajj",
+      "name_ar": "الحج",
+      "icon": "kaaba"
+     }
+    },
+    {
+     "tags": {
+      "id": "06a50fe4-5481-4176-a168-2aac154cf524",
+      "kind": "occasion",
+      "slug": "umrah",
+      "name_en": "Umrah",
+      "name_ar": "العمرة",
+      "icon": "mosque"
+     }
+    },
+    {
+     "tags": {
+      "id": "930469b7-51b8-4d87-9b05-8c5a3d05ee24",
+      "kind": "recipient",
+      "slug": "him",
+      "name_en": "For him",
+      "name_ar": "له",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "960f159f-e4fd-4a93-8c90-aec13ca12f55",
+   "slug": "ajwati-sukkari-dates",
+   "sku": null,
+   "name_en": "Ajwati Sukkari Dates",
+   "name_ar": "عجوتي، تمر سكري",
+   "description_en": "Soft amber Sukkari dates in a sealed tub under our Ajwati label.",
+   "description_ar": "تمر سكري طري بلون كهرماني في عبوة محكمة بعلامتنا \"عجوتي\".",
+   "base_price_sar": 4900,
+   "stock": 10,
+   "images": [
+    "/products/ajwati-sukkari-dates-1.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Ajwati Sukkari Dates | Al Mukarramah",
+   "seo_title_ar": "عجوتي، تمر سكري | المكرمة",
+   "seo_description_en": "Soft amber Sukkari dates in a sealed tub under our Ajwati label. Prepared in Madinah; delivered to Madinah and Makkah hotels, across Saudi Arabia and worldwide.",
+   "seo_description_ar": "تمر سكري طري بلون كهرماني في عبوة محكمة بعلامتنا \"عجوتي\". تُجهَّز في المدينة المنورة وتُوصَّل إلى فنادق المدينة ومكة وجميع أنحاء السعودية والعالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "449df030-a312-46b7-839f-9d06b19b1f23",
+   "categories": {
+    "slug": "dates",
+    "name_en": "Madinah Dates",
+    "name_ar": "تمور المدينة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "35a28515-7f05-4b76-8584-ebf2765f5535",
+      "kind": "occasion",
+      "slug": "ramadan",
+      "name_en": "Ramadan",
+      "name_ar": "رمضان",
+      "icon": "moon"
+     }
+    },
+    {
+     "tags": {
+      "id": "fbd38cdb-5bda-4d9f-ae96-c6e880a60fc7",
+      "kind": "occasion",
+      "slug": "eid",
+      "name_en": "Eid",
+      "name_ar": "العيد",
+      "icon": "star"
+     }
+    },
+    {
+     "tags": {
+      "id": "84b90212-6513-44ab-9c03-308d6fa1c187",
+      "kind": "recipient",
+      "slug": "corporate",
+      "name_en": "Corporate",
+      "name_ar": "للشركات",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "816c4fa4-523e-430a-97dc-89cc9c8105eb",
+   "slug": "calligraphy-prayer-mat-blue",
+   "sku": "98020",
+   "name_en": "Calligraphy Prayer Mat, Teal Blue",
+   "name_ar": "سجادة صلاة بالخط العربي، أزرق فيروزي",
+   "description_en": "Embroidered prayer mat with a bold Arabic calligraphy band in cream and gold across the top and cream fringes.",
+   "description_ar": "سجادة صلاة مطرّزة بشريط من الخط العربي باللونين الكريمي والذهبي في أعلاها، بأهداب كريمية.",
+   "base_price_sar": 14900,
+   "stock": 10,
+   "images": [
+    "/products/calligraphy-prayer-mat-blue-1.jpg",
+    "/products/calligraphy-prayer-mat-blue-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Calligraphy Prayer Mat, Teal Blue | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة بالخط العربي، أزرق فيروزي | المكرمة",
+   "seo_description_en": "Embroidered prayer mat with a bold Arabic calligraphy band in cream and gold across the top and cream fringes. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة مطرّزة بشريط من الخط العربي باللونين الكريمي والذهبي في أعلاها، بأهداب كريمية. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "fbd38cdb-5bda-4d9f-ae96-c6e880a60fc7",
+      "kind": "occasion",
+      "slug": "eid",
+      "name_en": "Eid",
+      "name_ar": "العيد",
+      "icon": "star"
+     }
+    },
+    {
+     "tags": {
+      "id": "f2c31851-edde-4285-9d26-4108bb27aa7a",
+      "kind": "recipient",
+      "slug": "her",
+      "name_en": "For her",
+      "name_ar": "لها",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "4fd3c6cd-05b0-438e-81cf-959dd5922fd5",
+   "slug": "calligraphy-prayer-mat-green",
+   "sku": "98019",
+   "name_en": "Calligraphy Prayer Mat, Olive Green",
+   "name_ar": "سجادة صلاة بالخط العربي، أخضر زيتوني",
+   "description_en": "Embroidered prayer mat with a bold Arabic calligraphy band in cream and gold across the top and cream fringes.",
+   "description_ar": "سجادة صلاة مطرّزة بشريط من الخط العربي باللونين الكريمي والذهبي في أعلاها، بأهداب كريمية.",
+   "base_price_sar": 14900,
+   "stock": 10,
+   "images": [
+    "/products/calligraphy-prayer-mat-green-1.jpg",
+    "/products/calligraphy-prayer-mat-green-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Calligraphy Prayer Mat, Olive Green | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة بالخط العربي، أخضر زيتوني | المكرمة",
+   "seo_description_en": "Embroidered prayer mat with a bold Arabic calligraphy band in cream and gold across the top and cream fringes. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة مطرّزة بشريط من الخط العربي باللونين الكريمي والذهبي في أعلاها، بأهداب كريمية. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "fbd38cdb-5bda-4d9f-ae96-c6e880a60fc7",
+      "kind": "occasion",
+      "slug": "eid",
+      "name_en": "Eid",
+      "name_ar": "العيد",
+      "icon": "star"
+     }
+    },
+    {
+     "tags": {
+      "id": "930469b7-51b8-4d87-9b05-8c5a3d05ee24",
+      "kind": "recipient",
+      "slug": "him",
+      "name_en": "For him",
+      "name_ar": "له",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "d112f2b2-32d4-4ae6-9aa8-1153641877cf",
+   "slug": "calligraphy-prayer-mat-burgundy",
+   "sku": "98018",
+   "name_en": "Calligraphy Prayer Mat, Burgundy",
+   "name_ar": "سجادة صلاة بالخط العربي، عنابي",
+   "description_en": "Embroidered prayer mat with a bold Arabic calligraphy band in cream and gold across the top and cream fringes.",
+   "description_ar": "سجادة صلاة مطرّزة بشريط من الخط العربي باللونين الكريمي والذهبي في أعلاها، بأهداب كريمية.",
+   "base_price_sar": 14900,
+   "stock": 10,
+   "images": [
+    "/products/calligraphy-prayer-mat-burgundy-1.jpg",
+    "/products/calligraphy-prayer-mat-burgundy-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Calligraphy Prayer Mat, Burgundy | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة بالخط العربي، عنابي | المكرمة",
+   "seo_description_en": "Embroidered prayer mat with a bold Arabic calligraphy band in cream and gold across the top and cream fringes. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة مطرّزة بشريط من الخط العربي باللونين الكريمي والذهبي في أعلاها، بأهداب كريمية. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "fbd38cdb-5bda-4d9f-ae96-c6e880a60fc7",
+      "kind": "occasion",
+      "slug": "eid",
+      "name_en": "Eid",
+      "name_ar": "العيد",
+      "icon": "star"
+     }
+    },
+    {
+     "tags": {
+      "id": "f2c31851-edde-4285-9d26-4108bb27aa7a",
+      "kind": "recipient",
+      "slug": "her",
+      "name_en": "For her",
+      "name_ar": "لها",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "8cdccdd5-ae83-45ec-abb4-72afe7ff6e35",
+   "slug": "calligraphy-prayer-mat-cream",
+   "sku": "98021",
+   "name_en": "Calligraphy Prayer Mat, Cream and Olive",
+   "name_ar": "سجادة صلاة بالخط العربي، كريمي وزيتوني",
+   "description_en": "Embroidered cream prayer mat with a large olive-green Arabic calligraphy band across the top and cream fringes.",
+   "description_ar": "سجادة صلاة كريمية مطرّزة بشريط كبير من الخط العربي باللون الأخضر الزيتوني في أعلاها، بأهداب كريمية.",
+   "base_price_sar": 14900,
+   "stock": 10,
+   "images": [
+    "/products/calligraphy-prayer-mat-cream-1.jpg",
+    "/products/calligraphy-prayer-mat-cream-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Calligraphy Prayer Mat, Cream and Olive | Al Mukarramah",
+   "seo_title_ar": "سجادة صلاة بالخط العربي، كريمي وزيتوني | المكرمة",
+   "seo_description_en": "Embroidered cream prayer mat with a large olive-green Arabic calligraphy band across the top and cream fringes. Prepared in Madinah, delivered worldwide.",
+   "seo_description_ar": "سجادة صلاة كريمية مطرّزة بشريط كبير من الخط العربي باللون الأخضر الزيتوني في أعلاها، بأهداب كريمية. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "e2cf825f-4c27-446f-af5b-3b5dbf3d2da1",
+   "categories": {
+    "slug": "prayer-mats",
+    "name_en": "Prayer Mats",
+    "name_ar": "سجادات الصلاة"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "1a6d8587-675c-4130-87d5-7c2009a6a31e",
+      "kind": "occasion",
+      "slug": "nikah",
+      "name_en": "Nikah",
+      "name_ar": "عقد القران",
+      "icon": "rings"
+     }
+    },
+    {
+     "tags": {
+      "id": "f2c31851-edde-4285-9d26-4108bb27aa7a",
+      "kind": "recipient",
+      "slug": "her",
+      "name_en": "For her",
+      "name_ar": "لها",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "a5763507-55c1-4579-be92-6d232c669c27",
+   "slug": "calligraphy-prayer-mat-set-green",
+   "sku": "98045",
+   "name_en": "Calligraphy Prayer Mat Set, Olive Green (Large and Small)",
+   "name_ar": "طقم سجادتي صلاة بالخط العربي، أخضر زيتوني (كبيرة وصغيرة)",
+   "description_en": "A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child.",
+   "description_ar": "سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل.",
+   "base_price_sar": 24900,
+   "stock": 10,
+   "images": [
+    "/products/calligraphy-prayer-mat-set-green-1.jpg",
+    "/products/calligraphy-prayer-mat-set-green-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Calligraphy Prayer Mat Set, Olive Green (Large and Small)",
+   "seo_title_ar": "طقم سجادتي صلاة بالخط العربي، أخضر زيتوني (كبيرة وصغيرة) | المكرمة",
+   "seo_description_en": "A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child. From Madinah.",
+   "seo_description_ar": "سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "512b0afe-c5c8-4a4b-925b-a8b84e3d1b3f",
+   "categories": {
+    "slug": "gift-sets",
+    "name_en": "Gift Sets",
+    "name_ar": "أطقم الهدايا"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "fbd38cdb-5bda-4d9f-ae96-c6e880a60fc7",
+      "kind": "occasion",
+      "slug": "eid",
+      "name_en": "Eid",
+      "name_ar": "العيد",
+      "icon": "star"
+     }
+    },
+    {
+     "tags": {
+      "id": "21c692d7-cda1-44d7-8f95-734ea7851717",
+      "kind": "recipient",
+      "slug": "kids",
+      "name_en": "For kids",
+      "name_ar": "للأطفال",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "b6fac128-f117-49cb-8959-5ee4d1b74e75",
+   "slug": "calligraphy-prayer-mat-set-burgundy",
+   "sku": "98044",
+   "name_en": "Calligraphy Prayer Mat Set, Burgundy (Large and Small)",
+   "name_ar": "طقم سجادتي صلاة بالخط العربي، عنابي (كبيرة وصغيرة)",
+   "description_en": "A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child.",
+   "description_ar": "سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل.",
+   "base_price_sar": 24900,
+   "stock": 10,
+   "images": [
+    "/products/calligraphy-prayer-mat-set-burgundy-1.jpg",
+    "/products/calligraphy-prayer-mat-set-burgundy-2.jpg",
+    "/products/calligraphy-prayer-mat-set-burgundy-3.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Calligraphy Prayer Mat Set, Burgundy (Large and Small)",
+   "seo_title_ar": "طقم سجادتي صلاة بالخط العربي، عنابي (كبيرة وصغيرة) | المكرمة",
+   "seo_description_en": "A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child. From Madinah.",
+   "seo_description_ar": "سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "512b0afe-c5c8-4a4b-925b-a8b84e3d1b3f",
+   "categories": {
+    "slug": "gift-sets",
+    "name_en": "Gift Sets",
+    "name_ar": "أطقم الهدايا"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "fbd38cdb-5bda-4d9f-ae96-c6e880a60fc7",
+      "kind": "occasion",
+      "slug": "eid",
+      "name_en": "Eid",
+      "name_ar": "العيد",
+      "icon": "star"
+     }
+    },
+    {
+     "tags": {
+      "id": "1a6d8587-675c-4130-87d5-7c2009a6a31e",
+      "kind": "occasion",
+      "slug": "nikah",
+      "name_en": "Nikah",
+      "name_ar": "عقد القران",
+      "icon": "rings"
+     }
+    },
+    {
+     "tags": {
+      "id": "21c692d7-cda1-44d7-8f95-734ea7851717",
+      "kind": "recipient",
+      "slug": "kids",
+      "name_en": "For kids",
+      "name_ar": "للأطفال",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "2dd7b963-aff9-40b4-913f-8f42b3de5bab",
+   "slug": "calligraphy-prayer-mat-set-navy",
+   "sku": "98047",
+   "name_en": "Calligraphy Prayer Mat Set, Navy (Large and Small)",
+   "name_ar": "طقم سجادتي صلاة بالخط العربي، كحلي (كبيرة وصغيرة)",
+   "description_en": "A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child.",
+   "description_ar": "سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل.",
+   "base_price_sar": 24900,
+   "stock": 10,
+   "images": [
+    "/products/calligraphy-prayer-mat-set-navy-1.jpg",
+    "/products/calligraphy-prayer-mat-set-navy-2.jpg",
+    "/products/calligraphy-prayer-mat-set-navy-3.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Calligraphy Prayer Mat Set, Navy (Large and Small)",
+   "seo_title_ar": "طقم سجادتي صلاة بالخط العربي، كحلي (كبيرة وصغيرة) | المكرمة",
+   "seo_description_en": "A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child. From Madinah.",
+   "seo_description_ar": "سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "512b0afe-c5c8-4a4b-925b-a8b84e3d1b3f",
+   "categories": {
+    "slug": "gift-sets",
+    "name_en": "Gift Sets",
+    "name_ar": "أطقم الهدايا"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "fbd38cdb-5bda-4d9f-ae96-c6e880a60fc7",
+      "kind": "occasion",
+      "slug": "eid",
+      "name_en": "Eid",
+      "name_ar": "العيد",
+      "icon": "star"
+     }
+    },
+    {
+     "tags": {
+      "id": "930469b7-51b8-4d87-9b05-8c5a3d05ee24",
+      "kind": "recipient",
+      "slug": "him",
+      "name_en": "For him",
+      "name_ar": "له",
+      "icon": null
+     }
+    },
+    {
+     "tags": {
+      "id": "21c692d7-cda1-44d7-8f95-734ea7851717",
+      "kind": "recipient",
+      "slug": "kids",
+      "name_en": "For kids",
+      "name_ar": "للأطفال",
+      "icon": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "a58b8be7-3fd0-466d-8bf9-876d01a3fcbc",
+   "slug": "calligraphy-prayer-mat-set-cream",
+   "sku": "98046",
+   "name_en": "Calligraphy Prayer Mat Set, Cream and Green (Large and Small)",
+   "name_ar": "طقم سجادتي صلاة بالخط العربي، كريمي وأخضر (كبيرة وصغيرة)",
+   "description_en": "A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child.",
+   "description_ar": "سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل.",
+   "base_price_sar": 24900,
+   "stock": 10,
+   "images": [
+    "/products/calligraphy-prayer-mat-set-cream-1.jpg",
+    "/products/calligraphy-prayer-mat-set-cream-2.jpg"
+   ],
+   "is_featured": false,
+   "restricted_countries": [],
+   "seo_title_en": "Calligraphy Prayer Mat Set, Cream and Green (Large and Small)",
+   "seo_title_ar": "طقم سجادتي صلاة بالخط العربي، كريمي وأخضر (كبيرة وصغيرة) | المكرمة",
+   "seo_description_en": "A matching pair of embroidered calligraphy prayer mats, one large and one small — a thoughtful gift for parent and child. From Madinah.",
+   "seo_description_ar": "سجادتا صلاة مطرّزتان متطابقتان بالخط العربي، كبيرة وصغيرة — هدية مميزة للوالد والطفل. تُجهَّز في المدينة المنورة وتُوصَّل إلى أنحاء العالم.",
+   "updated_at": "2026-10-28T21:58:38.967779+00:00",
+   "category_id": "512b0afe-c5c8-4a4b-925b-a8b84e3d1b3f",
+   "categories": {
+    "slug": "gift-sets",
+    "name_en": "Gift Sets",
+    "name_ar": "أطقم الهدايا"
+   },
+   "product_tags": [
+    {
+     "tags": {
+      "id": "1a6d8587-675c-4130-87d5-7c2009a6a31e",
+      "kind": "occasion",
+      "slug": "nikah",
+      "name_en": "Nikah",
+      "name_ar": "عقد القران",
+      "icon": "rings"
+     }
+    },
+    {
+     "tags": {
+      "id": "9febe39a-34f2-4d19-a858-5045caf221df",
+      "kind": "occasion",
+      "slug": "new-baby",
+      "name_en": "New baby",
+      "name_ar": "مولود جديد",
+      "icon": "baby"
+     }
+    }
+   ]
+  }
+ ],
+ "generated_at": "2026-10-29T00:00:00Z"
+}

@@ -16,6 +16,7 @@ import { useSession } from '@/lib/session';
 import { callFunction } from '@/lib/supabase';
 import type { ShippingQuote, ShipTo } from '@/lib/types';
 import { colors } from '@/theme';
+import { Seo } from '@/components/seo';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -98,6 +99,7 @@ export default function Checkout() {
   if (lines.length === 0) {
     return (
       <Screen chrome="checkout" step={2}>
+      <Seo title="Checkout | Al Mukarramah" description="Delivery and secure payment." path="/checkout" noindex />
         <Notice text={t('bagEmpty')} />
         <Button label={t('exploreGifts')} href="/shop" style={{ alignSelf: 'flex-start' }} />
       </Screen>
@@ -118,6 +120,7 @@ export default function Checkout() {
 
   return (
     <Screen chrome="checkout" step={quotes ? 3 : 2}>
+      <Seo title="Checkout | Al Mukarramah" description="Delivery and secure payment." path="/checkout" noindex />
       <H1 size={wide ? 48 : 34}>{t('checkoutTitle')}</H1>
       {!session && (
         <T color={colors.muted} style={{ marginBottom: 18 }}>

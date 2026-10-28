@@ -5,6 +5,7 @@ import { Button, Chip, H1, T } from '@/components/ui';
 import { formatMoney } from '@/lib/money';
 import { supabase } from '@/lib/supabase';
 import { colors, radius, space, type } from '@/theme';
+import { Seo } from '@/components/seo';
 
 type Row = { id: string; slug: string; name_en: string; name_ar: string; base_price_sar: number; stock: number; is_active: boolean };
 
@@ -26,6 +27,7 @@ export default function AdminProducts() {
 
   return (
     <Screen chrome="none" style={{ maxWidth: 1180 }}>
+      <Seo title="Admin | Al Mukarramah" description="Staff only." path="/admin" noindex />
       <H1>Products and stock</H1>
       <T size={13} color={colors.muted}>New products, descriptions, photos and SEO are added from Claude. Use this screen for quick stock and on/off changes.</T>
       {rows.map((r) => (

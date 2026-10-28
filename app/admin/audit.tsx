@@ -4,6 +4,7 @@ import { Screen } from '@/components/chrome';
 import { Card, Serif, T, Tag, useWide } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/theme';
+import { Seo } from '@/components/seo';
 
 type Entry = { id: number; at: string; actor_label: string | null; table_name: string; row_id: string; action: string };
 
@@ -16,6 +17,7 @@ export default function Audit() {
   }, []);
   return (
     <Screen chrome="none" style={{ maxWidth: 1180 }}>
+      <Seo title="Admin | Al Mukarramah" description="Staff only." path="/admin" noindex />
       <Serif role="h1" size={wide ? 40 : 32}>Audit history</Serif>
       <T size={13} color={colors.muted} style={{ marginBottom: 18 }}>Every change by staff, by Claude and by the server, newest first. Times in your local timezone.</T>
       <Card pad={0} style={{ overflow: 'hidden' }}>

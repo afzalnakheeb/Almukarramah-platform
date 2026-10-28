@@ -15,6 +15,12 @@ export type Product = {
   product_prices?: { currency: string; amount_minor: number }[];
   product_tags?: { tags: Tag }[];
   category_id?: string | null;
+  sku?: string | null;
+  seo_title_en?: string | null;
+  seo_title_ar?: string | null;
+  seo_description_en?: string | null;
+  seo_description_ar?: string | null;
+  updated_at?: string;
   categories?: Pick<Category, 'slug' | 'name_en' | 'name_ar'> | null;
 };
 
