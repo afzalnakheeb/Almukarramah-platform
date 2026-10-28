@@ -1,35 +1,38 @@
 // Homepage — follows Main.dc.html (desktop) and MobileHome.dc.html (phone) in the AlMukarramah Platform Design.
 import { Link, useLocalSearchParams, type Href } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Platform, Pressable, ScrollView, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { DestinationSheet, destIcon, Logo, Screen } from '@/components/chrome';
-import { ArchMotif, Icon } from '@/components/icons';
+import { Icon } from '@/components/icons';
 import { Button, Card, Container, Eyebrow, Grid, Loading, OptionCard, Photo, ProductTile, SectionHead, Serif, T, useWide } from '@/components/ui';
-import { getFeatured } from '@/lib/catalogue';
+import { getCategories, getFeatured } from '@/lib/catalogue';
 import { useI18n, type Key } from '@/lib/i18n';
+import { imageUrl } from '@/lib/images';
 import { convertFromSar, formatWhole } from '@/lib/money';
 import { DESTINATIONS, usePrefs } from '@/lib/prefs';
 import { useSession } from '@/lib/session';
-import type { Product } from '@/lib/types';
+import type { Category, Product } from '@/lib/types';
 import { colors, space } from '@/theme';
 
 const shop = (params: Record<string, string> = {}): Href => ({ pathname: '/shop', params });
 
-const OCCASIONS: { key: Key; tag?: string; tone: string }[] = [
-  { key: 'occ_eid', tag: 'eid', tone: '#F3E6DF' },
-  { key: 'occ_nikah', tag: 'nikah', tone: '#F2E8EC' },
-  { key: 'occ_baby', tag: 'new-baby', tone: '#E6EBE2' },
-  { key: 'occ_hifz', tone: '#E8E4EE' },
-  { key: 'occ_home', tone: '#EDE5D6' },
-  { key: 'occ_thanks', tone: '#F6F1E8' },
+const OCCASIONS: { key: Key; tag?: string; tone: string; img: string }[] = [
+  { key: 'occ_eid', tag: 'eid', tone: '#F3E6DF', img: '/images/occ-eid.jpg' },
+  { key: 'occ_nikah', tag: 'nikah', tone: '#F2E8EC', img: '/images/occ-nikah.jpg' },
+  { key: 'occ_baby', tag: 'new-baby', tone: '#E6EBE2', img: '/images/occ-baby.jpg' },
+  { key: 'occ_hifz', tone: '#E8E4EE', img: '/images/occ-hifz.jpg' },
+  { key: 'occ_home', tone: '#EDE5D6', img: '/images/occ-home.jpg' },
+  { key: 'occ_thanks', tone: '#F6F1E8', img: '/images/occ-thanks.jpg' },
 ];
 const CATEGORIES: { key: Key; tone: string }[] = [
   { key: 'cat_dates', tone: '#EDE5D6' }, { key: 'cat_perfume', tone: '#F3E6DF' }, { key: 'cat_prayer', tone: '#E8E4EE' },
   { key: 'cat_fashion', tone: '#F2E8EC' }, { key: 'cat_books', tone: '#E6EBE2' }, { key: 'cat_sets', tone: '#EDE5D6' },
 ];
-const RECIPIENTS: { key: string; tag?: string; tone: string }[] = [
-  { key: 'rec_her', tag: 'her', tone: '#F2E8EC' }, { key: 'rec_him', tag: 'him', tone: '#E8E4EE' }, { key: 'rec_parents', tone: '#EDE5D6' },
-  { key: 'rec_kids', tag: 'kids', tone: '#E6EBE2' }, { key: 'rec_home', tone: '#F3E6DF' },
+const RECIPIENTS: { key: string; tag?: string; tone: string; img: string }[] = [
+  { key: 'rec_her', tag: 'her', tone: '#F2E8EC', img: '/images/rec-her.jpg' }, { key: 'rec_him', tag: 'him', tone: '#E8E4EE', img: '/images/rec-him.jpg' },
+  { key: 'rec_parents', tone: '#EDE5D6', img: '/images/rec-parents.jpg' }, { key: 'rec_kids', tag: 'kids', tone: '#E6EBE2', img: '/images/rec-kids.jpg' },
+  { key: 'rec_home', tone: '#F3E6DF', img: '/images/rec-home.jpg' },
 ];
 // Budget bands in halalas (SAR minor units).
 const BUDGETS = [
@@ -41,15 +44,17 @@ const BUDGETS = [
 
 export default function Home() {
   const wide = useWide();
-  const { t, lang, currency } = useI18n();
+  const { t, lang, currency, pick } = useI18n();
   const { session } = useSession();
   const { destination, setDestination } = usePrefs();
   const params = useLocalSearchParams<{ s?: string }>();
   const [featured, setFeatured] = useState<Product[] | null>(null);
+  const [cats, setCats] = useState<Category[]>([]);
   const [destOpen, setDestOpen] = useState(false);
 
   useEffect(() => {
     getFeatured().then(setFeatured).catch(() => setFeatured([]));
+    getCategories().then(setCats).catch(() => undefined);
   }, []);
   useEffect(() => {
     if (Platform.OS === 'web' && params.s && typeof document !== 'undefined') {
@@ -89,7 +94,7 @@ export default function Home() {
           <Button label={t('exploreGifts')} href="/shop" size={wide ? 'lg' : 'md'} style={{ alignSelf: wide ? 'flex-start' : 'stretch' }} />
         </View>
         <View style={{ flex: wide ? 1.2 : undefined, height: wide ? 560 : 300, borderTopLeftRadius: wide ? 260 : 150, borderTopRightRadius: wide ? 260 : 150, borderBottomLeftRadius: wide ? 24 : 18, borderBottomRightRadius: wide ? 24 : 18, backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-          <ArchMotif width={wide ? 230 : 130} />
+          <Photo uri="/images/hero.jpg" ratio={wide ? 0.93 : 1.3} label={t('heroTitle')} style={{ width: '100%', height: '100%', aspectRatio: undefined, borderRadius: 0 }} />
         </View>
       </Container>
 
@@ -99,14 +104,18 @@ export default function Home() {
         <SectionHead kicker={t('occasionsKicker')} title={t('occasionTitle')} link={wide ? t('allOccasions') : t('all')} href="/shop" size={wide ? 48 : 32} />
         <View style={{ flexDirection: 'row', gap: wide ? 20 : 10 }}>
           {[
-            { k: t('hajjKicker'), title: t('hajjTitle'), body: t('hajjBody'), tone: colors.sand, tag: 'hajj' },
-            { k: t('ramadanKicker'), title: t('ramadanTitle'), body: t('ramadanBody'), tone: '#E8E4EE', tag: 'ramadan' },
+            { k: t('hajjKicker'), title: t('hajjTitle'), body: t('hajjBody'), tone: colors.sand, tag: 'hajj', img: '/images/hajj.jpg' },
+            { k: t('ramadanKicker'), title: t('ramadanTitle'), body: t('ramadanBody'), tone: '#E8E4EE', tag: 'ramadan', img: '/images/ramadan.jpg' },
           ].map((c) => (
             <Link key={c.tag} href={shop({ tag: c.tag })} asChild>
-              <Pressable accessibilityRole="link" style={{ flex: 1, minHeight: wide ? 380 : 200, borderRadius: wide ? 26 : 18, backgroundColor: c.tone, justifyContent: 'flex-end', padding: wide ? 30 : 14, gap: 6 }}>
-                <Eyebrow size={wide ? 13 : 10}>{c.k}</Eyebrow>
-                <Serif size={wide ? 44 : 25}>{c.title}</Serif>
-                {wide ? <T size={15} color={colors.body} lh={1.5} style={{ maxWidth: 440 }}>{c.body}</T> : null}
+              <Pressable accessibilityRole="link" style={{ flex: 1, minHeight: wide ? 420 : 220, borderRadius: wide ? 26 : 18, backgroundColor: c.tone, justifyContent: 'flex-end', overflow: 'hidden' }}>
+                <Image source={{ uri: imageUrl(c.img) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(11,16,48,0.28)' }]} />
+                <View style={{ backgroundColor: 'rgba(11,16,48,0.62)', padding: wide ? 26 : 12, gap: 6 }}>
+                  <Eyebrow size={wide ? 13 : 10} color={colors.champagne}>{c.k}</Eyebrow>
+                  <Serif size={wide ? 44 : 24} color={colors.white}>{c.title}</Serif>
+                  {wide ? <T size={15} color="#E6E7F2" lh={1.5} style={{ maxWidth: 460 }}>{c.body}</T> : null}
+                </View>
               </Pressable>
             </Link>
           ))}
@@ -116,7 +125,7 @@ export default function Home() {
             {OCCASIONS.map((o) => (
               <Link key={o.key} href={shop(o.tag ? { tag: o.tag } : {})} asChild>
                 <Pressable accessibilityRole="link" style={{ gap: wide ? 10 : 6 }}>
-                  <Photo shape="arch" ratio={3 / 4} tone={o.tone} />
+                  <Photo shape="arch" ratio={3 / 4} tone={o.tone} uri={o.img} />
                   <T w={700} size={wide ? 15 : 12.5} color={colors.navy} center lh={1.3}>{t(o.key)}</T>
                 </Pressable>
               </Link>
@@ -156,16 +165,30 @@ export default function Home() {
       {/* 3 · Categories */}
       <Container style={{ paddingTop: gap }}>
         <SectionHead title={t('categoriesTitle')} link={wide ? t('allCategories') : t('all')} href="/shop" size={wide ? 44 : 28} />
-        <Grid cols={wide ? 6 : 2} gap={wide ? 18 : 10}>
-          {CATEGORIES.map((c) => (
-            <Link key={c.key} href="/shop" asChild>
-              <Pressable accessibilityRole="link" style={{ gap: wide ? 12 : 6 }}>
-                <Photo ratio={wide ? 4 / 5 : 4 / 3} tone={c.tone} style={{ borderRadius: wide ? 20 : 14 }} />
-                <T w={700} size={wide ? 16 : 13.5} color={colors.navy}>{t(c.key)}</T>
-              </Pressable>
-            </Link>
-          ))}
-        </Grid>
+        {cats.length > 0 ? (
+          <Grid cols={wide ? Math.min(cats.length, 6) : 2} gap={wide ? 18 : 10}>
+            {cats.map((c) => (
+              <Link key={c.id} href={shop({ cat: c.slug })} asChild>
+                <Pressable accessibilityRole="link" style={{ gap: wide ? 12 : 6 }}>
+                  <Photo ratio={wide ? 4 / 5 : 4 / 3} uri={c.image} tone={colors.sand} style={{ borderRadius: wide ? 20 : 14 }} label={pick(c, 'name')} />
+                  <T w={700} size={wide ? 16 : 13.5} color={colors.navy}>{pick(c, 'name')}</T>
+                  {wide && c.blurb_en ? <T size={13} lh={1.5} color={colors.muted} numberOfLines={2}>{pick(c, 'blurb')}</T> : null}
+                </Pressable>
+              </Link>
+            ))}
+          </Grid>
+        ) : (
+          <Grid cols={wide ? 6 : 2} gap={wide ? 18 : 10}>
+            {CATEGORIES.map((c) => (
+              <Link key={c.key} href="/shop" asChild>
+                <Pressable accessibilityRole="link" style={{ gap: wide ? 12 : 6 }}>
+                  <Photo ratio={wide ? 4 / 5 : 4 / 3} tone={c.tone} style={{ borderRadius: wide ? 20 : 14 }} />
+                  <T w={700} size={wide ? 16 : 13.5} color={colors.navy}>{t(c.key)}</T>
+                </Pressable>
+              </Link>
+            ))}
+          </Grid>
+        )}
       </Container>
 
       {/* Who is it for + budget */}
@@ -176,7 +199,7 @@ export default function Home() {
             {RECIPIENTS.map((r) => (
               <Link key={r.key} href={shop(r.tag ? { tag: r.tag } : {})} asChild>
                 <Pressable accessibilityRole="link" style={{ gap: 10 }}>
-                  <Photo shape="arch" ratio={3 / 4} tone={r.tone} />
+                  <Photo shape="arch" ratio={3 / 4} tone={r.tone} uri={r.img} />
                   <Serif size={26} center>{t(r.key as Key)}</Serif>
                   <T size={13} color={colors.muted} center style={{ marginTop: -6 }}>{t(`${r.key}_hint` as Key)}</T>
                 </Pressable>
@@ -188,7 +211,7 @@ export default function Home() {
             {RECIPIENTS.map((r) => (
               <Link key={r.key} href={shop(r.tag ? { tag: r.tag } : {})} asChild>
                 <Pressable accessibilityRole="link" style={{ width: 92, gap: 6, alignItems: 'center' }}>
-                  <Photo shape="arch" ratio={92 / 116} tone={r.tone} />
+                  <Photo shape="arch" ratio={92 / 116} tone={r.tone} uri={r.img} />
                   <T w={700} size={13} color={colors.navy}>{t(r.key as Key)}</T>
                 </Pressable>
               </Link>
@@ -235,7 +258,7 @@ export default function Home() {
       {/* 6 · Heritage */}
       <View style={{ marginTop: wide ? 80 : 36, backgroundColor: colors.white, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.line }}>
         <Container style={{ paddingVertical: wide ? 72 : 28, flexDirection: wide ? 'row' : 'column', gap: wide ? 56 : 12, alignItems: wide ? 'center' : 'stretch' }}>
-          {wide && <View style={{ flex: 1, height: 480, borderRadius: 24, backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center' }}><Logo height={60} /></View>}
+          {wide && <View style={{ flex: 1, height: 520, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.sand }}><Photo uri="/images/heritage.jpg" style={{ height: '100%', aspectRatio: undefined }} label={t('heritageTitle')} /></View>}
           <View style={{ flex: wide ? 1.2 : undefined, gap: wide ? 20 : 12 }}>
             <Eyebrow size={wide ? 13 : 11}>{t('heritageKicker')}</Eyebrow>
             <Serif role="h2" size={wide ? 50 : 32}>{t('heritageTitle')}</Serif>
