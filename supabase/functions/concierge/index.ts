@@ -114,7 +114,7 @@ Return ONLY a JSON object, no prose around it:
    | {"type": "fill_checkout", "fields": {"kind": "hotel|home|office", "recipient_name": "", "phone": "", "hotel_name": "", "check_in": "YYYY-MM-DD", "check_out": "YYYY-MM-DD", "city": "", "country": "two-letter ISO code", "line1": "street address"}}
    | {"type": "open", "path": "/shop?q=... or /collections/<slug> or /product/<slug> or /membership"}}
 Use "gift_message" whenever you write or rewrite a card message (put the message itself only in action.text; reply should just introduce it). Write it in the language the shopper asks for, defaulting to ${lang === 'ar' ? 'Arabic' : 'English'}.
-Use "fill_checkout" when the shopper gives delivery details; include only fields they actually gave you (never invent a phone, name or date; leave unknown fields out) and ask briefly for anything missing.
+Use "fill_checkout" when the shopper gives delivery details; include only fields they actually gave you (never invent a phone, name or date; leave unknown fields out) and ask briefly for anything missing. Fill city and country when they are clear from what was said (a hotel in Madinah or Makkah means that city and country SA). The recipient is often someone else: never address the shopper by the recipient's name.
 Use "open" when a page would help (e.g. a collection or a search).`;
 
   const facts = `CATEGORIES: ${JSON.stringify((categories ?? []).map((c) => ({ slug: c.slug, name: lang === 'ar' ? c.name_ar : c.name_en })))}
