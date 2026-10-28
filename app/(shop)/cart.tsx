@@ -1,45 +1,94 @@
-import { router } from 'expo-router';
+// Bag — follows Cart.dc.html / MCart.dc.html (step 1 of checkout).
+import { Link, router } from 'expo-router';
 import React from 'react';
-import { Text, View } from 'react-native';
-import { Button, Chip, H1, Notice, Screen } from '@/components/ui';
+import { Pressable, View } from 'react-native';
+import { Screen } from '@/components/chrome';
+import { Button, Card, Divider, Field, H1, Photo, Row, Serif, Stepper, T, Tag, useWide } from '@/components/ui';
 import { useCart } from '@/lib/cart';
-import { useI18n } from '@/lib/i18n';
+import { useI18n, type Key } from '@/lib/i18n';
 import { convertFromSar, formatMoney } from '@/lib/money';
-import { colors, radius, space, type } from '@/theme';
+import { usePrefs } from '@/lib/prefs';
+import { useSession } from '@/lib/session';
+import { colors, toneFor } from '@/theme';
 
 export default function CartScreen() {
+  const wide = useWide();
   const { t, pick, currency, lang } = useI18n();
-  const { lines, setQty, subtotalSar } = useCart();
+  const { session } = useSession();
+  const { destination } = usePrefs();
+  const { lines, setQty, subtotalSar, giftMessage, setGiftMessage } = useCart();
   const money = (sar: number) => formatMoney(convertFromSar(sar, currency), currency, lang);
 
-  return (
-    <Screen>
-      <H1>{t('cart')}</H1>
-      {lines.length === 0 ? (
-        <Notice text={t('bagEmpty')} />
-      ) : (
+  if (lines.length === 0) {
+    return (
+      <Screen chrome="checkout" step={1}>
+        <View style={{ alignItems: 'center', paddingVertical: 64, gap: 12 }}>
+          <Serif role="h1" size={wide ? 44 : 32} center>{t('bagEmpty')}</Serif>
+          <T color={colors.muted} center>{t('bagEmptyBody')}</T>
+          <Button label={t('exploreGifts')} href="/shop" style={{ marginTop: 8 }} />
+        </View>
+      </Screen>
+    );
+  }
+
+  const summary = (
+    <Card pad={20} style={{ gap: 10, borderRadius: 20 }}>
+      <T w={700} size={17} color={colors.navy}>{t('summary')}</T>
+      <View style={{ backgroundColor: colors.ivory, borderRadius: 14, padding: 12, gap: 2 }}>
+        <T size={12} color={colors.muted}>{t('deliveringTo')}</T>
+        <T w={700} size={14}>{t(`destTitle_${destination}` as Key)}</T>
+      </View>
+      <Row label={t('items')} value={money(subtotalSar)} />
+      <Row label={t('shipping')} value={t('deliveryNext')} color={colors.muted} />
+      <Divider />
+      <Row label={t('subtotal')} value={money(subtotalSar)} bold />
+      <T size={12} color={colors.muted}>{t('vatIncluded')}</T>
+      <Button label={session ? t('continueCheckout') : t('checkoutGuest')} size="lg" onPress={() => router.push('/checkout')} style={{ marginTop: 6 }} />
+      {!session && (
         <>
-          {lines.map((l) => (
-            <View key={l.productId} style={{ backgroundColor: colors.white, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, padding: space(2), marginBottom: space(1.5) }}>
-              <Text style={[type.body, { fontWeight: '600' }]}>{pick(l, 'name')}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space(1) }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: space(1) }}>
-                  <Chip label="−" onPress={() => setQty(l.productId, l.quantity - 1)} />
-                  <Text style={type.body}>{l.quantity}</Text>
-                  <Chip label="+" onPress={() => setQty(l.productId, l.quantity + 1)} />
-                </View>
-                <Text style={{ fontWeight: '700', color: colors.navy }}>{money(l.unitPriceSar * l.quantity)}</Text>
-              </View>
-            </View>
-          ))}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: space(2) }}>
-            <Text style={type.title}>{t('subtotal')}</Text>
-            <Text style={type.title}>{money(subtotalSar)}</Text>
-          </View>
-          <Text style={type.small}>{t('vatIncluded')}</Text>
-          <Button label={t('checkout')} style={{ marginTop: space(3) }} onPress={() => router.push('/checkout')} />
+          <Link href="/account" style={{ alignSelf: 'center', paddingVertical: 6 }}><T w={700} size={14} color={colors.navy} style={{ textDecorationLine: 'underline' }}>{t('signInFaster')}</T></Link>
+          <T size={12} color={colors.muted} center>{t('noAccountNeeded')}</T>
         </>
       )}
+    </Card>
+  );
+
+  return (
+    <Screen chrome="checkout" step={1}>
+      <H1 size={wide ? 48 : 34}>{t('yourBag')}</H1>
+      <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 32 : 18, alignItems: 'flex-start' }}>
+        <View style={{ flex: 1, alignSelf: 'stretch', gap: 14 }}>
+          {lines.map((l) => (
+            <Card key={l.productId} pad={16} style={{ flexDirection: 'row', gap: 16, borderRadius: 20 }}>
+              <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/product/[slug]', params: { slug: l.slug } })} style={{ width: wide ? 120 : 84 }}>
+                <Photo ratio={4 / 5} tone={toneFor(l.slug)} style={{ borderRadius: 14 }} />
+              </Pressable>
+              <View style={{ flex: 1, gap: 6 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
+                  <T w={700} size={wide ? 16 : 14.5} style={{ flex: 1 }}>{pick(l, 'name')}</T>
+                  <T w={700} size={wide ? 16 : 14.5} color={colors.navy}>{money(l.unitPriceSar * l.quantity)}</T>
+                </View>
+                <T size={13} color={colors.success} w={600}>{t('inStock')}</T>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 'auto', flexWrap: 'wrap' }}>
+                  <Stepper value={l.quantity} min={1} onChange={(n) => setQty(l.productId, n)} />
+                  <Pressable accessibilityRole="button" onPress={() => setQty(l.productId, 0)}>
+                    <T w={700} size={14} color={colors.navy} style={{ textDecorationLine: 'underline' }}>{t('remove')}</T>
+                  </Pressable>
+                </View>
+              </View>
+            </Card>
+          ))}
+
+          <Card pad={wide ? 22 : 16} style={{ gap: 12, borderRadius: 20 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Serif role="h2" size={wide ? 30 : 24}>{t('gifting')}</Serif>
+              <Tag label={t('optional')} />
+            </View>
+            <Field label={t('giftMessage')} hint={`${t('giftMessageHint')} · ${giftMessage.length}/200`} value={giftMessage} onChangeText={(v) => setGiftMessage(v.slice(0, 200))} multiline maxLength={200} />
+          </Card>
+        </View>
+        <View style={{ width: wide ? 380 : '100%' }}>{summary}</View>
+      </View>
     </Screen>
   );
 }

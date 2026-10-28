@@ -9,19 +9,30 @@ type Cart = {
   add: (p: Product, qty?: number) => void;
   setQty: (productId: string, qty: number) => void;
   clear: () => void;
+  /** Printed on the gift card; prices never appear on what the recipient sees. */
+  giftMessage: string;
+  setGiftMessage: (m: string) => void;
 };
 
 const Ctx = createContext<Cart | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
+  const [giftMessage, setGiftMessage] = useState('');
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem('cart').then((v) => v && setLines(JSON.parse(v)));
+    AsyncStorage.multiGet(['cart', 'giftMessage'])
+      .then(([c, g]) => {
+        if (c[1]) setLines(JSON.parse(c[1]));
+        if (g[1]) setGiftMessage(g[1]);
+      })
+      .catch(() => undefined)
+      .finally(() => setReady(true));
   }, []);
   useEffect(() => {
-    AsyncStorage.setItem('cart', JSON.stringify(lines));
-  }, [lines]);
+    if (ready) AsyncStorage.multiSet([['cart', JSON.stringify(lines)], ['giftMessage', giftMessage]]).catch(() => undefined);
+  }, [lines, giftMessage, ready]);
 
   const value = useMemo<Cart>(() => ({
     lines,
@@ -35,8 +46,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }),
     setQty: (productId, qty) =>
       setLines((prev) => (qty <= 0 ? prev.filter((l) => l.productId !== productId) : prev.map((l) => (l.productId === productId ? { ...l, quantity: qty } : l)))),
-    clear: () => setLines([]),
-  }), [lines]);
+    clear: () => {
+      setLines([]);
+      setGiftMessage('');
+    },
+    giftMessage,
+    setGiftMessage,
+  }), [lines, giftMessage]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -1,111 +1,319 @@
+// Building blocks from the AlMukarramah Platform Design (PL-06 · Shared design system).
 import { Image } from 'expo-image';
-import { Link } from 'expo-router';
+import { Link, type Href } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View,
+  type StyleProp, type TextInputProps, type TextStyle, type ViewStyle,
+} from 'react-native';
 import { useI18n } from '@/lib/i18n';
 import { formatMoney, priceIn } from '@/lib/money';
 import type { Product } from '@/lib/types';
-import { colors, radius, space, type } from '@/theme';
+import { colors, MAX_WIDTH, radius, sans, serif, space, toneFor, WIDE, type Weight } from '@/theme';
+import { ArchMotif, Icon } from './icons';
 
-export function Screen({ children, scroll = true }: { children: React.ReactNode; scroll?: boolean }) {
-  const body = <View style={styles.inner}>{children}</View>;
+export function useWide() {
+  const { width } = useWindowDimensions();
+  return width >= WIDE;
+}
+
+/** Text in Manrope (English) or Readex Pro (Arabic). */
+export function T({ children, w = 400, size = 15, color = colors.ink, lh, style, numberOfLines, center }: {
+  children: React.ReactNode; w?: Weight; size?: number; color?: string; lh?: number; style?: StyleProp<TextStyle>; numberOfLines?: number; center?: boolean;
+}) {
+  const { isRTL } = useI18n();
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      {scroll ? <ScrollView contentContainerStyle={{ paddingBottom: space(6) }}>{body}</ScrollView> : body}
-    </SafeAreaView>
+    <Text numberOfLines={numberOfLines} style={[sans(w, isRTL), { fontSize: size, color }, lh ? { lineHeight: Math.round(size * lh) } : null, center && { textAlign: 'center' }, style]}>
+      {children}
+    </Text>
   );
 }
 
-export function H1({ children }: { children: React.ReactNode }) {
-  return <Text style={[type.display, { marginBottom: space(1) }]}>{children}</Text>;
+/** Headlines in Cormorant Garamond (English) or Amiri (Arabic). */
+export function Serif({ children, size = 44, color = colors.navy, style, center, role }: {
+  children: React.ReactNode; size?: number; color?: string; style?: StyleProp<TextStyle>; center?: boolean; role?: 'h1' | 'h2' | 'h3';
+}) {
+  const { isRTL } = useI18n();
+  const aria = role ? { role: 'heading' as const, 'aria-level': Number(role[1]) } : {};
+  return <Text {...aria} style={[serif(size, isRTL), { color }, center && { textAlign: 'center' }, style]}>{children}</Text>;
 }
 
-export function Section({ title, children }: { title: string; children: React.ReactNode }) {
+export function Eyebrow({ children, color = colors.brassText, size = 13, style }: { children: React.ReactNode; color?: string; size?: number; style?: StyleProp<TextStyle> }) {
+  const { isRTL } = useI18n();
   return (
-    <View style={{ marginTop: space(4) }}>
-      <Text style={[type.title, { marginBottom: space(2) }]}>{title}</Text>
+    <Text style={[sans(700, isRTL), { fontSize: isRTL ? size + 1 : size, color }, !isRTL && { letterSpacing: size * 0.16, textTransform: 'uppercase' }, style]}>
       {children}
+    </Text>
+  );
+}
+
+/** Page width container: 1280 max, 24 px gutters (16 on phones). */
+export function Container({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+  const wide = useWide();
+  return <View style={[{ width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center', paddingHorizontal: wide ? 24 : 16 }, style]}>{children}</View>;
+}
+
+export function H1({ children, size }: { children: React.ReactNode; size?: number }) {
+  const wide = useWide();
+  return <Serif role="h1" size={size ?? (wide ? 52 : 36)} style={{ marginBottom: space(1) }}>{children}</Serif>;
+}
+
+/** Section heading row: optional eyebrow, serif title, subtitle and a link on the far side. */
+export function SectionHead({ kicker, title, sub, link, href, size }: { kicker?: string; title: string; sub?: string; link?: string; href?: Href; size?: number }) {
+  const wide = useWide();
+  const { isRTL } = useI18n();
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, marginBottom: wide ? 24 : 14 }}>
+      <View style={{ flexShrink: 1 }}>
+        {kicker ? <Eyebrow size={wide ? 13 : 11}>{kicker}</Eyebrow> : null}
+        <Serif role="h2" size={size ?? (wide ? 44 : 30)} style={{ marginTop: kicker ? 4 : 0 }}>{title}</Serif>
+        {sub ? <T color={colors.muted} style={{ marginTop: 4 }}>{sub}</T> : null}
+      </View>
+      {link && href ? (
+        <Link href={href}><T w={700} size={14} color={colors.navy}>{link} {isRTL ? '←' : '→'}</T></Link>
+      ) : null}
     </View>
   );
 }
 
-export function Button({ label, onPress, kind = 'primary', disabled, busy, style }: {
-  label: string; onPress?: () => void; kind?: 'primary' | 'secondary' | 'danger'; disabled?: boolean; busy?: boolean; style?: ViewStyle;
+export function Button({ label, onPress, href, kind = 'primary', disabled, busy, style, size = 'md', full, icon }: {
+  label: string; onPress?: () => void; href?: Href; kind?: 'primary' | 'secondary' | 'danger' | 'light' | 'text'; disabled?: boolean; busy?: boolean;
+  style?: StyleProp<ViewStyle>; size?: 'sm' | 'md' | 'lg'; full?: boolean; icon?: React.ReactNode;
 }) {
-  const bg = kind === 'primary' ? colors.navy : kind === 'danger' ? colors.danger : colors.white;
-  const fg = kind === 'secondary' ? colors.navy : colors.white;
+  const bg = disabled ? colors.disabled : kind === 'primary' ? colors.navy : kind === 'danger' ? colors.danger : kind === 'light' ? colors.ivory : kind === 'text' ? 'transparent' : colors.white;
+  const fg = disabled ? colors.muted : kind === 'primary' || kind === 'danger' ? colors.white : colors.navy;
+  const border = disabled ? colors.disabled : kind === 'secondary' ? colors.navy : kind === 'text' || kind === 'light' ? 'transparent' : bg;
+  const h = size === 'lg' ? 56 : size === 'sm' ? 40 : 48;
+  const body = (
+    <Pressable
+      accessibilityRole={href ? 'link' : 'button'}
+      onPress={href ? undefined : onPress}
+      disabled={disabled || busy}
+      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+        styles.button,
+        { minHeight: h, backgroundColor: bg, borderColor: border, paddingHorizontal: kind === 'text' ? 4 : size === 'sm' ? 16 : 24 },
+        full && { alignSelf: 'stretch' },
+        (pressed || hovered) && !disabled && kind !== 'text' && { opacity: 0.88 },
+        style,
+      ]}>
+      {busy ? <ActivityIndicator color={fg} /> : (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {icon}
+          <T w={700} size={size === 'lg' ? 16 : size === 'sm' ? 13.5 : 15} color={fg} style={kind === 'text' && { textDecorationLine: 'underline' }}>{label}</T>
+        </View>
+      )}
+    </Pressable>
+  );
+  return href && !disabled ? <Link href={href} asChild>{body}</Link> : body;
+}
+
+export function Field(props: TextInputProps & { label: string; hint?: string; error?: string | null; dirLtr?: boolean }) {
+  const { isRTL } = useI18n();
+  const { label, hint, error, dirLtr, style, ...rest } = props;
+  return (
+    <View style={{ marginBottom: space(1.75), flexGrow: 1 }}>
+      {label ? <T w={600} size={13} style={{ marginBottom: 6 }}>{label}</T> : null}
+      <TextInput
+        placeholderTextColor={colors.muted}
+        accessibilityLabel={label || props.placeholder}
+        {...rest}
+        style={[
+          styles.input, sans(400, isRTL),
+          { textAlign: dirLtr ? 'left' : isRTL ? 'right' : 'left' },
+          rest.multiline && { minHeight: 96, paddingTop: 12, textAlignVertical: 'top' },
+          error ? { borderColor: colors.danger, borderWidth: 2 } : null,
+          style,
+        ]}
+      />
+      {error ? <T size={12} w={500} color={colors.danger} style={{ marginTop: 4 }}>{error}</T> : hint ? <T size={12} color={colors.muted} style={{ marginTop: 4 }}>{hint}</T> : null}
+    </View>
+  );
+}
+
+export function Card({ children, style, pad = 20 }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; pad?: number }) {
+  return <View style={[styles.card, { padding: pad }, style]}>{children}</View>;
+}
+
+/** Filter chip: navy when active. */
+export function Chip({ label, onPress, active, size = 'md' }: { label: string; onPress?: () => void; active?: boolean; size?: 'sm' | 'md' }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ selected: !!active }}
       onPress={onPress}
-      disabled={disabled || busy}
-      style={[styles.button, { backgroundColor: bg, opacity: disabled ? 0.45 : 1, borderColor: kind === 'secondary' ? colors.navy : bg }, style]}>
-      {busy ? <ActivityIndicator color={fg} /> : <Text style={{ color: fg, fontWeight: '700', fontSize: 15 }}>{label}</Text>}
+      style={[styles.chip, size === 'sm' && { minHeight: 36, paddingHorizontal: 12 }, active && { backgroundColor: colors.navy, borderColor: colors.navy }]}>
+      <T w={700} size={13} color={active ? colors.white : colors.navy}>{label}</T>
     </Pressable>
   );
 }
 
-export function Field(props: TextInputProps & { label: string }) {
-  const { isRTL } = useI18n();
+const TAGS = {
+  ok: [colors.successBg, colors.success], warn: [colors.warnBg, colors.warn], info: [colors.infoBg, colors.navy],
+  err: [colors.dangerBg, colors.danger], mute: ['#F3EEE5', colors.muted], sample: [colors.white, colors.sampleText],
+} as const;
+
+/** Status tag. "sample" is the dashed brick tag for anything not real yet (not connected, provisional). */
+export function Tag({ label, tone = 'mute' }: { label: string; tone?: keyof typeof TAGS }) {
+  const [bg, fg] = TAGS[tone];
   return (
-    <View style={{ marginBottom: space(1.5) }}>
-      <Text style={[type.small, { marginBottom: 4, fontWeight: '600' }]}>{props.label}</Text>
-      <TextInput placeholderTextColor={colors.muted} {...props} style={[styles.input, { textAlign: isRTL ? 'right' : 'left' }, props.style]} />
+    <View style={[styles.tag, { backgroundColor: bg }, tone === 'sample' && { borderWidth: 1, borderStyle: 'dashed', borderColor: colors.sample }]}>
+      <T w={700} size={11.5} color={fg}>{label}</T>
     </View>
   );
 }
 
-export function Price({ product, style }: { product: Product; style?: object }) {
-  const { currency, lang } = useI18n();
-  return <Text style={[{ fontWeight: '700', color: colors.navy }, style]}>{formatMoney(priceIn(product, currency), currency, lang)}</Text>;
+/** Photograph slot: product image when there is one, otherwise a soft tone (optionally with the arch motif). */
+export function Photo({ uri, tone, shape = 'rounded', ratio = 4 / 5, style, motif, label }: {
+  uri?: string | null; tone?: string; shape?: 'rounded' | 'arch' | 'tall-arch'; ratio?: number; style?: StyleProp<ViewStyle>; motif?: number; label?: string;
+}) {
+  const r = shape === 'rounded' ? { borderRadius: 20 } : { borderTopLeftRadius: 999, borderTopRightRadius: 999, borderBottomLeftRadius: 18, borderBottomRightRadius: 18 };
+  return (
+    <View
+      accessible={!!label}
+      accessibilityLabel={label}
+      style={[{ width: '100%', aspectRatio: ratio, backgroundColor: tone ?? colors.sand, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }, r, style]}>
+      {uri ? <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} /> : motif ? <ArchMotif width={motif} /> : null}
+    </View>
+  );
 }
 
-export function ProductCard({ product }: { product: Product }) {
-  const { pick } = useI18n();
+export function Price({ product, style, size = 17 }: { product: Product; style?: StyleProp<TextStyle>; size?: number }) {
+  const { currency, lang } = useI18n();
+  return <T w={700} size={size} color={colors.navy} style={style}>{formatMoney(priceIn(product, currency), currency, lang)}</T>;
+}
+
+/** Product card from the listing design: 4:5 image, eyebrow, name, price, availability. */
+export function ProductTile({ product, compact }: { product: Product; compact?: boolean }) {
+  const { pick, t } = useI18n();
+  const tag = product.product_tags?.[0]?.tags;
+  const soldOut = product.stock <= 0;
   return (
     <Link href={{ pathname: '/product/[slug]', params: { slug: product.slug } }} asChild>
-      <Pressable style={styles.card} accessibilityRole="link">
-        <Image source={product.images[0] ? { uri: product.images[0] } : require('../../assets/logo.png')} style={styles.cardImage} contentFit={product.images[0] ? 'cover' : 'contain'} />
-        <Text numberOfLines={2} style={[type.body, { fontWeight: '600', marginTop: space(1) }]}>{pick(product, 'name')}</Text>
-        <Price product={product} style={{ marginTop: 4 }} />
+      <Pressable accessibilityRole="link" style={({ hovered }: { hovered?: boolean }) => [{ gap: compact ? 5 : 10, opacity: soldOut ? 0.6 : 1 }, hovered && { opacity: 0.9 }]}>
+        <Photo uri={product.images[0]} tone={toneFor(product.slug)} motif={compact ? 54 : 80} />
+        <View style={{ gap: compact ? 3 : 4, paddingHorizontal: 2 }}>
+          {tag && !compact ? <Eyebrow size={12}>{pick(tag, 'name')}</Eyebrow> : null}
+          <T w={700} size={compact ? 13.5 : 16} lh={1.35} numberOfLines={2}>{pick(product, 'name')}</T>
+          <Price product={product} size={compact ? 15 : 17} style={{ paddingTop: 2 }} />
+          {!compact ? <T w={600} size={12.5} color={soldOut ? colors.sampleText : colors.success}>{soldOut ? t('outOfStock') : t('inStock')}</T> : null}
+        </View>
       </Pressable>
     </Link>
   );
 }
 
-export function Grid({ children }: { children: React.ReactNode }) {
-  return <View style={styles.grid}>{children}</View>;
-}
-
-export function Chip({ label, onPress, active }: { label: string; onPress?: () => void; active?: boolean }) {
+/** Responsive grid: equal columns that wrap. */
+export function Grid({ children, min = 240, gap = 22, cols }: { children: React.ReactNode; min?: number; gap?: number; cols?: number }) {
+  const { width } = useWindowDimensions();
+  const avail = Math.min(width, MAX_WIDTH) - (width >= WIDE ? 48 : 32);
+  const n = cols ?? Math.max(1, Math.floor((avail + gap) / (min + gap)));
+  const items = React.Children.toArray(children);
   return (
-    <Pressable onPress={onPress} style={[styles.chip, active && { backgroundColor: colors.navy, borderColor: colors.navy }]}>
-      <Text style={{ color: active ? colors.white : colors.navy, fontWeight: '600' }}>{label}</Text>
-    </Pressable>
-  );
-}
-
-export function Loading() {
-  return <ActivityIndicator style={{ marginTop: space(6) }} color={colors.navy} />;
-}
-
-export function Notice({ text, tone = 'info' }: { text: string; tone?: 'info' | 'warn' }) {
-  return (
-    <View style={[styles.notice, tone === 'warn' && { backgroundColor: '#FBE9E7' }]}>
-      <Text style={[type.body, tone === 'warn' && { color: colors.danger }]}>{text}</Text>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -gap / 2 }}>
+      {items.map((c, i) => (
+        <View key={i} style={{ width: `${100 / n}%`, paddingHorizontal: gap / 2, marginBottom: gap }}>{c}</View>
+      ))}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.cream },
-  inner: { paddingHorizontal: space(2), paddingTop: space(2), width: '100%', maxWidth: 1100, alignSelf: 'center' },
-  button: { minHeight: 48, paddingHorizontal: space(3), borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
-  input: { minHeight: 46, borderWidth: 1, borderColor: colors.line, borderRadius: radius.sm, paddingHorizontal: space(1.5), backgroundColor: colors.white, fontSize: 15, color: colors.ink },
-  card: { width: 170, flexGrow: 1, maxWidth: 260, backgroundColor: colors.white, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, padding: space(1.5) },
-  cardImage: { width: '100%', aspectRatio: 1, borderRadius: radius.sm, backgroundColor: colors.sand },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space(2) },
-  chip: { paddingHorizontal: space(2), minHeight: 40, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white },
-  notice: { backgroundColor: colors.sand, borderRadius: radius.md, padding: space(2), marginVertical: space(1) },
+export function Loading() {
+  return <ActivityIndicator style={{ marginVertical: space(6) }} color={colors.navy} />;
+}
+
+export function Notice({ text, tone = 'info' }: { text: string; tone?: 'info' | 'warn' | 'ok' }) {
+  const bg = tone === 'warn' ? colors.dangerBg : tone === 'ok' ? colors.successBg : colors.infoBg;
+  const fg = tone === 'warn' ? colors.danger : tone === 'ok' ? colors.success : colors.navy;
+  return (
+    <View accessibilityRole="alert" style={{ backgroundColor: bg, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 16, marginVertical: space(1) }}>
+      <T w={600} size={14} color={fg}>{text}</T>
+    </View>
+  );
+}
+
+export function Divider({ style }: { style?: StyleProp<ViewStyle> }) {
+  return <View style={[{ height: 1, backgroundColor: colors.line }, style]} />;
+}
+
+export function Breadcrumb({ items }: { items: { label: string; href?: Href }[] }) {
+  return (
+    <View accessibilityRole="navigation" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+      {items.map((it, i) => (
+        <React.Fragment key={i}>
+          {i > 0 && <T size={13} color={colors.muted}>/</T>}
+          {it.href ? <Link href={it.href}><T size={13} color={colors.navy}>{it.label}</T></Link> : <T size={13} color={colors.muted}>{it.label}</T>}
+        </React.Fragment>
+      ))}
+    </View>
+  );
+}
+
+/** Radio-style option card (delivery destination, delivery kind, shipping quote). */
+export function OptionCard({ selected, onPress, title, body, icon, extra }: {
+  selected?: boolean; onPress?: () => void; title: string; body?: string; icon?: React.ReactNode; extra?: React.ReactNode;
+}) {
+  const { t } = useI18n();
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ checked: !!selected }}
+      onPress={onPress}
+      style={[styles.option, selected && { borderWidth: 2, borderColor: colors.navy, backgroundColor: colors.lavender, padding: 17 }]}>
+      {icon}
+      <T w={700} size={16} color={colors.navy}>{title}</T>
+      {body ? <T size={13} color={colors.muted} lh={1.45}>{body}</T> : null}
+      {extra}
+      {selected ? <T w={700} size={12} color={colors.success}>{t('selected')}</T> : null}
+    </Pressable>
+  );
+}
+
+/** Simple bottom sheet / centred menu for pickers (destination, currency, mobile menu). */
+export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
+  const wide = useWide();
+  const { t } = useI18n();
+  return (
+    <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable accessibilityLabel={t('close')} onPress={onClose} style={{ flex: 1, backgroundColor: 'rgba(11,16,48,0.45)', justifyContent: wide ? 'center' : 'flex-end', alignItems: 'center' }}>
+        <Pressable onPress={() => undefined} style={{ width: '100%', maxWidth: wide ? 520 : undefined, backgroundColor: colors.ivory, borderRadius: 24, borderBottomLeftRadius: wide ? 24 : 0, borderBottomRightRadius: wide ? 24 : 0, padding: 20, paddingBottom: wide ? 20 : 32, gap: 12 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Serif size={28}>{title}</Serif>
+            <Pressable accessibilityRole="button" accessibilityLabel={t('close')} onPress={onClose} style={styles.iconBtn}><Icon name="close" /></Pressable>
+          </View>
+          {children}
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+/** Quantity stepper. */
+export function Stepper({ value, onChange, min = 0 }: { value: number; onChange: (n: number) => void; min?: number }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.inputLine, borderRadius: 999, backgroundColor: colors.white }}>
+      <Pressable accessibilityRole="button" accessibilityLabel="−" onPress={() => onChange(Math.max(min, value - 1))} style={styles.stepBtn}><Icon name="minus" size={16} /></Pressable>
+      <T w={700} size={15} style={{ minWidth: 26, textAlign: 'center' }}>{value}</T>
+      <Pressable accessibilityRole="button" accessibilityLabel="+" onPress={() => onChange(value + 1)} style={styles.stepBtn}><Icon name="plus" size={16} /></Pressable>
+    </View>
+  );
+}
+
+export function Row({ label, value, bold, color }: { label: string; value: string; bold?: boolean; color?: string }) {
+  return (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingVertical: 3 }}>
+      <T w={bold ? 700 : 400} size={bold ? 16 : 14} color={color ?? (bold ? colors.navy : colors.ink)} style={{ flexShrink: 1 }}>{label}</T>
+      <T w={bold ? 700 : 400} size={bold ? 16 : 14} color={color ?? (bold ? colors.navy : colors.ink)}>{value}</T>
+    </View>
+  );
+}
+
+export const styles = StyleSheet.create({
+  button: { borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  input: { minHeight: 48, borderWidth: 1, borderColor: colors.inputLine, borderRadius: 12, paddingHorizontal: 12, backgroundColor: colors.white, fontSize: 16, color: colors.ink },
+  card: { backgroundColor: colors.white, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line },
+  chip: { paddingHorizontal: 14, minHeight: 40, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1, borderColor: colors.navy, backgroundColor: colors.white },
+  tag: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+  option: { flex: 1, minWidth: 220, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, borderRadius: 18, padding: 18, gap: 6 },
+  iconBtn: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center', borderRadius: 999 },
+  stepBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
 });

@@ -32,7 +32,13 @@
     "@supabase/supabase-js": "^2",
     "react-native-url-polyfill": "*",
     "react-native-purchases": "*",
-    "@expo/metro-runtime": "*"
+    "@expo/metro-runtime": "*",
+    "expo-font": "*",
+    "react-native-svg": "*",
+    "@expo-google-fonts/cormorant-garamond": "*",
+    "@expo-google-fonts/manrope": "*",
+    "@expo-google-fonts/amiri": "*",
+    "@expo-google-fonts/readex-pro": "*"
   },
   "devDependencies": {
     "typescript": "*",

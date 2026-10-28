@@ -1,10 +1,17 @@
+import { Amiri_400Regular, Amiri_700Bold } from '@expo-google-fonts/amiri';
+import { CormorantGaramond_600SemiBold } from '@expo-google-fonts/cormorant-garamond';
+import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold } from '@expo-google-fonts/manrope';
+import { ReadexPro_400Regular, ReadexPro_500Medium, ReadexPro_600SemiBold } from '@expo-google-fonts/readex-pro';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { CartProvider } from '@/lib/cart';
 import { loadRates } from '@/lib/catalogue';
 import { I18nProvider } from '@/lib/i18n';
+import { PrefsProvider } from '@/lib/prefs';
 import { initPurchases } from '@/lib/purchases';
 import { SessionProvider, useSession } from '@/lib/session';
 import { colors } from '@/theme';
@@ -21,24 +28,44 @@ function Boot() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    CormorantGaramond_600SemiBold,
+    Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold,
+    Amiri_400Regular, Amiri_700Bold,
+    ReadexPro_400Regular, ReadexPro_500Medium, ReadexPro_600SemiBold,
+  });
+  // Never block the shop on a slow font download: show the page after 2.5 s with system fonts.
+  const [timedOut, setTimedOut] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setTimedOut(true), 2500);
+    return () => clearTimeout(id);
+  }, []);
+  if (!fontsLoaded && !fontError && !timedOut) return <View style={{ flex: 1, backgroundColor: colors.ivory }} />;
+
+  const web = Platform.OS === 'web';
   return (
     <SafeAreaProvider>
       <I18nProvider>
-        <SessionProvider>
-          <CartProvider>
-            <Boot />
-            <StatusBar style="dark" />
-            <Stack screenOptions={{ headerTintColor: colors.navy, contentStyle: { backgroundColor: colors.cream } }}>
-              <Stack.Screen name="(shop)" options={{ headerShown: false }} />
-              <Stack.Screen name="product/[slug]" options={{ title: '' }} />
-              <Stack.Screen name="checkout" options={{ title: '' }} />
-              <Stack.Screen name="membership" options={{ title: '' }} />
-              <Stack.Screen name="trail/[slug]" options={{ title: '' }} />
-              <Stack.Screen name="concierge" options={{ title: '' }} />
-              <Stack.Screen name="admin" options={{ headerShown: false }} />
-            </Stack>
-          </CartProvider>
-        </SessionProvider>
+        <PrefsProvider>
+          <SessionProvider>
+            <CartProvider>
+              <Boot />
+              <StatusBar style="dark" />
+              <Stack
+                screenOptions={{
+                  headerShown: !web,
+                  headerTintColor: colors.navy,
+                  headerTitle: '',
+                  headerShadowVisible: false,
+                  headerStyle: { backgroundColor: colors.white },
+                  contentStyle: { backgroundColor: colors.ivory },
+                }}>
+                <Stack.Screen name="(shop)" options={{ headerShown: false }} />
+                <Stack.Screen name="admin" options={{ headerShown: false }} />
+              </Stack>
+            </CartProvider>
+          </SessionProvider>
+        </PrefsProvider>
       </I18nProvider>
     </SafeAreaProvider>
   );

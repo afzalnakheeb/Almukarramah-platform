@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
-import { Button, Chip, H1, Notice, Screen } from '@/components/ui';
+import { View } from 'react-native';
+import { Screen } from '@/components/chrome';
+import { Button, Chip, H1, Notice, T } from '@/components/ui';
 import { formatMoney } from '@/lib/money';
 import { callFunction, supabase } from '@/lib/supabase';
 import { colors, radius, space, type } from '@/theme';
@@ -48,20 +49,20 @@ export default function AdminOrders() {
   }
 
   return (
-    <Screen>
+    <Screen chrome="none" style={{ maxWidth: 1180 }}>
       <H1>Orders</H1>
       <View style={{ flexDirection: 'row', gap: space(1), flexWrap: 'wrap', marginBottom: space(2) }}>
         {[...STATUSES, 'pending_payment', 'refunded'].map((s) => <Chip key={s} label={s} active={filter === s} onPress={() => setFilter(s)} />)}
       </View>
       {msg && <Notice text={msg} />}
       {orders.map((o) => (
-        <View key={o.id} style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, padding: space(2), marginBottom: space(1.5) }}>
-          <Text style={[type.body, { fontWeight: '700' }]}>AM-{o.number} · {formatMoney(o.total_minor, o.currency)}</Text>
-          <Text style={type.small}>
+        <View key={o.id} style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: radius.lg, padding: space(2.5), marginBottom: space(1.5) }}>
+          <T w={700}>AM-{o.number} · {formatMoney(o.total_minor, o.currency)}</T>
+          <T size={13} color={colors.muted}>
             {o.ship_to.recipient_name} · {o.ship_to.kind === 'hotel' ? `${o.ship_to.hotel_name}, ` : ''}{o.ship_to.city}, {o.ship_to.country} · {new Date(o.created_at).toLocaleString('en-GB')}
-          </Text>
+          </T>
           {o.invoices.map((i) => (
-            <Text key={i.number} style={type.small}>{i.doc} {i.number} · ZATCA: {i.zatca_status}</Text>
+            <T key={i.number} size={13} color={colors.muted}>{i.doc} {i.number} · ZATCA: {i.zatca_status}</T>
           ))}
           <View style={{ flexDirection: 'row', gap: space(1), flexWrap: 'wrap', marginTop: space(1) }}>
             {STATUSES.filter((s) => s !== o.status).map((s) => <Chip key={s} label={`→ ${s}`} onPress={() => setStatus(o, s)} />)}

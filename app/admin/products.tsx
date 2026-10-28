@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
-import { Button, Chip, H1, Screen } from '@/components/ui';
+import { TextInput, View } from 'react-native';
+import { Screen } from '@/components/chrome';
+import { Button, Chip, H1, T } from '@/components/ui';
 import { formatMoney } from '@/lib/money';
 import { supabase } from '@/lib/supabase';
 import { colors, radius, space, type } from '@/theme';
@@ -24,15 +25,15 @@ export default function AdminProducts() {
   }
 
   return (
-    <Screen>
+    <Screen chrome="none" style={{ maxWidth: 1180 }}>
       <H1>Products and stock</H1>
-      <Text style={type.small}>New products, descriptions, photos and SEO are added from Claude. Use this screen for quick stock and on/off changes.</Text>
+      <T size={13} color={colors.muted}>New products, descriptions, photos and SEO are added from Claude. Use this screen for quick stock and on/off changes.</T>
       {rows.map((r) => (
-        <View key={r.id} style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, padding: space(2), marginTop: space(1.5) }}>
-          <Text style={[type.body, { fontWeight: '700' }]}>{r.name_en} · {r.name_ar}</Text>
-          <Text style={type.small}>{formatMoney(r.base_price_sar, 'SAR')} · {r.slug}</Text>
+        <View key={r.id} style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: radius.lg, padding: space(2.5), marginTop: space(1.5) }}>
+          <T w={700}>{r.name_en} · {r.name_ar}</T>
+          <T size={13} color={colors.muted}>{formatMoney(r.base_price_sar, 'SAR')} · {r.slug}</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: space(1), marginTop: space(1), flexWrap: 'wrap' }}>
-            <Text style={type.small}>Stock</Text>
+            <T size={13} color={colors.muted}>Stock</T>
             <TextInput
               defaultValue={String(r.stock)}
               keyboardType="number-pad"

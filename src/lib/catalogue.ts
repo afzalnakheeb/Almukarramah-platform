@@ -20,23 +20,25 @@ export async function getTags(kind: Tag['kind']): Promise<Tag[]> {
 
 export async function getFeatured(): Promise<Product[]> {
   if (!isConfigured) return demoProducts.filter((p) => p.is_featured);
-  const { data, error } = await supabase.from('products').select(PRODUCT_FIELDS).eq('is_featured', true).eq('is_active', true).limit(12);
+  const { data, error } = await supabase.from('products').select(PRODUCT_FIELDS).eq('is_featured', true).eq('is_active', true).limit(8);
   if (error) throw error;
   return data as Product[];
 }
 
-export async function getProducts(filter: { tag?: string; maxSar?: number }): Promise<Product[]> {
+export async function getProducts(filter: { tag?: string; minSar?: number; maxSar?: number }): Promise<Product[]> {
   let rows: Product[];
   if (!isConfigured) {
     rows = demoProducts;
   } else {
     let q = supabase.from('products').select(PRODUCT_FIELDS).eq('is_active', true).order('created_at', { ascending: false });
-    if (filter.maxSar) q = q.lte('base_price_sar', filter.maxSar);
+    if (filter.minSar) q = q.gte('base_price_sar', filter.minSar);
+    if (filter.maxSar) q = q.lt('base_price_sar', filter.maxSar);
     const { data, error } = await q;
     if (error) throw error;
     rows = data as Product[];
   }
-  if (filter.maxSar) rows = rows.filter((p) => p.base_price_sar <= filter.maxSar!);
+  if (filter.minSar) rows = rows.filter((p) => p.base_price_sar >= filter.minSar!);
+  if (filter.maxSar) rows = rows.filter((p) => p.base_price_sar < filter.maxSar!);
   return filter.tag ? rows.filter((p) => p.product_tags?.some((pt) => pt.tags.slug === filter.tag)) : rows;
 }
 

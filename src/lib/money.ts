@@ -30,3 +30,9 @@ export function formatMoney(minor: number, currency: string, lang: 'ar' | 'en' =
 export function vatIncluded(totalInclMinor: number, rateBp = 1500): number {
   return Math.round((totalInclMinor * rateBp) / (10000 + rateBp));
 }
+
+/** Whole-unit price for labels such as budget bands ("SAR 200"). */
+export function formatWhole(minor: number, currency: string, lang: 'ar' | 'en' = 'en'): string {
+  const locale = lang === 'ar' ? 'ar-SA' : 'en-GB';
+  return new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(Math.round(minor / 100));
+}
