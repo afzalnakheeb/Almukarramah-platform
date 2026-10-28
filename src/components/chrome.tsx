@@ -8,6 +8,7 @@ import { useCart } from '@/lib/cart';
 import { getSettings } from '@/lib/catalogue';
 import { useI18n, type Key } from '@/lib/i18n';
 import { CURRENCIES } from '@/lib/money';
+import { openExternal, SEERAH_TRAIL_URL } from '@/lib/links';
 import { DESTINATIONS, usePrefs, type Destination } from '@/lib/prefs';
 import { colors, space } from '@/theme';
 import { Icon, type IconName } from './icons';
@@ -85,11 +86,12 @@ export function SiteHeader() {
   const [sheet, setSheet] = useState<'dest' | 'cur' | 'menu' | null>(null);
   const toggleLang = () => setLang(lang === 'ar' ? 'en' : 'ar');
 
-  const nav: { label: string; href: Href }[] = [
+  const nav: { label: string; href: Href; external?: boolean }[] = [
     { label: t('shop'), href: '/shop' },
     { label: t('navOccasions'), href: { pathname: '/', params: { s: 'occasions' } } },
     { label: t('membership'), href: '/membership' },
-    { label: t('navTrails'), href: { pathname: '/trail/[slug]', params: { slug: 'quran-trail' } } },
+    { label: t('quranTrail'), href: { pathname: '/trail/[slug]', params: { slug: 'quran-trail' } } },
+    { label: t('seerahTrail'), href: SEERAH_TRAIL_URL as Href, external: true },
   ];
 
   return (
@@ -137,7 +139,7 @@ export function SiteHeader() {
             </Container>
             <Container style={{ paddingBottom: 10, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 30 }}>
               {nav.map((n) => (
-                <Link key={n.label} href={n.href} style={{ paddingVertical: 8 }}><T w={600} size={15} color={colors.navy}>{n.label}</T></Link>
+                <Link key={n.label} href={n.href} target={n.external ? '_blank' : undefined} style={{ paddingVertical: 8 }}><T w={600} size={15} color={colors.navy}>{n.label}</T></Link>
               ))}
               <View style={{ flex: 1 }} />
               <Link href="/concierge" style={{ paddingVertical: 8 }}><T w={600} size={15} color={colors.brassText}>{t('helpChoose')}</T></Link>
@@ -171,7 +173,7 @@ export function SiteHeader() {
       <CurrencySheet open={sheet === 'cur'} onClose={() => setSheet(null)} />
       <Sheet open={sheet === 'menu'} onClose={() => setSheet(null)} title={t('menu')}>
         {[...nav, { label: t('helpChoose'), href: '/concierge' as Href }, { label: t('account'), href: '/account' as Href }].map((n) => (
-          <Pressable key={n.label} accessibilityRole="link" onPress={() => { setSheet(null); router.push(n.href); }} style={styles.menuRow}>
+          <Pressable key={n.label} accessibilityRole="link" onPress={() => { setSheet(null); if ('external' in n && n.external) openExternal(String(n.href)); else router.push(n.href); }} style={styles.menuRow}>
             <T w={700} size={16} color={colors.navy}>{n.label}</T>
             <Icon name={isRTL ? 'chevronLeft' : 'chevronRight'} size={18} />
           </Pressable>
@@ -227,7 +229,7 @@ export function SiteFooter() {
   const col = (title: string, links: { label: string; href?: Href }[]) => (
     <View style={{ gap: 10, minWidth: 190, flex: 1 }}>
       <T w={700} color={colors.white}>{title}</T>
-      {links.map((l) => (l.href ? <Link key={l.label} href={l.href}><T size={14} color="#C9CBDB">{l.label}</T></Link> : <T key={l.label} size={14} color="#9EA1BD">{l.label}</T>))}
+      {links.map((l) => (l.href ? <Link key={l.label} href={l.href} target={String(l.href).startsWith('http') ? '_blank' : undefined}><T size={14} color="#C9CBDB">{l.label}</T></Link> : <T key={l.label} size={14} color="#9EA1BD">{l.label}</T>))}
     </View>
   );
   return (
@@ -250,7 +252,7 @@ export function SiteFooter() {
         {col(t('footerCompany'), [
           { label: t('membership'), href: '/membership' },
           { label: t('quranTrail'), href: { pathname: '/trail/[slug]', params: { slug: 'quran-trail' } } },
-          { label: t('seerahTrail'), href: { pathname: '/trail/[slug]', params: { slug: 'seerah-trail' } } },
+          { label: t('seerahTrail'), href: SEERAH_TRAIL_URL as Href },
           { label: t('account'), href: '/account' },
           { label: t('appSoon') },
         ])}

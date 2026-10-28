@@ -6,6 +6,7 @@ import { Logo, Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
 import { Button, Card, Eyebrow, Field, H1, Notice, Photo, Serif, T, Tag, useWide } from '@/components/ui';
 import { useI18n, type Key } from '@/lib/i18n';
+import { openExternal, SEERAH_TRAIL_URL } from '@/lib/links';
 import { formatMoney } from '@/lib/money';
 import { useSession } from '@/lib/session';
 import { isConfigured, supabase } from '@/lib/supabase';
@@ -71,10 +72,10 @@ export default function Account() {
     );
   }
 
-  const tiles: { kicker: string; title: string; body: string; href: Parameters<typeof router.push>[0]; icon: 'book' | 'gift' | 'shield' }[] = [
+  const tiles: { kicker: string; title: string; body: string; href: Parameters<typeof router.push>[0]; icon: 'book' | 'gift' | 'shield'; external?: boolean }[] = [
     { kicker: t('membership'), title: t('membership'), body: t('circleBody'), href: '/membership', icon: 'gift' },
     { kicker: t('learning'), title: t('quranTrail'), body: t('membersOnlyBody'), href: { pathname: '/trail/[slug]', params: { slug: 'quran-trail' } }, icon: 'book' },
-    { kicker: t('learning'), title: t('seerahTrail'), body: t('membersOnlyBody'), href: { pathname: '/trail/[slug]', params: { slug: 'seerah-trail' } }, icon: 'book' },
+    { kicker: t('learning'), title: t('seerahTrail'), body: t('seerahExternal'), href: SEERAH_TRAIL_URL as never, icon: 'book', external: true },
   ];
   if (staffRole) tiles.unshift({ kicker: staffRole, title: t('admin'), body: t('adminBody'), href: '/admin', icon: 'shield' });
 
@@ -87,7 +88,7 @@ export default function Account() {
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
         {tiles.map((c) => (
-          <Pressable key={c.title} accessibilityRole="link" onPress={() => router.push(c.href)}
+          <Pressable key={c.title} accessibilityRole="link" onPress={() => (c.external ? openExternal(String(c.href)) : router.push(c.href))}
             style={{ flexGrow: 1, flexBasis: wide ? 220 : '100%', backgroundColor: c.icon === 'shield' ? colors.navy : colors.white, borderWidth: 1, borderColor: c.icon === 'shield' ? colors.navy : colors.line, borderRadius: 20, padding: 20, gap: 6 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Eyebrow size={11} color={c.icon === 'shield' ? colors.champagne : colors.brassText}>{c.kicker}</Eyebrow>

@@ -287,6 +287,8 @@ const en = {
   back: 'Back',
   day: 'Day',
   quranSource: 'Quran text: Quran Foundation',
+  seerahExternal: 'Seerah Trail is open on its own site, seerahtrails.com, until it joins the membership.',
+  openSeerah: 'Open Seerah Trail',
 };
 
 const ar: typeof en = {
@@ -562,6 +564,8 @@ const ar: typeof en = {
   back: 'رجوع',
   day: 'اليوم',
   quranSource: 'نص القرآن: مؤسسة القرآن',
+  seerahExternal: 'رحلة السيرة متاحة على موقعها الخاص seerahtrails.com إلى أن تنضم إلى العضوية.',
+  openSeerah: 'افتح رحلة السيرة',
 };
 
 export type Key = keyof typeof en;

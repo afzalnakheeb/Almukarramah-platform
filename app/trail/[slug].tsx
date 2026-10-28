@@ -6,6 +6,7 @@ import { Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
 import { Button, Card, Eyebrow, H1, Loading, Serif, T, useWide } from '@/components/ui';
 import { useI18n } from '@/lib/i18n';
+import { openExternal, SEERAH_TRAIL_URL } from '@/lib/links';
 import { callFunction, supabase } from '@/lib/supabase';
 import { colors, fonts } from '@/theme';
 
@@ -43,6 +44,21 @@ export default function Trail() {
   async function markDone(l: Lesson) {
     await supabase.from('lesson_progress').upsert({ lesson_id: l.id });
     setDone((s) => new Set(s).add(l.id));
+  }
+
+  if (slug === 'seerah-trail') {
+    return (
+      <Screen>
+        <View style={{ maxWidth: 820, width: '100%', alignSelf: 'center' }}>
+          <Eyebrow size={12}>{t('learning')}</Eyebrow>
+          <H1 size={wide ? 52 : 36}>{title}</H1>
+          <View style={{ backgroundColor: colors.navy, borderRadius: 24, padding: wide ? 32 : 20, gap: 12, marginTop: 10 }}>
+            <Serif size={wide ? 32 : 24} color={colors.white}>{t('seerahExternal')}</Serif>
+            <Button label={t('openSeerah')} kind="light" onPress={() => openExternal(SEERAH_TRAIL_URL)} style={{ alignSelf: 'flex-start', marginTop: 6 }} />
+          </View>
+        </View>
+      </Screen>
+    );
   }
 
   if (lessons === null) return <Screen><Loading /></Screen>;
