@@ -10,7 +10,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Your deen and your dunya, in one home
 json-ld: Organization, WebSite, ItemList, FAQPage
-visible text without JS: 4689 chars: "Al Mukarramah | The Premium Marketplace for Every Muslim Home Delivering to Saudi address SAR The curated marketplace for the Muslim home Your deen and your dun…"
+visible text without JS: 4679 chars: "Al Mukarramah | The Premium Marketplace for Every Muslim Home Delivering to Saudi address SAR The curated marketplace for the Muslim home Your deen and your dun…"
 
 ## /collections/perfumes  (HTTP 200)
 title: Perfumes | Al Mukarramah
@@ -50,9 +50,9 @@ og:title: Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml | Al Mukarramah
 og:image: https://almukarramah.com/products/aam/zumar-60-ml-1.jpg
 twitter:card: summary_large_image
 html lang/dir: lang="en"
-h1: Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml
+h1: Zumar Eau de Parfum, 60 ml
 json-ld: Product, BreadcrumbList, FAQPage
-visible text without JS: 2758 chars: "Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml | Al Mukarramah Delivering to Saudi address SAR Ahmed Al Maghribi Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml Genu…"
+visible text without JS: 2740 chars: "Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml | Al Mukarramah Delivering to Saudi address SAR Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml Genuine product, sold …"
 
 ## /product/kaaba-door-prayer-mat  (HTTP 200)
 title: Kaaba Door Prayer Mat, Black and Gold | Al Mukarramah
