@@ -7,6 +7,7 @@ import { Icon } from '@/components/icons';
 import { brandName, Breadcrumb, Button, Card, Divider, Eyebrow, Grid, Loading, Notice, Photo, Price, Row, Serif, shortName, Stepper, T, useWide } from '@/components/ui';
 import { useCart } from '@/lib/cart';
 import { Facts, Faq } from '@/components/faq';
+import { data, reveal } from '@/components/motion';
 import { breadcrumbLd, faqLd, productLd, Seo } from '@/components/seo';
 import { getFeatured, getProduct } from '@/lib/catalogue';
 import { strings, useI18n, type Key } from '@/lib/i18n';
@@ -82,11 +83,11 @@ export default function ProductScreen() {
 
   const gallery = (
     <View style={{ gap: 12 }}>
-      <Photo uri={product.images[image]} tone={product.images[0] ? colors.sandSoft : toneFor(product.slug)} fit="cover" style={wide ? { borderRadius: 2, borderWidth: 1, borderColor: colors.hair } : { borderRadius: 0 }} motif={wide ? 200 : 150} label={pick(product, 'name')} />
+      <Photo uri={product.images[image]} fade={450} tone={product.images[0] ? colors.sandSoft : toneFor(product.slug)} fit="cover" style={wide ? { borderRadius: 2, borderWidth: 1, borderColor: colors.hair } : { borderRadius: 0 }} motif={wide ? 200 : 150} label={pick(product, 'name')} />
       {product.images.length > 1 && (
         <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: wide ? 0 : 16 }}>
           {product.images.slice(0, 5).map((u, i) => (
-            <Pressable key={u} accessibilityRole="button" accessibilityLabel={`${i + 1}`} onPress={() => setImage(i)} style={{ flex: 1, maxWidth: 110 }}>
+            <Pressable key={u} accessibilityRole="button" accessibilityLabel={`${i + 1}`} onPress={() => setImage(i)} {...data({ hover: 'thumb' })} style={{ flex: 1, maxWidth: 110 }}>
               <Photo uri={u} ratio={1} tone={colors.sandSoft} fit="cover" style={[{ borderRadius: 4, borderWidth: 1, borderColor: colors.line }, i === image && { borderWidth: 2, borderColor: colors.gold }]} />
             </Pressable>
           ))}
@@ -184,19 +185,21 @@ export default function ProductScreen() {
           </>
         )}
 
-        <View style={{ marginTop: wide ? 56 : 8, paddingHorizontal: wide ? 0 : 16, maxWidth: 860 }}>
+        <View {...reveal(0)} style={{ marginTop: wide ? 56 : 8, paddingHorizontal: wide ? 0 : 16, maxWidth: 860 }}>
           <Faq title={t('faqTitle')} items={faqs} />
         </View>
 
         {others.length > 0 && (
           <View style={{ marginTop: wide ? 64 : 0, paddingHorizontal: wide ? 0 : 16, paddingBottom: wide ? 0 : 120 }}>
-            <Serif role="h2" size={wide ? 38 : 28}>{t('completeGift')}</Serif>
-            <T color={colors.muted} style={{ marginTop: 6, marginBottom: 20 }}>{t('completeGiftBody')}</T>
+            <View {...reveal(0)}>
+              <Serif role="h2" size={wide ? 38 : 28}>{t('completeGift')}</Serif>
+              <T color={colors.muted} style={{ marginTop: 6, marginBottom: 20 }}>{t('completeGiftBody')}</T>
+            </View>
             {added && <Notice tone="ok" text={`${t('added')}: ${added}`} />}
-            <Grid cols={wide ? 3 : 1} gap={18}>
+            <Grid cols={wide ? 3 : 1} gap={18} reveal>
               {others.map((o) => (
                 <Card key={o.id} pad={14} style={{ flexDirection: 'row', gap: 14, alignItems: 'center', borderRadius: 6 }}>
-                  <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/product/[slug]', params: { slug: o.slug } })} style={{ width: 84 }}>
+                  <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/product/[slug]', params: { slug: o.slug } })} {...data({ hover: 'thumb' })} style={{ width: 84 }}>
                     <Photo uri={o.images[0]} ratio={1} tone={o.images[0] ? colors.sandSoft : toneFor(o.slug)} fit="cover" style={{ borderRadius: 4 }} />
                   </Pressable>
                   <View style={{ flex: 1, gap: 3 }}>
