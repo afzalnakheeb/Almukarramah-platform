@@ -160,7 +160,7 @@ export default function Account() {
               <Icon name={c.icon} size={20} color={c.icon === 'shield' ? colors.champagne : colors.navy} />
             </View>
             <T w={700} size={18} color={c.icon === 'shield' ? colors.white : colors.navy}>{c.title}</T>
-            <T size={13} lh={1.5} color={c.icon === 'shield' ? '#D6D8EA' : colors.muted}>{c.body}</T>
+            <T size={13} lh={1.5} color={c.icon === 'shield' ? colors.onNight : colors.muted}>{c.body}</T>
           </Pressable>
         ))}
       </View>
