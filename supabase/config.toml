@@ -17,3 +17,7 @@ verify_jwt = false
 # The shop assistant is used by guests too; it applies its own per-visitor and store-wide daily limits.
 [functions.concierge]
 verify_jwt = false
+
+# Returns Moyasar form settings for an unpaid subscription order (opened in a browser from the apps, no sign-in there).
+[functions.payment-form]
+verify_jwt = false

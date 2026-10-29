@@ -1,5 +1,5 @@
 // Account — sign-in follows Identity.dc.html; signed-in view follows Account.dc.html.
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Logo, Screen } from '@/components/chrome';
@@ -29,6 +29,7 @@ export default function Account() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
+  const { status: payStatus } = useLocalSearchParams<{ status?: string }>();
   const [subs, setSubs] = useState<SubRow[]>([]);
   const [subBusy, setSubBusy] = useState<string | null>(null);
   const [subError, setSubError] = useState<string | null>(null);
@@ -114,6 +115,8 @@ export default function Account() {
         <H1 size={wide ? 44 : 32}>{t('greeting')}</H1>
       </View>
       <T size={14} color={colors.muted} style={{ marginBottom: 22 }}>{session.user.email}</T>
+      {payStatus === 'paid' && <Notice tone="ok" text={t('paymentReceived')} />}
+      {payStatus === 'failed' && <Notice tone="warn" text={t('paymentFailed')} />}
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
         {tiles.map((c) => (

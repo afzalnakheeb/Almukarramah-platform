@@ -42,12 +42,9 @@ Deno.serve(handle(async (req) => {
       ship_to: shipTo ?? { kind: 'home', recipient_name: user.email, country: 'SA', city: '-', line1: '-' },
     }).select('id, number').single();
     await db.from('order_items').insert({ order_id: order!.id, name_en: plan.name_en, name_ar: plan.name_ar, unit_price_minor: plan.price_sar, quantity: 1, line_total_minor: plan.price_sar });
-    const inv = await createInvoice({
-      amount: plan.price_sar, currency: 'SAR', description: `Al Mukarramah ${plan.name_en}`,
-      successUrl: `${site}/account`, backUrl: `${site}/membership`, metadata: { order_id: order!.id, subscription_id: sub!.id },
-    });
-    await db.from('orders').update({ payment_ref: inv.id }).eq('id', order!.id);
-    return json({ paymentUrl: inv.url, orderId: order!.id });
+    // First month is paid on our /pay page with Moyasar's payment form, which saves the card (as a Moyasar token)
+    // for monthly renewals. Hosted invoices cannot save cards, so they are not used for subscriptions.
+    return json({ paymentUrl: `${site}/pay?order=${order!.id}`, orderId: order!.id });
   }
 
   // ------------------------------------------------ shop order

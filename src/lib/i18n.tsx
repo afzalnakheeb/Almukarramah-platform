@@ -300,6 +300,11 @@ const en = {
   subscribeTitle: 'Join',
   startSubscription: 'Continue to secure payment',
   monthlyCharge: 'Charged monthly. Cancel any time from your account.',
+  payFormNote: 'Your card details go directly to Moyasar, our licensed payment provider. Moyasar keeps the card securely for the monthly renewal; Al Mukarramah never sees or stores the card number.',
+  payAlreadyPaid: 'This payment is already complete. You can see your subscription in your account.',
+  payUnavailable: 'Payment is not available right now. Please try again shortly or contact us on WhatsApp.',
+  paymentReceived: 'Thank you. Your payment was received and your subscription starts now.',
+  paymentFailed: 'The payment did not go through. No money was taken; please try again.',
   // Shop-wide assistant
   assistantOpen: 'Ask Al Mukarramah',
   assistantTitle: 'Al Mukarramah assistant',
@@ -664,6 +669,11 @@ const ar: typeof en = {
   subscribeTitle: 'الاشتراك',
   startSubscription: 'المتابعة إلى الدفع الآمن',
   monthlyCharge: 'يُخصم شهريًا. يمكنك الإلغاء في أي وقت من حسابك.',
+  payFormNote: 'تُرسل بيانات بطاقتك مباشرة إلى ميسر، مزوّد الدفع المرخّص. تحتفظ ميسر بالبطاقة بأمان للتجديد الشهري، ولا تطّلع المكرمة على رقم البطاقة ولا تحفظه.',
+  payAlreadyPaid: 'تمّ هذا الدفع بالفعل. يمكنك رؤية اشتراكك في حسابك.',
+  payUnavailable: 'الدفع غير متاح حاليًا. يرجى المحاولة بعد قليل أو التواصل معنا عبر واتساب.',
+  paymentReceived: 'شكرًا لك. استلمنا دفعتك وبدأ اشتراكك.',
+  paymentFailed: 'لم تتم عملية الدفع ولم يُخصم أي مبلغ؛ يرجى المحاولة مرة أخرى.',
   // Shop-wide assistant
   assistantOpen: 'اسأل المكرمة',
   assistantTitle: 'مساعد المكرمة',
