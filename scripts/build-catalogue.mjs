@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SNAPSHOT = join(root, 'src/generated/catalogue.json');
 const PUBLIC = join(root, 'public');
-const SITE = (process.env.EXPO_PUBLIC_SITE_URL || 'https://almukarramah-platform.vercel.app').replace(/\/$/, '');
+const SITE = (process.env.EXPO_PUBLIC_SITE_URL || 'https://almukarramah.com').replace(/\/$/, '');
 const URL_ = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
