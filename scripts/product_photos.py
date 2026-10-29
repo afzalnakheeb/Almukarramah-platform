@@ -157,7 +157,7 @@ def main():
     os.makedirs(a.out, exist_ok=True)
     looks = [l.strip() for l in a.looks.split(",") if l.strip()]
     names = [n for n in a.names.split(",") if n] or [os.path.splitext(os.path.basename(s.split("?")[0]))[0] for s in a.sources]
-    session = new_session("isnet-general-use")
+    session = new_session(os.environ.get("PHOTO_MODEL", "birefnet-general"))
     failed = 0
     for src, name, mode in zip(a.sources, names, a.modes):
         try:
