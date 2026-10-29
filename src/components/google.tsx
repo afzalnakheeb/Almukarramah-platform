@@ -43,7 +43,7 @@ export function GoogleButton({ onError, dividerLabel, next }: { onError?: (msg: 
         }
       }}
       style={({ pressed }) => ({
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, minHeight: 50, borderRadius: 999,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, minHeight: 50, borderRadius: 2,
         backgroundColor: pressed ? '#F7F8F8' : colors.white, borderWidth: 1, borderColor: '#DADCE0', paddingHorizontal: 18,
       })}>
       {busy ? <ActivityIndicator color={colors.navy} /> : <GoogleMark />}

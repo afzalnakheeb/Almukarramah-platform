@@ -56,7 +56,7 @@ export const organizationLd = {
   url: SITE_URL,
   logo: `${SITE_URL}/images/logo.png`,
   foundingDate: '2020',
-  description: 'Premium Islamic gifts prepared and packed in Madinah: prayer mats and rugs inspired by the Haramain, gift sets, Madinah dates and keepsakes, plus Ahmed Al Maghribi perfumes and oud oils as an authorised reseller.',
+  description: 'A curated marketplace of premium products for every Muslim home, based in Madinah: perfumes and oud oils, prayer mats and woven rugs inspired by the Haramain, Madinah dates and gifts from trusted makers, every product approved by the Al Mukarramah team. Ahmed Al Maghribi perfumes and oud oils are sold as an authorised reseller.',
   address: { '@type': 'PostalAddress', addressLocality: 'Madinah', addressCountry: 'SA' },
   areaServed: ['SA', 'AE', 'KW', 'QA', 'BH', 'OM', 'GB', 'US', 'MY', 'ID'],
   email: 'hello@almukarramah.com',

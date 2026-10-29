@@ -70,7 +70,7 @@ export default function Membership() {
         {plans.map((p) => {
           const featured = p.kind === 'membership';
           return (
-            <View key={p.id} style={{ flex: 1, backgroundColor: featured ? colors.night : colors.white, borderWidth: 1, borderColor: featured ? colors.gold : colors.champagne, borderRadius: 24, padding: wide ? 28 : 20, gap: 12, overflow: 'hidden' }}>
+            <View key={p.id} style={{ flex: 1, backgroundColor: featured ? colors.night : colors.white, borderWidth: 1, borderColor: featured ? colors.gold : colors.champagne, borderRadius: 6, padding: wide ? 28 : 20, gap: 12, overflow: 'hidden' }}>
               {featured && <StarLattice opacity={0.09} size={56} />}
               <Eyebrow size={11} color={featured ? colors.gold : colors.brassText}>{t(p.kind === 'membership' ? 'kind_membership' : 'kind_box')}</Eyebrow>
               <Serif size={wide ? 38 : 30} color={featured ? colors.white : colors.navy}>{pick(p, 'name')}</Serif>
@@ -87,7 +87,7 @@ export default function Membership() {
         })}
       </View>
 
-      <Card pad={wide ? 24 : 16} style={{ marginTop: 32, maxWidth: 980, width: '100%', alignSelf: 'center', borderRadius: 20 }}>
+      <Card pad={wide ? 24 : 16} style={{ marginTop: 32, maxWidth: 980, width: '100%', alignSelf: 'center', borderRadius: 6 }}>
         {faqs.map(([q, a], i) => (
           <View key={q} style={{ borderTopWidth: i ? 1 : 0, borderColor: colors.line }}>
             <Pressable accessibilityRole="button" accessibilityState={{ expanded: faq === i }} onPress={() => setFaq(faq === i ? null : i)}

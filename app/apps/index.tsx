@@ -29,7 +29,7 @@ export default function Apps() {
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: 18, alignItems: 'stretch' }}>
         {APPS.map((a) => <AppCard key={a.slug} a={a} />)}
       </View>
-      <Card pad={wide ? 22 : 16} style={{ marginTop: 22, borderRadius: 20, backgroundColor: colors.lavender, gap: 6 }}>
+      <Card pad={wide ? 22 : 16} style={{ marginTop: 22, borderRadius: 6, backgroundColor: colors.lavender, gap: 6 }}>
         <T w={700} size={16} color={colors.navy}>{t('oneAccountTitle')}</T>
         <T size={14} lh={1.6} color={colors.body}>{t('oneAccountBody')}</T>
       </Card>

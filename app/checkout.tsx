@@ -117,7 +117,7 @@ export default function Checkout() {
 
   const total = subtotalSar + (chosen?.amountSar ?? 0);
   const section = (title: string, children: React.ReactNode, right?: React.ReactNode) => (
-    <Card pad={wide ? 24 : 16} style={{ borderRadius: 20, gap: 14 }}>
+    <Card pad={wide ? 24 : 16} style={{ borderRadius: 6, gap: 14 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
         <Serif role="h2" size={wide ? 28 : 24}>{title}</Serif>
         {right}
@@ -203,7 +203,7 @@ export default function Checkout() {
         </View>
 
         <View style={{ width: wide ? 380 : '100%' }}>
-          <Card pad={20} style={{ gap: 10, borderRadius: 20 }}>
+          <Card pad={20} style={{ gap: 10, borderRadius: 6 }}>
             <T w={700} size={17} color={colors.navy}>{t('yourOrder')}</T>
             {lines.map((l) => <Row key={l.productId} label={`${pick(l, 'name')}${l.quantity > 1 ? ` × ${l.quantity}` : ''}`} value={money(l.unitPriceSar * l.quantity)} />)}
             <Row label={t('shipping')} value={chosen ? money(chosen.amountSar) : t('deliveryNext')} color={chosen ? undefined : colors.muted} />

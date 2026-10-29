@@ -93,7 +93,7 @@ export default function Drafts() {
         {cats.map(([slug, name]) => <Chip key={slug} size="sm" label={name} active={cat === slug} onPress={() => setCat(slug)} />)}
       </View>
 
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10, padding: 12, borderRadius: 16, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, marginBottom: 14 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10, padding: 12, borderRadius: 6, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, marginBottom: 14 }}>
         <Button size="sm" kind="secondary" label={view.length && view.every((r) => picked.has(r.id)) ? 'Clear selection' : `Select all ${view.length}`} onPress={selectAll} disabled={!view.length} />
         <T size={14} w={600} style={{ flex: 1, minWidth: 140 }}>{selectedInView.length} selected</T>
         {confirming ? (
@@ -121,9 +121,9 @@ export default function Drafts() {
             const ship = SHIP[r.ship_class] ?? SHIP.standard;
             return (
               <Pressable key={r.id} accessibilityRole="checkbox" accessibilityState={{ checked: on }} onPress={() => toggle(r.id)}
-                style={{ flexGrow: 1, flexBasis: 220, maxWidth: 280, backgroundColor: colors.white, borderRadius: 18, borderWidth: on ? 2 : 1, borderColor: on ? colors.navy : colors.line, padding: 10, gap: 8 }}>
+                style={{ flexGrow: 1, flexBasis: 220, maxWidth: 280, backgroundColor: colors.white, borderRadius: 6, borderWidth: on ? 2 : 1, borderColor: on ? colors.navy : colors.line, padding: 10, gap: 8 }}>
                 <View>
-                  <Photo uri={r.images?.[0]} ratio={1} fit="contain" tone={colors.white} style={{ borderRadius: 12 }} />
+                  <Photo uri={r.images?.[0]} ratio={1} fit="contain" tone={colors.white} style={{ borderRadius: 4 }} />
                   <View style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: 8, borderWidth: 2, borderColor: on ? colors.navy : colors.inputLine, backgroundColor: on ? colors.navy : colors.white, alignItems: 'center', justifyContent: 'center' }}>
                     {on && <Icon name="check" size={16} color={colors.white} />}
                   </View>

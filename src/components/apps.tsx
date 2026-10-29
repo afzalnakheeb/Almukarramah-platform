@@ -18,9 +18,9 @@ export function AppCard({ a, compact }: { a: PlatformApp; compact?: boolean }) {
   };
   const [label, tone] = status[a.status];
   return (
-    <Card pad={compact ? 16 : wide ? 26 : 18} style={{ borderRadius: 24, gap: 12, flex: 1, minWidth: wide ? 320 : undefined }}>
+    <Card pad={compact ? 16 : wide ? 26 : 18} style={{ borderRadius: 6, gap: 12, flex: 1, minWidth: wide ? 320 : undefined }}>
       <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
-        <View style={{ width: compact ? 56 : 72, height: compact ? 56 : 72, borderRadius: 18, overflow: 'hidden', backgroundColor: a.accent }}>
+        <View style={{ width: compact ? 56 : 72, height: compact ? 56 : 72, borderRadius: 6, overflow: 'hidden', backgroundColor: a.accent }}>
           <Image source={{ uri: a.icon }} style={{ width: '100%', height: '100%' }} accessibilityIgnoresInvertColors />
         </View>
         <View style={{ flex: 1, gap: 2 }}>

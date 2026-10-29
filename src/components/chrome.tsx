@@ -18,6 +18,8 @@ import { Container, Notice, OptionCard, Sheet, styles as ui, T, useWide } from '
 const LOGO = require('../../assets/logo.png');
 const LOGO_GOLD = require('../../assets/logo-gold.png'); // satin antique gold, for dark backgrounds
 const LOGO_RATIO = 917 / 264;
+/** Where 'Sell with us' goes: an email to the team until the seller sign-up pages are live. */
+export const SELL_HREF = 'mailto:hello@almukarramah.com?subject=Selling%20on%20Al%20Mukarramah';
 
 export const destIcon = (d: Destination): IconName => (d === 'saudi' ? 'house' : d === 'international' ? 'globe' : 'bed');
 
@@ -80,13 +82,13 @@ function StoreBanner() {
   );
 }
 
-function IconLink({ href, icon, label, badge }: { href: Href; icon: IconName; label: string; badge?: number }) {
+function IconLink({ href, icon, label, badge, color = colors.navy }: { href: Href; icon: IconName; label: string; badge?: number; color?: string }) {
   return (
     <Link href={href} asChild>
       <Pressable accessibilityRole="link" accessibilityLabel={badge ? `${label}, ${badge}` : label} style={ui.iconBtn}>
-        <Icon name={icon} size={22} stroke={1.7} />
+        <Icon name={icon} size={22} stroke={1.5} color={color} />
         {badge ? (
-          <View style={styles.badge}><T w={700} size={10} color={colors.white}>{badge}</T></View>
+          <View style={styles.badge}><T w={700} size={10} color={colors.night}>{badge}</T></View>
         ) : null}
       </Pressable>
     </Link>
@@ -115,13 +117,14 @@ export function SiteHeader() {
     <View role="banner">
       {wide ? (
         <>
-          <View style={{ backgroundColor: colors.night }}>
-            <Container style={{ paddingVertical: 9, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+          <View style={{ backgroundColor: colors.kiswah }}>
+            <Container style={{ paddingVertical: 9, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.goldLine }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View style={{ width: 6, height: 6, backgroundColor: colors.gold, transform: [{ rotate: '45deg' }] }} />
                 <T size={13} color={colors.champagne}>{t('topBar')}</T>
               </View>
               <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center' }}>
+                <Link href={SELL_HREF as Href}><T size={13} color={colors.goldBright}>{t('sellWithUs')}</T></Link>
                 <Link href="/membership"><T size={13} color={colors.white}>{t('membership')}</T></Link>
                 <Link href="/concierge"><T size={13} color={colors.white}>{t('concierge')}</T></Link>
                 <Pressable accessibilityRole="button" onPress={toggleLang} style={{ borderStartWidth: 1, borderColor: colors.goldLine, paddingStart: 16 }}>
@@ -130,49 +133,53 @@ export function SiteHeader() {
               </View>
             </Container>
           </View>
-          <View style={{ backgroundColor: colors.white }}>
-            <Container style={{ paddingVertical: 14, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 18 }}>
-              <Link href="/" accessibilityLabel={t('home')}><Logo height={44} line /></Link>
-              <SearchBox />
+          <View style={{ backgroundColor: colors.night }}>
+            <Container style={{ paddingVertical: 16, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 18 }}>
+              <Link href="/" accessibilityLabel={t('home')}><Logo height={46} white line /></Link>
+              <SearchBox dark />
               <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} style={styles.destPill}>
-                <Icon name={destIcon(destination)} size={18} />
+                <Icon name={destIcon(destination)} size={18} color={colors.gold} stroke={1.5} />
                 <View>
-                  <T size={11} color={colors.muted}>{t('deliveringTo')}</T>
-                  <T w={700} size={14}>{t(`dest_${destination}` as Key)}</T>
+                  <T size={11} color={colors.onNightFaint}>{t('deliveringTo')}</T>
+                  <T w={600} size={14} color={colors.white}>{t(`dest_${destination}` as Key)}</T>
                 </View>
-                <Icon name="chevronDown" size={14} stroke={2.2} />
+                <Icon name="chevronDown" size={14} stroke={2} color={colors.gold} />
               </Pressable>
               <Pressable accessibilityRole="button" accessibilityLabel={`${t('currency')}: ${currency}`} onPress={() => setSheet('cur')} style={styles.curPill}>
-                <T w={600} size={14}>{currency}</T>
-                <Icon name="chevronDown" size={14} stroke={2.2} />
+                <T w={600} size={14} color={colors.white}>{currency}</T>
+                <Icon name="chevronDown" size={14} stroke={2} color={colors.gold} />
               </Pressable>
               <View style={{ flexDirection: 'row', gap: 2 }}>
-                <IconLink href="/concierge" icon="help" label={t('concierge')} />
-                <IconLink href="/account" icon="user" label={t('account')} />
-                <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} />
+                <IconLink href="/concierge" icon="help" label={t('concierge')} color={colors.onNight} />
+                <IconLink href="/account" icon="user" label={t('account')} color={colors.onNight} />
+                <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} color={colors.onNight} />
               </View>
             </Container>
-            <Container style={{ paddingBottom: 10, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 30 }}>
+            <Container style={{ paddingBottom: 12, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 34 }}>
               {nav.map((n) => (
-                <Link key={n.label} href={n.href} target={n.external ? '_blank' : undefined} style={{ paddingVertical: 8 }}><T w={600} size={15} color={colors.navy}>{n.label}</T></Link>
+                <Link key={n.label} href={n.href} target={n.external ? '_blank' : undefined} style={{ paddingVertical: 8 }}>
+                  <T w={600} size={isRTL ? 15 : 12.5} color={colors.onNight} style={!isRTL && { letterSpacing: 1.8, textTransform: 'uppercase' }}>{n.label}</T>
+                </Link>
               ))}
               <View style={{ flex: 1 }} />
-              <Link href="/concierge" style={{ paddingVertical: 8 }}><T w={600} size={15} color={colors.brassText}>{t('helpChoose')}</T></Link>
+              <Link href="/concierge" style={{ paddingVertical: 8 }}>
+                <T w={600} size={isRTL ? 15 : 12.5} color={colors.gold} style={!isRTL && { letterSpacing: 1.8, textTransform: 'uppercase' }}>{t('helpChoose')}</T>
+              </Link>
             </Container>
-            <GoldRule style={{ height: 1, opacity: 0.7 }} />
+            <GoldRule style={{ height: 1, opacity: 0.8 }} />
           </View>
         </>
       ) : (
         <>
-          <View style={{ backgroundColor: colors.white, paddingVertical: 6, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Pressable accessibilityRole="button" accessibilityLabel={t('menu')} onPress={() => setSheet('menu')} style={ui.iconBtn}><Icon name="menu" /></Pressable>
-            <Link href="/" accessibilityLabel={t('home')}><Logo height={30} /></Link>
+          <View style={{ backgroundColor: colors.night, paddingVertical: 8, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.goldLine }}>
+            <Pressable accessibilityRole="button" accessibilityLabel={t('menu')} onPress={() => setSheet('menu')} style={ui.iconBtn}><Icon name="menu" color={colors.onNight} stroke={1.5} /></Pressable>
+            <Link href="/" accessibilityLabel={t('home')}><Logo height={32} white /></Link>
             <View style={{ flexDirection: 'row' }}>
-              <IconLink href="/shop" icon="search" label={t('shop')} />
-              <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} />
+              <IconLink href="/shop" icon="search" label={t('shop')} color={colors.onNight} />
+              <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} color={colors.onNight} />
             </View>
           </View>
-          <View style={{ flexDirection: 'row', backgroundColor: colors.night, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.gold }}>
+          <View style={{ flexDirection: 'row', backgroundColor: colors.kiswah, borderBottomWidth: 1, borderColor: colors.goldLine }}>
             <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} style={{ flex: 1, minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16 }}>
               <T size={13} color={colors.onNight}>{t('deliveringTo')}:</T>
               <T w={700} size={13} color={colors.white}>{t(`dest_${destination}` as Key)}</T>
@@ -203,22 +210,22 @@ export function SiteHeader() {
 }
 
 /** Header search: goes to the shop with ?q=, which also powers the WebSite search action for Google. */
-function SearchBox() {
+function SearchBox({ dark }: { dark?: boolean }) {
   const { t, isRTL } = useI18n();
   const [q, setQ] = useState('');
   const go = () => q.trim() && router.push({ pathname: '/shop', params: { q: q.trim() } });
   return (
-    <View accessibilityRole="search" style={styles.search}>
-      <Pressable accessibilityRole="button" accessibilityLabel={t('searchPlaceholder')} onPress={go}><Icon name="search" size={18} color={colors.muted} /></Pressable>
+    <View accessibilityRole="search" style={[styles.search, dark && styles.searchDark]}>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('searchPlaceholder')} onPress={go}><Icon name="search" size={18} color={dark ? colors.gold : colors.muted} stroke={1.5} /></Pressable>
       <TextInput
         value={q}
         onChangeText={setQ}
         onSubmitEditing={go}
         returnKeyType="search"
         placeholder={t('searchPlaceholder')}
-        placeholderTextColor={colors.muted}
+        placeholderTextColor={dark ? colors.onNightFaint : colors.muted}
         accessibilityLabel={t('searchPlaceholder')}
-        style={[sans(400, isRTL), { flex: 1, fontSize: 15, color: colors.ink, minHeight: 44, textAlign: isRTL ? 'right' : 'left', outlineStyle: 'none' } as never]}
+        style={[sans(400, isRTL), { flex: 1, fontSize: 15, color: dark ? colors.white : colors.ink, minHeight: 44, textAlign: isRTL ? 'right' : 'left', outlineStyle: 'none' } as never]}
       />
     </View>
   );
@@ -271,7 +278,7 @@ export function SiteFooter() {
     </View>
   );
   return (
-    <View role="contentinfo" style={{ backgroundColor: colors.night, marginTop: 'auto', overflow: 'hidden' }}>
+    <View role="contentinfo" style={{ backgroundColor: colors.kiswah, marginTop: 'auto', overflow: 'hidden' }}>
       <GoldRule />
       <StarLattice opacity={0.06} size={72} />
       <Container style={{ paddingTop: wide ? 56 : 28, paddingBottom: 28, flexDirection: 'row', flexWrap: 'wrap', gap: 32 }}>
@@ -292,6 +299,7 @@ export function SiteFooter() {
           { label: t('footHotel') }, { label: t('footSaudi') }, { label: t('footIntl') }, { label: t('footOrders'), href: '/account' },
         ])}
         {col(t('footerCompany'), [
+          { label: t('sellWithUs'), href: SELL_HREF as Href },
           { label: t('membership'), href: '/membership' },
           { label: t('navQuran'), href: { pathname: '/apps/[slug]', params: { slug: 'recite-with-me' } } },
           { label: t('navSeerah'), href: { pathname: '/apps/[slug]', params: { slug: 'seerah-trails' } } },
@@ -342,11 +350,12 @@ export function CheckoutHeader({ step }: { step: 1 | 2 | 3 }) {
 }
 
 const styles = StyleSheet.create({
-  search: { flexGrow: 1, flexBasis: 280, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.ivory, borderWidth: 1, borderColor: colors.line, borderRadius: 999, paddingHorizontal: 18, minHeight: 46 },
-  destPill: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.navy, borderRadius: 999, paddingHorizontal: 16, minHeight: 46 },
-  curPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: colors.line, borderRadius: 999, paddingHorizontal: 14, minHeight: 46 },
-  badge: { position: 'absolute', top: 6, end: 4, backgroundColor: colors.brass, borderRadius: 999, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
+  search: { flexGrow: 1, flexBasis: 280, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.ivory, borderWidth: 1, borderColor: colors.line, borderRadius: 3, paddingHorizontal: 18, minHeight: 46 },
+  searchDark: { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: colors.goldLine },
+  destPill: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.goldLine, borderRadius: 3, paddingHorizontal: 16, minHeight: 46 },
+  curPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: colors.goldLine, borderRadius: 3, paddingHorizontal: 14, minHeight: 46 },
+  badge: { position: 'absolute', top: 6, end: 4, backgroundColor: colors.gold, borderRadius: 999, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   menuRow: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderColor: colors.line },
-  curOption: { minWidth: 88, minHeight: 52, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line, borderRadius: 14, backgroundColor: colors.white },
-  stepDot: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: colors.inputLine, alignItems: 'center', justifyContent: 'center' },
+  curOption: { minWidth: 88, minHeight: 52, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line, borderRadius: 4, backgroundColor: colors.white },
+  stepDot: { width: 24, height: 24, borderRadius: 4, borderWidth: 1, borderColor: colors.inputLine, alignItems: 'center', justifyContent: 'center' },
 });
