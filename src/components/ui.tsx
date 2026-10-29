@@ -1,7 +1,7 @@
 // Building blocks from the AlMukarramah Platform Design (PL-06 · Shared design system).
 import { Image } from 'expo-image';
 import { Link, type Href } from 'expo-router';
-import React from 'react';
+import React, { useSyncExternalStore } from 'react';
 import {
   ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View,
   type StyleProp, type TextInputProps, type TextStyle, type ViewStyle,
@@ -13,9 +13,17 @@ import type { Product } from '@/lib/types';
 import { colors, MAX_WIDTH, radius, sans, serif, space, toneFor, WIDE, type Weight } from '@/theme';
 import { ArchMotif, Icon } from './icons';
 
+const noSubscribe = () => () => undefined;
+/** False while React hydrates the pre-rendered page (which was built without a screen size), true afterwards. */
+export function useHydrated() {
+  return useSyncExternalStore(noSubscribe, () => true, () => false);
+}
+
+/** Wide (desktop) layout. On the website the first render matches the pre-rendered HTML, then adapts to the screen. */
 export function useWide() {
   const { width } = useWindowDimensions();
-  return width >= WIDE;
+  const hydrated = useHydrated();
+  return hydrated && width >= WIDE;
 }
 
 /** Text in Manrope (English) or Readex Pro (Arabic). */
@@ -225,7 +233,8 @@ export function ProductTile({ product, compact }: { product: Product; compact?: 
 
 /** Responsive grid: equal columns that wrap. */
 export function Grid({ children, min = 240, gap = 22, cols }: { children: React.ReactNode; min?: number; gap?: number; cols?: number }) {
-  const { width } = useWindowDimensions();
+  const { width: w } = useWindowDimensions();
+  const width = useHydrated() ? w : 0;
   const avail = Math.min(width, MAX_WIDTH) - (width >= WIDE ? 48 : 32);
   const n = cols ?? Math.max(1, Math.floor((avail + gap) / (min + gap)));
   const items = React.Children.toArray(children);
