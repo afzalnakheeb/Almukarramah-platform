@@ -22,7 +22,7 @@ export const supabase = createClient(isConfigured ? url : 'https://demo.supabase
 
 export async function callFunction<T>(name: string, body: unknown): Promise<T> {
   if (!isConfigured) throw new Error('Demo mode: payments, delivery quotes and the concierge work once the Supabase project is connected.');
-  const { data, error } = await supabase.functions.invoke(name, { body });
+  const { data, error } = await supabase.functions.invoke(name, { body: body as Record<string, unknown> });
   if (error) throw error;
   return data as T;
 }

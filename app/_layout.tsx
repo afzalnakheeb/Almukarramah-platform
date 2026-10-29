@@ -3,13 +3,14 @@ import { CormorantGaramond_600SemiBold } from '@expo-google-fonts/cormorant-gara
 import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold } from '@expo-google-fonts/manrope';
 import { ReadexPro_400Regular, ReadexPro_500Medium, ReadexPro_600SemiBold } from '@expo-google-fonts/readex-pro';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AssistantDock } from '@/components/assistant';
 import { AssistantProvider } from '@/lib/assistant';
+import { takeNext } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
 import { loadRates } from '@/lib/catalogue';
 import { I18nProvider } from '@/lib/i18n';
@@ -25,6 +26,14 @@ function Boot() {
   }, []);
   useEffect(() => {
     initPurchases(session?.user.id ?? null);
+  }, [session?.user.id]);
+  // After signing in, open the page the visitor was going to (e.g. /admin), wherever sign-in returned them.
+  useEffect(() => {
+    if (!session) return;
+    takeNext().then((p) => {
+      if (!p || (Platform.OS === 'web' && window.location.pathname === p)) return;
+      router.replace(p as never);
+    });
   }, [session?.user.id]);
   return null;
 }

@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
+import { Ornament, StarLattice } from '@/components/decor';
 import { Button, Card, Eyebrow, Notice, Serif, T, useWide } from '@/components/ui';
 import { getPlans } from '@/lib/catalogue';
 import { strings, useI18n, type Key } from '@/lib/i18n';
@@ -60,6 +61,7 @@ export default function Membership() {
       <View style={{ alignItems: 'center', maxWidth: 760, alignSelf: 'center', gap: 10, marginBottom: 28, marginTop: wide ? 16 : 0 }}>
         <Eyebrow size={12}>{t('membership')}</Eyebrow>
         <Serif role="h1" size={wide ? 56 : 36} center>{t('memberTitle')}</Serif>
+        <Ornament color={colors.brass} align="center" width={110} />
         <T size={wide ? 17 : 15} lh={1.6} color={colors.body} center>{t('memberBody')}</T>
       </View>
       {msg && <Notice text={msg} />}
@@ -68,16 +70,18 @@ export default function Membership() {
         {plans.map((p) => {
           const featured = p.kind === 'membership';
           return (
-            <View key={p.id} style={{ flex: 1, backgroundColor: featured ? colors.navy : colors.white, borderWidth: 1, borderColor: featured ? colors.navy : colors.line, borderRadius: 24, padding: wide ? 28 : 20, gap: 12 }}>
-              <Eyebrow size={11} color={featured ? colors.champagne : colors.brassText}>{t(p.kind === 'membership' ? 'kind_membership' : 'kind_box')}</Eyebrow>
+            <View key={p.id} style={{ flex: 1, backgroundColor: featured ? colors.night : colors.white, borderWidth: 1, borderColor: featured ? colors.gold : colors.champagne, borderRadius: 24, padding: wide ? 28 : 20, gap: 12, overflow: 'hidden' }}>
+              {featured && <StarLattice opacity={0.09} size={56} />}
+              <Eyebrow size={11} color={featured ? colors.gold : colors.brassText}>{t(p.kind === 'membership' ? 'kind_membership' : 'kind_box')}</Eyebrow>
               <Serif size={wide ? 38 : 30} color={featured ? colors.white : colors.navy}>{pick(p, 'name')}</Serif>
+              <Ornament width={72} color={featured ? colors.gold : colors.brass} />
               <T size={15} lh={1.6} color={featured ? '#D6D8EA' : colors.body}>{pick(p, 'description')}</T>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
                 <T w={700} size={28} color={featured ? colors.white : colors.navy}>{formatMoney(convertFromSar(p.price_sar, currency), currency, lang)}</T>
                 <T size={14} color={featured ? '#D6D8EA' : colors.muted}>{t(p.period === 'year' ? 'perYear' : 'perMonth')}</T>
               </View>
               <T size={12} color={featured ? '#B9BCD6' : colors.muted}>{t('vatIncluded')}</T>
-              <Button label={t('join')} kind={featured ? 'light' : 'primary'} busy={busy === p.id} onPress={() => join(p)} style={{ marginTop: 'auto', alignSelf: 'flex-start' }} />
+              <Button label={t('join')} kind={featured ? 'gold' : 'primary'} busy={busy === p.id} onPress={() => join(p)} style={{ marginTop: 'auto', alignSelf: 'flex-start' }} />
             </View>
           );
         })}

@@ -2,13 +2,34 @@
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isConfigured, supabase } from '@/lib/supabase';
 
+const NEXT_KEY = 'postLoginNext';
+const safe = (p?: string) => (p && p.startsWith('/') && !p.startsWith('//') ? p : undefined);
+
+/** Remembers the page to open after sign-in (kept 30 minutes), so the visitor gets there even if the
+ *  sign-in service returns them to a different page. */
+export async function rememberNext(next?: string): Promise<void> {
+  const p = safe(next);
+  if (p) await AsyncStorage.setItem(NEXT_KEY, JSON.stringify({ p, t: Date.now() })).catch(() => undefined);
+}
+/** Returns (and forgets) the remembered page, if any. */
+export async function takeNext(): Promise<string | undefined> {
+  try {
+    const raw = await AsyncStorage.getItem(NEXT_KEY);
+    if (!raw) return undefined;
+    await AsyncStorage.removeItem(NEXT_KEY);
+    const { p, t } = JSON.parse(raw) as { p: string; t: number };
+    return Date.now() - t < 30 * 60 * 1000 ? safe(p) : undefined;
+  } catch { return undefined; }
+}
 
 /** Opens Google sign-in. On the website the page returns to /account; in the apps an in-app browser is used. */
 /** `next`: a page on this site to open after signing in (e.g. /admin). */
 export async function signInWithGoogle(next?: string): Promise<void> {
-  const back = next && next.startsWith('/') && !next.startsWith('//') ? `/account?next=${encodeURIComponent(next)}` : '/account';
+  const back = safe(next) ? `/account?next=${encodeURIComponent(next!)}` : '/account';
+  await rememberNext(next);
   if (Platform.OS === 'web') {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

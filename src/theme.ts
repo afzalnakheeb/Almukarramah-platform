@@ -16,6 +16,14 @@ export const colors = {
   brass: '#A9824B',
   brassText: '#8A6A3A',
   champagne: '#E9D9B8',
+  // Gold and night (the darker, richer layer: hero, heritage, footer)
+  gold: '#C9A45C', // gold on dark backgrounds (7:1 on night)
+  goldBright: '#DDBE7E',
+  goldSoft: '#F4EAD3', // pale gold panels on light backgrounds
+  goldLine: 'rgba(201,164,92,0.45)',
+  night: '#070B2C', // deepest navy: hero and heritage
+  nightSoft: '#11174A',
+  onNight: '#C9CCE0', // body text on night
   lavender: '#F4F2F9',
   white: '#FFFFFF',
   success: '#1E6B4A',

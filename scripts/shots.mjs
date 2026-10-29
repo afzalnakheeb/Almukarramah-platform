@@ -18,6 +18,7 @@ const views = [
 ];
 const slug = (p) => (p === '/' ? 'home' : p.replace(/^\//, '').replace(/[^a-z0-9]+/gi, '-'));
 
+const errors = [];
 const browser = await chromium.launch();
 for (const v of process.env.SEO_ONLY ? [] : views) {
   for (const path of pages) {
@@ -25,6 +26,8 @@ for (const v of process.env.SEO_ONLY ? [] : views) {
     // React Native Web scrolls inside an inner view, so measure the content and use a viewport that tall.
     const ctx = await browser.newContext({ viewport: { width: v.width, height: v.height }, deviceScaleFactor: v.dsf, locale: v.locale });
     const page = await ctx.newPage();
+    page.on('pageerror', (e) => errors.push(`${v.name} ${path} pageerror: ${e.message}\n${(e.stack || '').split('\n').slice(0, 6).join('\n')}`));
+    page.on('console', (m) => { if (m.type() === 'error') errors.push(`${v.name} ${path} console: ${m.text().slice(0, 600)}`); });
     try {
       await page.goto(base + path, { waitUntil: 'networkidle', timeout: 60000 });
       await page.waitForTimeout(1500);
@@ -47,6 +50,7 @@ for (const v of process.env.SEO_ONLY ? [] : views) {
   }
 }
 await browser.close();
+writeFileSync(join(out, 'errors.txt'), errors.join('\n\n') || 'no errors');
 
 // SEO report from raw HTML (what crawlers that do not run JavaScript, including most AI crawlers, see)
 const seoPages = [...new Set([...pages, '/collections/prayer-mats', '/privacy', '/terms'])].filter((p) => p !== '/account');
