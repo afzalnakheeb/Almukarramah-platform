@@ -17,6 +17,8 @@ import urllib.request
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 from rembg import new_session, remove
+from scipy import ndimage
+from scipy.spatial import ConvexHull
 
 W, H = 1200, 1500
 
@@ -62,9 +64,44 @@ def background(look: str) -> Image.Image:
     return Image.alpha_composite(bg.convert("RGBA"), floor)
 
 
-def cutout(img: Image.Image, session) -> Image.Image:
+def solid_mask(alpha: np.ndarray, flat: bool) -> np.ndarray:
+    """Background removal can punch holes in light parts of a product (white patterns on a rug).
+    Holes enclosed by the product are always filled. For flat items (prayer mats, rugs, sets of mats) each piece
+    is made solid along its outline (convex hull), which also fixes light areas touching the edge."""
+    solid = alpha > 40
+    filled = ndimage.binary_fill_holes(solid)
+    if not flat:
+        return filled
+    labels, n = ndimage.label(filled)
+    out = np.zeros_like(filled)
+    total = filled.sum()
+    for i in range(1, n + 1):
+        part = labels == i
+        if part.sum() < total * 0.02:
+            continue
+        ys, xs = np.nonzero(part)
+        step = max(1, len(xs) // 20000)
+        pts = np.stack([xs[::step], ys[::step]], 1)
+        try:
+            hull = ConvexHull(pts)
+        except Exception:
+            out |= part
+            continue
+        poly = Image.new("L", (alpha.shape[1], alpha.shape[0]), 0)
+        ImageDraw.Draw(poly).polygon([tuple(pts[v]) for v in hull.vertices], fill=1)
+        out |= np.array(poly).astype(bool)
+    return out
+
+
+def cutout(img: Image.Image, session, flat: bool = False) -> Image.Image:
     rgba = remove(img, session=session, post_process_mask=True)
-    a = np.array(rgba.split()[-1])
+    alpha = np.array(rgba.split()[-1])
+    fill = solid_mask(alpha, flat)
+    # keep soft edges where the model had them; make the inside fully solid
+    inner = ndimage.binary_erosion(fill, iterations=2)
+    alpha = np.where(inner, 255, np.where(fill, np.maximum(alpha, 160), alpha)).astype(np.uint8)
+    rgba = Image.merge("RGBA", (*img.convert("RGB").split(), Image.fromarray(alpha)))
+    a = alpha
     ys, xs = np.where(a > 12)
     if not len(xs):
         raise ValueError("nothing found in the photo")
@@ -114,15 +151,18 @@ def main():
         pairs = [l.split() for l in open(a.list) if l.strip() and not l.startswith("#")]
         a.names = ",".join(x[0] for x in pairs)
         a.sources = [x[1] for x in pairs]
+        a.modes = [x[2] if len(x) > 2 else "" for x in pairs]
+    else:
+        a.modes = [""] * len(a.sources)
     os.makedirs(a.out, exist_ok=True)
     looks = [l.strip() for l in a.looks.split(",") if l.strip()]
     names = [n for n in a.names.split(",") if n] or [os.path.splitext(os.path.basename(s.split("?")[0]))[0] for s in a.sources]
     session = new_session("isnet-general-use")
     failed = 0
-    for src, name in zip(a.sources, names):
+    for src, name, mode in zip(a.sources, names, a.modes):
         try:
             img = load(src)
-            item = cutout(img, session)
+            item = cutout(img, session, flat=(mode == "flat"))
             outs = []
             for look in looks:
                 o = compose(item, look)

@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install
-        run: pip install "rembg[cpu]==2.0.67" pillow numpy
+        run: pip install "rembg[cpu]==2.0.67" pillow numpy scipy
       - name: Make photos
         run: |
           rm -rf photo-out

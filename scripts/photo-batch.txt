@@ -1,11 +1,11 @@
 # name source (samples)
-kaaba-door-prayer-mat public/products/kaaba-door-prayer-mat-1.jpg
-calligraphy-set-blue public/products/calligraphy-prayer-mat-set-blue-1.jpg
+kaaba-door-prayer-mat public/products/kaaba-door-prayer-mat-1.jpg flat
+calligraphy-set-blue public/products/calligraphy-prayer-mat-set-blue-1.jpg flat
 ajwa-dates public/products/ajwati-ajwa-dates-500g-1.jpg
 aam-zumar https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/zumar-2.jpg
 aam-qarnain https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/batch-6/dsc-0693.jpg
 aam-dehn-oud https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/dehn-al-oud-maliki-qadeem.jpg
-mihrab-rug public/products/rawdah-mihrab-prayer-mat-red-1.jpg
+mihrab-rug public/products/rawdah-mihrab-prayer-mat-red-1.jpg flat
 door-seal-magnet public/products/prophets-mosque-door-seal-magnet-1.jpg
-mihrab-woven-rug public/products/mihrab-an-nabi-3d-woven-rug-1.jpg
-clock-tower-rug public/products/kaaba-clock-tower-woven-rug-gold-1.jpg
+mihrab-woven-rug public/products/mihrab-an-nabi-3d-woven-rug-1.jpg flat
+clock-tower-rug public/products/kaaba-clock-tower-woven-rug-gold-1.jpg flat
