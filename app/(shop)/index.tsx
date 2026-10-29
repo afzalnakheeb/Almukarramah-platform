@@ -274,7 +274,7 @@ export default function Home() {
       {/* 6 · Heritage */}
       <View style={{ marginTop: wide ? 80 : 36, backgroundColor: colors.white, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.line }}>
         <Container style={{ paddingVertical: wide ? 72 : 28, flexDirection: wide ? 'row' : 'column', gap: wide ? 56 : 12, alignItems: wide ? 'center' : 'stretch' }}>
-          {wide && <View style={{ flex: 1, height: 520, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.sand }}><Photo uri="/images/heritage.jpg" style={{ height: '100%', aspectRatio: undefined }} label={t('heritageTitle')} /></View>}
+          {wide && <View style={{ flex: 1, height: 520, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.sand }}><Photo uri="/images/madinah-minarets.jpg" style={{ height: '100%', aspectRatio: undefined }} label={t('heritageTitle')} /></View>}
           <View style={{ flex: wide ? 1.2 : undefined, gap: wide ? 20 : 12 }}>
             <Eyebrow size={wide ? 13 : 11}>{t('heritageKicker')}</Eyebrow>
             <Serif role="h2" size={wide ? 50 : 32}>{t('heritageTitle')}</Serif>
