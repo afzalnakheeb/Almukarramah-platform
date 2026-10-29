@@ -127,7 +127,7 @@ Sitemap: ${SITE}/sitemap.xml
 const byCat = categories.map((c) => ({ c, items: products.filter((p) => p.categories?.slug === c.slug) }));
 const llms = `# Al Mukarramah (المكرمة)
 
-> Premium Islamic gifts prepared and packed in Madinah, Saudi Arabia: prayer mats and woven prayer rugs inspired by the Haramain, matching gift sets, Madinah dates under the Ajwati label, Madinah keepsakes, and Ahmed Al Maghribi perfumes and oud oils (authorised reseller, official Saudi prices). Established 2020. Delivery to hotels in Madinah and Makkah, across Saudi Arabia and internationally. Prices are in Saudi riyals (SAR) and include 15% VAT; every order receives a ZATCA-compliant tax invoice.
+> A curated marketplace of premium products for every Muslim home, based in Madinah, Saudi Arabia (tagline: "For every Muslim home"). Every product is approved by the Al Mukarramah team. Today it offers prayer mats and woven prayer rugs inspired by the Haramain, matching gift sets, Madinah dates under the Ajwati label, Madinah keepsakes, and Ahmed Al Maghribi perfumes and oud oils (authorised reseller, official Saudi prices); makers of premium Muslim products can apply to sell (hello@almukarramah.com). Established 2020. Delivery to hotels in Madinah and Makkah, across Saudi Arabia and internationally. Prices are in Saudi riyals (SAR) and include 15% VAT; every order receives a ZATCA-compliant tax invoice.
 
 - Website: ${SITE}
 - Languages: Arabic and English
@@ -188,7 +188,7 @@ ${(p.images || []).slice(1).map((i) => `<g:additional_image_link>${esc(abs(i))}<
 <g:identifier_exists>no</g:identifier_exists>
 <g:product_type>${esc(p.categories?.name_en ?? '')}</g:product_type>
 </item>`);
-writeFileSync(join(PUBLIC, 'feeds/google-merchant.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel><title>Al Mukarramah</title><link>${SITE}</link><description>Premium Islamic gifts from Madinah</description>\n${items.join('\n')}\n</channel></rss>\n`);
+writeFileSync(join(PUBLIC, 'feeds/google-merchant.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel><title>Al Mukarramah</title><link>${SITE}</link><description>The premium marketplace for every Muslim home</description>\n${items.join('\n')}\n</channel></rss>\n`);
 
 if (!existsSync(join(PUBLIC, 'sitemap.xml'))) process.exit(1);
 console.log('wrote sitemap.xml, robots.txt, llms.txt, llms-full.txt, feeds/google-merchant.xml');

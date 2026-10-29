@@ -48,13 +48,13 @@ export function AssistantChat({ onClose, compact }: { onClose?: () => void; comp
     const mine = m.role === 'user';
     return (
       <View key={i} style={{ gap: 8 }}>
-        <View style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '88%', backgroundColor: mine ? colors.navy : colors.white, borderRadius: 18, borderBottomRightRadius: mine ? 6 : 18, borderBottomLeftRadius: mine ? 18 : 6, paddingVertical: 11, paddingHorizontal: 14, borderWidth: mine ? 0 : 1, borderColor: colors.line }}>
+        <View style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '88%', backgroundColor: mine ? colors.navy : colors.white, borderRadius: 6, borderBottomRightRadius: mine ? 6 : 18, borderBottomLeftRadius: mine ? 18 : 6, paddingVertical: 11, paddingHorizontal: 14, borderWidth: mine ? 0 : 1, borderColor: colors.line }}>
           <T size={14.5} lh={1.55} color={mine ? colors.white : colors.ink}>{m.content}</T>
         </View>
         {m.products?.map((p) => (
           <Pressable key={p.slug} accessibilityRole="link" onPress={() => go(`/product/${p.slug}`)}
-            style={{ flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: 16, padding: 8 }}>
-            <View style={{ width: 52 }}><Photo uri={p.image} ratio={1} fit="contain" tone={p.image ? colors.white : toneFor(p.slug)} style={{ borderRadius: 12 }} /></View>
+            style={{ flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: 6, padding: 8 }}>
+            <View style={{ width: 52 }}><Photo uri={p.image} ratio={1} fit="contain" tone={p.image ? colors.white : toneFor(p.slug)} style={{ borderRadius: 4 }} /></View>
             <View style={{ flex: 1, gap: 2 }}>
               <T w={700} size={13.5} numberOfLines={2}>{p.name}</T>
               <T size={13} color={colors.brassText} w={700}>{money(p.price_sar)}</T>
@@ -94,7 +94,7 @@ export function AssistantChat({ onClose, compact }: { onClose?: () => void; comp
         {bubble({ role: 'assistant', content: t(HELLO[a.page.kind] ?? 'assistantHello_home') }, -1)}
         {a.turns.map(bubble)}
         {a.busy && (
-          <View style={{ alignSelf: 'flex-start', backgroundColor: colors.white, borderRadius: 18, paddingVertical: 10, paddingHorizontal: 16, borderWidth: 1, borderColor: colors.line }}>
+          <View style={{ alignSelf: 'flex-start', backgroundColor: colors.white, borderRadius: 6, paddingVertical: 10, paddingHorizontal: 16, borderWidth: 1, borderColor: colors.line }}>
             <T color={colors.muted}>{t('assistantThinking')}</T>
           </View>
         )}
@@ -140,7 +140,7 @@ function ActionCard({ turn, index, go }: { turn: Turn; index: number; go: (p: st
   const a = useAssistant();
   const act = turn.action!;
   const [note, setNote] = useState<string | null>(null);
-  const box = { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.champagne, borderRadius: 16, padding: 12, gap: 10 } as const;
+  const box = { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.champagne, borderRadius: 6, padding: 12, gap: 10 } as const;
   const btn = (label: string, onPress: () => void, done?: boolean) => (
     <Pressable accessibilityRole="button" onPress={onPress} disabled={done}
       style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: done ? colors.lavender : colors.navy, borderRadius: 999, paddingVertical: 9, paddingHorizontal: 16 }}>
@@ -220,7 +220,7 @@ export function AssistantDock() {
     return (
       <>
         {a.open && (
-          <View style={[fixed, side, { bottom: bottom + 66, zIndex: 61, width: 400, height: Math.min(640, height - bottom - 100), backgroundColor: colors.white, borderRadius: 22, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, shadowColor: '#0B1030', shadowOpacity: 0.22, shadowRadius: 30, shadowOffset: { width: 0, height: 12 }, elevation: 12 }]}>
+          <View style={[fixed, side, { bottom: bottom + 66, zIndex: 61, width: 400, height: Math.min(640, height - bottom - 100), backgroundColor: colors.white, borderRadius: 6, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, shadowColor: '#0B1030', shadowOpacity: 0.22, shadowRadius: 30, shadowOffset: { width: 0, height: 12 }, elevation: 12 }]}>
             <AssistantChat onClose={() => a.setOpen(false)} />
           </View>
         )}

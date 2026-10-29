@@ -17,7 +17,7 @@ export default function Concierge() {
       <View style={{ maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         <H1 size={wide ? 48 : 34}>{t('concierge')}</H1>
         <T color={colors.muted} style={{ marginBottom: 20 }}>{t('conciergeSub')}</T>
-        <View style={{ height: wide ? 620 : 560, borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white }}>
+        <View style={{ height: wide ? 620 : 560, borderRadius: 6, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white }}>
           <AssistantChat />
         </View>
         <T size={12.5} color={colors.muted} style={{ marginTop: 10 }}>{t('conciergeNote')}</T>

@@ -21,7 +21,7 @@ export function Faq({ title, items }: { title: string; items: { q: string; a: st
 
 export function Facts({ title, rows }: { title: string; rows: [string, string][] }) {
   return (
-    <View style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 8 }}>
+    <View style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: 6, paddingHorizontal: 16, paddingVertical: 8 }}>
       <T w={700} size={14} color={colors.navy} style={{ paddingVertical: 8 }}>{title}</T>
       {rows.map(([k, v]) => (
         <View key={k} style={{ flexDirection: 'row', gap: 12, paddingVertical: 8, borderTopWidth: 1, borderColor: colors.lineSoft }}>

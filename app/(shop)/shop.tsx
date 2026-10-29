@@ -147,7 +147,7 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
       />
       <Breadcrumb items={[{ label: t('home'), href: '/' }, { label: t('shop'), href: activeTag || activeCat ? '/shop' : undefined }, ...(activeTag || activeCat ? [{ label: title }] : [])]} />
       {frag ? (
-        <View style={{ backgroundColor: colors.night, borderRadius: wide ? 26 : 20, overflow: 'hidden', borderWidth: 1, borderColor: colors.gold, marginBottom: 22 }}>
+        <View style={{ backgroundColor: colors.night, borderRadius: wide ? 8 : 6, overflow: 'hidden', borderWidth: 1, borderColor: colors.gold, marginBottom: 22 }}>
           <StarLattice opacity={0.08} size={60} />
           <Glow cx="85%" cy="0%" r="60%" opacity={0.2} />
           <View style={{ padding: wide ? 36 : 18, gap: 10 }}>
@@ -225,7 +225,7 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
             <>
               <T size={14} color={colors.muted}><T w={700} size={14}>{shown.length}</T> {t('products')}</T>
               {shown.length === 0 ? (
-                <View style={{ backgroundColor: colors.white, borderWidth: 1, borderStyle: 'dashed', borderColor: '#CFC5B3', borderRadius: 20, padding: 36, alignItems: 'center', gap: 10 }}>
+                <View style={{ backgroundColor: colors.white, borderWidth: 1, borderStyle: 'dashed', borderColor: '#CFC5B3', borderRadius: 6, padding: 36, alignItems: 'center', gap: 10 }}>
                   <Serif size={28} center>{t('noMatchTitle')}</Serif>
                   <T color={colors.muted} center>{t('noMatchBody')}</T>
                   <Button label={t('clearFilters')} onPress={clear} />

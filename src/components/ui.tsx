@@ -39,12 +39,12 @@ export function T({ children, w = 400, size = 15, color = colors.ink, lh, style,
 }
 
 /** Headlines in Cormorant Garamond (English) or Amiri (Arabic). */
-export function Serif({ children, size = 44, color = colors.navy, style, center, role }: {
-  children: React.ReactNode; size?: number; color?: string; style?: StyleProp<TextStyle>; center?: boolean; role?: 'h1' | 'h2' | 'h3';
+export function Serif({ children, size = 44, color = colors.navy, style, center, role, numberOfLines }: {
+  children: React.ReactNode; size?: number; color?: string; style?: StyleProp<TextStyle>; center?: boolean; role?: 'h1' | 'h2' | 'h3'; numberOfLines?: number;
 }) {
   const { isRTL } = useI18n();
   const aria = role ? { role: 'heading' as const, 'aria-level': Number(role[1]) } : {};
-  return <Text {...aria} style={[serif(size, isRTL), { color }, center && { textAlign: 'center' }, style]}>{children}</Text>;
+  return <Text {...aria} numberOfLines={numberOfLines} style={[serif(size, isRTL), { color }, center && { textAlign: 'center' }, style]}>{children}</Text>;
 }
 
 export function Eyebrow({ children, color = colors.brassText, size = 13, style }: { children: React.ReactNode; color?: string; size?: number; style?: StyleProp<TextStyle> }) {
@@ -100,6 +100,7 @@ export function Button({ label, onPress, href, kind = 'primary', disabled, busy,
   const bg = disabled ? colors.disabled : BG[kind];
   const fg = disabled ? colors.muted : FG[kind];
   const border = disabled ? colors.disabled : BORDER[kind];
+  const { isRTL } = useI18n();
   const h = size === 'lg' ? 56 : size === 'sm' ? 40 : 48;
   const base: StyleProp<ViewStyle> = [
     styles.button,
@@ -110,7 +111,8 @@ export function Button({ label, onPress, href, kind = 'primary', disabled, busy,
   const content = busy ? <ActivityIndicator color={fg} /> : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
       {icon}
-      <T w={700} size={size === 'lg' ? 16 : size === 'sm' ? 13.5 : 15} color={fg} style={kind === 'text' && { textDecorationLine: 'underline' }}>{label}</T>
+      <T w={600} size={isRTL ? (size === 'lg' ? 16 : size === 'sm' ? 13.5 : 15) : size === 'lg' ? 13.5 : size === 'sm' ? 12 : 13} color={fg}
+        style={kind === 'text' ? { textDecorationLine: 'underline' } : !isRTL && { letterSpacing: 1.6, textTransform: 'uppercase' }}>{label}</T>
     </View>
   );
   // Links: one flat style object. Link asChild spreads the child's style into an object, so a style function or
@@ -192,7 +194,7 @@ export function Tag({ label, tone = 'mute' }: { label: string; tone?: keyof type
 export function Photo({ uri, tone, shape = 'rounded', ratio = 4 / 5, style, motif, label, fit = 'cover' }: {
   uri?: string | null; tone?: string; shape?: 'rounded' | 'arch' | 'tall-arch'; ratio?: number; style?: StyleProp<ViewStyle>; motif?: number; label?: string; fit?: 'cover' | 'contain';
 }) {
-  const r = shape === 'rounded' ? { borderRadius: 20 } : { borderTopLeftRadius: 999, borderTopRightRadius: 999, borderBottomLeftRadius: 18, borderBottomRightRadius: 18 };
+  const r = shape === 'rounded' ? { borderRadius: 4 } : { borderTopLeftRadius: 999, borderTopRightRadius: 999, borderBottomLeftRadius: 18, borderBottomRightRadius: 18 };
   return (
     <View
       accessible={!!label}
@@ -210,20 +212,20 @@ export function Price({ product, style, size = 17 }: { product: Product; style?:
 
 /** Product card: 4:5 photograph, category in gold, name, price, availability. */
 export function ProductTile({ product, compact }: { product: Product; compact?: boolean }) {
-  const { pick, t } = useI18n();
+  const { pick, t, isRTL } = useI18n();
   const tag = product.categories ?? product.product_tags?.[0]?.tags;
   const soldOut = product.stock <= 0;
   const img = product.images[0];
   return (
     <Link href={{ pathname: '/product/[slug]', params: { slug: product.slug } }} asChild>
-      <Pressable accessibilityRole="link" style={StyleSheet.flatten([styles.tile, compact && { borderRadius: 16 }, soldOut && { opacity: 0.6 }])}>
+      <Pressable accessibilityRole="link" style={StyleSheet.flatten([styles.tile, soldOut && { opacity: 0.6 }])}>
         <Photo uri={img} tone={img ? colors.sandSoft : toneFor(product.slug)} fit="cover" motif={compact ? 54 : 80} style={{ borderRadius: 0 }} />
         <View style={{ gap: compact ? 3 : 4, paddingHorizontal: compact ? 10 : 14, paddingTop: compact ? 10 : 14, paddingBottom: compact ? 12 : 16 }}>
           {tag && !compact ? <Eyebrow size={11}>{pick(tag, 'name')}</Eyebrow> : null}
-          <T w={700} size={compact ? 13.5 : 15.5} lh={1.35} numberOfLines={2}>{pick(product, 'name')}</T>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, paddingTop: 2 }}>
-            <Price product={product} size={compact ? 15 : 17} />
-            {!compact ? <T w={600} size={12} color={soldOut ? colors.sampleText : colors.success}>{soldOut ? t('outOfStock') : t('inStock')}</T> : null}
+          <Serif size={compact ? 17 : 21} color={colors.navy} style={!isRTL && { lineHeight: Math.round((compact ? 17 : 21) * 1.15) }} numberOfLines={2}>{pick(product, 'name')}</Serif>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, paddingTop: 4 }}>
+            <Price product={product} size={compact ? 14 : 15.5} />
+            {!compact && soldOut ? <T w={600} size={12} color={colors.sampleText}>{t('outOfStock')}</T> : null}
           </View>
         </View>
       </Pressable>
@@ -255,7 +257,7 @@ export function Notice({ text, tone = 'info' }: { text: string; tone?: 'info' | 
   const bg = tone === 'warn' ? colors.dangerBg : tone === 'ok' ? colors.successBg : colors.infoBg;
   const fg = tone === 'warn' ? colors.danger : tone === 'ok' ? colors.success : colors.navy;
   return (
-    <View accessibilityRole="alert" style={{ backgroundColor: bg, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 16, marginVertical: space(1) }}>
+    <View accessibilityRole="alert" style={{ backgroundColor: bg, borderRadius: 4, paddingVertical: 12, paddingHorizontal: 16, marginVertical: space(1) }}>
       <T w={600} size={14} color={fg}>{text}</T>
     </View>
   );
@@ -305,7 +307,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable accessibilityLabel={t('close')} onPress={onClose} style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: wide ? 'center' : 'flex-end', alignItems: 'center' }}>
-        <Pressable onPress={() => undefined} style={{ width: '100%', maxWidth: wide ? 520 : undefined, backgroundColor: colors.ivory, borderRadius: 24, borderBottomLeftRadius: wide ? 24 : 0, borderBottomRightRadius: wide ? 24 : 0, padding: 20, paddingBottom: wide ? 20 : 32, gap: 12 }}>
+        <Pressable onPress={() => undefined} style={{ width: '100%', maxWidth: wide ? 520 : undefined, backgroundColor: colors.ivory, borderRadius: 6, borderBottomLeftRadius: wide ? 24 : 0, borderBottomRightRadius: wide ? 24 : 0, padding: 20, paddingBottom: wide ? 20 : 32, gap: 12 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Serif size={28}>{title}</Serif>
             <Pressable accessibilityRole="button" accessibilityLabel={t('close')} onPress={onClose} style={styles.iconBtn}><Icon name="close" /></Pressable>
@@ -320,7 +322,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
 /** Quantity stepper. */
 export function Stepper({ value, onChange, min = 0 }: { value: number; onChange: (n: number) => void; min?: number }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.inputLine, borderRadius: 999, backgroundColor: colors.white }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.inputLine, borderRadius: 2, backgroundColor: colors.white }}>
       <Pressable accessibilityRole="button" accessibilityLabel="−" onPress={() => onChange(Math.max(min, value - 1))} style={styles.stepBtn}><Icon name="minus" size={16} /></Pressable>
       <T w={700} size={15} style={{ minWidth: 26, textAlign: 'center' }}>{value}</T>
       <Pressable accessibilityRole="button" accessibilityLabel="+" onPress={() => onChange(value + 1)} style={styles.stepBtn}><Icon name="plus" size={16} /></Pressable>
@@ -338,13 +340,13 @@ export function Row({ label, value, bold, color }: { label: string; value: strin
 }
 
 export const styles = StyleSheet.create({
-  button: { borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
-  input: { minHeight: 48, borderWidth: 1, borderColor: colors.inputLine, borderRadius: 12, paddingHorizontal: 12, backgroundColor: colors.white, fontSize: 16, color: colors.ink },
+  button: { borderRadius: 2, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  input: { minHeight: 48, borderWidth: 1, borderColor: colors.inputLine, borderRadius: 4, paddingHorizontal: 12, backgroundColor: colors.white, fontSize: 16, color: colors.ink },
   card: { backgroundColor: colors.white, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line },
-  tile: { backgroundColor: colors.white, borderRadius: 20, borderWidth: 1, borderColor: colors.line, overflow: 'hidden', shadowColor: colors.night, shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } },
-  chip: { paddingHorizontal: 14, minHeight: 40, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1, borderColor: colors.navy, backgroundColor: colors.white },
-  tag: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
-  option: { flex: 1, minWidth: 220, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, borderRadius: 18, padding: 18, gap: 6 },
+  tile: { backgroundColor: colors.white, borderRadius: 4, borderWidth: 1, borderColor: colors.lineSoft, overflow: 'hidden' },
+  chip: { paddingHorizontal: 14, minHeight: 40, justifyContent: 'center', borderRadius: 2, borderWidth: 1, borderColor: colors.navy, backgroundColor: colors.white },
+  tag: { alignSelf: 'flex-start', borderRadius: 2, paddingHorizontal: 10, paddingVertical: 3 },
+  option: { flex: 1, minWidth: 220, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, borderRadius: 6, padding: 18, gap: 6 },
   iconBtn: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center', borderRadius: 999 },
   stepBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
 });

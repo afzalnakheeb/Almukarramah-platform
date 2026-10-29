@@ -58,7 +58,7 @@ export default function Trail() {
         <View style={{ maxWidth: 820, width: '100%', alignSelf: 'center' }}>
           <Eyebrow size={12}>{t('learning')}</Eyebrow>
           <H1 size={wide ? 52 : 36}>{title}</H1>
-          <View style={{ backgroundColor: colors.navy, borderRadius: 24, padding: wide ? 32 : 20, gap: 12, marginTop: 10 }}>
+          <View style={{ backgroundColor: colors.navy, borderRadius: 6, padding: wide ? 32 : 20, gap: 12, marginTop: 10 }}>
             <Serif size={wide ? 32 : 24} color={colors.white}>{t('seerahExternal')}</Serif>
             <Button label={t('openSeerah')} kind="light" onPress={() => openExternal(SEERAH_TRAIL_URL)} style={{ alignSelf: 'flex-start', marginTop: 6 }} />
           </View>
@@ -82,7 +82,7 @@ export default function Trail() {
           <Eyebrow size={12}>{t('day')} {open.day}</Eyebrow>
           <H1 size={wide ? 48 : 32}>{pick(open, 'title')}</H1>
           {open.quran_ref && (verses === null ? <Loading /> : (
-            <Card pad={wide ? 32 : 20} style={{ borderRadius: 24, marginTop: 10 }}>
+            <Card pad={wide ? 32 : 20} style={{ borderRadius: 6, marginTop: 10 }}>
               {verses.map((v) => (
                 <Text key={v.verse_key} style={{ fontFamily: fonts.quran, fontSize: wide ? 30 : 25, lineHeight: wide ? 64 : 54, textAlign: 'right', writingDirection: 'rtl', color: colors.ink }}>
                   {v.text_uthmani} ﴿{v.verse_key.split(':')[1]}﴾
@@ -108,17 +108,17 @@ export default function Trail() {
         <Eyebrow size={12}>{t('learning')}</Eyebrow>
         <H1 size={wide ? 52 : 36}>{title}</H1>
         {lessons.length === 0 ? (
-          <View style={{ backgroundColor: colors.navy, borderRadius: 24, padding: wide ? 32 : 20, gap: 10, marginTop: 10 }}>
+          <View style={{ backgroundColor: colors.navy, borderRadius: 6, padding: wide ? 32 : 20, gap: 10, marginTop: 10 }}>
             <Eyebrow size={11} color={colors.champagne}>{t('membersOnly')}</Eyebrow>
             <Serif size={wide ? 34 : 26} color={colors.white}>{t('membersOnlyBody')}</Serif>
             <Button label={t('circleCta')} kind="light" href="/membership" style={{ alignSelf: 'flex-start', marginTop: 6 }} />
           </View>
         ) : (
-          <Card pad={0} style={{ borderRadius: 20, overflow: 'hidden', marginTop: 10 }}>
+          <Card pad={0} style={{ borderRadius: 6, overflow: 'hidden', marginTop: 10 }}>
             {lessons.map((l, i) => (
               <Pressable key={l.id} accessibilityRole="button" onPress={() => setOpen(l)}
                 style={({ hovered }: { hovered?: boolean }) => [{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 18, borderTopWidth: i ? 1 : 0, borderColor: colors.lineSoft }, hovered && { backgroundColor: colors.lavender }]}>
-                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: done.has(l.id) ? colors.successBg : colors.ivory, alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{ width: 36, height: 36, borderRadius: 6, backgroundColor: done.has(l.id) ? colors.successBg : colors.ivory, alignItems: 'center', justifyContent: 'center' }}>
                   {done.has(l.id) ? <Icon name="check" size={18} color={colors.success} /> : <T w={700} size={13} color={colors.navy}>{l.day}</T>}
                 </View>
                 <T w={600} style={{ flex: 1 }}>{pick(l, 'title')}</T>

@@ -83,12 +83,12 @@ export default function ProductScreen() {
 
   const gallery = (
     <View style={{ gap: 12 }}>
-      <Photo uri={product.images[image]} tone={product.images[0] ? colors.sandSoft : toneFor(product.slug)} fit="cover" style={wide ? { borderRadius: 26, borderWidth: 1, borderColor: colors.champagne } : { borderRadius: 0 }} motif={wide ? 200 : 150} label={pick(product, 'name')} />
+      <Photo uri={product.images[image]} tone={product.images[0] ? colors.sandSoft : toneFor(product.slug)} fit="cover" style={wide ? { borderRadius: 8, borderWidth: 1, borderColor: colors.champagne } : { borderRadius: 0 }} motif={wide ? 200 : 150} label={pick(product, 'name')} />
       {product.images.length > 1 && (
         <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: wide ? 0 : 16 }}>
           {product.images.slice(0, 5).map((u, i) => (
             <Pressable key={u} accessibilityRole="button" accessibilityLabel={`${i + 1}`} onPress={() => setImage(i)} style={{ flex: 1, maxWidth: 110 }}>
-              <Photo uri={u} ratio={1} tone={colors.sandSoft} fit="cover" style={[{ borderRadius: 14, borderWidth: 1, borderColor: colors.line }, i === image && { borderWidth: 2, borderColor: colors.gold }]} />
+              <Photo uri={u} ratio={1} tone={colors.sandSoft} fit="cover" style={[{ borderRadius: 4, borderWidth: 1, borderColor: colors.line }, i === image && { borderWidth: 2, borderColor: colors.gold }]} />
             </Pressable>
           ))}
         </View>
@@ -117,14 +117,14 @@ export default function ProductScreen() {
         <Stepper value={qty} min={1} onChange={setQty} />
       </View>
 
-      <View style={{ backgroundColor: colors.sandSoft, borderRadius: 18, paddingVertical: 16, paddingHorizontal: 18, gap: 6 }}>
+      <View style={{ backgroundColor: colors.sandSoft, borderRadius: 6, paddingVertical: 16, paddingHorizontal: 18, gap: 6 }}>
         <Row label={`${pick(product, 'name')}${qty > 1 ? ` × ${qty}` : ''}`} value={total} />
         <Divider style={{ backgroundColor: '#DDD2BF', marginVertical: 4 }} />
         <Row label={t('total')} value={total} bold />
         <T size={12} color={colors.muted}>{t('includesVatDelivery')}</T>
       </View>
 
-      <Card pad={14} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', borderRadius: 16 }}>
+      <Card pad={14} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', borderRadius: 6 }}>
         <Icon name={destIcon(destination)} size={22} color={colors.success} />
         <View style={{ flex: 1 }}>
           <T w={700} size={14}>{t('deliveringTo')}: {t(`destTitle_${destination}` as Key)}</T>
@@ -197,9 +197,9 @@ export default function ProductScreen() {
             {added && <Notice tone="ok" text={`${t('added')}: ${added}`} />}
             <Grid cols={wide ? 3 : 1} gap={18}>
               {others.map((o) => (
-                <Card key={o.id} pad={14} style={{ flexDirection: 'row', gap: 14, alignItems: 'center', borderRadius: 18 }}>
+                <Card key={o.id} pad={14} style={{ flexDirection: 'row', gap: 14, alignItems: 'center', borderRadius: 6 }}>
                   <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/product/[slug]', params: { slug: o.slug } })} style={{ width: 84 }}>
-                    <Photo uri={o.images[0]} ratio={1} tone={o.images[0] ? colors.sandSoft : toneFor(o.slug)} fit="cover" style={{ borderRadius: 14 }} />
+                    <Photo uri={o.images[0]} ratio={1} tone={o.images[0] ? colors.sandSoft : toneFor(o.slug)} fit="cover" style={{ borderRadius: 4 }} />
                   </Pressable>
                   <View style={{ flex: 1, gap: 3 }}>
                     <T w={700} size={14} numberOfLines={2}>{pick(o, 'name')}</T>

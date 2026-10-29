@@ -98,7 +98,7 @@ export default function Account() {
       <Screen>
       <Seo title="Your account | Al Mukarramah" description="Orders, tax invoices and membership." path="/account" noindex />
         <View style={{ alignItems: 'center', paddingVertical: wide ? 32 : 8 }}>
-          <Card pad={28} style={{ width: '100%', maxWidth: 460, borderRadius: 24, gap: 14 }}>
+          <Card pad={28} style={{ width: '100%', maxWidth: 460, borderRadius: 6, gap: 14 }}>
             <Logo height={36} />
             <Serif role="h1" size={30} style={{ marginTop: 6 }}>{t('signInTitle')}</Serif>
             <T size={14} lh={1.6} color={colors.muted}>{t('signInBody')}</T>
@@ -154,7 +154,7 @@ export default function Account() {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
         {tiles.map((c) => (
           <Pressable key={c.title} accessibilityRole="link" onPress={() => (c.external ? openExternal(String(c.href)) : router.push(c.href))}
-            style={{ flexGrow: 1, flexBasis: wide ? 220 : '100%', backgroundColor: c.icon === 'shield' ? colors.navy : colors.white, borderWidth: 1, borderColor: c.icon === 'shield' ? colors.navy : colors.line, borderRadius: 20, padding: 20, gap: 6 }}>
+            style={{ flexGrow: 1, flexBasis: wide ? 220 : '100%', backgroundColor: c.icon === 'shield' ? colors.navy : colors.white, borderWidth: 1, borderColor: c.icon === 'shield' ? colors.navy : colors.line, borderRadius: 6, padding: 20, gap: 6 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Eyebrow size={11} color={c.icon === 'shield' ? colors.champagne : colors.brassText}>{c.kicker}</Eyebrow>
               <Icon name={c.icon} size={20} color={c.icon === 'shield' ? colors.champagne : colors.navy} />
@@ -166,7 +166,7 @@ export default function Account() {
       </View>
 
       {subs.length > 0 && (
-        <Card pad={wide ? 22 : 16} style={{ marginTop: 20, borderRadius: 20, gap: 4 }}>
+        <Card pad={wide ? 22 : 16} style={{ marginTop: 20, borderRadius: 6, gap: 4 }}>
           <T w={700} size={17} color={colors.navy} style={{ marginBottom: 8 }}>{t('mySubscriptions')}</T>
           {subs.map((s, i) => {
             const date = s.current_period_end ? new Date(s.current_period_end).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
@@ -195,12 +195,12 @@ export default function Account() {
         </Card>
       )}
 
-      <Card pad={wide ? 22 : 16} style={{ marginTop: 20, borderRadius: 20, gap: 4 }}>
+      <Card pad={wide ? 22 : 16} style={{ marginTop: 20, borderRadius: 6, gap: 4 }}>
         <T w={700} size={17} color={colors.navy} style={{ marginBottom: 8 }}>{t('myOrders')}</T>
         {orders.length === 0 ? <T color={colors.muted}>{t('noOrders')}</T> : orders.map((o, i) => (
           <Pressable key={o.id} accessibilityRole="link" onPress={() => router.push({ pathname: '/order', params: { id: o.id } })}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, borderTopWidth: i ? 1 : 0, borderColor: colors.lineSoft, flexWrap: 'wrap' }}>
-            <View style={{ width: 52 }}><Photo ratio={1} tone={toneFor(String(o.number))} style={{ borderRadius: 12 }} /></View>
+            <View style={{ width: 52 }}><Photo ratio={1} tone={toneFor(String(o.number))} style={{ borderRadius: 4 }} /></View>
             <View style={{ flex: 1, minWidth: 180, gap: 2 }}>
               <T w={700} size={15}>AM-{o.number}</T>
               <T size={13} color={colors.muted}>
@@ -226,7 +226,7 @@ export default function Account() {
       </View>
 
       {profile && (
-        <Card pad={wide ? 22 : 16} style={{ marginTop: 28, borderRadius: 20, gap: 4 }}>
+        <Card pad={wide ? 22 : 16} style={{ marginTop: 28, borderRadius: 6, gap: 4 }}>
           <T w={700} size={17} color={colors.navy} style={{ marginBottom: 4 }}>{t('yourDetails')}</T>
           <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 14 : 0 }}>
             <View style={{ flex: 1 }}><Field label={t('fullName')} value={profile.full_name ?? ''} onChangeText={(v) => { setProfileSaved(false); setProfile({ ...profile, full_name: v }); }} autoComplete="name" /></View>

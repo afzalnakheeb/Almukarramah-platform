@@ -51,7 +51,8 @@ export const toneFor = (key: string) => tones[[...key].reduce((n, c) => n + c.ch
 
 export const space = (n: number) => n * 8;
 
-export const radius = { sm: 10, md: 16, lg: 20, xl: 26, pill: 999 };
+/** Crisp corners read as tailored and premium; large rounded corners read as an everyday app. */
+export const radius = { sm: 3, md: 4, lg: 6, xl: 8, pill: 2 };
 
 /** Font family names registered in app/_layout.tsx (Google Fonts via expo-font). */
 export const fonts = {

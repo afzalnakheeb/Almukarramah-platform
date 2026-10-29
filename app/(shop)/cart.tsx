@@ -35,9 +35,9 @@ export default function CartScreen() {
   }
 
   const summary = (
-    <Card pad={20} style={{ gap: 10, borderRadius: 20 }}>
+    <Card pad={20} style={{ gap: 10, borderRadius: 6 }}>
       <T w={700} size={17} color={colors.navy}>{t('summary')}</T>
-      <View style={{ backgroundColor: colors.ivory, borderRadius: 14, padding: 12, gap: 2 }}>
+      <View style={{ backgroundColor: colors.ivory, borderRadius: 4, padding: 12, gap: 2 }}>
         <T size={12} color={colors.muted}>{t('deliveringTo')}</T>
         <T w={700} size={14}>{t(`destTitle_${destination}` as Key)}</T>
       </View>
@@ -63,9 +63,9 @@ export default function CartScreen() {
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 32 : 18, alignItems: 'flex-start' }}>
         <View style={{ flex: 1, alignSelf: 'stretch', gap: 14 }}>
           {lines.map((l) => (
-            <Card key={l.productId} pad={16} style={{ flexDirection: 'row', gap: 16, borderRadius: 20 }}>
+            <Card key={l.productId} pad={16} style={{ flexDirection: 'row', gap: 16, borderRadius: 6 }}>
               <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/product/[slug]', params: { slug: l.slug } })} style={{ width: wide ? 120 : 84 }}>
-                <Photo uri={l.image} ratio={4 / 5} tone={l.image ? colors.white : toneFor(l.slug)} fit="contain" style={{ borderRadius: 14, borderWidth: 1, borderColor: colors.line }} />
+                <Photo uri={l.image} ratio={4 / 5} tone={l.image ? colors.white : toneFor(l.slug)} fit="contain" style={{ borderRadius: 4, borderWidth: 1, borderColor: colors.line }} />
               </Pressable>
               <View style={{ flex: 1, gap: 6 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
@@ -83,7 +83,7 @@ export default function CartScreen() {
             </Card>
           ))}
 
-          <Card pad={wide ? 22 : 16} style={{ gap: 12, borderRadius: 20 }}>
+          <Card pad={wide ? 22 : 16} style={{ gap: 12, borderRadius: 6 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Serif role="h2" size={wide ? 30 : 24}>{t('gifting')}</Serif>
               <Tag label={t('optional')} />

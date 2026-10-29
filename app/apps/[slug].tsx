@@ -40,7 +40,7 @@ export default function AppPage() {
       {/* Hero in the app's own colour */}
       <View style={{ backgroundColor: a.accent }}>
         <Container style={{ paddingVertical: wide ? 64 : 36, flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: wide ? 40 : 22 }}>
-          <View style={{ width: wide ? 168 : 112, height: wide ? 168 : 112, borderRadius: wide ? 40 : 28, overflow: 'hidden', borderWidth: 3, borderColor: 'rgba(255,255,255,0.25)' }}>
+          <View style={{ width: wide ? 168 : 112, height: wide ? 168 : 112, borderRadius: wide ? 40 : 8, overflow: 'hidden', borderWidth: 3, borderColor: 'rgba(255,255,255,0.25)' }}>
             <Image source={{ uri: a.icon }} style={{ width: '100%', height: '100%' }} accessibilityLabel={a.name_en} />
           </View>
           <View style={{ flex: 1, gap: 10 }}>
@@ -67,7 +67,7 @@ export default function AppPage() {
             <T size={wide ? 18 : 16} lh={1.7} color={colors.body}>{ar ? a.description_ar : a.description_en}</T>
             <T size={14} color={colors.muted}>{t('appFor')}: {ar ? a.audience_ar : a.audience_en}</T>
           </View>
-          <Card pad={wide ? 24 : 18} style={{ flex: 1, borderRadius: 22, gap: 12, alignSelf: 'stretch' }}>
+          <Card pad={wide ? 24 : 18} style={{ flex: 1, borderRadius: 6, gap: 12, alignSelf: 'stretch' }}>
             <T w={700} size={16} color={colors.navy}>{t('appFeatures')}</T>
             {(ar ? a.features_ar : a.features_en).map((f) => (
               <View key={f} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
@@ -80,7 +80,7 @@ export default function AppPage() {
           </Card>
         </View>
 
-        <Card pad={wide ? 24 : 18} style={{ borderRadius: 22, gap: 10, backgroundColor: colors.lavender }}>
+        <Card pad={wide ? 24 : 18} style={{ borderRadius: 6, gap: 10, backgroundColor: colors.lavender }}>
           <T w={700} size={16} color={colors.navy}>{t('installTitle')}</T>
           <T size={14.5} lh={1.6} color={colors.body}>{t('installIphone')}</T>
           <T size={14.5} lh={1.6} color={colors.body}>{t('installAndroid')}</T>

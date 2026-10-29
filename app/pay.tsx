@@ -82,7 +82,7 @@ export default function Pay() {
       <Seo title="Secure payment | Al Mukarramah" description="Secure payment with Moyasar." path="/pay" noindex />
       <H1 size={wide ? 44 : 32}>{t('paymentTitle')}</H1>
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 32 : 16, alignItems: 'flex-start' }}>
-        <Card pad={wide ? 24 : 16} style={{ flex: 1, alignSelf: 'stretch', borderRadius: 20, gap: 12 }}>
+        <Card pad={wide ? 24 : 16} style={{ flex: 1, alignSelf: 'stretch', borderRadius: 6, gap: 12 }}>
           <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
             <Icon name="shield" size={22} color={colors.success} />
             <T size={13.5} lh={1.6} color={colors.body} style={{ flex: 1 }}>{t('payFormNote')}</T>
@@ -94,7 +94,7 @@ export default function Pay() {
         </Card>
         {config && (
           <View style={{ width: wide ? 340 : '100%' }}>
-            <Card pad={20} style={{ gap: 10, borderRadius: 20 }}>
+            <Card pad={20} style={{ gap: 10, borderRadius: 6 }}>
               <Row label={name ?? ''} value={`${formatMoney(config.amount, config.currency, lang)} / ${t('perMonth')}`} bold />
               <T size={12} color={colors.muted}>{t('vatIncluded')}</T>
               <T size={13} lh={1.5} color={colors.body}>{t('monthlyCharge')}</T>
