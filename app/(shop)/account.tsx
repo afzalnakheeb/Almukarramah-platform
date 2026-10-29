@@ -9,10 +9,11 @@ import { useI18n, type Key } from '@/lib/i18n';
 import { openExternal, SEERAH_TRAIL_URL } from '@/lib/links';
 import { formatMoney } from '@/lib/money';
 import { useSession } from '@/lib/session';
-import { isConfigured, supabase } from '@/lib/supabase';
+import { callFunction, isConfigured, supabase } from '@/lib/supabase';
 import { colors, toneFor } from '@/theme';
 import { Seo } from '@/components/seo';
 
+type SubRow = { id: string; source: string; status: string; cancel_at_period_end: boolean; current_period_end: string | null; plans: { name_en: string; name_ar: string; price_sar: number; kind: string } | null };
 type OrderRow = { id: string; number: number; status: string; currency: string; total_minor: number; created_at: string; invoices: { id: string; number: string }[] };
 
 const STATUS_TONE: Record<string, 'ok' | 'warn' | 'info' | 'err' | 'mute'> = {
@@ -28,6 +29,30 @@ export default function Account() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [subs, setSubs] = useState<SubRow[]>([]);
+  const [subBusy, setSubBusy] = useState<string | null>(null);
+  const [subError, setSubError] = useState<string | null>(null);
+
+  const loadSubs = () =>
+    supabase
+      .from('subscriptions')
+      .select('id, source, status, cancel_at_period_end, current_period_end, plans(name_en, name_ar, price_sar, kind)')
+      .in('status', ['active', 'past_due'])
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setSubs((data as unknown as SubRow[]) ?? []));
+
+  async function changeSub(id: string, action: 'cancel' | 'resume') {
+    setSubBusy(id);
+    setSubError(null);
+    try {
+      await callFunction('manage-subscription', { subscriptionId: id, action });
+      await loadSubs();
+    } catch {
+      setSubError(t('subChangeError'));
+    } finally {
+      setSubBusy(null);
+    }
+  }
 
   useEffect(() => {
     if (!session) return;
@@ -37,7 +62,8 @@ export default function Account() {
       .order('created_at', { ascending: false })
       .limit(10)
       .then(({ data }) => setOrders((data as OrderRow[]) ?? []));
-  }, [session]);
+    loadSubs();
+  }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!session) {
     return (
@@ -102,6 +128,36 @@ export default function Account() {
           </Pressable>
         ))}
       </View>
+
+      {subs.length > 0 && (
+        <Card pad={wide ? 22 : 16} style={{ marginTop: 20, borderRadius: 20, gap: 4 }}>
+          <T w={700} size={17} color={colors.navy} style={{ marginBottom: 8 }}>{t('mySubscriptions')}</T>
+          {subs.map((s, i) => {
+            const date = s.current_period_end ? new Date(s.current_period_end).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+            const store = s.source !== 'moyasar';
+            return (
+              <View key={s.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, borderTopWidth: i ? 1 : 0, borderColor: colors.lineSoft, flexWrap: 'wrap' }}>
+                <View style={{ flex: 1, minWidth: 200, gap: 2 }}>
+                  <T w={700} size={15}>{s.plans ? (lang === 'ar' ? s.plans.name_ar : s.plans.name_en) : ''}</T>
+                  <T size={13} color={colors.muted}>
+                    {s.plans ? `${formatMoney(s.plans.price_sar, 'SAR', lang)} / ${t('perMonth')} · ` : ''}
+                    {s.status === 'past_due' ? t('subPastDue') : s.cancel_at_period_end ? `${t('subEnds')} ${date}` : `${t('subRenews')} ${date}`}
+                  </T>
+                  {store && <T size={12.5} color={colors.muted}>{t('subStoreManaged')}</T>}
+                </View>
+                <Tag label={s.status === 'past_due' ? t('subPastDueTag') : s.cancel_at_period_end ? t('subCancelledTag') : t('subActiveTag')} tone={s.status === 'past_due' ? 'warn' : s.cancel_at_period_end ? 'mute' : 'ok'} />
+                {!store && (
+                  <Button size="sm" kind="secondary" busy={subBusy === s.id}
+                    label={s.cancel_at_period_end ? t('subResume') : t('subCancel')}
+                    onPress={() => changeSub(s.id, s.cancel_at_period_end ? 'resume' : 'cancel')} />
+                )}
+              </View>
+            );
+          })}
+          {subError && <Notice tone="warn" text={subError} />}
+          <T size={12.5} color={colors.muted} style={{ marginTop: 6 }}>{t('subCancelNote')}</T>
+        </Card>
+      )}
 
       <Card pad={wide ? 22 : 16} style={{ marginTop: 20, borderRadius: 20, gap: 4 }}>
         <T w={700} size={17} color={colors.navy} style={{ marginBottom: 8 }}>{t('myOrders')}</T>

@@ -1,5 +1,6 @@
 // Membership — follows MembershipPublic.dc.html. Prices come from the plans table.
 import * as WebBrowser from 'expo-web-browser';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { Screen } from '@/components/chrome';
@@ -38,6 +39,8 @@ export default function Membership() {
         await buyMembership();
         return setMsg('✓');
       }
+      // Box clubs need a delivery address first.
+      if (plan.kind === 'box') return router.push({ pathname: '/subscribe', params: { plan: plan.slug } });
       // Website membership and physical box clubs are paid through Moyasar (card saved for monthly renewal).
       const res = await callFunction<{ paymentUrl: string }>('create-payment', { planId: plan.id, lang });
       if (Platform.OS === 'web') window.location.href = res.paymentUrl;

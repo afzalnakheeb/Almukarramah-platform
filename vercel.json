@@ -4,6 +4,48 @@
   "buildCommand": "npm run build:web",
   "outputDirectory": "dist",
   "framework": null,
+  "redirects": [
+    {
+      "source": "/products/:slug([^./]+)",
+      "destination": "/product/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/collections/:c/products/:slug([^./]+)",
+      "destination": "/product/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/collections/all",
+      "destination": "/shop",
+      "permanent": true
+    },
+    {
+      "source": "/collections",
+      "destination": "/shop",
+      "permanent": true
+    },
+    {
+      "source": "/search",
+      "destination": "/shop",
+      "permanent": true
+    },
+    {
+      "source": "/pages/:page*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/account/:path+",
+      "destination": "/account",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",

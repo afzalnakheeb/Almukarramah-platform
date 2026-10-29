@@ -30,11 +30,16 @@ Deno.serve(handle(async (req) => {
     if (!user) throw new Error('Sign in first');
     const { data: plan } = await db.from('plans').select('*').eq('id', body.planId).eq('active', true).single();
     if (!plan) throw new Error('Plan not found');
-    const { data: sub } = await db.from('subscriptions').insert({ user_id: user.id, plan_id: plan.id, source: 'moyasar', status: 'past_due' }).select('id').single();
+    // Box clubs are delivered every month: they need a Saudi delivery address.
+    const shipTo = plan.kind === 'box' ? body.shipTo : null;
+    if (plan.kind === 'box' && (!shipTo || shipTo.country !== 'SA' || !shipTo.recipient_name || !shipTo.phone || !shipTo.city || !shipTo.line1)) {
+      throw new Error('A delivery address in Saudi Arabia is needed for this box');
+    }
+    const { data: sub } = await db.from('subscriptions').insert({ user_id: user.id, plan_id: plan.id, source: 'moyasar', status: 'past_due', ship_to: shipTo }).select('id').single();
     const { data: order } = await db.from('orders').insert({
       user_id: user.id, email: user.email, kind: 'subscription', subscription_id: sub!.id, currency: 'SAR',
       subtotal_minor: plan.price_sar, total_minor: plan.price_sar, vat_minor: vatIncluded(plan.price_sar, settings.vat_rate_bp),
-      ship_to: { kind: 'home', recipient_name: user.email, country: 'SA', city: '-', line1: '-' },
+      ship_to: shipTo ?? { kind: 'home', recipient_name: user.email, country: 'SA', city: '-', line1: '-' },
     }).select('id, number').single();
     await db.from('order_items').insert({ order_id: order!.id, name_en: plan.name_en, name_ar: plan.name_ar, unit_price_minor: plan.price_sar, quantity: 1, line_total_minor: plan.price_sar });
     const inv = await createInvoice({
