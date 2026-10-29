@@ -2,21 +2,27 @@
 premium background with a soft shadow, at 1200 x 1500 (the 4:5 shape the shop uses).
 
 Two looks:
-  ivory  - warm ivory-to-sand studio light (default for the shop)
+  ivory  - warm ivory-to-sand studio light
   night  - deep navy with a soft gold glow (matches the site's dark sections)
 
-Usage (runs in GitHub Actions, see .github/workflows/photos.yml):
-  python scripts/product_photos.py --out photo-out --looks ivory,night --compare <image path or URL> ...
+Two steps, so the slow part (background removal) runs once and the look can be chosen afterwards:
+  cut      python scripts/product_photos.py cut --list scripts/photo-all.txt --shard 3/12 --out photo-cut
+           -> photo-cut/<local path>.webp (transparent cut-out), photo-cut/report-<shard>.json, review sheets
+  compose  python scripts/product_photos.py compose --cut photo-cut --look ivory --dest public
+           -> public/<local path> (same file names the shop already uses, so no database change is needed)
+
+Photos where the product runs off the edge of the frame (close-ups, cropped shots) or where nothing could be
+separated cleanly are reported as "keep" and are left as the original photo.
 """
 import argparse
 import io
+import json
 import os
 import sys
 import urllib.request
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
-from rembg import new_session, remove
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from scipy import ndimage
 from scipy.spatial import ConvexHull
 
@@ -40,7 +46,12 @@ def radial(w, h, inner, outer, cx=0.5, cy=0.42, power=1.6):
     return Image.fromarray(img.astype(np.uint8), "RGB")
 
 
+_BG = {}
+
+
 def background(look: str) -> Image.Image:
+    if look in _BG:
+        return _BG[look].copy()
     if look == "night":
         bg = radial(W, H, (26, 33, 96), (7, 11, 44), power=1.2)
         glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -48,25 +59,26 @@ def background(look: str) -> Image.Image:
         g.ellipse((W * 0.12, H * 0.10, W * 0.88, H * 0.78), fill=(201, 164, 92, 70))
         glow = glow.filter(ImageFilter.GaussianBlur(160))
         bg = Image.alpha_composite(bg.convert("RGBA"), glow)
-        # thin gold arch line, very faint, for the house look
         arch = Image.new("RGBA", (W, H), (0, 0, 0, 0))
         a = ImageDraw.Draw(arch)
         m = 70
         a.rounded_rectangle((m, m, W - m, H - m), radius=40, outline=(201, 164, 92, 46), width=2)
         a.arc((m, m, W - m, W - 2 * m + m), 180, 360, fill=(201, 164, 92, 60), width=2)
-        return Image.alpha_composite(bg, arch)
-    bg = radial(W, H, (255, 253, 248), (234, 223, 203), power=1.8)
-    # soft floor: slightly warmer band at the bottom
-    floor = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    f = ImageDraw.Draw(floor)
-    f.rectangle((0, int(H * 0.80), W, H), fill=(214, 199, 172, 60))
-    floor = floor.filter(ImageFilter.GaussianBlur(90))
-    return Image.alpha_composite(bg.convert("RGBA"), floor)
+        out = Image.alpha_composite(bg, arch)
+    else:
+        bg = radial(W, H, (255, 253, 248), (234, 223, 203), power=1.8)
+        floor = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        f = ImageDraw.Draw(floor)
+        f.rectangle((0, int(H * 0.80), W, H), fill=(214, 199, 172, 60))
+        floor = floor.filter(ImageFilter.GaussianBlur(90))
+        out = Image.alpha_composite(bg.convert("RGBA"), floor)
+    _BG[look] = out
+    return out.copy()
 
 
 def solid_mask(alpha: np.ndarray, flat: bool) -> np.ndarray:
     """Background removal can punch holes in light parts of a product (white patterns on a rug).
-    Holes enclosed by the product are always filled. For flat items (prayer mats, rugs, sets of mats) each piece
+    Holes enclosed by the product are always filled. For flat items (prayer mats, rugs) each piece
     is made solid along its outline (convex hull), which also fixes light areas touching the edge."""
     solid = alpha > 40
     filled = ndimage.binary_fill_holes(solid)
@@ -93,21 +105,38 @@ def solid_mask(alpha: np.ndarray, flat: bool) -> np.ndarray:
     return out
 
 
-def cutout(img: Image.Image, session, flat: bool = False) -> Image.Image:
+def check(alpha: np.ndarray) -> str:
+    """Returns '' when the cut-out is usable, otherwise why the original photo should be kept."""
+    m = alpha > 128
+    cover = m.mean()
+    if cover < 0.03:
+        return "nothing found"
+    if cover > 0.88:
+        return "fills the frame"
+    h, w = m.shape
+    edges = {"top": m[:3].any(0).mean(), "bottom": m[-3:].any(0).mean(), "left": m[:, :3].any(1).mean(), "right": m[:, -3:].any(1).mean()}
+    cut = [k for k, v in edges.items() if v > 0.10]
+    if cut:
+        return "runs off the " + "/".join(cut) + " edge"
+    return ""
+
+
+def cutout(img: Image.Image, session, flat: bool = False):
+    from rembg import remove
+
     rgba = remove(img, session=session, post_process_mask=True)
     alpha = np.array(rgba.split()[-1])
     fill = solid_mask(alpha, flat)
-    # keep soft edges where the model had them; make the inside fully solid
     inner = ndimage.binary_erosion(fill, iterations=2)
     alpha = np.where(inner, 255, np.where(fill, np.maximum(alpha, 160), alpha)).astype(np.uint8)
+    why = check(alpha)
     rgba = Image.merge("RGBA", (*img.convert("RGB").split(), Image.fromarray(alpha)))
-    a = alpha
-    ys, xs = np.where(a > 12)
+    ys, xs = np.where(alpha > 12)
     if not len(xs):
-        raise ValueError("nothing found in the photo")
+        return None, why or "nothing found"
     pad = 4
     box = (max(0, xs.min() - pad), max(0, ys.min() - pad), min(rgba.width, xs.max() + pad), min(rgba.height, ys.max() + pad))
-    return rgba.crop(box)
+    return rgba.crop(box), why
 
 
 def compose(item: Image.Image, look: str) -> Image.Image:
@@ -119,7 +148,6 @@ def compose(item: Image.Image, look: str) -> Image.Image:
     y = int(H * 0.47 - item.height / 2)
     y = max(int(H * 0.08), min(y, int(H * 0.86) - item.height))
 
-    # soft contact shadow under the product and a gentle drop shadow from its own shape
     dark = 110 if look == "night" else 70
     shadow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
@@ -138,50 +166,118 @@ def compose(item: Image.Image, look: str) -> Image.Image:
     return Image.alpha_composite(out, layer).convert("RGB")
 
 
+def read_list(path):
+    rows = []
+    for line in open(path):
+        if not line.strip() or line.startswith("#"):
+            continue
+        parts = line.split()
+        rows.append({"path": parts[0], "src": parts[1], "flat": len(parts) > 2 and parts[2] == "flat"})
+    return rows
+
+
+def font(size):
+    for f in ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "/usr/share/fonts/dejavu/DejaVuSans.ttf"):
+        if os.path.exists(f):
+            return ImageFont.truetype(f, size)
+    return ImageFont.load_default()
+
+
+def sheet(entries, out_path):
+    """Review sheet: per photo, original | ivory | night, three photos per row."""
+    tw, th, gap, label = 240, 300, 8, 34
+    per_row = 3
+    rows = (len(entries) + per_row - 1) // per_row
+    cell_w = tw * 3 + gap * 2
+    canvas = Image.new("RGB", (per_row * cell_w + (per_row + 1) * 24, rows * (th + label + 24) + 24), (250, 250, 250))
+    d = ImageDraw.Draw(canvas)
+    f = font(15)
+    for i, (name, orig, ivory, night, why) in enumerate(entries):
+        cx = 24 + (i % per_row) * (cell_w + 24)
+        cy = 24 + (i // per_row) * (th + label + 24)
+        for j, im in enumerate([orig, ivory, night]):
+            box = Image.new("RGB", (tw, th), (255, 255, 255))
+            if im is not None:
+                t = im.copy()
+                t.thumbnail((tw, th))
+                box.paste(t, ((tw - t.width) // 2, (th - t.height) // 2))
+            canvas.paste(box, (cx + j * (tw + gap), cy))
+        txt = f"{i + 1}. {name}" + (f"  KEEP ORIGINAL: {why}" if why else "")
+        d.text((cx, cy + th + 8), txt[:110], fill=(180, 0, 0) if why else (20, 20, 20), font=f)
+    canvas.save(out_path, quality=78)
+
+
+def cmd_cut(a):
+    from rembg import new_session
+
+    rows = read_list(a.list)
+    i, n = (int(x) for x in a.shard.split("/"))
+    rows = rows[i - 1 :: n]
+    os.makedirs(a.out, exist_ok=True)
+    sheets_dir = os.path.join(a.out, "sheets")
+    os.makedirs(sheets_dir, exist_ok=True)
+    session = new_session(os.environ.get("PHOTO_MODEL", "birefnet-general"))
+    report, review = [], []
+    for r in rows:
+        name = r["path"].split("/")[-1].rsplit(".", 1)[0]
+        try:
+            img = load(r["src"])
+            item, why = cutout(img, session, r["flat"])
+            if item is not None and not why:
+                dest = os.path.join(a.out, r["path"].lstrip("/").rsplit(".", 1)[0] + ".webp")
+                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                item.save(dest, "WEBP", quality=90, method=5)
+            iv = compose(item, "ivory") if item is not None and not why else None
+            ni = compose(item, "night") if item is not None and not why else None
+            report.append({"path": r["path"], "ok": not why, "why": why})
+            review.append((name, img, iv, ni, why))
+            print("ok" if not why else "keep", r["path"], why, flush=True)
+        except Exception as e:  # keep going; report at the end
+            report.append({"path": r["path"], "ok": False, "why": f"error: {e}"})
+            review.append((name, None, None, None, f"error: {e}"))
+            print("FAILED", r["path"], e, file=sys.stderr, flush=True)
+    for k in range(0, len(review), 12):
+        sheet(review[k : k + 12], os.path.join(sheets_dir, f"sheet-{i:02d}-{k // 12 + 1}.jpg"))
+    json.dump(report, open(os.path.join(a.out, f"report-{i:02d}.json"), "w"), indent=1)
+    print(f"done: {sum(x['ok'] for x in report)} cut, {sum(not x['ok'] for x in report)} kept as original")
+
+
+def cmd_compose(a):
+    looks = {}
+    if a.look_map:
+        for line in open(a.look_map):
+            if line.strip() and not line.startswith("#"):
+                p, l = line.split()
+                looks[p] = l
+    done = 0
+    for root, _, files in os.walk(a.cut):
+        for fn in files:
+            if not fn.endswith(".webp"):
+                continue
+            rel = os.path.relpath(os.path.join(root, fn), a.cut).rsplit(".", 1)[0] + ".jpg"
+            look = looks.get("/" + rel, a.look)
+            item = Image.open(os.path.join(root, fn)).convert("RGBA")
+            dest = os.path.join(a.dest, rel)
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            compose(item, look).save(dest, quality=84, optimize=True, progressive=True)
+            done += 1
+    print(f"composed {done} photos")
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--out", required=True)
-    p.add_argument("--looks", default="ivory")
-    p.add_argument("--compare", action="store_true", help="also write a before/after sheet per photo")
-    p.add_argument("--names", default="", help="comma-separated output names, same order as the sources")
-    p.add_argument("--list", help="file with one 'name source' per line")
-    p.add_argument("sources", nargs="*")
+    sub = p.add_subparsers(dest="cmd", required=True)
+    c = sub.add_parser("cut")
+    c.add_argument("--list", required=True)
+    c.add_argument("--shard", default="1/1")
+    c.add_argument("--out", default="photo-cut")
+    m = sub.add_parser("compose")
+    m.add_argument("--cut", default="photo-cut")
+    m.add_argument("--look", default="ivory")
+    m.add_argument("--look-map", help="optional file of '/products/x.jpg night' lines overriding the look per photo")
+    m.add_argument("--dest", default="public")
     a = p.parse_args()
-    if a.list:
-        pairs = [l.split() for l in open(a.list) if l.strip() and not l.startswith("#")]
-        a.names = ",".join(x[0] for x in pairs)
-        a.sources = [x[1] for x in pairs]
-        a.modes = [x[2] if len(x) > 2 else "" for x in pairs]
-    else:
-        a.modes = [""] * len(a.sources)
-    os.makedirs(a.out, exist_ok=True)
-    looks = [l.strip() for l in a.looks.split(",") if l.strip()]
-    names = [n for n in a.names.split(",") if n] or [os.path.splitext(os.path.basename(s.split("?")[0]))[0] for s in a.sources]
-    session = new_session(os.environ.get("PHOTO_MODEL", "birefnet-general"))
-    failed = 0
-    for src, name, mode in zip(a.sources, names, a.modes):
-        try:
-            img = load(src)
-            item = cutout(img, session, flat=(mode == "flat"))
-            outs = []
-            for look in looks:
-                o = compose(item, look)
-                o.save(os.path.join(a.out, f"{name}--{look}.jpg"), quality=86, optimize=True, progressive=True)
-                outs.append(o)
-            if a.compare:
-                before = img.copy()
-                before.thumbnail((W, H))
-                canvas = Image.new("RGB", (W * (1 + len(outs)) // 2, H // 2), (255, 255, 255))
-                b = Image.new("RGB", (W, H), (255, 255, 255))
-                b.paste(before, ((W - before.width) // 2, (H - before.height) // 2))
-                for i, im in enumerate([b] + outs):
-                    canvas.paste(im.resize((W // 2, H // 2)), (i * W // 2, 0))
-                canvas.save(os.path.join(a.out, f"{name}--compare.jpg"), quality=80)
-            print("ok", name)
-        except Exception as e:  # keep going; report at the end
-            failed += 1
-            print("FAILED", name, e, file=sys.stderr)
-    print(f"done, {failed} failed")
+    cmd_cut(a) if a.cmd == "cut" else cmd_compose(a)
 
 
 if __name__ == "__main__":

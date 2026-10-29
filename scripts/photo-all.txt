@@ -1,0 +1,307 @@
+# local-path  source  [flat]   (all product photos; local path is where the studio version will go)
+/products/ajwati-ajwa-dates-500g-1.jpg public/products/ajwati-ajwa-dates-500g-1.jpg
+/products/ajwati-ajwa-dates-500g-2.jpg public/products/ajwati-ajwa-dates-500g-2.jpg
+/products/ajwati-sukkari-dates-1.jpg public/products/ajwati-sukkari-dates-1.jpg
+/products/al-baraka-rawdah-prayer-mat-green-1.jpg public/products/al-baraka-rawdah-prayer-mat-green-1.jpg flat
+/products/al-baraka-rawdah-prayer-mat-green-2.jpg public/products/al-baraka-rawdah-prayer-mat-green-2.jpg flat
+/products/black-stone-prayer-mat-1.jpg public/products/black-stone-prayer-mat-1.jpg flat
+/products/black-stone-prayer-mat-2.jpg public/products/black-stone-prayer-mat-2.jpg flat
+/products/calligraphy-prayer-mat-blue-1.jpg public/products/calligraphy-prayer-mat-blue-1.jpg flat
+/products/calligraphy-prayer-mat-blue-2.jpg public/products/calligraphy-prayer-mat-blue-2.jpg flat
+/products/calligraphy-prayer-mat-burgundy-1.jpg public/products/calligraphy-prayer-mat-burgundy-1.jpg flat
+/products/calligraphy-prayer-mat-burgundy-2.jpg public/products/calligraphy-prayer-mat-burgundy-2.jpg flat
+/products/calligraphy-prayer-mat-cream-1.jpg public/products/calligraphy-prayer-mat-cream-1.jpg flat
+/products/calligraphy-prayer-mat-cream-2.jpg public/products/calligraphy-prayer-mat-cream-2.jpg flat
+/products/calligraphy-prayer-mat-green-1.jpg public/products/calligraphy-prayer-mat-green-1.jpg flat
+/products/calligraphy-prayer-mat-green-2.jpg public/products/calligraphy-prayer-mat-green-2.jpg flat
+/products/calligraphy-prayer-mat-navy-1.jpg public/products/calligraphy-prayer-mat-navy-1.jpg flat
+/products/calligraphy-prayer-mat-navy-2.jpg public/products/calligraphy-prayer-mat-navy-2.jpg flat
+/products/calligraphy-prayer-mat-set-blue-1.jpg public/products/calligraphy-prayer-mat-set-blue-1.jpg
+/products/calligraphy-prayer-mat-set-blue-2.jpg public/products/calligraphy-prayer-mat-set-blue-2.jpg
+/products/calligraphy-prayer-mat-set-blue-3.jpg public/products/calligraphy-prayer-mat-set-blue-3.jpg
+/products/calligraphy-prayer-mat-set-burgundy-1.jpg public/products/calligraphy-prayer-mat-set-burgundy-1.jpg
+/products/calligraphy-prayer-mat-set-burgundy-2.jpg public/products/calligraphy-prayer-mat-set-burgundy-2.jpg
+/products/calligraphy-prayer-mat-set-burgundy-3.jpg public/products/calligraphy-prayer-mat-set-burgundy-3.jpg
+/products/calligraphy-prayer-mat-set-cream-1.jpg public/products/calligraphy-prayer-mat-set-cream-1.jpg
+/products/calligraphy-prayer-mat-set-cream-2.jpg public/products/calligraphy-prayer-mat-set-cream-2.jpg
+/products/calligraphy-prayer-mat-set-green-1.jpg public/products/calligraphy-prayer-mat-set-green-1.jpg
+/products/calligraphy-prayer-mat-set-green-2.jpg public/products/calligraphy-prayer-mat-set-green-2.jpg
+/products/calligraphy-prayer-mat-set-navy-1.jpg public/products/calligraphy-prayer-mat-set-navy-1.jpg
+/products/calligraphy-prayer-mat-set-navy-2.jpg public/products/calligraphy-prayer-mat-set-navy-2.jpg
+/products/calligraphy-prayer-mat-set-navy-3.jpg public/products/calligraphy-prayer-mat-set-navy-3.jpg
+/products/floral-mihrab-prayer-mat-cream-1.jpg public/products/floral-mihrab-prayer-mat-cream-1.jpg flat
+/products/floral-mihrab-prayer-mat-cream-2.jpg public/products/floral-mihrab-prayer-mat-cream-2.jpg flat
+/products/floral-vine-prayer-mat-cream-1.jpg public/products/floral-vine-prayer-mat-cream-1.jpg flat
+/products/geometric-star-prayer-mat-navy-1.jpg public/products/geometric-star-prayer-mat-navy-1.jpg flat
+/products/haram-window-woven-rug-green-1.jpg public/products/haram-window-woven-rug-green-1.jpg flat
+/products/haram-window-woven-rug-green-2.jpg public/products/haram-window-woven-rug-green-2.jpg flat
+/products/imams-mihrab-woven-rug-green-1.jpg public/products/imams-mihrab-woven-rug-green-1.jpg flat
+/products/imams-mihrab-woven-rug-green-2.jpg public/products/imams-mihrab-woven-rug-green-2.jpg flat
+/products/kaaba-clock-tower-woven-rug-gold-1.jpg public/products/kaaba-clock-tower-woven-rug-gold-1.jpg flat
+/products/kaaba-clock-tower-woven-rug-gold-2.jpg public/products/kaaba-clock-tower-woven-rug-gold-2.jpg flat
+/products/kaaba-clock-tower-woven-rug-mint-1.jpg public/products/kaaba-clock-tower-woven-rug-mint-1.jpg flat
+/products/kaaba-clock-tower-woven-rug-rose-1.jpg public/products/kaaba-clock-tower-woven-rug-rose-1.jpg flat
+/products/kaaba-clock-tower-woven-rug-rose-2.jpg public/products/kaaba-clock-tower-woven-rug-rose-2.jpg flat
+/products/kaaba-door-prayer-mat-1.jpg public/products/kaaba-door-prayer-mat-1.jpg flat
+/products/kaaba-door-prayer-mat-2.jpg public/products/kaaba-door-prayer-mat-2.jpg flat
+/products/kaaba-door-prayer-mat-3.jpg public/products/kaaba-door-prayer-mat-3.jpg flat
+/products/kaaba-kiswah-prayer-mat-1.jpg public/products/kaaba-kiswah-prayer-mat-1.jpg flat
+/products/kaaba-kiswah-prayer-mat-2.jpg public/products/kaaba-kiswah-prayer-mat-2.jpg flat
+/products/kaaba-kiswah-prayer-mat-3.jpg public/products/kaaba-kiswah-prayer-mat-3.jpg flat
+/products/kids-rawdah-woven-rug-green-1.jpg public/products/kids-rawdah-woven-rug-green-1.jpg flat
+/products/kids-rawdah-woven-rug-green-2.jpg public/products/kids-rawdah-woven-rug-green-2.jpg flat
+/products/kids-rawdah-woven-rug-red-1.jpg public/products/kids-rawdah-woven-rug-red-1.jpg flat
+/products/kids-rawdah-woven-rug-red-2.jpg public/products/kids-rawdah-woven-rug-red-2.jpg flat
+/products/masjid-quba-metal-magnet-1.jpg public/products/masjid-quba-metal-magnet-1.jpg
+/products/masjid-quba-metal-magnet-2.jpg public/products/masjid-quba-metal-magnet-2.jpg
+/products/mihrab-an-nabi-3d-woven-rug-1.jpg public/products/mihrab-an-nabi-3d-woven-rug-1.jpg flat
+/products/mihrab-an-nabi-3d-woven-rug-2.jpg public/products/mihrab-an-nabi-3d-woven-rug-2.jpg flat
+/products/prophets-mosque-door-seal-gift-box-1.jpg public/products/prophets-mosque-door-seal-gift-box-1.jpg
+/products/prophets-mosque-door-seal-gift-box-2.jpg public/products/prophets-mosque-door-seal-gift-box-2.jpg
+/products/prophets-mosque-door-seal-gift-box-3.jpg public/products/prophets-mosque-door-seal-gift-box-3.jpg
+/products/prophets-mosque-door-seal-magnet-1.jpg public/products/prophets-mosque-door-seal-magnet-1.jpg
+/products/prophets-mosque-door-seal-magnet-2.jpg public/products/prophets-mosque-door-seal-magnet-2.jpg
+/products/prophets-mosque-door-seal-magnet-3.jpg public/products/prophets-mosque-door-seal-magnet-3.jpg
+/products/prophets-mosque-mihrab-prayer-mat-1.jpg public/products/prophets-mosque-mihrab-prayer-mat-1.jpg flat
+/products/prophets-mosque-mihrab-prayer-mat-2.jpg public/products/prophets-mosque-mihrab-prayer-mat-2.jpg flat
+/products/rawdah-arch-woven-rug-red-gold-1.jpg public/products/rawdah-arch-woven-rug-red-gold-1.jpg flat
+/products/rawdah-arch-woven-rug-red-gold-2.jpg public/products/rawdah-arch-woven-rug-red-gold-2.jpg flat
+/products/rawdah-floral-woven-rug-red-1.jpg public/products/rawdah-floral-woven-rug-red-1.jpg flat
+/products/rawdah-floral-woven-rug-red-2.jpg public/products/rawdah-floral-woven-rug-red-2.jpg flat
+/products/rawdah-mihrab-prayer-mat-green-1.jpg public/products/rawdah-mihrab-prayer-mat-green-1.jpg flat
+/products/rawdah-mihrab-prayer-mat-green-2.jpg public/products/rawdah-mihrab-prayer-mat-green-2.jpg flat
+/products/rawdah-mihrab-prayer-mat-red-1.jpg public/products/rawdah-mihrab-prayer-mat-red-1.jpg flat
+/products/rawdah-mihrab-prayer-mat-red-2.jpg public/products/rawdah-mihrab-prayer-mat-red-2.jpg flat
+/products/rawdah-woven-rug-green-columns-1.jpg public/products/rawdah-woven-rug-green-columns-1.jpg flat
+/products/rawdah-woven-rug-green-columns-2.jpg public/products/rawdah-woven-rug-green-columns-2.jpg flat
+/products/rawdah-woven-rug-red-columns-1.jpg public/products/rawdah-woven-rug-red-columns-1.jpg flat
+/products/rawdah-woven-rug-red-columns-2.jpg public/products/rawdah-woven-rug-red-columns-2.jpg flat
+/products/rawdah-woven-rug-red-columns-3.jpg public/products/rawdah-woven-rug-red-columns-3.jpg flat
+/products/sadu-pattern-coasters-1.jpg public/products/sadu-pattern-coasters-1.jpg
+/products/aam/ahl-60-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/2-4.jpg
+/products/aam/ahl-60-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/1-4.jpg
+/products/aam/ameer-al-oud-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/ameer-al-oud.jpg
+/products/aam/ameer-al-oud-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/ameer-al-oud-box.jpg
+/products/aam/anab-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/anab-2.jpg
+/products/aam/anab-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/anab-1.jpg
+/products/aam/antee-gift-set-05-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/antee-1.jpg
+/products/aam/antee-gift-set-05-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/antee-2.jpg
+/products/aam/aswad-by-ahmed-10-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/oilnew/aswad-by-ahmed.jpg
+/products/aam/aswad-by-ahmed-10-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/oilnew/aswad-by-ahmed-1.jpg
+/products/aam/awfa-60-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/awfa-2.jpg
+/products/aam/awfa-60-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/awfa-1.jpg
+/products/aam/azure-royal-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/azure-royal-2.jpg
+/products/aam/azure-royal-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/azure-royal-1.jpg
+/products/aam/bakhoor-ahmed-10-tabs-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bakhoor-ahmed-1-1.jpg
+/products/aam/bakhoor-ahmed-10-tabs-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bakhoor-ahmed-2-1.jpg
+/products/aam/bakhoor-ahmed-20-tabs-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bakhoor-ahmed-2-2.jpg
+/products/aam/bakhoor-ahmed-20-tabs-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bakhoor-ahmed-1.jpg
+/products/aam/bakhoor-ahmed-40-tabs-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bakhoor-ahmed-2.jpg
+/products/aam/bakhoor-ahmed-40-tabs-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bakhoor-ahmed-1.jpg
+/products/aam/bakhoor-bushra-10-tabs-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bushra-1.jpg
+/products/aam/bakhoor-bushra-10-tabs-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bushra-2.jpg
+/products/aam/bakhoor-bushra-box-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bushra-1-1.jpg
+/products/aam/bakhoor-bushra-box-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bushra-2-1.jpg
+/products/aam/bakhoor-darbaat-20-tabs-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/2-5.jpg
+/products/aam/bakhoor-darbaat-20-tabs-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/1-5.jpg
+/products/aam/bakhoor-ghair-aadi-10-tabs-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/ghair-aadi-1.jpg
+/products/aam/bakhoor-ghair-aadi-10-tabs-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/ghair-aadi-2.jpg
+/products/aam/bakhoor-ghars-40-tabs-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bakhoor-ghars-2.jpg
+/products/aam/bakhoor-ghars-40-tabs-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bakhoor-ghars-1.jpg
+/products/aam/bakhoor-marj-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/marj-bakhoor-2.jpg
+/products/aam/bakhoor-marj-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/marj-bakhoor-1.jpg
+/products/aam/bakhoor-oud-and-roses-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-roses-bakhoor-1.jpg
+/products/aam/bakhoor-oud-and-roses-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-roses-bakhoor-2.jpg
+/products/aam/bidun-esam-12-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bidun-esam-parfum-oil-2.jpg
+/products/aam/bidun-esam-12-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bidun-esam-parfum-oil-1.jpg
+/products/aam/bidun-esam-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bidun-esam-2-1.jpg
+/products/aam/bidun-esam-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bidun-esam-1-1.jpg
+/products/aam/bidun-esam-gift-set-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bidun-esam-collection-1.jpg
+/products/aam/bidun-esam-gift-set-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bidun-esam-collection-2.jpg
+/products/aam/bin-ameer-90-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/batch-6/dsc-0616.jpg
+/products/aam/bin-ameer-90-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/batch-6/dsc-0614.jpg
+/products/aam/bin-shaikh-90-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/bin-shaikh.jpg
+/products/aam/bin-shaikh-90-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/products/bin-shaikh.jpg
+/products/aam/bin-shaikh-90-ml-3.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/bin-shaikh.jpg
+/products/aam/blu-oud-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/blu-oud.jpg
+/products/aam/blu-oud-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/blu-oud.jpg
+/products/aam/blush-noire-75-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/blush-noire-2.jpg
+/products/aam/blush-noire-75-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/blush-noire-1.jpg
+/products/aam/bombay-oud-80-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bombay-oud-2.jpg
+/products/aam/bombay-oud-80-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/bombay-oud-1.jpg
+/products/aam/cinder-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/cinder-2.jpg
+/products/aam/cinder-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/cinder-1.jpg
+/products/aam/couture-noir-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/couture-noir.jpg
+/products/aam/couture-noir-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/couture-noir.jpg
+/products/aam/dehn-al-oud-kalakasi-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/2-7.jpg
+/products/aam/dehn-al-oud-kalakasi-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/1-7.jpg
+/products/aam/dehn-al-oud-maliki-qadeem-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/dehn-al-oud-maliki-qadeem.jpg
+/products/aam/dehn-al-oud-maliki-qadeem-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/dehn-al-oud-maliki-qadeem-box.jpg
+/products/aam/dulook-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/dulook-2.jpg
+/products/aam/dulook-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/dulook-1.jpg
+/products/aam/ehyaa-15-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/ehyaa-2.jpg
+/products/aam/ehyaa-15-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/ehyaa-1.jpg
+/products/aam/endless-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/batch-6/dsc-0599-1.jpg
+/products/aam/endless-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/batch-6/dsc-0597-1.jpg
+/products/aam/exotic-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/exotic-2.jpg
+/products/aam/exotic-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/exotic-1.jpg
+/products/aam/firdaus-by-ahmed-15-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/firdaus-2.jpg
+/products/aam/firdaus-by-ahmed-15-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/firdaus-1.jpg
+/products/aam/frost-ice-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/frost-ice-2.jpg
+/products/aam/frost-ice-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/frost-ice-1.jpg
+/products/aam/ghali-15-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/ghali-2.jpg
+/products/aam/ghali-15-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/ghali-1.jpg
+/products/aam/ghawi-15-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/ghawi-2.jpg
+/products/aam/ghawi-15-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/ghawi-1.jpg
+/products/aam/hayana-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/hayana-2.jpg
+/products/aam/hayana-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/hayana-1.jpg
+/products/aam/hirfah-75-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/hirfah.jpg
+/products/aam/hirfah-75-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/hirfah.jpg
+/products/aam/ignite-oud-60-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/2-6.jpg
+/products/aam/ignite-oud-60-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/1-6.jpg
+/products/aam/ignite-rose-60-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/ignite-rose-2.jpg
+/products/aam/ignite-rose-60-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/ignite-rose-1.jpg
+/products/aam/joud-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/joud-100ml.jpg
+/products/aam/joud-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/joud-100ml.jpg
+/products/aam/kaaf-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/kaaf-2.jpg
+/products/aam/kawkab-75-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/batch-6/dsc-0623.jpg
+/products/aam/kawkab-75-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/batch-6/dsc-0620.jpg
+/products/aam/khetaam-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/khetaam-2.jpg
+/products/aam/khetaam-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/khetaam-1.jpg
+/products/aam/kiswah-by-ahmed-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/collection/kiswah-by-ahmed.jpg
+/products/aam/kiswah-by-ahmed-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/collection/kiswah-by-ahmed-box.jpg
+/products/aam/kiswah-by-ahmed-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/kiswah-bottle-final.jpg
+/products/aam/kiswah-by-ahmed-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/kiswah-box.jpg
+/products/aam/la-rosee-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/la-rosee-2.jpg
+/products/aam/la-rosee-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/la-rosee-1.jpg
+/products/aam/laathani-80-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/laathani-2.jpg
+/products/aam/laathani-80-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/laathani-1.jpg
+/products/aam/leather-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/leather-2.jpg
+/products/aam/leather-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/leather-1.jpg
+/products/aam/leen-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/leen.jpg
+/products/aam/leen-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/products/leen.jpg
+/products/aam/leen-50-ml-3.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/leen.jpg
+/products/aam/little-heart-gift-set-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/little-hearts-1-1.jpg
+/products/aam/little-heart-gift-set-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/little-hearts-2-1.jpg
+/products/aam/little-hearts-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/little-hearts-2.jpg
+/products/aam/little-hearts-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/little-hearts-1.jpg
+/products/aam/lush-noir-75-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/lush-noir.jpg
+/products/aam/lush-noir-75-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/lush-noir.jpg
+/products/aam/maani-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/maani-2.jpg
+/products/aam/maani-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/maani-1.jpg
+/products/aam/malyoon-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/malyoon-2.jpg
+/products/aam/malyoon-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/malyoon-1.jpg
+/products/aam/maria-oud-mubakhar-36-grams-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/maria-oud-mubakhar-36-grams-2.jpg
+/products/aam/maria-oud-mubakhar-36-grams-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/maria-oud-mubakhar-36-grams-1.jpg
+/products/aam/maria-oud-mubakhar-58-grams-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/maria-oud-mubakhar-2.jpg
+/products/aam/maria-oud-mubakhar-58-grams-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/maria-oud-mubakhar-1.jpg
+/products/aam/marj-60-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/marj-2.jpg
+/products/aam/marj-60-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/marj-1.jpg
+/products/aam/meillure-80-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/artboard-1.jpg
+/products/aam/meillure-80-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/meillure.jpg
+/products/aam/moonlit-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/batch-6/dsc-0585.jpg
+/products/aam/moonlit-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/batch-6/dsc-0583.jpg
+/products/aam/mosaic-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/mosaic-1.jpg
+/products/aam/mosaic-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/mosaic-2.jpg
+/products/aam/musk-and-roses-75-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/musk-roses-2.jpg
+/products/aam/musk-and-roses-75-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/musk-roses-1.jpg
+/products/aam/muzn-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/2-8.jpg
+/products/aam/muzn-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/1-8.jpg
+/products/aam/nasooh-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/nasooh-bottle.jpg
+/products/aam/nasooh-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/nasooh-box.jpg
+/products/aam/nehayah-15-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/concentrated-oil/nehayah.jpg
+/products/aam/nehayah-15-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/concentrated-oil/nehayah-1500x1500.jpg
+/products/aam/nihlah-75-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/nihlah-2.jpg
+/products/aam/nihlah-75-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/nihlah-1.jpg
+/products/aam/niswah-75-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/niswah-2.jpg
+/products/aam/niswah-75-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/niswah-1.jpg
+/products/aam/oud-amg-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-amg-2.jpg
+/products/aam/oud-amg-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-amg-1.jpg
+/products/aam/oud-and-roses-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-roses-hair-mist-2.jpg
+/products/aam/oud-and-roses-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-roses-hair-mist-1.jpg
+/products/aam/oud-and-roses-60-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-roses-2.jpg
+/products/aam/oud-and-roses-60-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-roses-1.jpg
+/products/aam/oud-classic-60-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-classic-2.jpg
+/products/aam/oud-classic-60-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-classic-1.jpg
+/products/aam/oud-couture-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/2.jpg
+/products/aam/oud-couture-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/1.jpg
+/products/aam/oud-kiflain-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/newbakhoor/oud-kiflain-1.jpg
+/products/aam/oud-kiflain-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/newbakhoor/oud-kiflain.jpg
+/products/aam/oud-lavender-75-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-lavender-2.jpg
+/products/aam/oud-lavender-75-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-lavender-1.jpg
+/products/aam/oud-maattar-majalis-58-grams-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oudh-maattar-majalis-2.jpg
+/products/aam/oud-maattar-majalis-58-grams-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oudh-maattar-majalis-1.jpg
+/products/aam/oud-maattar-majalis-omani-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/newbakhoor/oud-ma-atar-majalis-botle-3-tl-1.jpg
+/products/aam/oud-maattar-majalis-omani-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/newbakhoor/oud-ma-atar-majalis-botle-3-tl.jpg
+/products/aam/oud-maattar-maliki-3-tola-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-maattar-maliki-2.jpg
+/products/aam/oud-maattar-maliki-3-tola-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-maattar-maliki-1.jpg
+/products/aam/oud-maattar-subaat-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-subaat-2.jpg
+/products/aam/oud-maattar-subaat-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-subaat-1.jpg
+/products/aam/oud-maattar-tayyeb-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-tayyeb-2.jpg
+/products/aam/oud-maattar-tayyeb-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/oud-tayyeb-1.jpg
+/products/aam/peachy-peach-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/peachy-2.jpg
+/products/aam/peachy-peach-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/peachy-1.jpg
+/products/aam/pearl-oud-75-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/pearl-oud.jpg
+/products/aam/pearl-oud-75-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/products/pearl-oud.jpg
+/products/aam/pearl-oud-75-ml-3.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/pearl-oud.jpg
+/products/aam/qarnain-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/batch-6/dsc-0693.jpg
+/products/aam/qarnain-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/batch-6/dsc-0696.jpg
+/products/aam/qeyafah-15-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/qeyafah-2.jpg
+/products/aam/qeyafah-15-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/qeyafah-1.jpg
+/products/aam/raheeque-15-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/concentrated-oil/raheeque-2.jpg
+/products/aam/raheeque-15-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/concentrated-oil/raheeque-3.jpg
+/products/aam/rawdha-by-ahmed-10-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/2-1.jpg
+/products/aam/rawdha-by-ahmed-10-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/1-1.jpg
+/products/aam/rawdha-by-ahmed-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/rawdha-2.jpg
+/products/aam/rawdha-by-ahmed-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/rawdha-1.jpg
+/products/aam/rose-noir-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/rose-noir-hair-mist-2.jpg
+/products/aam/rose-noir-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/rose-noir-hair-mist-1.jpg
+/products/aam/rose-noir-75-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/rose-noir-2.jpg
+/products/aam/rose-noir-75-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/rose-noir-1.jpg
+/products/aam/saadah-gift-set-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/saadah-1.jpg
+/products/aam/saadah-gift-set-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/saadah-2.jpg
+/products/aam/saadaik-90-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/saadik.jpg
+/products/aam/saadaik-90-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/saadik.jpg
+/products/aam/safa-marwah-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/giftnew/safa-marwah-closed-box.jpg
+/products/aam/safa-marwah-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/giftnew/safa-marwah-open-box.jpg
+/products/aam/saif-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/saif-2.jpg
+/products/aam/saif-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/saif-1.jpg
+/products/aam/sapphire-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/sapphire.jpg
+/products/aam/sapphire-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/sapphire.jpg
+/products/aam/scentique-white-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/scentique-white-2.jpg
+/products/aam/scentique-white-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/scentique-white-1.jpg
+/products/aam/shaikha-hind-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/shaikha-hind-hair-mist.jpg
+/products/aam/shaikha-hind-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/shaikha-hind-hair-mist-box.jpg
+/products/aam/shay-jadeed-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/shay-jadeed.jpg
+/products/aam/shay-jadeed-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/shay-jadeed.jpg
+/products/aam/sheukh-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/sheukh.jpg
+/products/aam/sheukh-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/products/sheukh.jpg
+/products/aam/sheukh-50-ml-3.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/sheukh.jpg
+/products/aam/silk-oud-60-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/silk-oud.jpg
+/products/aam/silk-oud-60-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/silk-oud.jpg
+/products/aam/sultan-by-ahmed-80-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/sultan-bottle.jpg
+/products/aam/sultan-by-ahmed-80-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/sultan-boxjpg.jpeg
+/products/aam/summer-oud-60-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/dsc-7010.jpg
+/products/aam/summer-oud-60-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/dsc-7006.jpg
+/products/aam/supreme-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/supreme-2.jpg
+/products/aam/supreme-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/supreme-1.jpg
+/products/aam/tanuf-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/tanuf-2.jpg
+/products/aam/tanuf-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/tanuf-1.jpg
+/products/aam/thaqaf-50-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/thaqaf.jpg
+/products/aam/thaqaf-50-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/products/thaqaf.jpg
+/products/aam/the-alchemy-lab-2025-75-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/2025-2.jpg
+/products/aam/the-alchemy-lab-2025-75-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/2025-1.jpg
+/products/aam/the-beyond-2050-75-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/2-3.jpg
+/products/aam/the-beyond-2050-75-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/1-3.jpg
+/products/aam/the-roots-2000-75-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/2-2.jpg
+/products/aam/the-roots-2000-75-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/1-2.jpg
+/products/aam/wesaf-15-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/wesaf-2.jpg
+/products/aam/wesaf-15-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/wesaf-1.jpg
+/products/aam/yaumiyyat-gift-set-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/giftnew/yaumiyyat-1.jpg
+/products/aam/yaumiyyat-gift-set-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/giftnew/yaumiyyat.jpg
+/products/aam/zam-zam-by-ahmed-15-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/zam-zam-1.jpg
+/products/aam/zam-zam-by-ahmed-15-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/concentrated-oil/whatsapp-image-2025-05-24-at-31328-pm.jpeg
+/products/aam/zeleny-100-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/epdnew/zeleny.jpg
+/products/aam/zeleny-100-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/edpbox/zeleny.jpg
+/products/aam/zumar-60-ml-1.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/zumar-2.jpg
+/products/aam/zumar-60-ml-2.jpg https://adminksa.ahmedalmaghribi.com/public/storage/ksa-website-images/zumar-1.jpg

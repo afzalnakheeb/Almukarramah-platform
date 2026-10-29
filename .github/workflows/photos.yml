@@ -1,5 +1,6 @@
-# Studio product photos: on a push to a photos/* branch, remove the background from the photos listed in
-# scripts/photo-batch.txt, place them on the studio backgrounds, and commit the results to photo-out/ on that branch.
+# Studio product photos: on a push to a photos/* branch, remove the background from every photo listed in
+# scripts/photo-all.txt (in parallel shards), then commit the transparent cut-outs, review sheets and report
+# to photo-cut/ on that branch. Composing the final photos in the chosen look is a separate, fast step.
 name: Studio product photos
 on:
   push:
@@ -10,10 +11,14 @@ concurrency:
   group: photos-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  photos:
+  cut:
     if: "!contains(github.event.head_commit.message, '[photos-result]')"
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,16 +26,37 @@ jobs:
           python-version: '3.12'
       - name: Install
         run: pip install "rembg[cpu]==2.0.67" pillow numpy scipy
-      - name: Make photos
-        run: |
-          rm -rf photo-out
-          python scripts/product_photos.py --out photo-out --looks "${PHOTO_LOOKS:-ivory,night}" --compare --list scripts/photo-batch.txt
-        env:
-          PHOTO_LOOKS: ${{ vars.PHOTO_LOOKS }}
+      - name: Cut out
+        run: python scripts/product_photos.py cut --list scripts/photo-all.txt --shard ${{ matrix.shard }}/12 --out photo-cut
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cut-${{ matrix.shard }}
+          path: photo-cut
+          retention-days: 7
+
+  collect:
+    needs: cut
+    if: "always() && !contains(github.event.head_commit.message, '[photos-result]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: parts
       - name: Commit results
         run: |
+          rm -rf photo-cut photo-out && mkdir photo-cut
+          for d in parts/*/; do cp -r "$d". photo-cut/; done
+          python3 - <<'EOF'
+          import glob, json
+          rows = [r for f in sorted(glob.glob('photo-cut/report-*.json')) for r in json.load(open(f))]
+          json.dump(sorted(rows, key=lambda r: r['path']), open('photo-cut/report.json', 'w'), indent=1)
+          print(sum(r['ok'] for r in rows), 'cut;', sum(not r['ok'] for r in rows), 'kept')
+          EOF
+          rm -f photo-cut/report-*.json
           git config user.name "photos-bot"
           git config user.email "photos-bot@users.noreply.github.com"
-          git add -f photo-out
-          git commit -m "Studio photos for ${GITHUB_SHA::7} [photos-result]" || exit 0
+          git add -A photo-out photo-cut
+          git add -f photo-cut
+          git commit -m "Studio cut-outs for ${GITHUB_SHA::7} [photos-result]" || exit 0
           git push
