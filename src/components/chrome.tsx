@@ -16,14 +16,28 @@ import { Icon, type IconName } from './icons';
 import { Container, Notice, OptionCard, Sheet, styles as ui, T, useWide } from './ui';
 
 const LOGO = require('../../assets/logo.png');
-const LOGO_WHITE = require('../../assets/logo-white.png');
+const LOGO_GOLD = require('../../assets/logo-gold.png'); // satin antique gold, for dark backgrounds
 const LOGO_RATIO = 917 / 264;
 
 export const destIcon = (d: Destination): IconName => (d === 'saudi' ? 'house' : d === 'international' ? 'globe' : 'bed');
 
-export function Logo({ height = 44, white }: { height?: number; white?: boolean }) {
-  const { t } = useI18n();
-  return <Image source={white ? LOGO_WHITE : LOGO} style={{ height, width: height * LOGO_RATIO }} contentFit="contain" accessibilityLabel={t('appName')} />;
+/** The logo: emerald on light backgrounds, satin gold on dark ones (white). With line, the descriptor
+ *  "The Marketplace of Muslim Luxury" sits under it in spaced capitals, which tells this house apart from the group's other work. */
+export function Logo({ height = 44, white, line }: { height?: number; white?: boolean; line?: boolean }) {
+  const { t, isRTL } = useI18n();
+  const img = <Image source={white ? LOGO_GOLD : LOGO} style={{ height, width: height * LOGO_RATIO }} contentFit="contain" accessibilityLabel={t('appName')} />;
+  if (!line) return img;
+  const size = Math.max(8.5, Math.round(height * 0.2 * 10) / 10);
+  return (
+    <View style={{ alignItems: 'center', gap: Math.round(height * 0.09) }}>
+      {img}
+      <View style={{ alignSelf: 'stretch', height: StyleSheet.hairlineWidth, backgroundColor: colors.goldLine }} />
+      <T w={600} size={isRTL ? size * 1.2 : size} color={white ? colors.gold : colors.navy} lh={1.25}
+        style={{ letterSpacing: isRTL ? 0 : size * 0.18, textTransform: 'uppercase' }}>
+        {t('logoLine')}
+      </T>
+    </View>
+  );
 }
 
 /**
@@ -118,7 +132,7 @@ export function SiteHeader() {
           </View>
           <View style={{ backgroundColor: colors.white }}>
             <Container style={{ paddingVertical: 14, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 18 }}>
-              <Link href="/" accessibilityLabel={t('home')}><Logo height={44} /></Link>
+              <Link href="/" accessibilityLabel={t('home')}><Logo height={44} line /></Link>
               <SearchBox />
               <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} style={styles.destPill}>
                 <Icon name={destIcon(destination)} size={18} />
@@ -253,7 +267,7 @@ export function SiteFooter() {
   const col = (title: string, links: { label: string; href?: Href }[]) => (
     <View style={{ gap: 10, minWidth: 190, flex: 1 }}>
       <T w={700} color={colors.goldBright}>{title}</T>
-      {links.map((l) => (l.href ? <Link key={l.label} href={l.href} target={String(l.href).startsWith('http') ? '_blank' : undefined}><T size={14} color={colors.onNight}>{l.label}</T></Link> : <T key={l.label} size={14} color="#9EA1BD">{l.label}</T>))}
+      {links.map((l) => (l.href ? <Link key={l.label} href={l.href} target={String(l.href).startsWith('http') ? '_blank' : undefined}><T size={14} color={colors.onNight}>{l.label}</T></Link> : <T key={l.label} size={14} color={colors.onNightFaint}>{l.label}</T>))}
     </View>
   );
   return (
@@ -262,7 +276,7 @@ export function SiteFooter() {
       <StarLattice opacity={0.06} size={72} />
       <Container style={{ paddingTop: wide ? 56 : 28, paddingBottom: 28, flexDirection: 'row', flexWrap: 'wrap', gap: 32 }}>
         <View style={{ gap: 14, minWidth: 220, flex: 1 }}>
-          <Logo height={40} white />
+          <View style={{ alignSelf: 'flex-start' }}><Logo height={52} white line /></View>
           <T size={14} color={colors.onNight}>{t('footerTagline')}</T>
           <Pressable accessibilityRole="button" onPress={() => setLang(lang === 'ar' ? 'en' : 'ar')} style={{ alignSelf: 'flex-start', borderWidth: 1, borderColor: colors.goldLine, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6 }}><T w={600} size={14} color={colors.white}>{t('language')}</T></Pressable>
         </View>
