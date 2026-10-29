@@ -24,6 +24,11 @@ export const colors = {
   night: '#070B2C', // deepest navy: hero and heritage
   nightSoft: '#11174A',
   onNight: '#C9CCE0', // body text on night
+  onNightSoft: '#B9BCD6', // secondary text on night
+  onNightFaint: '#9EA1BD', // fine print on night
+  scrim: 'rgba(7,11,44,0.78)', // text panel over a photo
+  scrimSoft: 'rgba(7,11,44,0.22)',
+  overlay: 'rgba(11,16,48,0.45)', // behind dialogs
   lavender: '#F4F2F9',
   white: '#FFFFFF',
   success: '#1E6B4A',

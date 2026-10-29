@@ -75,12 +75,12 @@ export default function Membership() {
               <Eyebrow size={11} color={featured ? colors.gold : colors.brassText}>{t(p.kind === 'membership' ? 'kind_membership' : 'kind_box')}</Eyebrow>
               <Serif size={wide ? 38 : 30} color={featured ? colors.white : colors.navy}>{pick(p, 'name')}</Serif>
               <Ornament width={72} color={featured ? colors.gold : colors.brass} />
-              <T size={15} lh={1.6} color={featured ? '#D6D8EA' : colors.body}>{pick(p, 'description')}</T>
+              <T size={15} lh={1.6} color={featured ? colors.onNight : colors.body}>{pick(p, 'description')}</T>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
                 <T w={700} size={28} color={featured ? colors.white : colors.navy}>{formatMoney(convertFromSar(p.price_sar, currency), currency, lang)}</T>
-                <T size={14} color={featured ? '#D6D8EA' : colors.muted}>{t(p.period === 'year' ? 'perYear' : 'perMonth')}</T>
+                <T size={14} color={featured ? colors.onNight : colors.muted}>{t(p.period === 'year' ? 'perYear' : 'perMonth')}</T>
               </View>
-              <T size={12} color={featured ? '#B9BCD6' : colors.muted}>{t('vatIncluded')}</T>
+              <T size={12} color={featured ? colors.onNightSoft : colors.muted}>{t('vatIncluded')}</T>
               <Button label={t('join')} kind={featured ? 'gold' : 'primary'} busy={busy === p.id} onPress={() => join(p)} style={{ marginTop: 'auto', alignSelf: 'flex-start' }} />
             </View>
           );

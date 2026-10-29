@@ -253,7 +253,7 @@ export function SiteFooter() {
   const col = (title: string, links: { label: string; href?: Href }[]) => (
     <View style={{ gap: 10, minWidth: 190, flex: 1 }}>
       <T w={700} color={colors.goldBright}>{title}</T>
-      {links.map((l) => (l.href ? <Link key={l.label} href={l.href} target={String(l.href).startsWith('http') ? '_blank' : undefined}><T size={14} color="#C9CBDB">{l.label}</T></Link> : <T key={l.label} size={14} color="#9EA1BD">{l.label}</T>))}
+      {links.map((l) => (l.href ? <Link key={l.label} href={l.href} target={String(l.href).startsWith('http') ? '_blank' : undefined}><T size={14} color={colors.onNight}>{l.label}</T></Link> : <T key={l.label} size={14} color="#9EA1BD">{l.label}</T>))}
     </View>
   );
   return (
@@ -263,7 +263,7 @@ export function SiteFooter() {
       <Container style={{ paddingTop: wide ? 56 : 28, paddingBottom: 28, flexDirection: 'row', flexWrap: 'wrap', gap: 32 }}>
         <View style={{ gap: 14, minWidth: 220, flex: 1 }}>
           <Logo height={40} white />
-          <T size={14} color="#C9CBDB">{t('footerTagline')}</T>
+          <T size={14} color={colors.onNight}>{t('footerTagline')}</T>
           <Pressable accessibilityRole="button" onPress={() => setLang(lang === 'ar' ? 'en' : 'ar')} style={{ alignSelf: 'flex-start', borderWidth: 1, borderColor: colors.goldLine, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6 }}><T w={600} size={14} color={colors.white}>{t('language')}</T></Pressable>
         </View>
         {col(t('shop'), [
@@ -289,8 +289,8 @@ export function SiteFooter() {
       </Container>
       <View style={{ borderTopWidth: 1, borderColor: colors.navyLine }}>
         <Container style={{ paddingVertical: 16, paddingBottom: 28, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10 }}>
-          <T size={12} color="#9EA1BD">© {new Date().getFullYear()} {t('copyright')}</T>
-          <T size={12} color="#9EA1BD">{t('securePayment')} · {t('payNote')}</T>
+          <T size={12} color={colors.onNightFaint}>© {new Date().getFullYear()} {t('copyright')}</T>
+          <T size={12} color={colors.onNightFaint}>{t('securePayment')} · {t('payNote')}</T>
         </Container>
       </View>
     </View>
