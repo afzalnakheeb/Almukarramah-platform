@@ -1,0 +1,511 @@
+d / pageerror: Failed to set an indexed property [0] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [0] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17320)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at _f (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:146038)
+    at Pi (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:93303)
+
+d / pageerror: Minified React error #520; visit https://react.dev/errors/520 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Error: Minified React error #520; visit https://react.dev/errors/520 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at Qu (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:72713)
+    at Lc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:122453)
+    at Ec (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:120908)
+    at fc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:117427)
+    at lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:129516)
+
+d /shop pageerror: Failed to set an indexed property [0] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [0] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17320)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at _f (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:146038)
+    at Pi (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:93303)
+
+d /shop pageerror: Minified React error #520; visit https://react.dev/errors/520 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Error: Minified React error #520; visit https://react.dev/errors/520 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at Qu (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:72713)
+    at Lc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:122453)
+    at Ec (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:120908)
+    at fc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:117427)
+    at lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:129516)
+
+d /product/kaaba-door-prayer-mat pageerror: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Error: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at xl (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:37617)
+    at ki (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:88414)
+    at Pc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:122027)
+    at xc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:121079)
+    at Ec (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:120921)
+
+d /membership pageerror: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Error: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at xl (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:37617)
+    at ki (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:88414)
+    at Pc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:122027)
+    at xc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:121079)
+    at Ec (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:120921)
+
+d /apps pageerror: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Error: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at xl (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:37617)
+    at ki (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:88414)
+    at Pc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:122027)
+    at xc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:121079)
+    at Ec (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:120921)
+
+d /apps/seerah-trails pageerror: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Error: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at xl (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:37617)
+    at ki (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:88414)
+    at Pc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:122027)
+    at xc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:121079)
+    at Ec (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:120921)
+
+d /account pageerror: Failed to set an indexed property [0] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [0] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17320)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at _f (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:146038)
+    at Pi (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:93303)
+
+d /account pageerror: Minified React error #520; visit https://react.dev/errors/520 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Error: Minified React error #520; visit https://react.dev/errors/520 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at Qu (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:72713)
+    at Lc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:122453)
+    at Ec (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:120908)
+    at fc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:117427)
+    at lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:129516)
+
+m / pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m / pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m / pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m / pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m / pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m / pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m / pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m / pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m / pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m / pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m / pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m / pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /shop pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+m /account pageerror: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [1] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17269)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at Ff (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:148842)
+    at Ri (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:99640)
+
+ar / pageerror: Failed to set an indexed property [0] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+TypeError: Failed to set an indexed property [0] on 'CSSStyleDeclaration': Indexed property setter is not supported.
+    at On (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:16955)
+    at Mn (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:17320)
+    at Lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:138634)
+    at _f (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:146038)
+    at Pi (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:93303)
+
+ar / pageerror: Minified React error #520; visit https://react.dev/errors/520 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Error: Minified React error #520; visit https://react.dev/errors/520 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at Qu (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:72713)
+    at Lc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:122453)
+    at Ec (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:120908)
+    at fc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:117427)
+    at lf (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:129516)
+
+ar /product/kaaba-door-prayer-mat pageerror: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Error: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at xl (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:37617)
+    at ki (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:88414)
+    at Pc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:122027)
+    at xc (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:121079)
+    at Ec (http://localhost:3000/_expo/static/js/web/entry-414c4a59d2d28c392cc13fb131408d1d.js:163:120921)

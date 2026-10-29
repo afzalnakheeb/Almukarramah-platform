@@ -1,3 +1,46 @@
-tsconfig.json(5,5): error TS5101: Option 'baseUrl' is deprecated and will stop functioning in TypeScript 7.0. Specify compilerOption '"ignoreDeprecations": "6.0"' to silence this error.
-  Visit https://aka.ms/ts6 for migration information.
+app/(shop)/_layout.tsx(24,62): error TS2322: Type '({ color }: { color: string; }) => React.JSX.Element' is not assignable to type '(props: { focused: boolean; color: ColorValue; size: number; }) => ReactNode'.
+  Types of parameters '__0' and 'props' are incompatible.
+    Type '{ focused: boolean; color: ColorValue; size: number; }' is not assignable to type '{ color: string; }'.
+      Types of property 'color' are incompatible.
+        Type 'ColorValue' is not assignable to type 'string'.
+          Type 'OpaqueColorValue' is not assignable to type 'string'.
+app/(shop)/_layout.tsx(25,61): error TS2322: Type '({ color }: { color: string; }) => React.JSX.Element' is not assignable to type '(props: { focused: boolean; color: ColorValue; size: number; }) => ReactNode'.
+  Types of parameters '__0' and 'props' are incompatible.
+    Type '{ focused: boolean; color: ColorValue; size: number; }' is not assignable to type '{ color: string; }'.
+      Types of property 'color' are incompatible.
+        Type 'ColorValue' is not assignable to type 'string'.
+          Type 'OpaqueColorValue' is not assignable to type 'string'.
+app/(shop)/_layout.tsx(26,105): error TS2322: Type '({ color }: { color: string; }) => React.JSX.Element' is not assignable to type '(props: { focused: boolean; color: ColorValue; size: number; }) => ReactNode'.
+  Types of parameters '__0' and 'props' are incompatible.
+    Type '{ focused: boolean; color: ColorValue; size: number; }' is not assignable to type '{ color: string; }'.
+      Types of property 'color' are incompatible.
+        Type 'ColorValue' is not assignable to type 'string'.
+          Type 'OpaqueColorValue' is not assignable to type 'string'.
+app/(shop)/_layout.tsx(27,67): error TS2322: Type '({ color }: { color: string; }) => React.JSX.Element' is not assignable to type '(props: { focused: boolean; color: ColorValue; size: number; }) => ReactNode'.
+  Types of parameters '__0' and 'props' are incompatible.
+    Type '{ focused: boolean; color: ColorValue; size: number; }' is not assignable to type '{ color: string; }'.
+      Types of property 'color' are incompatible.
+        Type 'ColorValue' is not assignable to type 'string'.
+          Type 'OpaqueColorValue' is not assignable to type 'string'.
+app/product/[slug].tsx(63,19): error TS2345: Argument of type 'Product' is not assignable to parameter of type '{ slug: string; sku: string | null | undefined; name_en: string; name_ar: string; description_en: string | null; images: string[]; base_price_sar: number; stock: number; categories?: { name_en: string; slug?: string | undefined; } | null | undefined; brand?: string | ... 1 more ... | undefined; }'.
+  Property 'sku' is optional in type 'Product' but required in type '{ slug: string; sku: string | null | undefined; name_en: string; name_ar: string; description_en: string | null; images: string[]; base_price_sar: number; stock: number; categories?: { name_en: string; slug?: string | undefined; } | null | undefined; brand?: string | ... 1 more ... | undefined; }'.
+app/trail/[slug].tsx(57,22): error TS2367: This comparison appears to be unintentional because the types '"seerah-trail"' and '"quran-trail"' have no overlap.
+app/trail/[slug].tsx(57,110): error TS2367: This comparison appears to be unintentional because the types '"seerah-trail"' and '"quran-trail"' have no overlap.
+app/trail/[slug].tsx(120,23): error TS2322: Type '({ hovered }: { hovered?: boolean; }) => (false | { flexDirection: "row"; alignItems: "center"; gap: number; paddingVertical: number; paddingHorizontal: number; borderTopWidth: number; borderColor: string; backgroundColor?: undefined; } | { ...; } | undefined)[]' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type '({ hovered }: { hovered?: boolean; }) => (false | { flexDirection: "row"; alignItems: "center"; gap: number; paddingVertical: number; paddingHorizontal: number; borderTopWidth: number; borderColor: string; backgroundColor?: undefined; } | { ...; } | undefined)[]' is not assignable to type '(state: PressableStateCallbackType) => StyleProp<ViewStyle>'.
+    Types of parameters '__0' and 'state' are incompatible.
+      Type 'PressableStateCallbackType' has no properties in common with type '{ hovered?: boolean | undefined; }'.
+src/components/chrome.tsx(259,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type '"contentinfo"' is not assignable to type 'AccessibilityRole | undefined'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type '"contentinfo"' is not assignable to type 'AccessibilityRole | undefined'.
+src/components/ui.tsx(260,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type '"navigation"' is not assignable to type 'AccessibilityRole | undefined'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type '"navigation"' is not assignable to type 'AccessibilityRole | undefined'.
+src/lib/i18n.tsx(335,3): error TS1117: An object literal cannot have multiple properties with the same name.
+src/lib/i18n.tsx(755,3): error TS1117: An object literal cannot have multiple properties with the same name.
+src/lib/supabase.ts(25,67): error TS2322: Type 'unknown' is not assignable to type 'string | File | Blob | ArrayBuffer | FormData | ReadableStream<Uint8Array<ArrayBufferLike>> | Record<...> | undefined'.
 exit 2
