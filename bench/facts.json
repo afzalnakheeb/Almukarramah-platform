@@ -1,0 +1,295 @@
+[
+ {
+  "name": "almukarramah",
+  "url": "https://almukarramah.com/",
+  "title": "Al Mukarramah | The Premium Marketplace for Every Muslim Home",
+  "bodyBg": "rgb(246, 242, 234)",
+  "bodyFont": "\"Times New Roman\"",
+  "bodySize": "16px",
+  "headerBg": "rgba(0, 0, 0, 0)",
+  "headerHeight": 195,
+  "h1": {
+   "text": "Your deen and your dunya, in one home",
+   "font": "CormorantGaramond_600SemiBold",
+   "size": "76px",
+   "weight": "400"
+  },
+  "nav": [
+   "Sell with us",
+   "Membership",
+   "Gift assistant",
+   "FOR EVERY MUSLIM HOME",
+   "SHOP",
+   "PERFUMES",
+   "OCCASIONS",
+   "MEMBERSHIP",
+   "QURAN",
+   "SEERAH GAME",
+   "OUR APPS",
+   "HELP ME CHOOSE A GIFT"
+  ],
+  "navStyle": {
+   "size": "14px",
+   "spacing": "normal",
+   "transform": "none",
+   "weight": "400"
+  },
+  "button": {
+   "text": "EXPLORE THE MARKETPLACE",
+   "radius": "2px",
+   "bg": "rgb(196, 164, 104)",
+   "spacing": "normal",
+   "transform": "none"
+  },
+  "videos": 0,
+  "images": 40,
+  "pageHeight": 900
+ },
+ {
+  "name": "rolex",
+  "url": "https://www.rolex.com/en-us",
+  "title": "Access Denied",
+  "bodyBg": "rgba(0, 0, 0, 0)",
+  "bodyFont": "\"Times New Roman\"",
+  "bodySize": "16px",
+  "h1": {
+   "text": "Access Denied",
+   "font": "\"Times New Roman\"",
+   "size": "32px",
+   "weight": "700"
+  },
+  "nav": [],
+  "navStyle": null,
+  "button": null,
+  "videos": 0,
+  "images": 0,
+  "pageHeight": 900
+ },
+ {
+  "name": "harrods",
+  "url": "https://www.harrods.com/en-gb/",
+  "title": "Access Denied",
+  "bodyBg": "rgba(0, 0, 0, 0)",
+  "bodyFont": "\"Times New Roman\"",
+  "bodySize": "16px",
+  "h1": {
+   "text": "Access Denied",
+   "font": "\"Times New Roman\"",
+   "size": "32px",
+   "weight": "700"
+  },
+  "nav": [],
+  "navStyle": null,
+  "button": null,
+  "videos": 0,
+  "images": 0,
+  "pageHeight": 900
+ },
+ {
+  "name": "amouage",
+  "url": "https://amouage.com/",
+  "title": "The House of Amouage",
+  "bodyBg": "rgb(255, 255, 255)",
+  "bodyFont": "Gotham-Book",
+  "bodySize": "16px",
+  "headerBg": "rgba(0, 0, 0, 0)",
+  "headerHeight": 128,
+  "h1": {
+   "text": "",
+   "font": "Assistant, sans-serif",
+   "size": "40px",
+   "weight": "400"
+  },
+  "nav": [
+   "Cart",
+   "Sign in"
+  ],
+  "navStyle": {
+   "size": "14px",
+   "spacing": "0.6px",
+   "transform": "none",
+   "weight": "400"
+  },
+  "button": {
+   "text": "ACCEPT",
+   "radius": "2px",
+   "bg": "rgb(51, 51, 51)",
+   "spacing": "normal",
+   "transform": "uppercase"
+  },
+  "videos": 6,
+  "images": 30,
+  "pageHeight": 7069
+ },
+ {
+  "name": "cartier",
+  "url": "https://www.cartier.com/en-gb/",
+  "title": "Access Denied",
+  "bodyBg": "rgba(0, 0, 0, 0)",
+  "bodyFont": "\"Times New Roman\"",
+  "bodySize": "16px",
+  "h1": {
+   "text": "Access Denied",
+   "font": "\"Times New Roman\"",
+   "size": "32px",
+   "weight": "700"
+  },
+  "nav": [],
+  "navStyle": null,
+  "button": null,
+  "videos": 0,
+  "images": 0,
+  "pageHeight": 900
+ },
+ {
+  "name": "hermes",
+  "url": "https://www.hermes.com/uk/en/",
+  "title": "The official Hermes online store | Hermès UK",
+  "bodyBg": "rgb(252, 247, 241)",
+  "bodyFont": "Manrope, Roboto, sans-serif",
+  "bodySize": "12px",
+  "headerBg": "rgba(0, 0, 0, 0)",
+  "headerHeight": 110,
+  "h1": {
+   "text": "THE OFFICIAL HERMES ONLINE STORE - HOMEPAGE",
+   "font": "\"Overpass Mono\", \"Gill Sans MT\", calibri, sans-serif",
+   "size": "24px",
+   "weight": "300"
+  },
+  "nav": [
+   "Go to main content",
+   "Go to product browsing",
+   "Homepage Hermès Paris",
+   "Account\n,\noffline"
+  ],
+  "navStyle": {
+   "size": "12px",
+   "spacing": "normal",
+   "transform": "none",
+   "weight": "400"
+  },
+  "button": {
+   "text": "COOKIE PREFERENCES",
+   "radius": "8px",
+   "bg": "rgb(68, 68, 68)",
+   "spacing": "1px",
+   "transform": "uppercase"
+  },
+  "videos": 2,
+  "images": 49,
+  "pageHeight": 4740
+ },
+ {
+  "name": "ounass",
+  "url": "https://www.ounass.ae/",
+  "title": "OUNASS UAE - Up to 50% OFF | The Definitive Home of Luxury",
+  "bodyBg": "rgb(255, 255, 255)",
+  "bodyFont": "NunitoSans, sans-serif",
+  "bodySize": "16px",
+  "headerBg": "rgba(0, 0, 0, 0)",
+  "headerHeight": 145,
+  "h1": null,
+  "nav": [
+   "WOMEN",
+   "MEN",
+   "KIDS",
+   "Change",
+   "Account",
+   "Wishlist (0)",
+   "Bag (0)"
+  ],
+  "navStyle": {
+   "size": "16px",
+   "spacing": "normal",
+   "transform": "none",
+   "weight": "400"
+  },
+  "button": {
+   "text": "SUBSCRIBE",
+   "radius": "4px",
+   "bg": "rgb(204, 204, 204)",
+   "spacing": "normal",
+   "transform": "none"
+  },
+  "videos": 0,
+  "images": 20,
+  "pageHeight": 1772
+ },
+ {
+  "name": "bateel",
+  "url": "https://bateel.com/",
+  "title": "Bateel | Organic Dates and Luxury Gifts | Shop Online",
+  "bodyBg": "rgb(255, 255, 255)",
+  "bodyFont": "Brown, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+  "bodySize": "12px",
+  "headerBg": "rgb(255, 255, 255)",
+  "headerHeight": 187,
+  "h1": {
+   "text": "The World's Finest Organic Dates, Artisan Chocolates and Luxury Gift Boxes",
+   "font": "\"Playfair Display\"",
+   "size": "35px",
+   "weight": "300"
+  },
+  "nav": [
+   "Call Us",
+   "Email message",
+   "Ship To:\nChoose an Optio",
+   "LUXURY GIFTS",
+   "ORGANIC DATES",
+   "GOURMET FOOD",
+   "CORPORATE GIFTS",
+   "THE WORLD OF BATEEL",
+   "BATEEL REWARDS"
+  ],
+  "navStyle": {
+   "size": "12px",
+   "spacing": "normal",
+   "transform": "none",
+   "weight": "400"
+  },
+  "button": {
+   "text": "CONTINUE SHOPPING",
+   "radius": "0px",
+   "bg": "rgb(195, 164, 119)",
+   "spacing": "normal",
+   "transform": "uppercase"
+  },
+  "videos": 0,
+  "images": 50,
+  "pageHeight": 6157
+ },
+ {
+  "name": "mfk",
+  "url": "https://www.franciskurkdjian.com/int-en",
+  "title": "Maison Francis Kurkdjian - Official online store",
+  "bodyBg": "rgb(255, 255, 255)",
+  "bodyFont": "\"Post Grotesk\", sans-serif",
+  "bodySize": "16px",
+  "headerBg": "rgb(255, 255, 255)",
+  "headerHeight": 108,
+  "h1": null,
+  "nav": [
+   "Skip to main content",
+   "MY VERY INTIMATE PERFUME",
+   "Search",
+   "My favorites",
+   "My account"
+  ],
+  "navStyle": {
+   "size": "12px",
+   "spacing": "1px",
+   "transform": "none",
+   "weight": "500"
+  },
+  "button": {
+   "text": "UNITED STATES",
+   "radius": "0px",
+   "bg": "rgb(83, 83, 89)",
+   "spacing": "1px",
+   "transform": "uppercase"
+  },
+  "videos": 0,
+  "images": 198,
+  "pageHeight": 5653
+ }
+]
