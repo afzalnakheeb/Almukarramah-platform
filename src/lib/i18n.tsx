@@ -870,12 +870,13 @@ const Ctx = createContext<I18n | null>(null);
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   let device: Lang = 'en';
   try {
-    // During pre-rendering there is no browser; English is the default and Arabic is applied in the browser.
-    if (typeof window !== 'undefined' && getLocales()[0]?.languageCode === 'ar') device = 'ar';
+    if (getLocales()[0]?.languageCode === 'ar') device = 'ar';
   } catch {
     device = 'en';
   }
-  const [lang, setLangState] = useState<Lang>(device);
+  // The website starts in English to match its pre-rendered pages (React must hydrate the same HTML),
+  // then switches to the saved or device language straight after. The apps use the device language at once.
+  const [lang, setLangState] = useState<Lang>(Platform.OS === 'web' ? 'en' : device);
   const [currency, setCurrencyState] = useState('SAR');
 
   useEffect(() => {
@@ -883,8 +884,9 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       const l = pairs[0][1];
       const c = pairs[1][1];
       if (l === 'ar' || l === 'en') setLangState(l);
+      else if (device === 'ar') setLangState('ar');
       if (c) setCurrencyState(c);
-    });
+    }).catch(() => device === 'ar' && setLangState('ar'));
   }, []);
 
   useEffect(() => {
