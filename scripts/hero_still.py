@@ -15,11 +15,11 @@ CUT, OUT = sys.argv[1].rstrip("/") + "/products/", sys.argv[2]
 RTL = len(sys.argv) > 3 and sys.argv[3] == "rtl"
 W, H = 2400, 1200
 LEDGE = int(H * 0.80)
-WALL = [("kaaba-door-prayer-mat-1.webp", 900, 0.70, 50)]  # name, height, centre x (share of width), top
+WALL = [("kaaba-door-prayer-mat-1.webp", 860, 0.735, 60)]  # name, height, centre x (share of width), top
 LEDGE_ITEMS = [  # name, height, centre x, drop below the ledge line
-    ("aam/pearl-oud-75-ml-1.webp", 360, 0.50, 40),
-    ("aam/oud-maattar-maliki-3-tola-1.webp", 400, 0.695, 52),
-    ("aam/zumar-60-ml-1.webp", 480, 0.885, 40),
+    ("aam/pearl-oud-75-ml-1.webp", 330, 0.585, 40),
+    ("aam/oud-maattar-maliki-3-tola-1.webp", 370, 0.735, 52),
+    ("aam/zumar-60-ml-1.webp", 440, 0.89, 40),
 ]
 
 y, x = np.mgrid[0:H, 0:W].astype(float)
@@ -27,7 +27,7 @@ if RTL:
     x = W - 1 - x  # mirror the room and the light; products are placed at mirrored positions below
     WALL = [(n, h, 1 - cx, top) for n, h, cx, top in WALL]
     LEDGE_ITEMS = [(n, h, 1 - cx, dr) for n, h, cx, dr in LEDGE_ITEMS]
-d = np.sqrt(((x - W * 0.68) / (W * 0.55)) ** 2 + ((y - H * 0.42) / (H * 0.75)) ** 2)
+d = np.sqrt(((x - W * 0.72) / (W * 0.55)) ** 2 + ((y - H * 0.42) / (H * 0.75)) ** 2)
 t = np.clip(d, 0, 1) ** 1.3
 img = np.array((24, 72, 58), float) * (1 - t[..., None]) + np.array((6, 24, 19), float) * t[..., None]
 beam = np.exp(-(((x - W * 0.30) * 0.80 - y * 0.62) / (W * 0.09)) ** 2) * np.clip(1 - y / H * 0.9, 0, 1)
@@ -84,7 +84,7 @@ for name, h, cx, drop in LEDGE_ITEMS:
     bg = Image.alpha_composite(bg, layer(it, (x0, y0)))
 
 arr = np.array(bg.convert("RGB")).astype(float)
-arr += np.exp(-(((x - W * 0.70) / (W * 0.25)) ** 2 + ((y - H * 0.70) / (H * 0.30)) ** 2))[..., None] * np.array((40, 32, 14))
+arr += np.exp(-(((x - W * 0.74) / (W * 0.25)) ** 2 + ((y - H * 0.70) / (H * 0.30)) ** 2))[..., None] * np.array((40, 32, 14))
 arr *= np.clip(1 - 0.45 * (np.sqrt(((x - W * 0.6) / (W * 0.75)) ** 2 + ((y - H * 0.5) / (H * 0.8)) ** 2)) ** 2, 0.4, 1)[..., None]
 Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)).save(OUT, quality=86, optimize=True, progressive=True)
 print("hero written", OUT)
