@@ -3,8 +3,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Screen } from '@/components/chrome';
+import { Glow, Ornament, StarLattice } from '@/components/decor';
 import { Icon } from '@/components/icons';
-import { Breadcrumb, Button, Card, Chip, Grid, H1, Loading, ProductTile, Serif, T, useWide } from '@/components/ui';
+import { Breadcrumb, Button, Card, Chip, Eyebrow, Grid, H1, Loading, ProductTile, Serif, T, useWide } from '@/components/ui';
 import { getCategories, getProducts, getTags } from '@/lib/catalogue';
 import { Faq } from '@/components/faq';
 import { breadcrumbLd, faqLd, itemListLd, Seo } from '@/components/seo';
@@ -16,6 +17,9 @@ import type { Category, Product, Tag } from '@/lib/types';
 import { colors } from '@/theme';
 
 type Sort = 'rec' | 'low' | 'high';
+type Ship = 'all' | 'perfume_spray' | 'perfume_oil';
+/** Fragrance collections get their own header and a spray/oil filter instead of occasion and recipient. */
+const FRAGRANCE = ['perfumes', 'oud-oils', 'bakhoor'];
 const BANDS: [number, number][] = [[0, 0], [0, 20000], [20000, 50000], [50000, 100000], [100000, 0]];
 
 export default function Shop() {
@@ -44,6 +48,7 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
   const [band, setBand] = useState<[number, number]>([Number(params.min ?? 0), Number(params.max ?? 0)]);
   const [sort, setSort] = useState<Sort>('rec');
   const [hideOos, setHideOos] = useState(false);
+  const [ship, setShip] = useState<Ship>('all');
   const [products, setProducts] = useState<Product[] | null>(() =>
     filterSnapshot({ tag: params.tag, category: fixedCat ?? params.cat, minSar: Number(params.min ?? 0) || undefined, maxSar: Number(params.max ?? 0) || undefined }));
 
@@ -63,14 +68,26 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
     let rows = products ?? [];
     if (q) rows = rows.filter((p) => [p.name_en, p.name_ar, p.description_en, p.description_ar, p.categories?.name_en].some((v) => v?.toLowerCase().includes(q)));
     if (hideOos) rows = rows.filter((p) => p.stock > 0);
+    if (ship === 'perfume_spray') rows = rows.filter((p) => p.ship_class === 'perfume_spray');
+    if (ship === 'perfume_oil') rows = rows.filter((p) => p.ship_class !== 'perfume_spray');
     if (sort !== 'rec') rows = [...rows].sort((a, b) => (priceIn(a, currency) - priceIn(b, currency)) * (sort === 'low' ? 1 : -1));
     return rows;
-  }, [products, hideOos, sort, currency, q]);
+  }, [products, hideOos, sort, currency, q, ship]);
 
   const activeTag = [...occasions, ...recipients].find((g) => g.slug === tag);
   const activeCat = categories.find((c) => c.slug === cat);
   const title = activeCat ? pick(activeCat, 'name') : activeTag ? pick(activeTag, 'name') : q ? `${t('searchResults')} “${params.q}”` : t('allGifts');
   const blurb = activeCat ? pick(activeCat, 'blurb') : '';
+  const frag = !!cat && FRAGRANCE.includes(cat);
+  const fragSiblings = categories.filter((c) => FRAGRANCE.includes(c.slug) && c.slug !== cat);
+  const hasSprays = (products ?? []).some((p) => p.ship_class === 'perfume_spray');
+  const shipChips = (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+      {(['all', 'perfume_spray', 'perfume_oil'] as Ship[]).map((k) => (
+        <Chip key={k} size={wide ? 'md' : 'sm'} label={k === 'all' ? t('all') : k === 'perfume_spray' ? t('fragSprays') : t('fragOils')} active={ship === k} onPress={() => setShip(k)} />
+      ))}
+    </View>
+  );
   const f = (v: number) => formatWhole(convertFromSar(v, currency), currency, lang);
   const bandLabel = ([a, b]: [number, number]) => (!a && !b ? t('all') : !a ? `${t('under')} ${f(b)}` : !b ? `${f(a)}+` : `${f(a)}–${f(b)}`);
   const clear = () => {
@@ -78,6 +95,7 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
     setCat(fixedCat);
     setBand([0, 0]);
     setHideOos(false);
+    setShip('all');
     router.setParams({ tag: undefined, cat: undefined, min: undefined, max: undefined });
   };
 
@@ -111,7 +129,7 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
 
   const seoPath = fixedCat ? `/collections/${fixedCat}` : '/shop';
   const seoTitle = activeCat ? `${activeCat.name_en} | Al Mukarramah` : 'All gifts | Al Mukarramah — Islamic gifts from Madinah';
-  const seoDesc = activeCat?.blurb_en ?? 'Prayer mats, woven prayer rugs, gift sets, Madinah dates and keepsakes, prepared and packed in Madinah. Prices include VAT; delivery to Madinah and Makkah hotels and worldwide.';
+  const seoDesc = activeCat?.blurb_en ?? 'Prayer mats, woven prayer rugs, gift sets, Madinah dates, keepsakes and Ahmed Al Maghribi perfumes, from Madinah. Prices include VAT; delivery to Madinah and Makkah hotels and worldwide.';
   return (
     <Screen>
       <Seo
@@ -128,11 +146,36 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
         ]}
       />
       <Breadcrumb items={[{ label: t('home'), href: '/' }, { label: t('shop'), href: activeTag || activeCat ? '/shop' : undefined }, ...(activeTag || activeCat ? [{ label: title }] : [])]} />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, marginBottom: 22 }}>
-        <View style={{ maxWidth: 700 }}>
-          <H1>{title}</H1>
-          <T size={16} lh={1.6} color={colors.body}>{blurb || t('listingBody')}</T>
+      {frag ? (
+        <View style={{ backgroundColor: colors.night, borderRadius: wide ? 26 : 20, overflow: 'hidden', borderWidth: 1, borderColor: colors.gold, marginBottom: 22 }}>
+          <StarLattice opacity={0.08} size={60} />
+          <Glow cx="85%" cy="0%" r="60%" opacity={0.2} />
+          <View style={{ padding: wide ? 36 : 18, gap: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{ width: 28, height: 1, backgroundColor: colors.gold }} />
+              <Eyebrow size={wide ? 13 : 11} color={colors.gold}>{t('fragKicker')}</Eyebrow>
+            </View>
+            <Serif role="h1" size={wide ? 52 : 34} color={colors.white}>{title}</Serif>
+            <Ornament width={90} />
+            <T size={wide ? 16 : 14} lh={1.6} color={colors.onNight} style={{ maxWidth: 760 }}>{blurb}</T>
+            <T size={13} color={colors.champagne} style={{ maxWidth: 760 }}>{t('fragShipNote')}</T>
+            {fragSiblings.length > 0 && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
+                {fragSiblings.map((c) => (
+                  <Button key={c.id} size="sm" kind="outlineLight" label={pick(c, 'name')} href={{ pathname: '/collections/[slug]', params: { slug: c.slug } }} />
+                ))}
+              </View>
+            )}
+          </View>
         </View>
+      ) : null}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: frag ? 'flex-end' : 'space-between', alignItems: 'flex-end', gap: 16, marginBottom: 22 }}>
+        {!frag && (
+          <View style={{ maxWidth: 700 }}>
+            <H1>{title}</H1>
+            <T size={16} lh={1.6} color={colors.body}>{blurb || t('listingBody')}</T>
+          </View>
+        )}
         {wide && sortControl}
       </View>
 
@@ -148,8 +191,14 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
                 </View>
               </Card>
             )}
-            <Card pad={16} style={{ gap: 10 }}><T w={700} size={14}>{t('occasion')}</T>{chips(occasions)}</Card>
-            <Card pad={16} style={{ gap: 10 }}><T w={700} size={14}>{t('recipient')}</T>{chips(recipients)}</Card>
+            {frag ? (
+              hasSprays && <Card pad={16} style={{ gap: 10 }}><T w={700} size={14}>{t('fragType')}</T>{shipChips}</Card>
+            ) : (
+              <>
+                <Card pad={16} style={{ gap: 10 }}><T w={700} size={14}>{t('occasion')}</T>{chips(occasions)}</Card>
+                <Card pad={16} style={{ gap: 10 }}><T w={700} size={14}>{t('recipient')}</T>{chips(recipients)}</Card>
+              </>
+            )}
             <Card pad={16} style={{ gap: 10 }}><T w={700} size={14}>{t('price')}</T>{bandChips}</Card>
             <Card pad={16}>{oosToggle}</Card>
           </View>
@@ -160,9 +209,10 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
                 {categories.map((c) => <Chip key={c.id} label={pick(c, 'name')} active={cat === c.slug} onPress={() => setCat(cat === c.slug ? undefined : c.slug)} />)}
               </ScrollView>
             )}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            {frag && hasSprays && shipChips}
+            {!frag && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               {[...occasions, ...recipients].map((g) => <Chip key={g.id} label={pick(g, 'name')} active={tag === g.slug} onPress={() => setTag(tag === g.slug ? undefined : g.slug)} />)}
-            </ScrollView>
+            </ScrollView>}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               {BANDS.slice(1).map((b) => <Chip key={b.join('-')} label={bandLabel(b)} active={band[0] === b[0] && band[1] === b[1]} onPress={() => setBand(band[0] === b[0] && band[1] === b[1] ? [0, 0] : b)} />)}
             </ScrollView>

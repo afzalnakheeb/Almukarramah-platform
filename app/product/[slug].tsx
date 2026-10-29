@@ -99,12 +99,14 @@ export default function ProductScreen() {
   const details = (
     <View style={{ gap: 20 }}>
       <View style={{ gap: 8 }}>
-        <Eyebrow size={12}>{tag ? `${t('appName')} · ${pick(tag, 'name')}` : t('appName')}</Eyebrow>
+        <Eyebrow size={12}>{product.brand ? product.brand : tag ? `${t('appName')} · ${pick(tag, 'name')}` : t('appName')}</Eyebrow>
         <Serif role="h1" size={wide ? 50 : 30}>{pick(product, 'name')}</Serif>
         <Ornament color={colors.brass} width={84} style={{ marginVertical: 2 }} />
-        <T size={wide ? 15 : 12.5} color={colors.body}>{t('preparedLine')}</T>
+        <T size={wide ? 15 : 12.5} color={colors.body}>{product.brand ? t('soldByReseller') : t('preparedLine')}</T>
         {wide && <Price product={product} size={26} />}
       </View>
+
+      {product.ship_class === 'perfume_spray' && <Notice text={t('noDeliveryPerfume')} />}
 
       {product.restricted_countries.length > 0 && (
         <Notice text={`${t('notToCountry')}: ${product.restricted_countries.join(', ')}`} />
@@ -137,10 +139,10 @@ export default function ProductScreen() {
         rows={[
           ...(catName ? [[t('factCategory'), catName] as [string, string]] : []),
           ...(product.sku ? [[t('factSku'), product.sku] as [string, string]] : []),
-          [t('factOrigin'), t('factOriginValue')],
+          product.brand ? [t('factBrand'), product.brand] : [t('factOrigin'), t('factOriginValue')],
           [t('factPrice'), `${formatMoney(unit, currency, lang)} · ${t('vatIncluded')}`],
           [t('factAvailability'), soldOut ? t('outOfStock') : t('inStock')],
-          [t('factDelivery'), t('factDeliveryValue')],
+          [t('factDelivery'), product.ship_class === 'perfume_spray' ? t('factDeliverySaudi') : t('factDeliveryValue')],
         ]}
       />
 

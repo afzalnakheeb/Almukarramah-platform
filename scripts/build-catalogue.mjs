@@ -127,7 +127,7 @@ Sitemap: ${SITE}/sitemap.xml
 const byCat = categories.map((c) => ({ c, items: products.filter((p) => p.categories?.slug === c.slug) }));
 const llms = `# Al Mukarramah (المكرمة)
 
-> Premium Islamic gifts prepared and packed in Madinah, Saudi Arabia: prayer mats and woven prayer rugs inspired by the Haramain, matching gift sets, Madinah dates under the Ajwati label, and Madinah keepsakes. Established 2020. Delivery to hotels in Madinah and Makkah, across Saudi Arabia and internationally. Prices are in Saudi riyals (SAR) and include 15% VAT; every order receives a ZATCA-compliant tax invoice.
+> Premium Islamic gifts prepared and packed in Madinah, Saudi Arabia: prayer mats and woven prayer rugs inspired by the Haramain, matching gift sets, Madinah dates under the Ajwati label, Madinah keepsakes, and Ahmed Al Maghribi perfumes and oud oils (authorised reseller, official Saudi prices). Established 2020. Delivery to hotels in Madinah and Makkah, across Saudi Arabia and internationally. Prices are in Saudi riyals (SAR) and include 15% VAT; every order receives a ZATCA-compliant tax invoice.
 
 - Website: ${SITE}
 - Languages: Arabic and English
@@ -148,6 +148,7 @@ ${products.filter((p) => p.is_featured).map((p) => `- [${p.name_en}](${SITE}/pro
 ## Policies
 - Prices include 15% VAT (Saudi Arabia). Delivery charge is shown at checkout before payment.
 - Gift message printed on a card; prices never appear on anything the recipient sees.
+- Perfume sprays (alcohol-based) are delivered within Saudi Arabia only; oud and perfume oils ship internationally.
 - Payment through Moyasar: mada, Apple Pay, STC Pay and cards. Card details never reach Al Mukarramah.
 `;
 writeFileSync(join(PUBLIC, 'llms.txt'), llms);

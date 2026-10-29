@@ -55,12 +55,12 @@ export const organizationLd = {
   url: SITE_URL,
   logo: `${SITE_URL}/images/logo.png`,
   foundingDate: '2020',
-  description: 'Premium Islamic gifts prepared and packed in Madinah: prayer mats and rugs inspired by the Haramain, gift sets, Madinah dates and keepsakes.',
+  description: 'Premium Islamic gifts prepared and packed in Madinah: prayer mats and rugs inspired by the Haramain, gift sets, Madinah dates and keepsakes, plus Ahmed Al Maghribi perfumes and oud oils as an authorised reseller.',
   address: { '@type': 'PostalAddress', addressLocality: 'Madinah', addressCountry: 'SA' },
   areaServed: ['SA', 'AE', 'KW', 'QA', 'BH', 'OM', 'GB', 'US', 'MY', 'ID'],
   email: 'hello@almukarramah.com',
   contactPoint: { '@type': 'ContactPoint', contactType: 'customer service', email: 'hello@almukarramah.com', availableLanguage: ['English', 'Arabic'], areaServed: 'Worldwide' },
-  knowsAbout: ['Islamic gifts', 'prayer mats', 'Madinah dates', 'Hajj and Umrah gifts', 'Ramadan and Eid gifts'],
+  knowsAbout: ['Islamic gifts', 'prayer mats', 'Madinah dates', 'Hajj and Umrah gifts', 'Ramadan and Eid gifts', 'Arabian perfumes', 'oud oil', 'Ahmed Al Maghribi perfumes'],
 };
 
 // Opened perfumes, oils, bakhoor and food cannot be returned unless faulty (see /terms); other items: 7 days.
