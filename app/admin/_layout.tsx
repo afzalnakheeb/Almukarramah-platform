@@ -13,6 +13,7 @@ const LINKS: { href: Href; label: string; group?: string }[] = [
   { href: '/admin', label: 'Home' },
   { href: '/admin/orders', label: 'Orders & refunds', group: 'Customers' },
   { href: '/admin/products', label: 'Products & stock', group: 'Catalogue' },
+  { href: '/admin/drafts', label: 'Drafts to approve' },
   { href: '/admin/audit', label: 'Audit history', group: 'System' },
   { href: '/', label: '← Back to the shop', group: ' ' },
 ];
