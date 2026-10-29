@@ -28,7 +28,12 @@ jobs:
       - name: Build website
         run: npm run build:web
       - name: Type check (report only)
-        run: mkdir -p shots && (npx tsc --noEmit > typecheck.txt 2>&1; echo "exit $?" >> typecheck.txt) ; tail -40 typecheck.txt
+        run: |
+          set +e
+          npx tsc --noEmit > typecheck.txt 2>&1
+          echo "exit $?" >> typecheck.txt
+          tail -40 typecheck.txt
+          exit 0
       - name: Install browser
         run: npm install --no-save --legacy-peer-deps playwright serve && npx playwright install --with-deps chromium
       - name: Screenshots and SEO report (this build)
