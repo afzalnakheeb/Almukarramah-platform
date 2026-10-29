@@ -75,6 +75,9 @@ function FragranceHouse() {
   );
 }
 
+/** Products whose cover is still a close-up taken on the floor; kept out of the homepage selection until re-shot. */
+const NOT_STUDIO = ['kaaba-clock-tower-woven-rug-gold', 'kids-rawdah-woven-rug-green', 'kids-rawdah-woven-rug-red', 'black-stone-prayer-mat'];
+
 const DOORS: { title: Key; line: Key; img: string; href: Href }[] = [
   { title: 'doorPerfume', line: 'doorPerfumeLine', img: '/images/door-perfume.jpg', href: { pathname: '/collections/[slug]', params: { slug: 'perfumes' } } },
   { title: 'doorPrayer', line: 'doorPrayerLine', img: '/images/door-prayer.jpg', href: { pathname: '/collections/[slug]', params: { slug: 'prayer-mats' } } },
@@ -217,7 +220,7 @@ export default function Home() {
         <SectionHead kicker={t('doorsKicker')} title={t('featured')} link={wide ? t('viewAll') : t('all')} href="/shop" />
         {featured === null ? <Loading /> : (
           <Grid cols={wide ? 3 : 2} gap={wide ? 28 : 12}>
-            {featured.slice(0, 6).map((p) => <ProductTile key={p.id} product={p} compact={!wide} />)}
+            {featured.filter((p) => !NOT_STUDIO.includes(p.slug)).slice(0, 6).map((p) => <ProductTile key={p.id} product={p} compact={!wide} />)}
           </Grid>
         )}
       </Container>

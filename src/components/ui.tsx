@@ -166,8 +166,8 @@ export function Chip({ label, onPress, active, size = 'md' }: { label: string; o
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
       onPress={onPress}
-      style={[styles.chip, size === 'sm' && { minHeight: 36, paddingHorizontal: 12 }, active && { backgroundColor: colors.navy, borderColor: colors.navy }]}>
-      <T w={700} size={13} color={active ? colors.white : colors.navy}>{label}</T>
+      style={[styles.chip, size === 'sm' && { minHeight: 36, paddingHorizontal: 12 }, active && { backgroundColor: colors.emeraldSoft, borderColor: colors.emerald }]}>
+      <T w={active ? 600 : 500} size={13} color={active ? colors.emerald : colors.navy}>{label}</T>
     </Pressable>
   );
 }
@@ -354,7 +354,7 @@ export const styles = StyleSheet.create({
   input: { minHeight: 48, borderWidth: 1, borderColor: colors.inputLine, borderRadius: 4, paddingHorizontal: 12, backgroundColor: colors.white, fontSize: 16, color: colors.ink },
   card: { backgroundColor: colors.white, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line },
   tile: { backgroundColor: colors.white, borderRadius: 2, borderWidth: 1, borderColor: colors.hair, overflow: 'hidden' },
-  chip: { paddingHorizontal: 14, minHeight: 40, justifyContent: 'center', borderRadius: 2, borderWidth: 1, borderColor: colors.navy, backgroundColor: colors.white },
+  chip: { paddingHorizontal: 14, minHeight: 40, justifyContent: 'center', borderRadius: 2, borderWidth: 1, borderColor: colors.inputLine, backgroundColor: 'transparent' },
   tag: { alignSelf: 'flex-start', borderRadius: 2, paddingHorizontal: 10, paddingVertical: 3 },
   option: { flex: 1, minWidth: 220, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, borderRadius: 6, padding: 18, gap: 6 },
   iconBtn: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center', borderRadius: 999 },

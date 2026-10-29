@@ -3,9 +3,8 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { destIcon, Screen } from '@/components/chrome';
-import { Ornament } from '@/components/decor';
 import { Icon } from '@/components/icons';
-import { Breadcrumb, Button, Card, Divider, Eyebrow, Grid, Loading, Notice, Photo, Price, Row, Serif, Stepper, T, useWide } from '@/components/ui';
+import { brandName, Breadcrumb, Button, Card, Divider, Eyebrow, Grid, Loading, Notice, Photo, Price, Row, Serif, shortName, Stepper, T, useWide } from '@/components/ui';
 import { useCart } from '@/lib/cart';
 import { Facts, Faq } from '@/components/faq';
 import { breadcrumbLd, faqLd, productLd, Seo } from '@/components/seo';
@@ -83,7 +82,7 @@ export default function ProductScreen() {
 
   const gallery = (
     <View style={{ gap: 12 }}>
-      <Photo uri={product.images[image]} tone={product.images[0] ? colors.sandSoft : toneFor(product.slug)} fit="cover" style={wide ? { borderRadius: 8, borderWidth: 1, borderColor: colors.champagne } : { borderRadius: 0 }} motif={wide ? 200 : 150} label={pick(product, 'name')} />
+      <Photo uri={product.images[image]} tone={product.images[0] ? colors.sandSoft : toneFor(product.slug)} fit="cover" style={wide ? { borderRadius: 2, borderWidth: 1, borderColor: colors.hair } : { borderRadius: 0 }} motif={wide ? 200 : 150} label={pick(product, 'name')} />
       {product.images.length > 1 && (
         <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: wide ? 0 : 16 }}>
           {product.images.slice(0, 5).map((u, i) => (
@@ -99,9 +98,8 @@ export default function ProductScreen() {
   const details = (
     <View style={{ gap: 20 }}>
       <View style={{ gap: 8 }}>
-        <Eyebrow size={12}>{product.brand ? product.brand : tag ? `${t('appName')} · ${pick(tag, 'name')}` : t('appName')}</Eyebrow>
-        <Serif role="h1" size={wide ? 50 : 30}>{pick(product, 'name')}</Serif>
-        <Ornament color={colors.brass} width={84} style={{ marginVertical: 2 }} />
+        <Eyebrow size={12}>{product.brand ? brandName(product.brand, lang === 'ar') : tag ? `${t('appName')} · ${pick(tag, 'name')}` : t('appName')}</Eyebrow>
+        <Serif role="h1" size={wide ? 50 : 30}>{shortName(pick(product, 'name'), product.brand)}</Serif>
         <T size={wide ? 15 : 12.5} color={colors.body}>{product.brand ? t('soldByReseller') : t('preparedLine')}</T>
         {wide && <Price product={product} size={26} />}
       </View>

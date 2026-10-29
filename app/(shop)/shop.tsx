@@ -3,7 +3,6 @@ import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Screen } from '@/components/chrome';
-import { Glow, Ornament, StarLattice } from '@/components/decor';
 import { Icon } from '@/components/icons';
 import { Breadcrumb, Button, Card, Chip, Eyebrow, Grid, H1, Loading, ProductTile, Serif, T, useWide } from '@/components/ui';
 import { getCategories, getProducts, getTags } from '@/lib/catalogue';
@@ -147,26 +146,18 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
       />
       <Breadcrumb items={[{ label: t('home'), href: '/' }, { label: t('shop'), href: activeTag || activeCat ? '/shop' : undefined }, ...(activeTag || activeCat ? [{ label: title }] : [])]} />
       {frag ? (
-        <View style={{ backgroundColor: colors.night, borderRadius: wide ? 8 : 6, overflow: 'hidden', borderWidth: 1, borderColor: colors.gold, marginBottom: 22 }}>
-          <StarLattice opacity={0.08} size={60} />
-          <Glow cx="85%" cy="0%" r="60%" opacity={0.2} />
-          <View style={{ padding: wide ? 36 : 18, gap: 10 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ width: 28, height: 1, backgroundColor: colors.gold }} />
-              <Eyebrow size={wide ? 13 : 11} color={colors.gold}>{t('fragKicker')}</Eyebrow>
+        <View style={{ borderBottomWidth: 1, borderColor: colors.goldLine, paddingTop: wide ? 18 : 6, paddingBottom: wide ? 32 : 18, marginBottom: 24, gap: 10 }}>
+          <Eyebrow size={wide ? 12 : 11}>{t('fragKicker')}</Eyebrow>
+          <Serif role="h1" size={wide ? 56 : 34}>{title}</Serif>
+          <T size={wide ? 16 : 14} lh={1.6} color={colors.body} style={{ maxWidth: 760 }}>{blurb}</T>
+          <T size={13} color={colors.muted} style={{ maxWidth: 760 }}>{t('fragShipNote')}</T>
+          {fragSiblings.length > 0 && (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
+              {fragSiblings.map((c) => (
+                <Button key={c.id} size="sm" kind="secondary" label={pick(c, 'name')} href={{ pathname: '/collections/[slug]', params: { slug: c.slug } }} />
+              ))}
             </View>
-            <Serif role="h1" size={wide ? 52 : 34} color={colors.white}>{title}</Serif>
-            <Ornament width={90} />
-            <T size={wide ? 16 : 14} lh={1.6} color={colors.onNight} style={{ maxWidth: 760 }}>{blurb}</T>
-            <T size={13} color={colors.champagne} style={{ maxWidth: 760 }}>{t('fragShipNote')}</T>
-            {fragSiblings.length > 0 && (
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
-                {fragSiblings.map((c) => (
-                  <Button key={c.id} size="sm" kind="outlineLight" label={pick(c, 'name')} href={{ pathname: '/collections/[slug]', params: { slug: c.slug } }} />
-                ))}
-              </View>
-            )}
-          </View>
+          )}
         </View>
       ) : null}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: frag ? 'flex-end' : 'space-between', alignItems: 'flex-end', gap: 16, marginBottom: 22 }}>
