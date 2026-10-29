@@ -23,7 +23,7 @@ export function Seo({ title, description, path, image, type = 'website', noindex
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={url} />
-      {noindex ? <meta name="robots" content="noindex, nofollow" /> : <meta name="robots" content="index, follow, max-image-preview:large" />}
+      {noindex ? <meta name="robots" content="noindex, nofollow" /> : <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />}
       <meta property="og:site_name" content={BRAND} />
       <meta property="og:type" content={type} />
       <meta property="og:title" content={title} />
@@ -58,7 +58,29 @@ export const organizationLd = {
   description: 'Premium Islamic gifts prepared and packed in Madinah: prayer mats and rugs inspired by the Haramain, gift sets, Madinah dates and keepsakes.',
   address: { '@type': 'PostalAddress', addressLocality: 'Madinah', addressCountry: 'SA' },
   areaServed: ['SA', 'AE', 'KW', 'QA', 'BH', 'OM', 'GB', 'US', 'MY', 'ID'],
+  email: 'hello@almukarramah.com',
+  contactPoint: { '@type': 'ContactPoint', contactType: 'customer service', email: 'hello@almukarramah.com', availableLanguage: ['English', 'Arabic'], areaServed: 'Worldwide' },
+  knowsAbout: ['Islamic gifts', 'prayer mats', 'Madinah dates', 'Hajj and Umrah gifts', 'Ramadan and Eid gifts'],
 };
+
+// Opened perfumes, oils, bakhoor and food cannot be returned unless faulty (see /terms); other items: 7 days.
+const NO_RETURN = ['perfumes', 'oud-oils', 'bakhoor', 'madinah-dates', 'dates'];
+function returnPolicy(categorySlug?: string) {
+  const closed = !!categorySlug && NO_RETURN.includes(categorySlug);
+  return {
+    '@type': 'MerchantReturnPolicy',
+    applicableCountry: 'SA',
+    url: `${SITE_URL}/terms`,
+    ...(closed
+      ? { returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted' }
+      : {
+          returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+          merchantReturnDays: 7,
+          returnMethod: 'https://schema.org/ReturnByMail',
+          returnFees: 'https://schema.org/ReturnShippingFees',
+        }),
+  };
+}
 
 export const websiteLd = {
   '@context': 'https://schema.org',
@@ -99,7 +121,7 @@ export function itemListLd(name: string, products: { slug: string; name_en: stri
 
 export function productLd(p: {
   slug: string; sku: string | null | undefined; name_en: string; name_ar: string; description_en: string | null; images: string[];
-  base_price_sar: number; stock: number; categories?: { name_en: string } | null; brand?: string | null;
+  base_price_sar: number; stock: number; categories?: { name_en: string; slug?: string } | null; brand?: string | null;
 }) {
   return {
     '@context': 'https://schema.org',
@@ -123,6 +145,7 @@ export function productLd(p: {
       availability: p.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
       itemCondition: 'https://schema.org/NewCondition',
       seller: { '@id': `${SITE_URL}/#organization` },
+      hasMerchantReturnPolicy: returnPolicy(p.categories?.slug),
     },
   };
 }

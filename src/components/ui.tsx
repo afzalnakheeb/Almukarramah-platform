@@ -66,46 +66,62 @@ export function SectionHead({ kicker, title, sub, link, href, size }: { kicker?:
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, marginBottom: wide ? 24 : 14 }}>
       <View style={{ flexShrink: 1 }}>
-        {kicker ? <Eyebrow size={wide ? 13 : 11}>{kicker}</Eyebrow> : null}
+        {kicker ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={{ width: 22, height: 1, backgroundColor: colors.brass }} />
+            <Eyebrow size={wide ? 13 : 11}>{kicker}</Eyebrow>
+          </View>
+        ) : null}
         <Serif role="h2" size={size ?? (wide ? 44 : 30)} style={{ marginTop: kicker ? 4 : 0 }}>{title}</Serif>
         {sub ? <T color={colors.muted} style={{ marginTop: 4 }}>{sub}</T> : null}
       </View>
       {link && href ? (
-        <Link href={href}><T w={700} size={14} color={colors.navy}>{link} {isRTL ? '←' : '→'}</T></Link>
+        <Link href={href}><T w={700} size={14} color={colors.brassText}>{link} {isRTL ? '←' : '→'}</T></Link>
       ) : null}
     </View>
   );
 }
 
 export function Button({ label, onPress, href, kind = 'primary', disabled, busy, style, size = 'md', full, icon }: {
-  label: string; onPress?: () => void; href?: Href; kind?: 'primary' | 'secondary' | 'danger' | 'light' | 'text'; disabled?: boolean; busy?: boolean;
+  label: string; onPress?: () => void; href?: Href; kind?: 'primary' | 'secondary' | 'danger' | 'light' | 'text' | 'gold' | 'outlineLight'; disabled?: boolean; busy?: boolean;
   style?: StyleProp<ViewStyle>; size?: 'sm' | 'md' | 'lg'; full?: boolean; icon?: React.ReactNode;
 }) {
-  const bg = disabled ? colors.disabled : kind === 'primary' ? colors.navy : kind === 'danger' ? colors.danger : kind === 'light' ? colors.ivory : kind === 'text' ? 'transparent' : colors.white;
-  const fg = disabled ? colors.muted : kind === 'primary' || kind === 'danger' ? colors.white : colors.navy;
-  const border = disabled ? colors.disabled : kind === 'secondary' ? colors.navy : kind === 'text' || kind === 'light' ? 'transparent' : bg;
+  const BG = { primary: colors.navy, danger: colors.danger, light: colors.ivory, text: 'transparent', gold: colors.gold, outlineLight: 'transparent', secondary: colors.white };
+  const FG = { primary: colors.white, danger: colors.white, light: colors.navy, text: colors.navy, gold: colors.night, outlineLight: colors.white, secondary: colors.navy };
+  const BORDER = { primary: colors.navy, danger: colors.danger, light: 'transparent', text: 'transparent', gold: colors.gold, outlineLight: colors.goldLine, secondary: colors.navy };
+  const bg = disabled ? colors.disabled : BG[kind];
+  const fg = disabled ? colors.muted : FG[kind];
+  const border = disabled ? colors.disabled : BORDER[kind];
   const h = size === 'lg' ? 56 : size === 'sm' ? 40 : 48;
-  const body = (
+  const base: StyleProp<ViewStyle> = [
+    styles.button,
+    { minHeight: h, backgroundColor: bg, borderColor: border, paddingHorizontal: kind === 'text' ? 4 : size === 'sm' ? 16 : size === 'lg' ? 30 : 24 },
+    full && { alignSelf: 'stretch' },
+    style,
+  ];
+  const content = busy ? <ActivityIndicator color={fg} /> : (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      {icon}
+      <T w={700} size={size === 'lg' ? 16 : size === 'sm' ? 13.5 : 15} color={fg} style={kind === 'text' && { textDecorationLine: 'underline' }}>{label}</T>
+    </View>
+  );
+  // Links: a plain style (Link asChild cannot merge a style function, which used to drop the button's background).
+  if (href && !disabled) {
+    return (
+      <Link href={href} asChild>
+        <Pressable accessibilityRole="link" style={base}>{content}</Pressable>
+      </Link>
+    );
+  }
+  return (
     <Pressable
-      accessibilityRole={href ? 'link' : 'button'}
-      onPress={href ? undefined : onPress}
+      accessibilityRole="button"
+      onPress={onPress}
       disabled={disabled || busy}
-      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
-        styles.button,
-        { minHeight: h, backgroundColor: bg, borderColor: border, paddingHorizontal: kind === 'text' ? 4 : size === 'sm' ? 16 : 24 },
-        full && { alignSelf: 'stretch' },
-        (pressed || hovered) && !disabled && kind !== 'text' && { opacity: 0.88 },
-        style,
-      ]}>
-      {busy ? <ActivityIndicator color={fg} /> : (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {icon}
-          <T w={700} size={size === 'lg' ? 16 : size === 'sm' ? 13.5 : 15} color={fg} style={kind === 'text' && { textDecorationLine: 'underline' }}>{label}</T>
-        </View>
-      )}
+      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [base, (pressed || hovered) && !disabled && kind !== 'text' && { opacity: 0.88 }]}>
+      {content}
     </Pressable>
   );
-  return href && !disabled ? <Link href={href} asChild>{body}</Link> : body;
 }
 
 export function Field(props: TextInputProps & { label: string; hint?: string; error?: string | null; dirLtr?: boolean }) {
@@ -183,20 +199,23 @@ export function Price({ product, style, size = 17 }: { product: Product; style?:
   return <T w={700} size={size} color={colors.navy} style={style}>{formatMoney(priceIn(product, currency), currency, lang)}</T>;
 }
 
-/** Product card from the listing design: 4:5 image, eyebrow, name, price, availability. */
+/** Product card: 4:5 photograph, category in gold, name, price, availability. */
 export function ProductTile({ product, compact }: { product: Product; compact?: boolean }) {
   const { pick, t } = useI18n();
   const tag = product.categories ?? product.product_tags?.[0]?.tags;
   const soldOut = product.stock <= 0;
+  const img = product.images[0];
   return (
     <Link href={{ pathname: '/product/[slug]', params: { slug: product.slug } }} asChild>
-      <Pressable accessibilityRole="link" style={({ hovered }: { hovered?: boolean }) => [{ gap: compact ? 5 : 10, opacity: soldOut ? 0.6 : 1 }, hovered && { opacity: 0.9 }]}>
-        <Photo uri={product.images[0]} tone={product.images[0] ? colors.white : toneFor(product.slug)} fit="contain" motif={compact ? 54 : 80} style={product.images[0] ? { borderWidth: 1, borderColor: colors.line } : null} />
-        <View style={{ gap: compact ? 3 : 4, paddingHorizontal: 2 }}>
-          {tag && !compact ? <Eyebrow size={12}>{pick(tag, 'name')}</Eyebrow> : null}
-          <T w={700} size={compact ? 13.5 : 16} lh={1.35} numberOfLines={2}>{pick(product, 'name')}</T>
-          <Price product={product} size={compact ? 15 : 17} style={{ paddingTop: 2 }} />
-          {!compact ? <T w={600} size={12.5} color={soldOut ? colors.sampleText : colors.success}>{soldOut ? t('outOfStock') : t('inStock')}</T> : null}
+      <Pressable accessibilityRole="link" style={[styles.tile, compact && { borderRadius: 16 }, soldOut && { opacity: 0.6 }]}>
+        <Photo uri={img} tone={img ? colors.sandSoft : toneFor(product.slug)} fit="cover" motif={compact ? 54 : 80} style={{ borderRadius: 0 }} />
+        <View style={{ gap: compact ? 3 : 4, paddingHorizontal: compact ? 10 : 14, paddingTop: compact ? 10 : 14, paddingBottom: compact ? 12 : 16 }}>
+          {tag && !compact ? <Eyebrow size={11}>{pick(tag, 'name')}</Eyebrow> : null}
+          <T w={700} size={compact ? 13.5 : 15.5} lh={1.35} numberOfLines={2}>{pick(product, 'name')}</T>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, paddingTop: 2 }}>
+            <Price product={product} size={compact ? 15 : 17} />
+            {!compact ? <T w={600} size={12} color={soldOut ? colors.sampleText : colors.success}>{soldOut ? t('outOfStock') : t('inStock')}</T> : null}
+          </View>
         </View>
       </Pressable>
     </Link>
@@ -312,6 +331,7 @@ export const styles = StyleSheet.create({
   button: { borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
   input: { minHeight: 48, borderWidth: 1, borderColor: colors.inputLine, borderRadius: 12, paddingHorizontal: 12, backgroundColor: colors.white, fontSize: 16, color: colors.ink },
   card: { backgroundColor: colors.white, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line },
+  tile: { backgroundColor: colors.white, borderRadius: 20, borderWidth: 1, borderColor: colors.line, overflow: 'hidden', shadowColor: colors.night, shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } },
   chip: { paddingHorizontal: 14, minHeight: 40, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1, borderColor: colors.navy, backgroundColor: colors.white },
   tag: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
   option: { flex: 1, minWidth: 220, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, borderRadius: 18, padding: 18, gap: 6 },

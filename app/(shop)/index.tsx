@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { Image } from 'expo-image';
 import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { DestinationSheet, destIcon, Logo, Screen } from '@/components/chrome';
-import { Icon } from '@/components/icons';
+import { Glow, Ornament, StarLattice } from '@/components/decor';
+import { Icon, type IconName } from '@/components/icons';
 import { Button, Card, Container, Eyebrow, Grid, Loading, OptionCard, Photo, ProductTile, SectionHead, Serif, T, useWide } from '@/components/ui';
 import { Faq } from '@/components/faq';
 import { faqLd, itemListLd, organizationLd, Seo, websiteLd } from '@/components/seo';
@@ -17,6 +18,19 @@ import { DESTINATIONS, usePrefs } from '@/lib/prefs';
 import { useSession } from '@/lib/session';
 import type { Category, Product } from '@/lib/types';
 import { colors, space } from '@/theme';
+
+/** Gold-ringed icon on a night disc. */
+function Medallion({ icon }: { icon: IconName }) {
+  return (
+    <View style={{ width: 46, height: 46, borderRadius: 999, backgroundColor: colors.night, borderWidth: 1, borderColor: colors.gold, alignItems: 'center', justifyContent: 'center' }}>
+      <Icon name={icon} size={21} color={colors.goldBright} stroke={1.6} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  ring: { borderWidth: 1, borderColor: colors.champagne },
+});
 
 const shop = (params: Record<string, string> = {}): Href => ({ pathname: '/shop', params });
 
@@ -100,19 +114,44 @@ export default function Home() {
         </Container>
       )}
 
-      {/* 1 · Proposition */}
-      <Container style={{ paddingTop: wide ? 48 : 20, flexDirection: wide ? 'row' : 'column-reverse', gap: wide ? 48 : 18, alignItems: wide ? 'center' : 'stretch' }}>
-        <View style={{ flex: wide ? 1 : undefined, gap: wide ? 22 : 14 }}>
-          {session && !wide ? <T size={14} color={colors.muted}>{t('greeting')}</T> : null}
-          <Eyebrow size={wide ? 13 : 11}>{t('heroKicker')}</Eyebrow>
-          <Serif role="h1" size={wide ? 66 : 38}>{t('heroTitle')}</Serif>
-          {wide ? <T size={18} lh={1.65} color={colors.body} style={{ maxWidth: 500 }}>{t('heroBody')}</T> : null}
-          <Button label={t('exploreGifts')} href="/shop" size={wide ? 'lg' : 'md'} style={{ alignSelf: wide ? 'flex-start' : 'stretch' }} />
-        </View>
-        <View style={{ flex: wide ? 1.2 : undefined, height: wide ? 560 : 300, borderTopLeftRadius: wide ? 260 : 150, borderTopRightRadius: wide ? 260 : 150, borderBottomLeftRadius: wide ? 24 : 18, borderBottomRightRadius: wide ? 24 : 18, backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-          <Photo uri="/images/hero.jpg" ratio={wide ? 0.93 : 1.3} label={t('heroTitle')} style={{ width: '100%', height: '100%', aspectRatio: undefined, borderRadius: 0 }} />
-        </View>
-      </Container>
+      {/* 1 · Proposition: night background, gold light, star lattice, the photograph in a gold-framed arch */}
+      <View style={{ backgroundColor: colors.night, overflow: 'hidden' }}>
+        <StarLattice opacity={0.07} size={wide ? 76 : 56} />
+        <Glow cx={wide ? '72%' : '50%'} cy={wide ? '45%' : '22%'} r={wide ? '50%' : '70%'} opacity={0.26} />
+        <Container style={{ paddingTop: wide ? 72 : 24, paddingBottom: wide ? 84 : 36, flexDirection: wide ? 'row' : 'column-reverse', gap: wide ? 64 : 26, alignItems: wide ? 'center' : 'stretch' }}>
+          <View style={{ flex: wide ? 1 : undefined, gap: wide ? 22 : 14 }}>
+            {session && !wide ? <T size={14} color={colors.onNight}>{t('greeting')}</T> : null}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{ width: 28, height: 1, backgroundColor: colors.gold }} />
+              <Eyebrow size={wide ? 13 : 11} color={colors.gold}>{t('heroKicker')}</Eyebrow>
+            </View>
+            <Serif role="h1" size={wide ? 72 : 40} color={colors.white}>{t('heroTitle')}</Serif>
+            <Ornament width={wide ? 120 : 96} />
+            <T size={wide ? 18 : 15} lh={1.65} color={colors.onNight} style={{ maxWidth: 520 }}>{t('heroBody')}</T>
+            <View style={{ flexDirection: wide ? 'row' : 'column', gap: 12, marginTop: wide ? 8 : 4 }}>
+              <Button label={t('exploreGifts')} href="/shop" kind="gold" size="lg" icon={<Icon name="gift" size={19} color={colors.night} />} />
+              <Button label={t('helpChoose')} href="/concierge" kind="outlineLight" size="lg" />
+            </View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 22, rowGap: 8, marginTop: wide ? 18 : 8 }}>
+              {(['heroTrust1', 'heroTrust2', 'heroTrust3'] as const).map((k) => (
+                <View key={k} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ width: 5, height: 5, backgroundColor: colors.gold, transform: [{ rotate: '45deg' }] }} />
+                  <T size={13} w={500} color={colors.champagne}>{t(k)}</T>
+                </View>
+              ))}
+            </View>
+          </View>
+          <View style={{ flex: wide ? 1.05 : undefined, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: '100%', maxWidth: wide ? 560 : 420, alignSelf: 'center' }}>
+              {/* gold outline arch, offset behind the photograph */}
+              <View style={{ position: 'absolute', top: wide ? -16 : -10, left: wide ? 16 : 10, right: wide ? -16 : -10, bottom: wide ? 16 : 10, borderWidth: 1.5, borderColor: colors.gold, borderTopLeftRadius: 999, borderTopRightRadius: 999, borderBottomLeftRadius: 26, borderBottomRightRadius: 26, opacity: 0.85 }} />
+              <View style={{ height: wide ? 600 : 330, borderTopLeftRadius: 999, borderTopRightRadius: 999, borderBottomLeftRadius: wide ? 26 : 18, borderBottomRightRadius: wide ? 26 : 18, overflow: 'hidden', backgroundColor: colors.nightSoft, borderWidth: 4, borderColor: colors.nightSoft }}>
+                <Photo uri="/images/hero.jpg" label={t('heroTitle')} style={{ width: '100%', height: '100%', aspectRatio: undefined, borderRadius: 0 }} />
+              </View>
+            </View>
+          </View>
+        </Container>
+      </View>
 
       {/* What's the occasion */}
       <Container style={{ paddingTop: wide ? 64 : 30 }}>
@@ -124,11 +163,11 @@ export default function Home() {
             { k: t('ramadanKicker'), title: t('ramadanTitle'), body: t('ramadanBody'), tone: '#E8E4EE', tag: 'ramadan', img: '/images/ramadan.jpg' },
           ].map((c) => (
             <Link key={c.tag} href={shop({ tag: c.tag })} asChild>
-              <Pressable accessibilityRole="link" style={{ flex: 1, minHeight: wide ? 420 : 220, borderRadius: wide ? 26 : 18, backgroundColor: c.tone, justifyContent: 'flex-end', overflow: 'hidden' }}>
+              <Pressable accessibilityRole="link" style={{ flex: 1, minHeight: wide ? 440 : 220, borderRadius: wide ? 26 : 18, backgroundColor: c.tone, justifyContent: 'flex-end', overflow: 'hidden', borderWidth: 1, borderColor: colors.goldLine }}>
                 <Image source={{ uri: imageUrl(c.img) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
-                <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(11,16,48,0.28)' }]} />
-                <View style={{ backgroundColor: 'rgba(11,16,48,0.62)', padding: wide ? 26 : 12, gap: 6 }}>
-                  <Eyebrow size={wide ? 13 : 10} color={colors.champagne}>{c.k}</Eyebrow>
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(7,11,44,0.22)' }]} />
+                <View style={{ backgroundColor: 'rgba(7,11,44,0.78)', borderTopWidth: 1, borderColor: colors.gold, padding: wide ? 28 : 12, gap: 6 }}>
+                  <Eyebrow size={wide ? 13 : 10} color={colors.gold}>{c.k}</Eyebrow>
                   <Serif size={wide ? 44 : 24} color={colors.white}>{c.title}</Serif>
                   {wide ? <T size={15} color="#E6E7F2" lh={1.5} style={{ maxWidth: 460 }}>{c.body}</T> : null}
                 </View>
@@ -141,7 +180,7 @@ export default function Home() {
             {OCCASIONS.map((o) => (
               <Link key={o.key} href={shop(o.tag ? { tag: o.tag } : {})} asChild>
                 <Pressable accessibilityRole="link" style={{ gap: wide ? 10 : 6 }}>
-                  <Photo shape="arch" ratio={3 / 4} tone={o.tone} uri={o.img} />
+                  <Photo shape="arch" ratio={3 / 4} tone={o.tone} uri={o.img} style={styles.ring} />
                   <T w={700} size={wide ? 15 : 12.5} color={colors.navy} center lh={1.3}>{t(o.key)}</T>
                 </Pressable>
               </Link>
@@ -186,7 +225,7 @@ export default function Home() {
             {cats.map((c) => (
               <Link key={c.id} href={{ pathname: '/collections/[slug]', params: { slug: c.slug } }} asChild>
                 <Pressable accessibilityRole="link" style={{ gap: wide ? 12 : 6 }}>
-                  <Photo ratio={wide ? 4 / 5 : 4 / 3} uri={c.image} tone={colors.sand} style={{ borderRadius: wide ? 20 : 14 }} label={pick(c, 'name')} />
+                  <Photo ratio={wide ? 4 / 5 : 4 / 3} uri={c.image} tone={colors.sand} style={{ borderRadius: wide ? 20 : 14, borderWidth: 1, borderColor: colors.line }} label={pick(c, 'name')} />
                   <T w={700} size={wide ? 16 : 13.5} color={colors.navy}>{pick(c, 'name')}</T>
                   {wide && c.blurb_en ? <T size={13} lh={1.5} color={colors.muted} numberOfLines={2}>{pick(c, 'blurb')}</T> : null}
                 </Pressable>
@@ -207,15 +246,16 @@ export default function Home() {
         )}
       </Container>
 
-      {/* Who is it for + budget */}
-      <Container style={{ paddingTop: gap }}>
+      {/* Who is it for + budget, on a pale gold band */}
+      <View style={{ marginTop: gap, backgroundColor: colors.goldSoft, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.champagne }}>
+      <Container style={{ paddingVertical: wide ? 64 : 28 }}>
         <SectionHead title={t('forWhom')} sub={wide ? t('forWhomBody') : undefined} link={wide ? t('giftFinder') : undefined} href="/concierge" size={wide ? 44 : 28} />
         {wide ? (
           <Grid cols={5} gap={18}>
             {RECIPIENTS.map((r) => (
               <Link key={r.key} href={shop(r.tag ? { tag: r.tag } : {})} asChild>
                 <Pressable accessibilityRole="link" style={{ gap: 10 }}>
-                  <Photo shape="arch" ratio={3 / 4} tone={r.tone} uri={r.img} />
+                  <Photo shape="arch" ratio={3 / 4} tone={r.tone} uri={r.img} style={styles.ring} />
                   <Serif size={26} center>{t(r.key as Key)}</Serif>
                   <T size={13} color={colors.muted} center style={{ marginTop: -6 }}>{t(`${r.key}_hint` as Key)}</T>
                 </Pressable>
@@ -227,19 +267,19 @@ export default function Home() {
             {RECIPIENTS.map((r) => (
               <Link key={r.key} href={shop(r.tag ? { tag: r.tag } : {})} asChild>
                 <Pressable accessibilityRole="link" style={{ width: 92, gap: 6, alignItems: 'center' }}>
-                  <Photo shape="arch" ratio={92 / 116} tone={r.tone} uri={r.img} />
+                  <Photo shape="arch" ratio={92 / 116} tone={r.tone} uri={r.img} style={styles.ring} />
                   <T w={700} size={13} color={colors.navy}>{t(r.key as Key)}</T>
                 </Pressable>
               </Link>
             ))}
           </ScrollView>
         )}
-        <View style={wide ? { marginTop: 34, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: 24, padding: 22, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14 } : { marginTop: 18, gap: 8 }}>
+        <View style={wide ? { marginTop: 34, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.champagne, borderRadius: 24, padding: 22, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14 } : { marginTop: 18, gap: 8 }}>
           <T w={700} size={wide ? 16 : 14} color={colors.navy} style={wide ? { marginEnd: 8 } : null}>{t('byBudget')}</T>
           <View style={{ flex: wide ? 1 : undefined, flexDirection: 'row', flexWrap: 'wrap', gap: wide ? 14 : 8 }}>
             {BUDGETS.map((b) => (
               <Link key={b.min} href={shop({ ...(b.min ? { min: String(b.min) } : {}), ...(b.max ? { max: String(b.max) } : {}) })} asChild>
-                <Pressable accessibilityRole="link" style={{ flexGrow: 1, flexBasis: wide ? 180 : '45%', borderWidth: 1, borderColor: colors.line, backgroundColor: wide ? colors.ivory : colors.white, borderRadius: wide ? 16 : 14, paddingVertical: wide ? 14 : 10, paddingHorizontal: wide ? 18 : 12, gap: 2 }}>
+                <Pressable accessibilityRole="link" style={{ flexGrow: 1, flexBasis: wide ? 180 : '45%', borderWidth: 1, borderColor: colors.champagne, backgroundColor: wide ? colors.ivory : colors.white, borderRadius: wide ? 16 : 14, paddingVertical: wide ? 14 : 10, paddingHorizontal: wide ? 18 : 12, gap: 2 }}>
                   <T w={700} size={wide ? 17 : 14} color={colors.navy}>{band(b)}</T>
                   <T size={wide ? 12.5 : 11.5} color={colors.muted}>{t(b.hint)}</T>
                 </Pressable>
@@ -248,6 +288,7 @@ export default function Home() {
           </View>
         </View>
       </Container>
+      </View>
 
       {/* 4 · Curated selection */}
       <Container style={{ paddingTop: gap }}>
@@ -259,31 +300,44 @@ export default function Home() {
         )}
       </Container>
 
-      {/* Membership: Quran Trail and Seerah Trail */}
-      <Container style={{ paddingTop: wide ? 40 : 20 }}>
-        <View style={{ backgroundColor: colors.navy, borderRadius: wide ? 28 : 22, padding: wide ? 36 : 18, flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'stretch', gap: wide ? 32 : 10 }}>
-          <View style={{ flex: wide ? 1 : undefined, gap: 10 }}>
-            <Eyebrow color={colors.champagne} size={11}>{t('membership')}</Eyebrow>
-            <Serif size={wide ? 40 : 28} color={colors.white}>{t('circleTitle')}</Serif>
-            <T size={wide ? 16 : 14} lh={1.6} color="#D6D8EA" style={{ maxWidth: 560 }}>{t('circleBody')}</T>
+      {/* Membership: gold card */}
+      <Container style={{ paddingTop: wide ? 48 : 24 }}>
+        <View style={{ backgroundColor: colors.nightSoft, borderRadius: wide ? 28 : 22, overflow: 'hidden', borderWidth: 1, borderColor: colors.gold }}>
+          <StarLattice opacity={0.1} size={60} />
+          <Glow cx="90%" cy="20%" r="60%" opacity={0.3} />
+          <View style={{ padding: wide ? 44 : 20, flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'stretch', gap: wide ? 32 : 14 }}>
+            <View style={{ flex: wide ? 1 : undefined, gap: 10 }}>
+              <Eyebrow color={colors.gold} size={12}>{t('membership')}</Eyebrow>
+              <Serif size={wide ? 46 : 30} color={colors.white}>{t('circleTitle')}</Serif>
+              <Ornament width={90} />
+              <T size={wide ? 16 : 14} lh={1.6} color={colors.onNight} style={{ maxWidth: 600 }}>{t('circleBody')}</T>
+            </View>
+            <Button label={t('circleCta')} kind="gold" size="lg" href="/membership" style={{ alignSelf: wide ? 'center' : 'flex-start' }} />
           </View>
-          <Button label={t('circleCta')} kind="light" href="/membership" style={{ alignSelf: wide ? 'center' : 'flex-start' }} />
         </View>
       </Container>
 
-      {/* 6 · Heritage */}
-      <View style={{ marginTop: wide ? 80 : 36, backgroundColor: colors.white, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.line }}>
-        <Container style={{ paddingVertical: wide ? 72 : 28, flexDirection: wide ? 'row' : 'column', gap: wide ? 56 : 12, alignItems: wide ? 'center' : 'stretch' }}>
-          {wide && <View style={{ flex: 1, height: 520, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.sand }}><Photo uri="/images/madinah-minarets.jpg" style={{ height: '100%', aspectRatio: undefined }} label={t('heritageTitle')} /></View>}
-          <View style={{ flex: wide ? 1.2 : undefined, gap: wide ? 20 : 12 }}>
-            <Eyebrow size={wide ? 13 : 11}>{t('heritageKicker')}</Eyebrow>
-            <Serif role="h2" size={wide ? 50 : 32}>{t('heritageTitle')}</Serif>
-            <T size={wide ? 17 : 14} lh={1.7} color={colors.body}>{t('heritageBody')}</T>
-            <View style={wide ? { flexDirection: 'row', borderTopWidth: 2, borderColor: colors.brass, marginTop: 8 } : { borderStartWidth: 2, borderColor: colors.brass, paddingStart: 14, gap: 10, marginTop: 4 }}>
+      {/* 6 · Heritage: night section with the Prophet's Mosque and a gold timeline */}
+      <View style={{ marginTop: wide ? 88 : 36, backgroundColor: colors.night, overflow: 'hidden' }}>
+        <StarLattice opacity={0.06} size={80} />
+        <Glow cx="20%" cy="50%" r="55%" opacity={0.18} />
+        <Container style={{ paddingVertical: wide ? 88 : 36, flexDirection: wide ? 'row' : 'column', gap: wide ? 64 : 20, alignItems: wide ? 'center' : 'stretch' }}>
+          <View style={{ flex: 1, height: wide ? 560 : 300, borderRadius: wide ? 26 : 18, overflow: 'hidden', backgroundColor: colors.nightSoft, borderWidth: 1, borderColor: colors.gold }}>
+            <Photo uri="/images/madinah-minarets.jpg" style={{ height: '100%', aspectRatio: undefined, borderRadius: 0 }} label={t('heritageTitle')} />
+          </View>
+          <View style={{ flex: wide ? 1.15 : undefined, gap: wide ? 20 : 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{ width: 28, height: 1, backgroundColor: colors.gold }} />
+              <Eyebrow size={wide ? 13 : 11} color={colors.gold}>{t('heritageKicker')}</Eyebrow>
+            </View>
+            <Serif role="h2" size={wide ? 54 : 32} color={colors.white}>{t('heritageTitle')}</Serif>
+            <T size={wide ? 17 : 14.5} lh={1.7} color={colors.onNight}>{t('heritageBody')}</T>
+            <View style={wide ? { flexDirection: 'row', borderTopWidth: 1, borderColor: colors.gold, marginTop: 12 } : { borderStartWidth: 1, borderColor: colors.gold, paddingStart: 16, gap: 14, marginTop: 6 }}>
               {(['h1', 'h2', 'h3'] as const).map((h) => (
-                <View key={h} style={wide ? { flex: 1, paddingTop: 14, paddingEnd: 16, gap: 4 } : { flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                  {wide ? <Serif size={30}>{t(`${h}Label` as Key)}</Serif> : <T w={700} size={13.5} color={colors.navy}>{t(`${h}Label` as Key)} —</T>}
-                  <T size={13.5} lh={1.5} color={colors.body} style={{ flexShrink: 1 }}>{t(`${h}Body` as Key)}</T>
+                <View key={h} style={wide ? { flex: 1, paddingTop: 18, paddingEnd: 18, gap: 6 } : { gap: 2 }}>
+                  {wide && <View style={{ position: 'absolute', top: -5, start: 0, width: 9, height: 9, backgroundColor: colors.gold, transform: [{ rotate: '45deg' }] }} />}
+                  <Serif size={wide ? 34 : 24} color={colors.goldBright}>{t(`${h}Label` as Key)}</Serif>
+                  <T size={13.5} lh={1.55} color={colors.onNight} style={{ flexShrink: 1 }}>{t(`${h}Body` as Key)}</T>
                 </View>
               ))}
             </View>
@@ -295,10 +349,13 @@ export default function Home() {
       <Container style={{ paddingTop: gap }}>
         <SectionHead title={t('servicesTitle')} size={wide ? 44 : 28} />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: wide ? 18 : 10 }}>
-          {(['svc1', 'svc2', 'svc3', 'svc4'] as const).map((k) => (
-            <Card key={k} pad={wide ? 22 : 14} style={{ flexGrow: 1, flexBasis: wide ? 240 : '100%', gap: 8 }}>
+          {([['svc1', 'gift'], ['svc2', 'send'], ['svc3', 'bed'], ['svc4', 'sparkle']] as const).map(([k, ic]) => (
+            <Card key={k} pad={wide ? 24 : 16} style={{ flexGrow: 1, flexBasis: wide ? 240 : '100%', gap: 10, flexDirection: wide ? 'column' : 'row', alignItems: wide ? 'flex-start' : 'center' }}>
+              <Medallion icon={ic} />
+              <View style={{ flex: wide ? undefined : 1, gap: 6 }}>
               <T w={700} size={16} color={colors.navy}>{t(`${k}t` as Key)}</T>
               <T size={14} lh={1.55} color={colors.body}>{t(`${k}b` as Key)}</T>
+              </View>
             </Card>
           ))}
         </View>
@@ -313,14 +370,17 @@ export default function Home() {
       </Container>
 
       {/* 8 · Reassurance */}
-      <Container style={{ paddingTop: wide ? 56 : 28, paddingBottom: wide ? 80 : 40 }}>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', backgroundColor: colors.sandSoft, borderRadius: 20 }}>
-          {[
-            [t('re1t'), t('re1b')], [t('re2t'), t('payNote')], [t('re3t'), t('re3b')], [t('re4t'), t('re4b')],
-          ].map(([a, b]) => (
-            <View key={a} style={{ flexGrow: 1, flexBasis: wide ? 230 : '100%', paddingVertical: wide ? 18 : 12, paddingHorizontal: wide ? 22 : 14, gap: 2 }}>
-              <T w={700} size={15} color={colors.navy}>{a}</T>
-              <T size={13} color={colors.body}>{b}</T>
+      <Container style={{ paddingTop: wide ? 64 : 28, paddingBottom: wide ? 88 : 40 }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', backgroundColor: colors.white, borderRadius: 22, borderWidth: 1, borderColor: colors.champagne, paddingVertical: wide ? 8 : 4 }}>
+          {([
+            ['bag', t('re1t'), t('re1b')], ['lock', t('re2t'), t('payNote')], ['shield', t('re3t'), t('re3b')], ['check', t('re4t'), t('re4b')],
+          ] as const).map(([ic, a, b]) => (
+            <View key={a} style={{ flexGrow: 1, flexBasis: wide ? 230 : '100%', flexDirection: 'row', gap: 12, alignItems: 'flex-start', paddingVertical: wide ? 18 : 12, paddingHorizontal: wide ? 22 : 14 }}>
+              <Icon name={ic} size={22} color={colors.brass} />
+              <View style={{ flex: 1, gap: 2 }}>
+                <T w={700} size={15} color={colors.navy}>{a}</T>
+                <T size={13} color={colors.body}>{b}</T>
+              </View>
             </View>
           ))}
         </View>

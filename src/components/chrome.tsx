@@ -8,9 +8,10 @@ import { useCart } from '@/lib/cart';
 import { getSettings } from '@/lib/catalogue';
 import { useI18n, type Key } from '@/lib/i18n';
 import { CURRENCIES } from '@/lib/money';
-import { openExternal, SEERAH_TRAIL_URL } from '@/lib/links';
+import { openExternal } from '@/lib/links';
 import { DESTINATIONS, usePrefs, type Destination } from '@/lib/prefs';
 import { colors, sans, space } from '@/theme';
+import { GoldRule, StarLattice } from './decor';
 import { Icon, type IconName } from './icons';
 import { Container, Notice, OptionCard, Sheet, styles as ui, T, useWide } from './ui';
 
@@ -96,22 +97,25 @@ export function SiteHeader() {
   ];
 
   return (
-    <View accessibilityRole="header">
+    <View role="banner">
       {wide ? (
         <>
-          <View style={{ backgroundColor: colors.navy }}>
+          <View style={{ backgroundColor: colors.night }}>
             <Container style={{ paddingVertical: 9, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-              <T size={13} color="#E6E7F2">{t('topBar')}</T>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ width: 6, height: 6, backgroundColor: colors.gold, transform: [{ rotate: '45deg' }] }} />
+                <T size={13} color={colors.champagne}>{t('topBar')}</T>
+              </View>
               <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center' }}>
                 <Link href="/membership"><T size={13} color={colors.white}>{t('membership')}</T></Link>
                 <Link href="/concierge"><T size={13} color={colors.white}>{t('concierge')}</T></Link>
-                <Pressable accessibilityRole="button" onPress={toggleLang} style={{ borderStartWidth: 1, borderColor: '#3A3F7A', paddingStart: 16 }}>
-                  <T size={13} color={colors.white} style={{ fontFamily: isRTL ? 'Manrope_600SemiBold' : 'ReadexPro_400Regular' }}>{t('language')}</T>
+                <Pressable accessibilityRole="button" onPress={toggleLang} style={{ borderStartWidth: 1, borderColor: colors.goldLine, paddingStart: 16 }}>
+                  <T size={13} color={colors.goldBright} style={{ fontFamily: isRTL ? 'Manrope_600SemiBold' : 'ReadexPro_400Regular' }}>{t('language')}</T>
                 </Pressable>
               </View>
             </Container>
           </View>
-          <View style={{ backgroundColor: colors.white, borderBottomWidth: 1, borderColor: colors.line }}>
+          <View style={{ backgroundColor: colors.white }}>
             <Container style={{ paddingVertical: 14, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 18 }}>
               <Link href="/" accessibilityLabel={t('home')}><Logo height={44} /></Link>
               <SearchBox />
@@ -140,11 +144,12 @@ export function SiteHeader() {
               <View style={{ flex: 1 }} />
               <Link href="/concierge" style={{ paddingVertical: 8 }}><T w={600} size={15} color={colors.brassText}>{t('helpChoose')}</T></Link>
             </Container>
+            <GoldRule style={{ height: 1, opacity: 0.7 }} />
           </View>
         </>
       ) : (
         <>
-          <View style={{ backgroundColor: colors.white, borderBottomWidth: 1, borderColor: colors.line, paddingVertical: 6, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ backgroundColor: colors.white, paddingVertical: 6, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Pressable accessibilityRole="button" accessibilityLabel={t('menu')} onPress={() => setSheet('menu')} style={ui.iconBtn}><Icon name="menu" /></Pressable>
             <Link href="/" accessibilityLabel={t('home')}><Logo height={30} /></Link>
             <View style={{ flexDirection: 'row' }}>
@@ -152,14 +157,14 @@ export function SiteHeader() {
               <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} />
             </View>
           </View>
-          <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: colors.line, backgroundColor: colors.lavender }}>
+          <View style={{ flexDirection: 'row', backgroundColor: colors.night, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.gold }}>
             <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} style={{ flex: 1, minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16 }}>
-              <T size={13} color={colors.muted}>{t('deliveringTo')}:</T>
-              <T w={700} size={13}>{t(`dest_${destination}` as Key)}</T>
-              <Icon name="chevronDown" size={12} stroke={2.4} />
+              <T size={13} color={colors.onNight}>{t('deliveringTo')}:</T>
+              <T w={700} size={13} color={colors.white}>{t(`dest_${destination}` as Key)}</T>
+              <Icon name="chevronDown" size={12} stroke={2.4} color={colors.gold} />
             </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel={`${t('currency')}: ${currency}`} onPress={() => setSheet('cur')} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderStartWidth: 1, borderColor: '#DCD8EA' }}>
-              <T w={700} size={13}>{currency}</T>
+            <Pressable accessibilityRole="button" accessibilityLabel={`${t('currency')}: ${currency}`} onPress={() => setSheet('cur')} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderStartWidth: 1, borderColor: colors.goldLine }}>
+              <T w={700} size={13} color={colors.goldBright}>{currency}</T>
             </Pressable>
           </View>
         </>
@@ -246,17 +251,19 @@ export function SiteFooter() {
   const { t, setLang, lang } = useI18n();
   const col = (title: string, links: { label: string; href?: Href }[]) => (
     <View style={{ gap: 10, minWidth: 190, flex: 1 }}>
-      <T w={700} color={colors.white}>{title}</T>
+      <T w={700} color={colors.goldBright}>{title}</T>
       {links.map((l) => (l.href ? <Link key={l.label} href={l.href} target={String(l.href).startsWith('http') ? '_blank' : undefined}><T size={14} color="#C9CBDB">{l.label}</T></Link> : <T key={l.label} size={14} color="#9EA1BD">{l.label}</T>))}
     </View>
   );
   return (
-    <View accessibilityRole="contentinfo" style={{ backgroundColor: colors.navyDeep, marginTop: 'auto' }}>
+    <View accessibilityRole="contentinfo" style={{ backgroundColor: colors.night, marginTop: 'auto', overflow: 'hidden' }}>
+      <GoldRule />
+      <StarLattice opacity={0.06} size={72} />
       <Container style={{ paddingTop: wide ? 56 : 28, paddingBottom: 28, flexDirection: 'row', flexWrap: 'wrap', gap: 32 }}>
         <View style={{ gap: 14, minWidth: 220, flex: 1 }}>
           <Logo height={40} white />
           <T size={14} color="#C9CBDB">{t('footerTagline')}</T>
-          <Pressable accessibilityRole="button" onPress={() => setLang(lang === 'ar' ? 'en' : 'ar')}><T w={600} size={14} color={colors.white}>{t('language')}</T></Pressable>
+          <Pressable accessibilityRole="button" onPress={() => setLang(lang === 'ar' ? 'en' : 'ar')} style={{ alignSelf: 'flex-start', borderWidth: 1, borderColor: colors.goldLine, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6 }}><T w={600} size={14} color={colors.white}>{t('language')}</T></Pressable>
         </View>
         {col(t('shop'), [
           { label: t('allGifts'), href: '/shop' },
@@ -293,7 +300,7 @@ export function CheckoutHeader({ step }: { step: 1 | 2 | 3 }) {
   const { t } = useI18n();
   const steps = [t('cart'), t('shipping'), t('stepDetails')];
   return (
-    <View accessibilityRole="header" style={{ backgroundColor: colors.white, borderBottomWidth: 1, borderColor: colors.line }}>
+    <View role="banner" style={{ backgroundColor: colors.white, borderBottomWidth: 1, borderColor: colors.line }}>
       <Container style={{ paddingVertical: 14, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
         <Link href="/" accessibilityLabel={t('home')}><Logo height={wide ? 40 : 30} /></Link>
         {wide && (

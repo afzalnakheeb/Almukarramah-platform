@@ -27,13 +27,15 @@ jobs:
         run: npm run vercel-install
       - name: Build website
         run: npm run build:web
+      - name: Type check (report only)
+        run: mkdir -p shots && (npx tsc --noEmit > typecheck.txt 2>&1; echo "exit $?" >> typecheck.txt) ; tail -40 typecheck.txt
       - name: Install browser
         run: npm install --no-save --legacy-peer-deps playwright serve && npx playwright install --with-deps chromium
       - name: Screenshots and SEO report (this build)
         run: |
           npx serve dist -l 3000 >/dev/null 2>&1 &
           sleep 3
-          rm -rf shots && node scripts/shots.mjs http://localhost:3000 shots
+          rm -rf shots && node scripts/shots.mjs http://localhost:3000 shots && cp typecheck.txt shots/
       - name: SEO report (live site)
         run: SEO_ONLY=1 node scripts/shots.mjs https://almukarramah.com shots/live && mv shots/live/seo-report.md shots/seo-live.md && rm -rf shots/live
       - name: Commit results

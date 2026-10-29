@@ -15,6 +15,7 @@ import { Seo } from '@/components/seo';
 import { GoogleButton } from '@/components/google';
 import { AppCard } from '@/components/apps';
 import { APPS } from '@/lib/apps';
+import { rememberNext } from '@/lib/auth';
 
 type SubRow = { id: string; source: string; status: string; cancel_at_period_end: boolean; current_period_end: string | null; plans: { name_en: string; name_ar: string; price_sar: number; kind: string } | null };
 type OrderRow = { id: string; number: number; status: string; currency: string; total_minor: number; created_at: string; invoices: { id: string; number: string }[] };
@@ -111,6 +112,7 @@ export default function Account() {
               onPress={async () => {
                 setBusy(true);
                 setError(null);
+                await rememberNext(nextPath);
                 const { error: e } = await supabase.auth.signInWithOtp({
                   email: email.trim(),
                   options: typeof window !== 'undefined' ? { emailRedirectTo: `${window.location.origin}/account${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ''}` } : undefined,
