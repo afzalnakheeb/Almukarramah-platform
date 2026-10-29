@@ -2,7 +2,7 @@
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
-import { supabase } from '@/lib/supabase';
+import { isConfigured, supabase } from '@/lib/supabase';
 
 
 /** Opens Google sign-in. On the website the page returns to /account; in the apps an in-app browser is used. */
@@ -27,4 +27,17 @@ export async function signInWithGoogle(): Promise<void> {
   if (!code) throw new Error('Google sign-in did not complete');
   const { error: exErr } = await supabase.auth.exchangeCodeForSession(code);
   if (exErr) throw exErr;
+}
+
+let googleCheck: Promise<boolean> | null = null;
+/** True when the Google provider is switched on in Supabase Auth (public settings endpoint, checked once). */
+export function googleEnabled(): Promise<boolean> {
+  if (!isConfigured) return Promise.resolve(false);
+  googleCheck ??= fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/auth/v1/settings`, {
+    headers: { apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '' },
+  })
+    .then((r) => r.json())
+    .then((s: { external?: { google?: boolean } }) => !!s.external?.google)
+    .catch(() => false);
+  return googleCheck;
 }

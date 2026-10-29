@@ -1,9 +1,9 @@
 // "Continue with Google" button, following Google's branding guidelines (white button, Google "G" mark).
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { T } from '@/components/ui';
-import { signInWithGoogle } from '@/lib/auth';
+import { googleEnabled, signInWithGoogle } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 import { colors } from '@/theme';
 
@@ -18,10 +18,17 @@ function GoogleMark({ size = 20 }: { size?: number }) {
   );
 }
 
-export function GoogleButton({ onError }: { onError?: (msg: string) => void }) {
+export function GoogleButton({ onError, dividerLabel }: { onError?: (msg: string) => void; dividerLabel?: string }) {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
+  // Shown only once Google is switched on in Supabase Auth, so shoppers never reach an error page.
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    googleEnabled().then(setEnabled);
+  }, []);
+  if (!enabled) return null;
   return (
+    <>
     <Pressable
       accessibilityRole="button"
       disabled={busy}
@@ -42,5 +49,7 @@ export function GoogleButton({ onError }: { onError?: (msg: string) => void }) {
       {busy ? <ActivityIndicator color={colors.navy} /> : <GoogleMark />}
       <T w={600} size={15.5} color="#1F1F1F">{t('continueGoogle')}</T>
     </Pressable>
+    {dividerLabel ? <T size={12.5} color={colors.muted} center>{dividerLabel}</T> : null}
+    </>
   );
 }

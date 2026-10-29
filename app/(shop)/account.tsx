@@ -97,8 +97,7 @@ export default function Account() {
             <Serif role="h1" size={30} style={{ marginTop: 6 }}>{t('signInTitle')}</Serif>
             <T size={14} lh={1.6} color={colors.muted}>{t('signInBody')}</T>
             {!isConfigured && <Notice text="Preview mode: sign-in works once the Supabase project is connected." />}
-            <GoogleButton onError={() => setError(t('googleError'))} />
-            <T size={12.5} color={colors.muted} center>{t('orEmail')}</T>
+            <GoogleButton onError={() => setError(t('googleError'))} dividerLabel={t('orEmail')} />
             <Field label={t('email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" dirLtr />
             <Button
               label={t('sendCode')}
