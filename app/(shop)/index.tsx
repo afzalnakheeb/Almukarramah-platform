@@ -160,7 +160,7 @@ export default function Home() {
       ) : (
         <>
           <View style={{ height: 360, backgroundColor: colors.sand }}>
-            <CinematicPhoto uri="/images/hero-light.jpg" position={isRTL ? 'left' : 'right'} label={t('heroImageAlt')} sweep={false} />
+            <CinematicPhoto uri={isRTL ? '/images/hero-light-rtl.jpg' : '/images/hero-light.jpg'} position={isRTL ? 'left' : 'right'} label={t('heroImageAlt')} sweep={false} />
           </View>
           <Container style={{ paddingTop: 28, paddingBottom: 8 }}>{heroText}</Container>
         </>
