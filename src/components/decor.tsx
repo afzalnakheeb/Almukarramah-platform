@@ -140,3 +140,24 @@ export function SideShade({ color = colors.night, from = 'left', strength = 0.92
     </View>
   );
 }
+
+/**
+ * Hero film: a muted, looping video on the website (desktop or phone cut, chosen after hydration so phones never
+ * download the desktop file), with the poster image shown first and kept for visitors who prefer less motion.
+ * In the iPhone and Android apps the poster is shown with the slow camera drift instead.
+ */
+export function HeroFilm({ desktop, phone, poster, posterPhone, label, wide }: { desktop: string; phone: string; poster: string; posterPhone?: string; label?: string; wide: boolean }) {
+  const [ready, setReady] = React.useState(false);
+  React.useEffect(() => { setReady(!reducedMotion()); }, []);
+  const still = wide ? poster : posterPhone ?? poster;
+  if (Platform.OS !== 'web') return <CinematicPhoto uri={still} label={label} sweep={false} />;
+  return (
+    <View style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]} accessible={!!label} accessibilityLabel={label} accessibilityRole={label ? 'image' : undefined}>
+      <Image source={{ uri: imageUrl(still) }} style={StyleSheet.absoluteFill} contentFit="cover" priority="high" />
+      {ready ? (
+        <video key={wide ? 'd' : 'm'} src={imageUrl(wide ? desktop : phone)} poster={imageUrl(still)} autoPlay muted loop playsInline preload="auto" aria-hidden
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+      ) : null}
+    </View>
+  );
+}
