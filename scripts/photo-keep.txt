@@ -1,0 +1,8 @@
+# Photos left as the original: the background tool removed part of the product (a box or tray) or the product
+# runs off the edge of the photo. Our own rug photos taken close-up on the floor are listed by the report instead.
+/products/prophets-mosque-door-seal-magnet-2.jpg
+/products/prophets-mosque-door-seal-gift-box-2.jpg
+/products/prophets-mosque-door-seal-gift-box-3.jpg
+/products/aam/little-heart-gift-set-2.jpg
+/products/aam/bidun-esam-gift-set-2.jpg
+/products/aam/joud-100-ml-2.jpg

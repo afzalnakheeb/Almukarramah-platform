@@ -304,7 +304,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   const { t } = useI18n();
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable accessibilityLabel={t('close')} onPress={onClose} style={{ flex: 1, backgroundColor: 'rgba(11,16,48,0.45)', justifyContent: wide ? 'center' : 'flex-end', alignItems: 'center' }}>
+      <Pressable accessibilityLabel={t('close')} onPress={onClose} style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: wide ? 'center' : 'flex-end', alignItems: 'center' }}>
         <Pressable onPress={() => undefined} style={{ width: '100%', maxWidth: wide ? 520 : undefined, backgroundColor: colors.ivory, borderRadius: 24, borderBottomLeftRadius: wide ? 24 : 0, borderBottomRightRadius: wide ? 24 : 0, padding: 20, paddingBottom: wide ? 20 : 32, gap: 12 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Serif size={28}>{title}</Serif>

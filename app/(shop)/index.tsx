@@ -228,11 +228,11 @@ export default function Home() {
             <Link key={c.tag} href={shop({ tag: c.tag })} asChild>
               <Pressable accessibilityRole="link" style={{ flex: 1, minHeight: wide ? 440 : 220, borderRadius: wide ? 26 : 18, backgroundColor: c.tone, justifyContent: 'flex-end', overflow: 'hidden', borderWidth: 1, borderColor: colors.goldLine }}>
                 <Image source={{ uri: imageUrl(c.img) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
-                <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(7,11,44,0.22)' }]} />
-                <View style={{ backgroundColor: 'rgba(7,11,44,0.78)', borderTopWidth: 1, borderColor: colors.gold, padding: wide ? 28 : 12, gap: 6 }}>
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrimSoft }]} />
+                <View style={{ backgroundColor: colors.scrim, borderTopWidth: 1, borderColor: colors.gold, padding: wide ? 28 : 12, gap: 6 }}>
                   <Eyebrow size={wide ? 13 : 10} color={colors.gold}>{c.k}</Eyebrow>
                   <Serif size={wide ? 44 : 24} color={colors.white}>{c.title}</Serif>
-                  {wide ? <T size={15} color="#E6E7F2" lh={1.5} style={{ maxWidth: 460 }}>{c.body}</T> : null}
+                  {wide ? <T size={15} color={colors.onNight} lh={1.5} style={{ maxWidth: 460 }}>{c.body}</T> : null}
                 </View>
               </Pressable>
             </Link>

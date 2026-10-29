@@ -1,30 +1,37 @@
 // Design tokens from the AlMukarramah Platform Design (PL-06 · Shared design system).
+// Palette: Rawdah Emerald (deep Madinah green on warm ivory, antique brass used as a thin line).
+// The token names 'navy' and 'night' are kept from the first palette: 'navy' is the brand colour, 'night' the deepest shade.
 export const colors = {
-  navy: '#010852',
-  navyDeep: '#0B1030', // footer
-  navyLine: '#23284F',
-  ink: '#14152A',
-  body: '#3F3C36',
-  muted: '#5E5A52',
-  ivory: '#FBF8F3',
-  cream: '#FBF8F3',
-  sand: '#EDE5D6',
-  sandSoft: '#F2ECE1',
-  line: '#ECE4D6',
-  lineSoft: '#F1EBE0',
-  inputLine: '#D8CFBF',
-  brass: '#A9824B',
-  brassText: '#8A6A3A',
-  champagne: '#E9D9B8',
+  navy: '#14392F',
+  navyDeep: '#0D2A22', // footer
+  navyLine: '#2B4B41',
+  ink: '#16211D',
+  body: '#3F443F',
+  muted: '#61665F',
+  ivory: '#F6F2EA',
+  cream: '#F6F2EA',
+  sand: '#E9E2D4',
+  sandSoft: '#F0EBE1',
+  line: '#E3DCCD',
+  lineSoft: '#EDE8DD',
+  inputLine: '#D2CABA',
+  brass: '#A07E46',
+  brassText: '#7C6236',
+  champagne: '#E6D9BE',
   // Gold and night (the darker, richer layer: hero, heritage, footer)
-  gold: '#C9A45C', // gold on dark backgrounds (7:1 on night)
-  goldBright: '#DDBE7E',
-  goldSoft: '#F4EAD3', // pale gold panels on light backgrounds
-  goldLine: 'rgba(201,164,92,0.45)',
-  night: '#070B2C', // deepest navy: hero and heritage
-  nightSoft: '#11174A',
-  onNight: '#C9CCE0', // body text on night
-  lavender: '#F4F2F9',
+  gold: '#C4A468', // gold on dark backgrounds (7:1 on night)
+  goldBright: '#D8BF8C',
+  goldSoft: '#F1EADA', // pale gold panels on light backgrounds
+  goldLine: 'rgba(196,164,104,0.45)',
+  night: '#0F2C25', // deepest brand shade: hero and heritage
+  nightSoft: '#173A31',
+  onNight: '#D5DED7', // body text on night
+  onNightSoft: '#B9C7BE', // secondary text on night
+  onNightFaint: '#8DA096', // fine print on night
+  scrim: 'rgba(15,44,37,0.80)', // text panel over a photo
+  scrimSoft: 'rgba(15,44,37,0.22)',
+  overlay: 'rgba(15,44,37,0.45)', // behind dialogs
+  lavender: '#EFF2EC',
   white: '#FFFFFF',
   success: '#1E6B4A',
   successBg: '#E6F2EC',
@@ -32,14 +39,14 @@ export const colors = {
   warnBg: '#FBF1E3',
   danger: '#A3271F',
   dangerBg: '#FBE9E7',
-  infoBg: '#EEF1F8',
+  infoBg: '#ECF1EC',
   sample: '#B5523A',
   sampleText: '#8A3A26',
   disabled: '#D9D2C3',
 };
 
 /** Soft image tones used where a photograph will go. */
-export const tones = ['#EDE5D6', '#E8E4EE', '#F3E6DF', '#E6EBE2', '#F2E8EC', '#F6F1E8'];
+export const tones = ['#E9E2D4', '#E4E8E0', '#EFE6DA', '#E3EAE3', '#EEE7E0', '#F4EFE6'];
 export const toneFor = (key: string) => tones[[...key].reduce((n, c) => n + c.charCodeAt(0), 0) % tones.length];
 
 export const space = (n: number) => n * 8;

@@ -49,12 +49,12 @@ export default function AppPage() {
               <Tag label={t(statusLabel)} tone={tone} />
             </View>
             <Serif role="h1" size={wide ? 60 : 40} color={colors.white}>{ar ? a.name_ar : a.name_en}</Serif>
-            <T size={wide ? 20 : 17} color="#E9ECF2">{ar ? a.name_en : a.name_ar}</T>
+            <T size={wide ? 20 : 17} color={colors.onNight}>{ar ? a.name_en : a.name_ar}</T>
             <T size={wide ? 19 : 16.5} lh={1.5} color={colors.white} w={600} style={{ maxWidth: 640 }}>{ar ? a.tagline_ar : a.tagline_en}</T>
             {a.url && (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 10, alignItems: 'center' }}>
                 <Button label={t('openApp')} kind="light" size="lg" onPress={() => openExternal(a.url!)} icon={<Icon name="arrowRight" size={18} />} />
-                <T size={13} color="#D9DEE8">{a.url.replace('https://', '')} · {t('appOpensNew')}</T>
+                <T size={13} color={colors.onNightSoft}>{a.url.replace('https://', '')} · {t('appOpensNew')}</T>
               </View>
             )}
           </View>
