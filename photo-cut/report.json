@@ -26,8 +26,8 @@
  },
  {
   "path": "/products/aam/anab-100-ml-2.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b935760>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/antee-gift-set-05-1.jpg",
@@ -86,8 +86,8 @@
  },
  {
   "path": "/products/aam/bakhoor-ahmed-20-tabs-2.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b935e40>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/bakhoor-ahmed-40-tabs-1.jpg",
@@ -146,8 +146,8 @@
  },
  {
   "path": "/products/aam/bakhoor-ghars-40-tabs-2.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b935ee0>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/bakhoor-marj-1.jpg",
@@ -206,8 +206,8 @@
  },
  {
   "path": "/products/aam/bin-ameer-90-ml-2.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b935f80>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/bin-shaikh-90-ml-1.jpg",
@@ -266,8 +266,8 @@
  },
  {
   "path": "/products/aam/couture-noir-100-ml-1.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b9360c0>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/couture-noir-100-ml-2.jpg",
@@ -326,8 +326,8 @@
  },
  {
   "path": "/products/aam/exotic-100-ml-1.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b936110>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/exotic-100-ml-2.jpg",
@@ -386,8 +386,8 @@
  },
  {
   "path": "/products/aam/hirfah-75-ml-1.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b936250>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/hirfah-75-ml-2.jpg",
@@ -421,8 +421,8 @@
  },
  {
   "path": "/products/aam/joud-100-ml-2.jpg",
-  "ok": false,
-  "why": "runs off the bottom edge"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/kaaf-100-ml-1.jpg",
@@ -446,8 +446,8 @@
  },
  {
   "path": "/products/aam/khetaam-100-ml-2.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b9362a0>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/kiswah-by-ahmed-1.jpg",
@@ -506,8 +506,8 @@
  },
  {
   "path": "/products/aam/leen-50-ml-2.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b9363e0>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/leen-50-ml-3.jpg",
@@ -566,8 +566,8 @@
  },
  {
   "path": "/products/aam/maria-oud-mubakhar-36-grams-1.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b936480>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/maria-oud-mubakhar-36-grams-2.jpg",
@@ -626,8 +626,8 @@
  },
  {
   "path": "/products/aam/musk-and-roses-75-ml-1.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b936520>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/musk-and-roses-75-ml-2.jpg",
@@ -686,8 +686,8 @@
  },
  {
   "path": "/products/aam/oud-amg-50-ml-1.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b9365c0>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/oud-amg-50-ml-2.jpg",
@@ -746,8 +746,8 @@
  },
  {
   "path": "/products/aam/oud-lavender-75-ml-1.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b936660>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/oud-lavender-75-ml-2.jpg",
@@ -806,8 +806,8 @@
  },
  {
   "path": "/products/aam/peachy-peach-100-ml-1.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b936700>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/peachy-peach-100-ml-2.jpg",
@@ -866,8 +866,8 @@
  },
  {
   "path": "/products/aam/rawdha-by-ahmed-10-ml-2.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b9367a0>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/rawdha-by-ahmed-50-ml-1.jpg",
@@ -926,8 +926,8 @@
  },
  {
   "path": "/products/aam/safa-marwah-2.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b936840>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/saif-50-ml-1.jpg",
@@ -986,8 +986,8 @@
  },
  {
   "path": "/products/aam/sheukh-50-ml-2.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b936980>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/sheukh-50-ml-3.jpg",
@@ -1046,8 +1046,8 @@
  },
  {
   "path": "/products/aam/thaqaf-50-ml-1.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b936b10>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/thaqaf-50-ml-2.jpg",
@@ -1106,8 +1106,8 @@
  },
  {
   "path": "/products/aam/zam-zam-by-ahmed-15-ml-1.jpg",
-  "ok": false,
-  "why": "error: cannot identify image file <_io.BytesIO object at 0x7fb39b936c50>"
+  "ok": true,
+  "why": ""
  },
  {
   "path": "/products/aam/zam-zam-by-ahmed-15-ml-2.jpg",
