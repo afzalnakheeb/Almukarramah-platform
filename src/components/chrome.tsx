@@ -256,7 +256,7 @@ export function SiteFooter() {
     </View>
   );
   return (
-    <View accessibilityRole="contentinfo" style={{ backgroundColor: colors.night, marginTop: 'auto', overflow: 'hidden' }}>
+    <View role="contentinfo" style={{ backgroundColor: colors.night, marginTop: 'auto', overflow: 'hidden' }}>
       <GoldRule />
       <StarLattice opacity={0.06} size={72} />
       <Container style={{ paddingTop: wide ? 56 : 28, paddingBottom: 28, flexDirection: 'row', flexWrap: 'wrap', gap: 32 }}>

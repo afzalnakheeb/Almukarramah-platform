@@ -65,7 +65,7 @@ const en = {
   storeClosed: 'The store is closed for a short time. Please come back soon.',
   checkoutClosed: 'Checkout is paused for a short time. Your bag is saved.',
   join: 'Join',
-  perMonth: 'a month',
+  perMonth: 'month',
   perYear: 'a year',
   membersOnly: 'For members',
   membersOnlyBody: 'Join the membership to open the daily lessons.',
@@ -332,7 +332,6 @@ const en = {
   oneAccountBody: 'Each app opens on the web today, and the iPhone and Android versions are being prepared. More apps will appear here as they launch.',
   // Subscriptions
   mySubscriptions: 'Your subscriptions',
-  perMonth: 'month',
   subRenews: 'Renews on',
   subEnds: 'Ends on',
   subPastDue: 'Renewal payment failed. We will try your card again daily for a week.',
@@ -752,7 +751,6 @@ const ar: typeof en = {
   oneAccountBody: 'يعمل كل تطبيق اليوم على الويب، ويجري إعداد إصداري iPhone وAndroid. ستظهر هنا تطبيقات جديدة عند إطلاقها.',
   // Subscriptions
   mySubscriptions: 'اشتراكاتك',
-  perMonth: 'شهريًا',
   subRenews: 'يتجدد في',
   subEnds: 'ينتهي في',
   subPastDue: 'تعذّر دفع التجديد. سنعيد المحاولة على بطاقتك يوميًا لمدة أسبوع.',

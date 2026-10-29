@@ -105,11 +105,12 @@ export function Button({ label, onPress, href, kind = 'primary', disabled, busy,
       <T w={700} size={size === 'lg' ? 16 : size === 'sm' ? 13.5 : 15} color={fg} style={kind === 'text' && { textDecorationLine: 'underline' }}>{label}</T>
     </View>
   );
-  // Links: a plain style (Link asChild cannot merge a style function, which used to drop the button's background).
+  // Links: one flat style object. Link asChild spreads the child's style into an object, so a style function or
+  // array breaks (a function dropped the button's background; an array crashes the page on the web).
   if (href && !disabled) {
     return (
       <Link href={href} asChild>
-        <Pressable accessibilityRole="link" style={base}>{content}</Pressable>
+        <Pressable accessibilityRole="link" style={StyleSheet.flatten(base)}>{content}</Pressable>
       </Link>
     );
   }
@@ -207,7 +208,7 @@ export function ProductTile({ product, compact }: { product: Product; compact?: 
   const img = product.images[0];
   return (
     <Link href={{ pathname: '/product/[slug]', params: { slug: product.slug } }} asChild>
-      <Pressable accessibilityRole="link" style={[styles.tile, compact && { borderRadius: 16 }, soldOut && { opacity: 0.6 }]}>
+      <Pressable accessibilityRole="link" style={StyleSheet.flatten([styles.tile, compact && { borderRadius: 16 }, soldOut && { opacity: 0.6 }])}>
         <Photo uri={img} tone={img ? colors.sandSoft : toneFor(product.slug)} fit="cover" motif={compact ? 54 : 80} style={{ borderRadius: 0 }} />
         <View style={{ gap: compact ? 3 : 4, paddingHorizontal: compact ? 10 : 14, paddingTop: compact ? 10 : 14, paddingBottom: compact ? 12 : 16 }}>
           {tag && !compact ? <Eyebrow size={11}>{pick(tag, 'name')}</Eyebrow> : null}
@@ -257,7 +258,7 @@ export function Divider({ style }: { style?: StyleProp<ViewStyle> }) {
 
 export function Breadcrumb({ items }: { items: { label: string; href?: Href }[] }) {
   return (
-    <View accessibilityRole="navigation" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+    <View role="navigation" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
       {items.map((it, i) => (
         <React.Fragment key={i}>
           {i > 0 && <T size={13} color={colors.muted}>/</T>}

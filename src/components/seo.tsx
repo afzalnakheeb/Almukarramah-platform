@@ -120,7 +120,7 @@ export function itemListLd(name: string, products: { slug: string; name_en: stri
 }
 
 export function productLd(p: {
-  slug: string; sku: string | null | undefined; name_en: string; name_ar: string; description_en: string | null; images: string[];
+  slug: string; sku?: string | null; name_en: string; name_ar: string; description_en: string | null; images: string[];
   base_price_sar: number; stock: number; categories?: { name_en: string; slug?: string } | null; brand?: string | null;
 }) {
   return {
