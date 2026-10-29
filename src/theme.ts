@@ -1,35 +1,35 @@
 // Design tokens from the AlMukarramah Platform Design (PL-06 · Shared design system).
 export const colors = {
-  navy: '#010852',
-  navyDeep: '#0B1030', // footer
-  navyLine: '#23284F',
-  ink: '#14152A',
-  body: '#3F3C36',
-  muted: '#5E5A52',
-  ivory: '#FBF8F3',
-  cream: '#FBF8F3',
-  sand: '#EDE5D6',
-  sandSoft: '#F2ECE1',
-  line: '#ECE4D6',
-  lineSoft: '#F1EBE0',
-  inputLine: '#D8CFBF',
-  brass: '#A9824B',
-  brassText: '#8A6A3A',
-  champagne: '#E9D9B8',
+  navy: '#211C18',
+  navyDeep: '#171310', // footer
+  navyLine: '#3B342D',
+  ink: '#1E1A16',
+  body: '#4A443C',
+  muted: '#6F675D',
+  ivory: '#F7F3EC',
+  cream: '#F7F3EC',
+  sand: '#ECE5D9',
+  sandSoft: '#F2EDE4',
+  line: '#E5DDD0',
+  lineSoft: '#EEE8DE',
+  inputLine: '#D5CBBB',
+  brass: '#9A7A47',
+  brassText: '#7A5F36',
+  champagne: '#E7DAC2',
   // Gold and night (the darker, richer layer: hero, heritage, footer)
-  gold: '#C9A45C', // gold on dark backgrounds (7:1 on night)
-  goldBright: '#DDBE7E',
-  goldSoft: '#F4EAD3', // pale gold panels on light backgrounds
-  goldLine: 'rgba(201,164,92,0.45)',
-  night: '#070B2C', // deepest navy: hero and heritage
-  nightSoft: '#11174A',
-  onNight: '#C9CCE0', // body text on night
-  onNightSoft: '#B9BCD6', // secondary text on night
-  onNightFaint: '#9EA1BD', // fine print on night
-  scrim: 'rgba(7,11,44,0.78)', // text panel over a photo
-  scrimSoft: 'rgba(7,11,44,0.22)',
-  overlay: 'rgba(11,16,48,0.45)', // behind dialogs
-  lavender: '#F4F2F9',
+  gold: '#B89A62', // gold on dark backgrounds (7:1 on night)
+  goldBright: '#CDB485',
+  goldSoft: '#F1EADC', // pale gold panels on light backgrounds
+  goldLine: 'rgba(184,154,98,0.45)',
+  night: '#1D1915', // deepest navy: hero and heritage
+  nightSoft: '#2A241F',
+  onNight: '#DCD3C6', // body text on night
+  onNightSoft: '#C2B8AA', // secondary text on night
+  onNightFaint: '#9D9387', // fine print on night
+  scrim: 'rgba(29,25,21,0.78)', // text panel over a photo
+  scrimSoft: 'rgba(29,25,21,0.22)',
+  overlay: 'rgba(29,25,21,0.45)', // behind dialogs
+  lavender: '#F3EFE8',
   white: '#FFFFFF',
   success: '#1E6B4A',
   successBg: '#E6F2EC',
@@ -37,14 +37,14 @@ export const colors = {
   warnBg: '#FBF1E3',
   danger: '#A3271F',
   dangerBg: '#FBE9E7',
-  infoBg: '#EEF1F8',
+  infoBg: '#F1ECE3',
   sample: '#B5523A',
   sampleText: '#8A3A26',
   disabled: '#D9D2C3',
 };
 
 /** Soft image tones used where a photograph will go. */
-export const tones = ['#EDE5D6', '#E8E4EE', '#F3E6DF', '#E6EBE2', '#F2E8EC', '#F6F1E8'];
+export const tones = ['#ECE5D9', '#E9E3DA', '#EFE6DC', '#E7E4DB', '#EEE6E1', '#F4EFE7'];
 export const toneFor = (key: string) => tones[[...key].reduce((n, c) => n + c.charCodeAt(0), 0) % tones.length];
 
 export const space = (n: number) => n * 8;
