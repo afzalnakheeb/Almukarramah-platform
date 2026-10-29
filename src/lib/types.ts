@@ -16,6 +16,8 @@ export type Product = {
   product_tags?: { tags: Tag }[];
   category_id?: string | null;
   sku?: string | null;
+  brand?: string | null;
+  ship_class?: 'standard' | 'perfume_spray' | 'perfume_oil';
   seo_title_en?: string | null;
   seo_title_ar?: string | null;
   seo_description_en?: string | null;

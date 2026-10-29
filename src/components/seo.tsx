@@ -99,7 +99,7 @@ export function itemListLd(name: string, products: { slug: string; name_en: stri
 
 export function productLd(p: {
   slug: string; sku: string | null | undefined; name_en: string; name_ar: string; description_en: string | null; images: string[];
-  base_price_sar: number; stock: number; categories?: { name_en: string } | null;
+  base_price_sar: number; stock: number; categories?: { name_en: string } | null; brand?: string | null;
 }) {
   return {
     '@context': 'https://schema.org',
@@ -111,9 +111,9 @@ export function productLd(p: {
     image: p.images.map((i) => abs(i)),
     sku: p.sku ?? p.slug,
     category: p.categories?.name_en,
-    brand: { '@type': 'Brand', name: BRAND },
-    manufacturer: { '@id': `${SITE_URL}/#organization` },
-    countryOfAssembly: 'SA',
+    brand: { '@type': 'Brand', name: p.brand || BRAND },
+    // Partner brands are made by their house; Al Mukarramah is the seller.
+    ...(p.brand ? { seller: { '@id': `${SITE_URL}/#organization` } } : { manufacturer: { '@id': `${SITE_URL}/#organization` }, countryOfAssembly: 'SA' }),
     offers: {
       '@type': 'Offer',
       url: `${SITE_URL}/product/${p.slug}`,

@@ -42,6 +42,7 @@
   },
   "devDependencies": {
     "typescript": "*",
-    "@types/react": "*"
+    "@types/react": "*",
+    "sharp": "^0.33.5"
   }
 }

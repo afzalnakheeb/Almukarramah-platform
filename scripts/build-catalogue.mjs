@@ -24,7 +24,7 @@ async function snapshot() {
   if (!URL_ || !KEY) throw new Error('Supabase env not set');
   const categories = await fetchJson('categories?select=id,slug,name_en,name_ar,sort,image,blurb_en,blurb_ar&is_active=eq.true&order=sort');
   const products = await fetchJson(
-    'products?select=id,slug,sku,name_en,name_ar,description_en,description_ar,base_price_sar,stock,images,is_featured,restricted_countries,' +
+    'products?select=id,slug,sku,brand,ship_class,name_en,name_ar,description_en,description_ar,base_price_sar,stock,images,is_featured,restricted_countries,' +
       'seo_title_en,seo_title_ar,seo_description_en,seo_description_ar,updated_at,category_id,categories(slug,name_en,name_ar),' +
       'product_tags(tags(id,kind,slug,name_en,name_ar,icon))&is_active=eq.true&order=is_featured.desc,created_at',
   );
@@ -41,6 +41,36 @@ try {
   console.warn(`catalogue snapshot skipped (${e.message}); using the committed snapshot`);
   data = JSON.parse(readFileSync(SNAPSHOT, 'utf8'));
 }
+
+// Partner photos (e.g. Ahmed Al Maghribi, used with permission) are fetched from the brand's server at build time,
+// resized and served from our own domain, so pages never depend on someone else's server.
+async function mirrorRemoteImages() {
+  const manifestPath = join(root, 'scripts/remote-images.json');
+  if (!existsSync(manifestPath)) return;
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  let sharp = null;
+  try { sharp = (await import('sharp')).default; } catch { console.warn('sharp not installed: partner photos copied at full size'); }
+  const entries = Object.entries(manifest).filter(([local]) => !existsSync(join(PUBLIC, local)));
+  let ok = 0, failed = 0;
+  for (let i = 0; i < entries.length; i += 8) {
+    await Promise.all(entries.slice(i, i + 8).map(async ([local, url]) => {
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+        if (!res.ok) throw new Error(String(res.status));
+        let buf = Buffer.from(await res.arrayBuffer());
+        if (sharp) buf = await sharp(buf).resize({ width: 1200, height: 1200, fit: 'inside', withoutEnlargement: true }).flatten({ background: '#ffffff' }).jpeg({ quality: 82, mozjpeg: true }).toBuffer();
+        mkdirSync(dirname(join(PUBLIC, local)), { recursive: true });
+        writeFileSync(join(PUBLIC, local), buf);
+        ok++;
+      } catch (e) {
+        failed++;
+        console.warn(`photo not fetched: ${local} (${e.message})`);
+      }
+    }));
+  }
+  console.log(`partner photos: ${ok} fetched, ${failed} failed, ${Object.keys(manifest).length - entries.length} already present`);
+}
+await mirrorRemoteImages();
 
 const { categories, products } = data;
 const today = new Date().toISOString().slice(0, 10);
@@ -147,7 +177,7 @@ ${p.images?.[0] ? `<g:image_link>${esc(abs(p.images[0]))}</g:image_link>` : ''}
 ${(p.images || []).slice(1).map((i) => `<g:additional_image_link>${esc(abs(i))}</g:additional_image_link>`).join('')}
 <g:availability>${p.stock > 0 ? 'in_stock' : 'out_of_stock'}</g:availability>
 <g:price>${sar(p.base_price_sar)} SAR</g:price>
-<g:brand>Al Mukarramah</g:brand>
+<g:brand>${esc(p.brand || 'Al Mukarramah')}</g:brand>
 <g:condition>new</g:condition>
 <g:identifier_exists>no</g:identifier_exists>
 <g:product_type>${esc(p.categories?.name_en ?? '')}</g:product_type>
