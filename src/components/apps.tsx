@@ -1,4 +1,5 @@
 // App card used on /apps and in the account.
+import { router } from 'expo-router';
 import React from 'react';
 import { Image, View } from 'react-native';
 import { Icon } from '@/components/icons';
@@ -43,6 +44,7 @@ export function AppCard({ a, compact }: { a: PlatformApp; compact?: boolean }) {
       )}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 'auto', paddingTop: 6 }}>
         {a.url && <Button label={t('openApp')} size={compact ? 'sm' : undefined} onPress={() => openExternal(a.url!)} />}
+        <Button label={t('learnMore')} kind="secondary" size={compact ? 'sm' : undefined} onPress={() => router.push({ pathname: '/apps/[slug]', params: { slug: a.slug } })} />
         {a.ios && <Button label="App Store" kind="secondary" size={compact ? 'sm' : undefined} onPress={() => openExternal(a.ios!)} />}
         {a.android && <Button label="Google Play" kind="secondary" size={compact ? 'sm' : undefined} onPress={() => openExternal(a.android!)} />}
         {!a.ios && !a.android && <T size={12.5} color={colors.muted} style={{ alignSelf: 'center' }}>{t('appStoresSoon')}</T>}

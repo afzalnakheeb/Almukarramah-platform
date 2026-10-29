@@ -125,7 +125,8 @@ export default function Account() {
 
   const tiles: { kicker: string; title: string; body: string; href: Parameters<typeof router.push>[0]; icon: 'book' | 'gift' | 'shield' | 'grid'; external?: boolean }[] = [
     { kicker: t('membership'), title: t('membership'), body: t('circleBody'), href: '/membership', icon: 'gift' },
-    { kicker: t('learning'), title: t('quranTrail'), body: t('membersOnlyBody'), href: { pathname: '/trail/[slug]', params: { slug: 'quran-trail' } }, icon: 'book' },
+    { kicker: t('navQuran'), title: 'Recite With Me · رتّل معي', body: t('quranTileBody'), href: { pathname: '/apps/[slug]', params: { slug: 'recite-with-me' } }, icon: 'book' },
+    { kicker: t('navSeerah'), title: 'Seerah Trails · دروب السيرة', body: t('seerahTileBody'), href: { pathname: '/apps/[slug]', params: { slug: 'seerah-trails' } }, icon: 'book' },
     { kicker: t('ourApps'), title: t('ourApps'), body: t('appsTileBody'), href: '/apps', icon: 'grid' },
   ];
   if (staffRole) tiles.unshift({ kicker: staffRole, title: t('admin'), body: t('adminBody'), href: '/admin', icon: 'shield' });

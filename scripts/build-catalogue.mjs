@@ -79,7 +79,7 @@ const abs = (p) => (p?.startsWith('http') ? p : `${SITE}${p}`);
 const sar = (h) => (h / 100).toFixed(2);
 
 // sitemap.xml (with image extension)
-const pages = ['/', '/shop', '/apps', '/membership', '/concierge', '/trail/quran-trail', '/trail/seerah-trail', '/privacy', '/terms'];
+const pages = ['/', '/shop', '/apps', '/membership', '/concierge', '/apps/recite-with-me', '/apps/seerah-trails', '/privacy', '/terms'];
 const urls = [
   ...pages.map((p) => `<url><loc>${SITE}${p}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>${p === '/' ? '1.0' : '0.6'}</priority></url>`),
   ...categories.map((c) => `<url><loc>${SITE}/collections/${c.slug}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>${c.image ? `<image:image><image:loc>${esc(abs(c.image))}</image:loc></image:image>` : ''}</url>`),

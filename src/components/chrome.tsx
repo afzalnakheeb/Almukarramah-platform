@@ -90,7 +90,8 @@ export function SiteHeader() {
     { label: t('shop'), href: '/shop' },
     { label: t('navOccasions'), href: { pathname: '/', params: { s: 'occasions' } } },
     { label: t('membership'), href: '/membership' },
-    { label: t('quranTrail'), href: { pathname: '/trail/[slug]', params: { slug: 'quran-trail' } } },
+    { label: t('navQuran'), href: { pathname: '/apps/[slug]', params: { slug: 'recite-with-me' } } },
+    { label: t('navSeerah'), href: { pathname: '/apps/[slug]', params: { slug: 'seerah-trails' } } },
     { label: t('ourApps'), href: '/apps' },
   ];
 
@@ -268,9 +269,9 @@ export function SiteFooter() {
         ])}
         {col(t('footerCompany'), [
           { label: t('membership'), href: '/membership' },
-          { label: t('quranTrail'), href: { pathname: '/trail/[slug]', params: { slug: 'quran-trail' } } },
+          { label: t('navQuran'), href: { pathname: '/apps/[slug]', params: { slug: 'recite-with-me' } } },
+          { label: t('navSeerah'), href: { pathname: '/apps/[slug]', params: { slug: 'seerah-trails' } } },
           { label: t('ourApps'), href: '/apps' },
-          { label: t('seerahTrail'), href: SEERAH_TRAIL_URL as Href },
           { label: t('account'), href: '/account' },
           { label: t('privacyPolicy'), href: '/privacy' },
           { label: t('termsOfService'), href: '/terms' },

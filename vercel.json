@@ -6,6 +6,16 @@
   "framework": null,
   "redirects": [
     {
+      "source": "/trail/quran-trail",
+      "destination": "/apps/recite-with-me",
+      "permanent": false
+    },
+    {
+      "source": "/trail/seerah-trail",
+      "destination": "/apps/seerah-trails",
+      "permanent": false
+    },
+    {
       "source": "/products/:slug([^./]+)",
       "destination": "/product/:slug",
       "permanent": true
