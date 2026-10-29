@@ -76,7 +76,7 @@ function reducedMotion() {
  * Cinematic photograph: a very slow push-in and drift (like a camera moving through a gallery), with a soft band of
  * gold light that passes across every few seconds. Fills its parent; the first frame matches the pre-rendered page.
  */
-export function CinematicPhoto({ uri, position = 'center', label }: { uri: string; position?: 'center' | 'right' | 'left'; label?: string }) {
+export function CinematicPhoto({ uri, position = 'center', label, sweep: withSweep = true }: { uri: string; position?: 'center' | 'right' | 'left'; label?: string; sweep?: boolean }) {
   const drift = React.useRef(new Animated.Value(0)).current;
   const sweep = React.useRef(new Animated.Value(0)).current;
   React.useEffect(() => {
@@ -105,7 +105,7 @@ export function CinematicPhoto({ uri, position = 'center', label }: { uri: strin
       <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ scale }, { translateX: shift }] }]}>
         <Image source={{ uri: imageUrl(uri) }} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={position} priority="high" />
       </Animated.View>
-      <Animated.View {...hidden} style={{ position: 'absolute', top: '-20%', bottom: '-20%', width: '38%', left: sweepX as unknown as number, opacity: sweepO, transform: [{ rotate: '14deg' }] }}>
+      {withSweep && <Animated.View {...hidden} style={{ position: 'absolute', top: '-20%', bottom: '-20%', width: '38%', left: sweepX as unknown as number, opacity: sweepO, transform: [{ rotate: '14deg' }] }}>
         <Svg width="100%" height="100%">
           <Defs>
             <LinearGradient id={id} x1="0" y1="0" x2="1" y2="0">
@@ -116,7 +116,7 @@ export function CinematicPhoto({ uri, position = 'center', label }: { uri: strin
           </Defs>
           <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${id})`} />
         </Svg>
-      </Animated.View>
+      </Animated.View>}
     </View>
   );
 }

@@ -11,11 +11,10 @@ import { CURRENCIES } from '@/lib/money';
 import { openExternal } from '@/lib/links';
 import { DESTINATIONS, usePrefs, type Destination } from '@/lib/prefs';
 import { colors, sans, space } from '@/theme';
-import { GoldRule, StarLattice } from './decor';
 import { Icon, type IconName } from './icons';
 import { Container, Notice, OptionCard, Sheet, styles as ui, T, useWide } from './ui';
 
-const LOGO = require('../../assets/logo.png');
+const LOGO = require('../../assets/logo-ink.png'); // ink, for light backgrounds
 const LOGO_GOLD = require('../../assets/logo-gold.png'); // satin antique gold, for dark backgrounds
 const LOGO_RATIO = 917 / 264;
 /** Where 'Sell with us' goes: an email to the team until the seller sign-up pages are live. */
@@ -23,7 +22,7 @@ export const SELL_HREF = 'mailto:hello@almukarramah.com?subject=Selling%20on%20A
 
 export const destIcon = (d: Destination): IconName => (d === 'saudi' ? 'house' : d === 'international' ? 'globe' : 'bed');
 
-/** The logo: emerald on light backgrounds, satin gold on dark ones (white). With line, the descriptor
+/** The logo: ink on light backgrounds, satin gold on dark ones (white). With line, the descriptor
  *  "For every Muslim home" (لكل بيت مسلم) sits under it in spaced capitals, which tells this house apart from the group's other work. */
 export function Logo({ height = 44, white, line }: { height?: number; white?: boolean; line?: boolean }) {
   const { t, isRTL } = useI18n();
@@ -34,7 +33,7 @@ export function Logo({ height = 44, white, line }: { height?: number; white?: bo
     <View style={{ alignItems: 'center', gap: Math.round(height * 0.09) }}>
       {img}
       <View style={{ alignSelf: 'stretch', height: StyleSheet.hairlineWidth, backgroundColor: colors.goldLine }} />
-      <T w={600} size={isRTL ? size * 1.2 : size} color={white ? colors.gold : colors.navy} lh={1.25}
+      <T w={600} size={isRTL ? size * 1.2 : size} color={white ? colors.gold : colors.brassText} lh={1.25}
         style={{ letterSpacing: isRTL ? 0 : size * 0.18, textTransform: 'uppercase' }}>
         {t('logoLine')}
       </T>
@@ -88,7 +87,7 @@ function IconLink({ href, icon, label, badge, color = colors.navy }: { href: Hre
       <Pressable accessibilityRole="link" accessibilityLabel={badge ? `${label}, ${badge}` : label} style={ui.iconBtn}>
         <Icon name={icon} size={22} stroke={1.5} color={color} />
         {badge ? (
-          <View style={styles.badge}><T w={700} size={10} color={colors.night}>{badge}</T></View>
+          <View style={styles.badge}><T w={700} size={10} color={colors.white}>{badge}</T></View>
         ) : null}
       </Pressable>
     </Link>
@@ -104,101 +103,92 @@ export function SiteHeader() {
   const toggleLang = () => setLang(lang === 'ar' ? 'en' : 'ar');
 
   const nav: { label: string; href: Href; external?: boolean }[] = [
-    { label: t('shop'), href: '/shop' },
-    { label: t('navPerfumes'), href: { pathname: '/collections/[slug]', params: { slug: 'perfumes' } } },
-    { label: t('navOccasions'), href: { pathname: '/', params: { s: 'occasions' } } },
-    { label: t('membership'), href: '/membership' },
-    { label: t('navQuran'), href: { pathname: '/apps/[slug]', params: { slug: 'recite-with-me' } } },
-    { label: t('navSeerah'), href: { pathname: '/apps/[slug]', params: { slug: 'seerah-trails' } } },
+    { label: t('navPerfumeOud'), href: { pathname: '/collections/[slug]', params: { slug: 'perfumes' } } },
+    { label: t('navPrayer'), href: { pathname: '/collections/[slug]', params: { slug: 'prayer-mats' } } },
+    { label: t('navGifts'), href: { pathname: '/collections/[slug]', params: { slug: 'gift-sets' } } },
+    { label: t('navDates'), href: { pathname: '/collections/[slug]', params: { slug: 'dates' } } },
     { label: t('ourApps'), href: '/apps' },
   ];
+  const caps = (size: number) => (isRTL ? { fontSize: size + 2 } : { letterSpacing: size * 0.16, textTransform: 'uppercase' as const });
 
   return (
     <View role="banner">
       {wide ? (
         <>
+          {/* thin black bar: delivery, currency and the smaller links */}
           <View style={{ backgroundColor: colors.kiswah }}>
-            <Container style={{ paddingVertical: 9, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.goldLine }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View style={{ width: 6, height: 6, backgroundColor: colors.gold, transform: [{ rotate: '45deg' }] }} />
-                <T size={13} color={colors.champagne}>{t('topBar')}</T>
+            <Container style={{ minHeight: 36, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
+                <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <T size={12} color={colors.onNightFaint}>{t('deliveringTo')}</T>
+                  <T w={600} size={12} color={colors.onNight}>{t(`dest_${destination}` as Key)}</T>
+                  <Icon name="chevronDown" size={11} stroke={2} color={colors.gold} />
+                </Pressable>
+                <Pressable accessibilityRole="button" accessibilityLabel={`${t('currency')}: ${currency}`} onPress={() => setSheet('cur')} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, borderStartWidth: 1, borderColor: 'rgba(255,255,255,0.14)', paddingStart: 16 }}>
+                  <T w={600} size={12} color={colors.onNight}>{currency}</T>
+                  <Icon name="chevronDown" size={11} stroke={2} color={colors.gold} />
+                </Pressable>
               </View>
               <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center' }}>
-                <Link href={SELL_HREF as Href}><T size={13} color={colors.goldBright}>{t('sellWithUs')}</T></Link>
-                <Link href="/membership"><T size={13} color={colors.white}>{t('membership')}</T></Link>
-                <Link href="/concierge"><T size={13} color={colors.white}>{t('concierge')}</T></Link>
-                <Pressable accessibilityRole="button" onPress={toggleLang} style={{ borderStartWidth: 1, borderColor: colors.goldLine, paddingStart: 16 }}>
-                  <T size={13} color={colors.goldBright} style={{ fontFamily: isRTL ? 'Manrope_600SemiBold' : 'ReadexPro_400Regular' }}>{t('language')}</T>
+                <Link href={SELL_HREF as Href}><T size={12} color={colors.goldBright}>{t('sellWithUs')}</T></Link>
+                <Link href="/membership"><T size={12} color={colors.onNight}>{t('membership')}</T></Link>
+                <Link href="/concierge"><T size={12} color={colors.onNight}>{t('concierge')}</T></Link>
+                <Pressable accessibilityRole="button" onPress={toggleLang} style={{ borderStartWidth: 1, borderColor: 'rgba(255,255,255,0.14)', paddingStart: 16 }}>
+                  <T size={12} color={colors.onNight} style={{ fontFamily: isRTL ? 'Manrope_600SemiBold' : 'ReadexPro_400Regular' }}>{t('language')}</T>
                 </Pressable>
               </View>
             </Container>
           </View>
-          <View style={{ backgroundColor: colors.night }}>
-            <Container style={{ paddingVertical: 16, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 18 }}>
-              <Link href="/" accessibilityLabel={t('home')}><Logo height={46} white line /></Link>
-              <SearchBox dark />
-              <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} style={styles.destPill}>
-                <Icon name={destIcon(destination)} size={18} color={colors.gold} stroke={1.5} />
-                <View>
-                  <T size={11} color={colors.onNightFaint}>{t('deliveringTo')}</T>
-                  <T w={600} size={14} color={colors.white}>{t(`dest_${destination}` as Key)}</T>
-                </View>
-                <Icon name="chevronDown" size={14} stroke={2} color={colors.gold} />
-              </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel={`${t('currency')}: ${currency}`} onPress={() => setSheet('cur')} style={styles.curPill}>
-                <T w={600} size={14} color={colors.white}>{currency}</T>
-                <Icon name="chevronDown" size={14} stroke={2} color={colors.gold} />
-              </Pressable>
-              <View style={{ flexDirection: 'row', gap: 2 }}>
-                <IconLink href="/concierge" icon="help" label={t('concierge')} color={colors.onNight} />
-                <IconLink href="/account" icon="user" label={t('account')} color={colors.onNight} />
-                <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} color={colors.onNight} />
+          {/* the house: search, the logo in the centre, account and bag */}
+          <View style={{ backgroundColor: colors.ivory }}>
+            <Container style={{ paddingTop: 22, paddingBottom: 14, flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ flex: 1, alignItems: 'flex-start' }}><SearchBox /></View>
+              <Link href="/" accessibilityLabel={t('home')}><Logo height={48} line /></Link>
+              <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: 2 }}>
+                <IconLink href="/concierge" icon="help" label={t('concierge')} />
+                <IconLink href="/account" icon="user" label={t('account')} />
+                <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} />
               </View>
             </Container>
-            <Container style={{ paddingBottom: 12, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 34 }}>
+            <Container style={{ paddingBottom: 14, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', columnGap: 44 }}>
               {nav.map((n) => (
                 <Link key={n.label} href={n.href} target={n.external ? '_blank' : undefined} style={{ paddingVertical: 8 }}>
-                  <T w={600} size={isRTL ? 15 : 12.5} color={colors.onNight} style={!isRTL && { letterSpacing: 1.8, textTransform: 'uppercase' }}>{n.label}</T>
+                  <T w={500} size={12} color={colors.navy} style={caps(12)}>{n.label}</T>
                 </Link>
               ))}
-              <View style={{ flex: 1 }} />
-              <Link href="/concierge" style={{ paddingVertical: 8 }}>
-                <T w={600} size={isRTL ? 15 : 12.5} color={colors.gold} style={!isRTL && { letterSpacing: 1.8, textTransform: 'uppercase' }}>{t('helpChoose')}</T>
-              </Link>
             </Container>
-            <GoldRule style={{ height: 1, opacity: 0.8 }} />
+            <View style={{ height: 1, backgroundColor: colors.goldLine }} />
           </View>
         </>
       ) : (
         <>
-          <View style={{ backgroundColor: colors.night, paddingVertical: 8, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.goldLine }}>
-            <Pressable accessibilityRole="button" accessibilityLabel={t('menu')} onPress={() => setSheet('menu')} style={ui.iconBtn}><Icon name="menu" color={colors.onNight} stroke={1.5} /></Pressable>
-            <Link href="/" accessibilityLabel={t('home')}><Logo height={32} white /></Link>
+          <View style={{ backgroundColor: colors.ivory, paddingVertical: 8, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderColor: colors.goldLine }}>
+            <Pressable accessibilityRole="button" accessibilityLabel={t('menu')} onPress={() => setSheet('menu')} style={ui.iconBtn}><Icon name="menu" stroke={1.5} /></Pressable>
+            <Link href="/" accessibilityLabel={t('home')}><Logo height={32} /></Link>
             <View style={{ flexDirection: 'row' }}>
-              <IconLink href="/shop" icon="search" label={t('shop')} color={colors.onNight} />
-              <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} color={colors.onNight} />
+              <IconLink href="/shop" icon="search" label={t('shop')} />
+              <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} />
             </View>
           </View>
-          <View style={{ flexDirection: 'row', backgroundColor: colors.kiswah, borderBottomWidth: 1, borderColor: colors.goldLine }}>
-            <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} style={{ flex: 1, minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16 }}>
-              <T size={13} color={colors.onNight}>{t('deliveringTo')}:</T>
-              <T w={700} size={13} color={colors.white}>{t(`dest_${destination}` as Key)}</T>
-              <Icon name="chevronDown" size={12} stroke={2.4} color={colors.gold} />
+          <View style={{ flexDirection: 'row', backgroundColor: colors.kiswah }}>
+            <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} style={{ flex: 1, minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16 }}>
+              <T size={12.5} color={colors.onNightFaint}>{t('deliveringTo')}</T>
+              <T w={600} size={12.5} color={colors.onNight}>{t(`dest_${destination}` as Key)}</T>
+              <Icon name="chevronDown" size={11} stroke={2} color={colors.gold} />
             </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel={`${t('currency')}: ${currency}`} onPress={() => setSheet('cur')} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderStartWidth: 1, borderColor: colors.goldLine }}>
-              <T w={700} size={13} color={colors.goldBright}>{currency}</T>
+            <Pressable accessibilityRole="button" accessibilityLabel={`${t('currency')}: ${currency}`} onPress={() => setSheet('cur')} style={{ minHeight: 40, justifyContent: 'center', paddingHorizontal: 16, borderStartWidth: 1, borderColor: 'rgba(255,255,255,0.14)' }}>
+              <T w={600} size={12.5} color={colors.onNight}>{currency}</T>
             </Pressable>
           </View>
         </>
       )}
-
       <DestinationSheet open={sheet === 'dest'} onClose={() => setSheet(null)} />
       <CurrencySheet open={sheet === 'cur'} onClose={() => setSheet(null)} />
       <Sheet open={sheet === 'menu'} onClose={() => setSheet(null)} title={t('menu')}>
-        {[...nav, { label: t('helpChoose'), href: '/concierge' as Href }, { label: t('account'), href: '/account' as Href }].map((n) => (
+        {[...nav, { label: t('membership'), href: '/membership' as Href }, { label: t('helpChoose'), href: '/concierge' as Href }, { label: t('account'), href: '/account' as Href }, { label: t('sellWithUs'), href: SELL_HREF as Href, external: true }].map((n) => (
           <Pressable key={n.label} accessibilityRole="link" onPress={() => { setSheet(null); if ('external' in n && n.external) openExternal(String(n.href)); else router.push(n.href); }} style={styles.menuRow}>
-            <T w={700} size={16} color={colors.navy}>{n.label}</T>
-            <Icon name={isRTL ? 'chevronLeft' : 'chevronRight'} size={18} />
+            <T w={500} size={16} color={colors.navy}>{n.label}</T>
+            <Icon name={isRTL ? 'chevronLeft' : 'chevronRight'} size={18} stroke={1.4} />
           </Pressable>
         ))}
         <Pressable accessibilityRole="button" onPress={() => { setSheet(null); toggleLang(); }} style={styles.menuRow}>
@@ -225,7 +215,7 @@ function SearchBox({ dark }: { dark?: boolean }) {
         placeholder={t('searchPlaceholder')}
         placeholderTextColor={dark ? colors.onNightFaint : colors.muted}
         accessibilityLabel={t('searchPlaceholder')}
-        style={[sans(400, isRTL), { flex: 1, fontSize: 15, color: dark ? colors.white : colors.ink, minHeight: 44, textAlign: isRTL ? 'right' : 'left', outlineStyle: 'none' } as never]}
+        style={[sans(400, isRTL), { flex: 1, fontSize: 14, color: dark ? colors.white : colors.ink, minHeight: 40, textAlign: isRTL ? 'right' : 'left', outlineStyle: 'none' } as never]}
       />
     </View>
   );
@@ -279,13 +269,11 @@ export function SiteFooter() {
   );
   return (
     <View role="contentinfo" style={{ backgroundColor: colors.kiswah, marginTop: 'auto', overflow: 'hidden' }}>
-      <GoldRule />
-      <StarLattice opacity={0.06} size={72} />
-      <Container style={{ paddingTop: wide ? 56 : 28, paddingBottom: 28, flexDirection: 'row', flexWrap: 'wrap', gap: 32 }}>
+      <Container style={{ paddingTop: wide ? 64 : 32, paddingBottom: 28, flexDirection: 'row', flexWrap: 'wrap', gap: 32 }}>
         <View style={{ gap: 14, minWidth: 220, flex: 1 }}>
           <View style={{ alignSelf: 'flex-start' }}><Logo height={52} white line /></View>
           <T size={14} color={colors.onNight}>{t('footerTagline')}</T>
-          <Pressable accessibilityRole="button" onPress={() => setLang(lang === 'ar' ? 'en' : 'ar')} style={{ alignSelf: 'flex-start', borderWidth: 1, borderColor: colors.goldLine, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6 }}><T w={600} size={14} color={colors.white}>{t('language')}</T></Pressable>
+          <Pressable accessibilityRole="button" onPress={() => setLang(lang === 'ar' ? 'en' : 'ar')} style={{ alignSelf: 'flex-start', borderWidth: 1, borderColor: colors.goldLine, borderRadius: 2, paddingHorizontal: 14, paddingVertical: 6 }}><T w={600} size={14} color={colors.white}>{t('language')}</T></Pressable>
         </View>
         {col(t('shop'), [
           { label: t('allGifts'), href: '/shop' },
@@ -350,11 +338,11 @@ export function CheckoutHeader({ step }: { step: 1 | 2 | 3 }) {
 }
 
 const styles = StyleSheet.create({
-  search: { flexGrow: 1, flexBasis: 280, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.ivory, borderWidth: 1, borderColor: colors.line, borderRadius: 3, paddingHorizontal: 18, minHeight: 46 },
+  search: { width: 260, flexDirection: 'row', alignItems: 'center', gap: 10, borderBottomWidth: 1, borderColor: colors.goldLine, minHeight: 40 },
   searchDark: { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: colors.goldLine },
   destPill: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.goldLine, borderRadius: 3, paddingHorizontal: 16, minHeight: 46 },
   curPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: colors.goldLine, borderRadius: 3, paddingHorizontal: 14, minHeight: 46 },
-  badge: { position: 'absolute', top: 6, end: 4, backgroundColor: colors.gold, borderRadius: 999, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
+  badge: { position: 'absolute', top: 6, end: 4, backgroundColor: colors.emerald, borderRadius: 999, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   menuRow: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderColor: colors.line },
   curOption: { minWidth: 88, minHeight: 52, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line, borderRadius: 4, backgroundColor: colors.white },
   stepDot: { width: 24, height: 24, borderRadius: 4, borderWidth: 1, borderColor: colors.inputLine, alignItems: 'center', justifyContent: 'center' },

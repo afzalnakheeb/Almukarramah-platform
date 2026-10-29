@@ -1,36 +1,22 @@
-// Homepage — follows Main.dc.html (desktop) and MobileHome.dc.html (phone) in the AlMukarramah Platform Design.
+// Homepage: light and calm. Hero in arched afternoon light, three doors, the fragrance house in black, a short
+// selection, seasons of giving, the invitation to makers, our story, answers and reassurance.
 import { Link, useLocalSearchParams, type Href } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Image } from 'expo-image';
 import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { DestinationSheet, destIcon, Logo, Screen, SELL_HREF } from '@/components/chrome';
-import { CinematicPhoto, Glow, Ornament, SideShade, StarLattice } from '@/components/decor';
-import { Icon, type IconName } from '@/components/icons';
-import { Button, Card, Container, Eyebrow, Grid, Loading, OptionCard, Photo, ProductTile, SectionHead, Serif, T, useWide } from '@/components/ui';
+import { CinematicPhoto } from '@/components/decor';
+import { Icon } from '@/components/icons';
+import { Button, Container, Eyebrow, Grid, Loading, ProductTile, SectionHead, Serif, T, useWide } from '@/components/ui';
 import { Faq } from '@/components/faq';
 import { faqLd, itemListLd, organizationLd, Seo, websiteLd } from '@/components/seo';
-import { getCategories, getFeatured, getProducts } from '@/lib/catalogue';
-import { snapshot, snapshotByCategory, snapshotFeatured } from '@/lib/snapshot';
+import { getFeatured, getProducts } from '@/lib/catalogue';
+import { snapshotByCategory, snapshotFeatured } from '@/lib/snapshot';
 import { strings, useI18n, type Key } from '@/lib/i18n';
 import { imageUrl } from '@/lib/images';
-import { convertFromSar, formatWhole } from '@/lib/money';
-import { DESTINATIONS, usePrefs } from '@/lib/prefs';
-import { useSession } from '@/lib/session';
-import type { Category, Product } from '@/lib/types';
-import { colors, space } from '@/theme';
-
-/** Gold-ringed icon on a night disc. */
-function Medallion({ icon }: { icon: IconName }) {
-  return (
-    <View style={{ width: 46, height: 46, borderRadius: 999, backgroundColor: colors.kiswah, borderWidth: 1, borderColor: colors.gold, alignItems: 'center', justifyContent: 'center' }}>
-      <Icon name={icon} size={21} color={colors.goldBright} stroke={1.6} />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  ring: { borderWidth: 1, borderColor: colors.champagne },
-});
+import { usePrefs } from '@/lib/prefs';
+import type { Product } from '@/lib/types';
+import { colors } from '@/theme';
 
 type FragTab = 'perfumes' | 'oud-oils';
 const premiumFirst = (rows: Product[]) => [...rows].sort((a, b) => b.base_price_sar - a.base_price_sar);
@@ -49,35 +35,29 @@ function FragranceHouse() {
       getProducts({ category: c }).then((r) => r.length && setRows((cur) => ({ ...cur, [c]: premiumFirst(r) }))).catch(() => undefined));
   }, []);
   if (!rows.perfumes.length && !rows['oud-oils'].length) return null;
-  const shown = rows[tab].slice(0, 8);
+  const shown = rows[tab].slice(0, 4);
   const tabBtn = (k: FragTab, label: string) => (
     <Pressable key={k} accessibilityRole="tab" accessibilityState={{ selected: tab === k }} onPress={() => setTab(k)}
-      style={{ minHeight: 42, paddingHorizontal: 18, borderRadius: 2, justifyContent: 'center', borderWidth: 1, borderColor: tab === k ? colors.gold : colors.goldLine, backgroundColor: tab === k ? colors.gold : 'transparent' }}>
-      <T w={700} size={14} color={tab === k ? colors.night : colors.champagne}>{label} · {rows[k].length}</T>
+      style={{ minHeight: 40, paddingHorizontal: 4, justifyContent: 'center', borderBottomWidth: 1, borderColor: tab === k ? colors.gold : 'transparent' }}>
+      <T w={500} size={13} color={tab === k ? colors.white : colors.onNightFaint} style={{ letterSpacing: 1.4, textTransform: 'uppercase' }}>{label} · {rows[k].length}</T>
     </Pressable>
   );
   return (
     <View nativeID="perfumes" style={{ marginTop: wide ? 72 : 32, backgroundColor: colors.kiswah, overflow: 'hidden' }}>
-      <StarLattice opacity={0.06} size={72} />
-      <Glow cx="80%" cy="10%" r="50%" opacity={0.2} />
-      <Container style={{ paddingVertical: wide ? 72 : 32, gap: wide ? 26 : 16 }}>
+      <Container style={{ paddingVertical: wide ? 104 : 44, gap: wide ? 36 : 18 }}>
         <View style={{ flexDirection: wide ? 'row' : 'column', justifyContent: 'space-between', alignItems: wide ? 'flex-end' : 'flex-start', gap: 16 }}>
           <View style={{ gap: 10, maxWidth: 680 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ width: 28, height: 1, backgroundColor: colors.gold }} />
-              <Eyebrow size={wide ? 13 : 11} color={colors.gold}>{t('fragKicker')}</Eyebrow>
-            </View>
+            <Eyebrow size={wide ? 12 : 11} color={colors.gold}>{t('fragKicker')}</Eyebrow>
             <Serif role="h2" size={wide ? 52 : 32} color={colors.white}>{t('fragTitle')}</Serif>
-            <Ornament width={96} />
             <T size={wide ? 16 : 14} lh={1.6} color={colors.onNight}>{t('fragBody')}</T>
           </View>
-          <View accessibilityRole="tablist" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+          <View accessibilityRole="tablist" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 28 }}>
             {tabBtn('perfumes', t('fragTabPerfumes'))}
             {tabBtn('oud-oils', t('fragTabOils'))}
           </View>
         </View>
         {wide ? (
-          <Grid cols={4} gap={20}>
+          <Grid cols={4} gap={24}>
             {shown.map((p) => <ProductTile key={p.id} product={p} />)}
           </Grid>
         ) : (
@@ -86,7 +66,7 @@ function FragranceHouse() {
           </ScrollView>
         )}
         <View style={{ flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'stretch', gap: 12, flexWrap: 'wrap' }}>
-          <Button label={`${t('fragAll')} · ${rows.perfumes.length}`} kind="gold" size="lg" href={{ pathname: '/collections/[slug]', params: { slug: 'perfumes' } }} />
+          <Button label={`${t('fragAll')} · ${rows.perfumes.length}`} kind="outlineLight" size="lg" href={{ pathname: '/collections/[slug]', params: { slug: 'perfumes' } }} />
           <Button label={`${t('fragAllOils')} · ${rows['oud-oils'].length}`} kind="outlineLight" size="lg" href={{ pathname: '/collections/[slug]', params: { slug: 'oud-oils' } }} />
           <T size={13} color={colors.champagne} style={{ flexShrink: 1, marginStart: wide ? 8 : 0 }}>{t('fragShipNote')}</T>
         </View>
@@ -95,46 +75,32 @@ function FragranceHouse() {
   );
 }
 
-const shop = (params: Record<string, string> = {}): Href => ({ pathname: '/shop', params });
+const DOORS: { title: Key; line: Key; img: string; href: Href }[] = [
+  { title: 'doorPerfume', line: 'doorPerfumeLine', img: '/images/door-perfume.jpg', href: { pathname: '/collections/[slug]', params: { slug: 'perfumes' } } },
+  { title: 'doorPrayer', line: 'doorPrayerLine', img: '/images/door-prayer.jpg', href: { pathname: '/collections/[slug]', params: { slug: 'prayer-mats' } } },
+  { title: 'doorGifts', line: 'doorGiftsLine', img: '/images/door-gifts.jpg', href: { pathname: '/collections/[slug]', params: { slug: 'gift-sets' } } },
+];
 
-const OCCASIONS: { key: Key; tag?: string; tone: string; img: string }[] = [
-  { key: 'occ_eid', tag: 'eid', tone: '#F3E6DF', img: '/images/occ-eid.jpg' },
-  { key: 'occ_nikah', tag: 'nikah', tone: '#F2E8EC', img: '/images/occ-nikah.jpg' },
-  { key: 'occ_baby', tag: 'new-baby', tone: '#E6EBE2', img: '/images/occ-baby.jpg' },
-  { key: 'occ_hifz', tone: '#E8E4EE', img: '/images/occ-hifz.jpg' },
-  { key: 'occ_home', tone: '#EDE5D6', img: '/images/occ-home.jpg' },
-  { key: 'occ_thanks', tone: '#F6F1E8', img: '/images/occ-thanks.jpg' },
-];
-const CATEGORIES: { key: Key; tone: string }[] = [
-  { key: 'cat_dates', tone: '#EDE5D6' }, { key: 'cat_perfume', tone: '#F3E6DF' }, { key: 'cat_prayer', tone: '#E8E4EE' },
-  { key: 'cat_fashion', tone: '#F2E8EC' }, { key: 'cat_books', tone: '#E6EBE2' }, { key: 'cat_sets', tone: '#EDE5D6' },
-];
-const RECIPIENTS: { key: string; tag?: string; tone: string; img: string }[] = [
-  { key: 'rec_her', tag: 'her', tone: '#F2E8EC', img: '/images/rec-her.jpg' }, { key: 'rec_him', tag: 'him', tone: '#E8E4EE', img: '/images/rec-him.jpg' },
-  { key: 'rec_parents', tone: '#EDE5D6', img: '/images/rec-parents.jpg' }, { key: 'rec_kids', tag: 'kids', tone: '#E6EBE2', img: '/images/rec-kids.jpg' },
-  { key: 'rec_home', tone: '#F3E6DF', img: '/images/rec-home.jpg' },
-];
-// Budget bands in halalas (SAR minor units).
-const BUDGETS = [
-  { min: 0, max: 20000, hint: 'budget1' as Key },
-  { min: 20000, max: 50000, hint: 'budget2' as Key },
-  { min: 50000, max: 100000, hint: 'budget3' as Key },
-  { min: 100000, max: 0, hint: 'budget4' as Key },
-];
+/** Small capitals link with a fine gold underline. */
+function CapsLink({ label, href, light }: { label: string; href: Href; light?: boolean }) {
+  const { isRTL } = useI18n();
+  return (
+    <Link href={href} style={{ alignSelf: 'flex-start', borderBottomWidth: 1, borderColor: colors.goldLine, paddingBottom: 4 }}>
+      <T w={600} size={isRTL ? 14 : 12} color={light ? colors.white : colors.navy} style={!isRTL && { letterSpacing: 1.8, textTransform: 'uppercase' }}>{label}</T>
+    </Link>
+  );
+}
 
 export default function Home() {
   const wide = useWide();
-  const { t, lang, currency, pick, isRTL } = useI18n();
-  const { session } = useSession();
-  const { destination, setDestination } = usePrefs();
+  const { t, isRTL } = useI18n();
+  const { destination } = usePrefs();
   const params = useLocalSearchParams<{ s?: string }>();
   const [featured, setFeatured] = useState<Product[] | null>(() => snapshotFeatured());
-  const [cats, setCats] = useState<Category[]>(snapshot.categories);
   const [destOpen, setDestOpen] = useState(false);
 
   useEffect(() => {
     getFeatured().then((f) => f.length && setFeatured(f)).catch(() => undefined);
-    getCategories().then((c) => c.length && setCats(c)).catch(() => undefined);
   }, []);
   useEffect(() => {
     if (Platform.OS === 'web' && params.s && typeof document !== 'undefined') {
@@ -142,35 +108,15 @@ export default function Home() {
     }
   }, [params.s]);
 
-  const band = (b: (typeof BUDGETS)[number]) => {
-    const f = (v: number) => formatWhole(convertFromSar(v, currency), currency, lang);
-    if (b.min === 0) return `${t('under')} ${f(b.max)}`;
-    if (b.max === 0) return `${f(b.min)}+`;
-    return `${f(b.min)}–${f(b.max).replace(/[^\d.,٠-٩٬٫]/g, '').trim()}`;
-  };
-  const gap = wide ? 72 : 32;
-
+  const gap = wide ? 128 : 56;
   const heroText = (
-    <View style={{ gap: wide ? 22 : 14 }}>
-      {session && !wide ? <T size={14} color={colors.onNight}>{t('greeting')}</T> : null}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <View style={{ width: 28, height: 1, backgroundColor: colors.gold }} />
-        <Eyebrow size={wide ? 13 : 11} color={colors.gold}>{t('heroKicker')}</Eyebrow>
-      </View>
-      <Serif role="h1" size={wide ? 76 : 42} color={colors.white}>{t('heroTitle')}</Serif>
-      <Ornament width={wide ? 120 : 96} />
-      <T size={wide ? 18 : 15} lh={1.65} color={colors.onNight} style={{ maxWidth: 520 }}>{t('heroBody')}</T>
-      <View style={{ flexDirection: wide ? 'row' : 'column', gap: 12, marginTop: wide ? 8 : 4 }}>
-        <Button label={t('exploreGifts')} href="/shop" kind="gold" size="lg" />
-        <Button label={t('helpChoose')} href="/concierge" kind="outlineLight" size="lg" />
-      </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 22, rowGap: 8, marginTop: wide ? 18 : 8 }}>
-        {(['heroTrust1', 'heroTrust2', 'heroTrust3'] as const).map((k) => (
-          <View key={k} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <View style={{ width: 5, height: 5, backgroundColor: colors.gold, transform: [{ rotate: '45deg' }] }} />
-            <T size={13} w={500} color={colors.champagne}>{t(k)}</T>
-          </View>
-        ))}
+    <View style={{ gap: wide ? 22 : 14, maxWidth: 520 }}>
+      <Eyebrow size={wide ? 12 : 11}>{t('heroKicker')}</Eyebrow>
+      <Serif role="h1" size={wide ? 74 : 42}>{t('heroTitle')}</Serif>
+      <T size={wide ? 18 : 15} lh={1.6} color={colors.body}>{t('heroBody')}</T>
+      <View style={{ flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'stretch', gap: wide ? 28 : 16, marginTop: wide ? 10 : 4 }}>
+        <Button label={t('exploreGifts')} href="/shop" size="lg" />
+        <CapsLink label={t('helpChoose')} href="/concierge" />
       </View>
     </View>
   );
@@ -182,282 +128,163 @@ export default function Home() {
         title="Al Mukarramah | The Premium Marketplace for Every Muslim Home"
         description="A curated marketplace of premium perfumes, oud oils, prayer mats, Madinah dates and gifts from trusted makers across the Muslim world, every product approved by our team. Hotel delivery in Madinah and Makkah, shipping across Saudi Arabia and worldwide."
         path="/"
-        image="/images/hero-still.jpg"
+        image="/images/hero-light.jpg"
         jsonLd={[
           organizationLd,
           websiteLd,
-          itemListLd('Featured gifts', featured ?? []),
+          itemListLd('Featured', featured ?? []),
           faqLd([1, 2, 3, 4].map((n) => ({ q: strings.en[`hfaq${n}q` as Key], a: strings.en[`hfaq${n}a` as Key] }))),
         ]}
       />
-      {/* Phones in the app: logo and delivery chip (AppHome design). The website has the full header. */}
+      {/* Phones in the app: logo and delivery chip. The website has the full header. */}
       {Platform.OS !== 'web' && (
         <Container style={{ paddingTop: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Logo height={30} />
-          <Pressable accessibilityRole="button" onPress={() => setDestOpen(true)} style={{ flexDirection: 'row', gap: 6, alignItems: 'center', borderWidth: 1, borderColor: colors.inputLine, backgroundColor: colors.white, borderRadius: 2, paddingHorizontal: 12, minHeight: 44 }}>
-            <Icon name={destIcon(destination)} size={16} />
-            <T w={700} size={12} color={colors.navy}>{t(`dest_${destination}` as Key)}</T>
-            <Icon name="chevronDown" size={12} stroke={2.4} />
+          <Pressable accessibilityRole="button" onPress={() => setDestOpen(true)} style={{ flexDirection: 'row', gap: 6, alignItems: 'center', borderBottomWidth: 1, borderColor: colors.goldLine, minHeight: 44 }}>
+            <Icon name={destIcon(destination)} size={16} stroke={1.5} />
+            <T w={600} size={12} color={colors.navy}>{t(`dest_${destination}` as Key)}</T>
+            <Icon name="chevronDown" size={12} stroke={2} />
           </Pressable>
         </Container>
       )}
 
-      {/* 1 · Proposition: a slowly moving still life of real products from the marketplace, headline over the shaded side */}
-      <View style={{ backgroundColor: colors.night, overflow: 'hidden' }}>
-        {wide ? (
-          <View style={{ minHeight: 660, justifyContent: 'center' }}>
-            <CinematicPhoto uri={isRTL ? '/images/hero-still-rtl.jpg' : '/images/hero-still.jpg'} label={t('heroImageAlt')} />
-            <SideShade from={isRTL ? 'right' : 'left'} reach={0.66} />
-            <Container style={{ paddingTop: 96, paddingBottom: 104 }}>
-              <View style={{ maxWidth: 560 }}>{heroText}</View>
-            </Container>
+      {/* 1 · Hero: real products from the marketplace in arched afternoon light; the headline sits on the quiet wall */}
+      {wide ? (
+        <View style={{ minHeight: 680, justifyContent: 'center', overflow: 'hidden', backgroundColor: colors.sand }}>
+          <CinematicPhoto uri={isRTL ? '/images/hero-light-rtl.jpg' : '/images/hero-light.jpg'} label={t('heroImageAlt')} sweep={false} />
+          <Container style={{ paddingVertical: 96 }}>{heroText}</Container>
+        </View>
+      ) : (
+        <>
+          <View style={{ height: 360, backgroundColor: colors.sand }}>
+            <CinematicPhoto uri="/images/hero-light.jpg" position={isRTL ? 'left' : 'right'} label={t('heroImageAlt')} sweep={false} />
           </View>
-        ) : (
-          <>
-            <View style={{ height: 380 }}>
-              <CinematicPhoto uri="/images/hero-still.jpg" position={isRTL ? 'left' : 'right'} label={t('heroImageAlt')} />
-            </View>
-            <Container style={{ paddingTop: 26, paddingBottom: 38 }}>{heroText}</Container>
-          </>
-        )}
-      </View>
+          <Container style={{ paddingTop: 28, paddingBottom: 8 }}>{heroText}</Container>
+        </>
+      )}
 
-      {/* What's the occasion */}
-      <Container style={{ paddingTop: wide ? 64 : 30 }}>
-        <View nativeID="occasions" />
-        <SectionHead kicker={t('occasionsKicker')} title={t('occasionTitle')} link={wide ? t('allOccasions') : t('all')} href="/shop" size={wide ? 48 : 32} />
-        <View style={{ flexDirection: 'row', gap: wide ? 20 : 10 }}>
-          {[
-            { k: t('hajjKicker'), title: t('hajjTitle'), body: t('hajjBody'), tone: colors.sand, tag: 'hajj', img: '/images/hajj.jpg' },
-            { k: t('ramadanKicker'), title: t('ramadanTitle'), body: t('ramadanBody'), tone: '#E8E4EE', tag: 'ramadan', img: '/images/ramadan.jpg' },
-          ].map((c) => (
-            <Link key={c.tag} href={shop({ tag: c.tag })} asChild>
-              <Pressable accessibilityRole="link" style={{ flex: 1, minHeight: wide ? 440 : 220, borderRadius: wide ? 8 : 6, backgroundColor: c.tone, justifyContent: 'flex-end', overflow: 'hidden', borderWidth: 1, borderColor: colors.goldLine }}>
-                <Image source={{ uri: imageUrl(c.img) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
-                <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrimSoft }]} />
-                <View style={{ backgroundColor: colors.scrim, borderTopWidth: 1, borderColor: colors.gold, padding: wide ? 28 : 12, gap: 6 }}>
-                  <Eyebrow size={wide ? 13 : 10} color={colors.gold}>{c.k}</Eyebrow>
-                  <Serif size={wide ? 44 : 24} color={colors.white}>{c.title}</Serif>
-                  {wide ? <T size={15} color={colors.onNight} lh={1.5} style={{ maxWidth: 460 }}>{c.body}</T> : null}
-                </View>
-              </Pressable>
-            </Link>
+      {/* Promise: three quiet lines between fine gold rules */}
+      <Container style={{ paddingTop: wide ? 0 : 28 }}>
+        <View style={{ flexDirection: wide ? 'row' : 'column', borderBottomWidth: 1, borderColor: colors.goldLine }}>
+          {(['heroTrust1', 'heroTrust2', 'heroTrust3'] as const).map((k, i) => (
+            <View key={k} style={{ flex: 1, paddingVertical: wide ? 22 : 12, alignItems: wide ? 'center' : 'flex-start', borderStartWidth: wide && i ? 1 : 0, borderColor: colors.goldLine }}>
+              <T size={13} w={500} color={colors.body} style={!isRTL && { letterSpacing: 0.4 }}>{t(k)}</T>
+            </View>
           ))}
         </View>
-        <View style={{ marginTop: wide ? 20 : 12 }}>
-          <Grid cols={wide ? 6 : 3} gap={wide ? 16 : 10}>
-            {OCCASIONS.map((o) => (
-              <Link key={o.key} href={shop(o.tag ? { tag: o.tag } : {})} asChild>
-                <Pressable accessibilityRole="link" style={{ gap: wide ? 10 : 6 }}>
-                  <Photo shape="arch" ratio={3 / 4} tone={o.tone} uri={o.img} style={styles.ring} />
-                  <T w={700} size={wide ? 15 : 12.5} color={colors.navy} center lh={1.3}>{t(o.key)}</T>
-                </Pressable>
-              </Link>
-            ))}
-          </Grid>
-        </View>
       </Container>
 
-      {/* 2 · Delivery destination */}
-      <Container style={{ paddingTop: wide ? 48 : 28 }}>
-        {wide ? (
-          <Card pad={32} style={{ borderRadius: 8 }}>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, marginBottom: 20 }}>
-              <View style={{ flexShrink: 1 }}>
-                <Serif role="h2" size={36}>{t('destHeading')}</Serif>
-                <T color={colors.muted} style={{ marginTop: 4 }}>{t('destBody')}</T>
-              </View>
-              <Button label={t('deliverToHotel')} onPress={() => setDestination('madinah-hotel')} />
-            </View>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
-              {DESTINATIONS.map((d) => (
-                <OptionCard key={d} selected={d === destination} onPress={() => setDestination(d)}
-                  icon={<Icon name={destIcon(d)} size={26} stroke={1.6} />}
-                  title={t(`destTitle_${d}` as Key)} body={t(`destDesc_${d}` as Key)} />
-              ))}
-            </View>
-          </Card>
-        ) : (
-          <Card pad={16} style={{ gap: 10 }}>
-            <Serif role="h2" size={26}>{t('destHeading')}</Serif>
-            <T size={13.5} color={colors.body} lh={1.5}>{t('destBody')}</T>
-            <Button label={t('deliverToHotel')} onPress={() => { setDestination('madinah-hotel'); setDestOpen(true); }} full />
-          </Card>
-        )}
-      </Container>
-
-      {/* 3 · Categories */}
+      {/* 2 · Three doors into the marketplace */}
       <Container style={{ paddingTop: gap }}>
-        <SectionHead title={t('categoriesTitle')} link={wide ? t('allCategories') : t('all')} href="/shop" size={wide ? 44 : 28} />
-        {cats.length > 0 ? (
-          <Grid cols={wide ? Math.min(cats.length, 7) : 2} gap={wide ? 18 : 10}>
-            {cats.map((c) => (
-              <Link key={c.id} href={{ pathname: '/collections/[slug]', params: { slug: c.slug } }} asChild>
-                <Pressable accessibilityRole="link" style={{ gap: wide ? 12 : 6 }}>
-                  <Photo ratio={wide ? 4 / 5 : 4 / 3} uri={c.image} tone={colors.sand} style={{ borderRadius: wide ? 6 : 4, borderWidth: 1, borderColor: colors.line }} label={pick(c, 'name')} />
-                  <T w={700} size={wide ? 16 : 13.5} color={colors.navy}>{pick(c, 'name')}</T>
-                  {wide && c.blurb_en ? <T size={13} lh={1.5} color={colors.muted} numberOfLines={2}>{pick(c, 'blurb')}</T> : null}
-                </Pressable>
-              </Link>
-            ))}
-          </Grid>
-        ) : (
-          <Grid cols={wide ? 6 : 2} gap={wide ? 18 : 10}>
-            {CATEGORIES.map((c) => (
-              <Link key={c.key} href="/shop" asChild>
-                <Pressable accessibilityRole="link" style={{ gap: wide ? 12 : 6 }}>
-                  <Photo ratio={wide ? 4 / 5 : 4 / 3} tone={c.tone} style={{ borderRadius: wide ? 6 : 4 }} />
-                  <T w={700} size={wide ? 16 : 13.5} color={colors.navy}>{t(c.key)}</T>
-                </Pressable>
-              </Link>
-            ))}
-          </Grid>
-        )}
-      </Container>
-
-      {/* Fragrance house: Ahmed Al Maghribi perfumes and oud oils */}
-      <FragranceHouse />
-
-      {/* Who is it for + budget, on a pale gold band */}
-      <View style={{ marginTop: gap, backgroundColor: colors.goldSoft, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.champagne }}>
-      <Container style={{ paddingVertical: wide ? 64 : 28 }}>
-        <SectionHead title={t('forWhom')} sub={wide ? t('forWhomBody') : undefined} link={wide ? t('giftFinder') : undefined} href="/concierge" size={wide ? 44 : 28} />
+        <SectionHead kicker={t('doorsKicker')} title={t('doorsTitle')} />
         {wide ? (
-          <Grid cols={5} gap={18}>
-            {RECIPIENTS.map((r) => (
-              <Link key={r.key} href={shop(r.tag ? { tag: r.tag } : {})} asChild>
-                <Pressable accessibilityRole="link" style={{ gap: 10 }}>
-                  <Photo shape="arch" ratio={3 / 4} tone={r.tone} uri={r.img} style={styles.ring} />
-                  <Serif size={26} center>{t(r.key as Key)}</Serif>
-                  <T size={13} color={colors.muted} center style={{ marginTop: -6 }}>{t(`${r.key}_hint` as Key)}</T>
+          <View style={{ flexDirection: 'row', gap: 28 }}>
+            {DOORS.map((d) => (
+              <Link key={d.title} href={d.href} asChild>
+                <Pressable accessibilityRole="link" style={{ flex: 1, gap: 16 }}>
+                  <View style={{ aspectRatio: 4 / 5, overflow: 'hidden', borderWidth: 1, borderColor: colors.hair, backgroundColor: colors.sand }}>
+                    <Image source={{ uri: imageUrl(d.img) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} accessibilityLabel={t(d.title)} />
+                  </View>
+                  <Serif size={30}>{t(d.title)}</Serif>
+                  <T size={14.5} lh={1.55} color={colors.body}>{t(d.line)}</T>
+                  <T w={600} size={isRTL ? 14 : 12} color={colors.emerald} style={!isRTL && { letterSpacing: 1.8, textTransform: 'uppercase' }}>{t('discover')}</T>
                 </Pressable>
               </Link>
             ))}
-          </Grid>
+          </View>
         ) : (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-            {RECIPIENTS.map((r) => (
-              <Link key={r.key} href={shop(r.tag ? { tag: r.tag } : {})} asChild>
-                <Pressable accessibilityRole="link" style={{ width: 92, gap: 6, alignItems: 'center' }}>
-                  <Photo shape="arch" ratio={92 / 116} tone={r.tone} uri={r.img} style={styles.ring} />
-                  <T w={700} size={13} color={colors.navy}>{t(r.key as Key)}</T>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingEnd: 16 }}>
+            {DOORS.map((d) => (
+              <Link key={d.title} href={d.href} asChild>
+                <Pressable accessibilityRole="link" style={{ width: 260, gap: 10 }}>
+                  <View style={{ aspectRatio: 4 / 5, overflow: 'hidden', borderWidth: 1, borderColor: colors.hair, backgroundColor: colors.sand }}>
+                    <Image source={{ uri: imageUrl(d.img) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} accessibilityLabel={t(d.title)} />
+                  </View>
+                  <Serif size={24}>{t(d.title)}</Serif>
+                  <T size={13.5} lh={1.5} color={colors.body}>{t(d.line)}</T>
                 </Pressable>
               </Link>
             ))}
           </ScrollView>
         )}
-        <View style={wide ? { marginTop: 34, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.champagne, borderRadius: 6, padding: 22, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14 } : { marginTop: 18, gap: 8 }}>
-          <T w={700} size={wide ? 16 : 14} color={colors.navy} style={wide ? { marginEnd: 8 } : null}>{t('byBudget')}</T>
-          <View style={{ flex: wide ? 1 : undefined, flexDirection: 'row', flexWrap: 'wrap', gap: wide ? 14 : 8 }}>
-            {BUDGETS.map((b) => (
-              <Link key={b.min} href={shop({ ...(b.min ? { min: String(b.min) } : {}), ...(b.max ? { max: String(b.max) } : {}) })} asChild>
-                <Pressable accessibilityRole="link" style={{ flexGrow: 1, flexBasis: wide ? 180 : '45%', borderWidth: 1, borderColor: colors.champagne, backgroundColor: wide ? colors.ivory : colors.white, borderRadius: wide ? 6 : 4, paddingVertical: wide ? 14 : 10, paddingHorizontal: wide ? 18 : 12, gap: 2 }}>
-                  <T w={700} size={wide ? 17 : 14} color={colors.navy}>{band(b)}</T>
-                  <T size={wide ? 12.5 : 11.5} color={colors.muted}>{t(b.hint)}</T>
-                </Pressable>
-              </Link>
-            ))}
-          </View>
-        </View>
       </Container>
-      </View>
 
-      {/* 4 · Curated selection */}
+      {/* 3 · The fragrance house, in Kiswah black */}
+      <View style={{ marginTop: gap }}><FragranceHouse /></View>
+
+      {/* 4 · A considered selection */}
       <Container style={{ paddingTop: gap }}>
-        <SectionHead title={t('featured')} link={wide ? t('viewAll') : t('all')} href="/shop" size={wide ? 44 : 28} />
+        <SectionHead kicker={t('doorsKicker')} title={t('featured')} link={wide ? t('viewAll') : t('all')} href="/shop" />
         {featured === null ? <Loading /> : (
-          <Grid min={wide ? 240 : 150} gap={wide ? 22 : 12} cols={wide ? undefined : 2}>
-            {featured.map((p) => <ProductTile key={p.id} product={p} compact={!wide} />)}
+          <Grid cols={wide ? 3 : 2} gap={wide ? 28 : 12}>
+            {featured.slice(0, 6).map((p) => <ProductTile key={p.id} product={p} compact={!wide} />)}
           </Grid>
         )}
       </Container>
 
-      {/* Membership: gold card */}
-      <Container style={{ paddingTop: wide ? 48 : 24 }}>
-        <View style={{ backgroundColor: colors.nightSoft, borderRadius: wide ? 8 : 6, overflow: 'hidden', borderWidth: 1, borderColor: colors.gold }}>
-          <StarLattice opacity={0.1} size={60} />
-          <Glow cx="88%" cy="0%" r="55%" opacity={0.16} />
-          <View style={{ padding: wide ? 44 : 20, flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'stretch', gap: wide ? 32 : 14 }}>
-            <View style={{ flex: wide ? 1 : undefined, gap: 10 }}>
-              <Eyebrow color={colors.gold} size={12}>{t('membership')}</Eyebrow>
-              <Serif size={wide ? 46 : 30} color={colors.white}>{t('circleTitle')}</Serif>
-              <Ornament width={90} />
-              <T size={wide ? 16 : 14} lh={1.6} color={colors.onNight} style={{ maxWidth: 600 }}>{t('circleBody')}</T>
-            </View>
-            <Button label={t('circleCta')} kind="gold" size="lg" href="/membership" style={{ alignSelf: wide ? 'center' : 'flex-start' }} />
-          </View>
-        </View>
-      </Container>
-
-      {/* 6 · Heritage: night section with the Prophet's Mosque and a gold timeline */}
-      <View style={{ marginTop: wide ? 88 : 36, backgroundColor: colors.night, overflow: 'hidden' }}>
-        <StarLattice opacity={0.06} size={80} />
-        <Glow cx="20%" cy="50%" r="55%" opacity={0.18} />
-        <Container style={{ paddingVertical: wide ? 88 : 36, flexDirection: wide ? 'row' : 'column', gap: wide ? 64 : 20, alignItems: wide ? 'center' : 'stretch' }}>
-          <View style={{ flex: 1, height: wide ? 560 : 300, borderRadius: wide ? 8 : 6, overflow: 'hidden', backgroundColor: colors.nightSoft, borderWidth: 1, borderColor: colors.gold }}>
-            <Photo uri="/images/madinah-minarets.jpg" style={{ height: '100%', aspectRatio: undefined, borderRadius: 0 }} label={t('heritageTitle')} />
-          </View>
-          <View style={{ flex: wide ? 1.15 : undefined, gap: wide ? 20 : 12 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ width: 28, height: 1, backgroundColor: colors.gold }} />
-              <Eyebrow size={wide ? 13 : 11} color={colors.gold}>{t('heritageKicker')}</Eyebrow>
-            </View>
-            <Serif role="h2" size={wide ? 54 : 32} color={colors.white}>{t('heritageTitle')}</Serif>
-            <T size={wide ? 17 : 14.5} lh={1.7} color={colors.onNight}>{t('heritageBody')}</T>
-            <View style={wide ? { flexDirection: 'row', borderTopWidth: 1, borderColor: colors.gold, marginTop: 12 } : { borderStartWidth: 1, borderColor: colors.gold, paddingStart: 16, gap: 14, marginTop: 6 }}>
-              {(['h1', 'h2', 'h3'] as const).map((h) => (
-                <View key={h} style={wide ? { flex: 1, paddingTop: 18, paddingEnd: 18, gap: 6 } : { gap: 2 }}>
-                  {wide && <View style={{ position: 'absolute', top: -5, start: 0, width: 9, height: 9, backgroundColor: colors.gold, transform: [{ rotate: '45deg' }] }} />}
-                  <Serif size={wide ? 34 : 24} color={colors.goldBright}>{t(`${h}Label` as Key)}</Serif>
-                  <T size={13.5} lh={1.55} color={colors.onNight} style={{ flexShrink: 1 }}>{t(`${h}Body` as Key)}</T>
-                </View>
-              ))}
-            </View>
-          </View>
-        </Container>
-      </View>
-
-      {/* 7 · Gifting services */}
+      {/* 5 · Seasons of giving */}
       <Container style={{ paddingTop: gap }}>
-        <SectionHead title={t('servicesTitle')} size={wide ? 44 : 28} />
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: wide ? 18 : 10 }}>
-          {([['svc1', 'gift'], ['svc2', 'send'], ['svc3', 'bed'], ['svc4', 'sparkle']] as const).map(([k, ic]) => (
-            <Card key={k} pad={wide ? 24 : 16} style={{ flexGrow: 1, flexBasis: wide ? 240 : '100%', gap: 10, flexDirection: wide ? 'column' : 'row', alignItems: wide ? 'flex-start' : 'center' }}>
-              <Medallion icon={ic} />
-              <View style={{ flex: wide ? undefined : 1, gap: 6 }}>
-              <T w={700} size={16} color={colors.navy}>{t(`${k}t` as Key)}</T>
-              <T size={14} lh={1.55} color={colors.body}>{t(`${k}b` as Key)}</T>
-              </View>
-            </Card>
+        <View nativeID="occasions" />
+        <SectionHead kicker={t('occasionsKicker')} title={t('occasionTitle')} link={wide ? t('allOccasions') : t('all')} href="/shop" />
+        <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 28 : 24 }}>
+          {[
+            { k: t('hajjKicker'), title: t('hajjTitle'), body: t('hajjBody'), tag: 'hajj', img: '/images/hajj.jpg' },
+            { k: t('ramadanKicker'), title: t('ramadanTitle'), body: t('ramadanBody'), tag: 'ramadan', img: '/images/ramadan.jpg' },
+          ].map((c) => (
+            <Link key={c.tag} href={{ pathname: '/shop', params: { tag: c.tag } }} asChild>
+              <Pressable accessibilityRole="link" style={{ flex: 1, gap: 14 }}>
+                <View style={{ aspectRatio: 16 / 10, overflow: 'hidden', borderWidth: 1, borderColor: colors.hair, backgroundColor: colors.sand }}>
+                  <Image source={{ uri: imageUrl(c.img) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} accessibilityLabel={c.title} />
+                </View>
+                <Eyebrow size={11}>{c.k}</Eyebrow>
+                <Serif size={wide ? 36 : 26}>{c.title}</Serif>
+                <T size={14.5} lh={1.55} color={colors.body} style={{ maxWidth: 520 }}>{c.body}</T>
+              </Pressable>
+            </Link>
           ))}
         </View>
-        <Button label={t('helpChoose')} kind="secondary" href="/concierge" style={{ marginTop: wide ? 22 : 12, alignSelf: wide ? 'flex-start' : 'stretch' }} />
       </Container>
 
-      {/* For makers: invitation to sell on the marketplace */}
-      <View style={{ marginTop: gap, backgroundColor: colors.goldSoft, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.goldLine, overflow: 'hidden' }}>
-        <StarLattice color={colors.brass} opacity={0.07} size={72} />
-        <Container style={{ paddingVertical: wide ? 72 : 36, flexDirection: wide ? 'row' : 'column', gap: wide ? 56 : 18, alignItems: wide ? 'center' : 'stretch' }}>
+      {/* 6 · For makers: invitation to sell, between fine gold and green rules */}
+      <Container style={{ paddingTop: gap }}>
+        <View style={{ borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.goldLine, paddingVertical: wide ? 72 : 36, flexDirection: wide ? 'row' : 'column', gap: wide ? 72 : 18, alignItems: wide ? 'center' : 'stretch' }}>
           <View style={{ flex: 1.2, gap: wide ? 16 : 10 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ width: 28, height: 1, backgroundColor: colors.brass }} />
-              <Eyebrow size={wide ? 13 : 11}>{t('sellKicker')}</Eyebrow>
-            </View>
-            <Serif role="h2" size={wide ? 52 : 32}>{t('sellTitle')}</Serif>
-            <Ornament color={colors.brass} width={wide ? 110 : 90} />
+            <Eyebrow size={wide ? 12 : 11} color={colors.emerald}>{t('sellKicker')}</Eyebrow>
+            <Serif role="h2" size={wide ? 50 : 32}>{t('sellTitle')}</Serif>
             <T size={wide ? 17 : 15} lh={1.7} color={colors.body} style={{ maxWidth: 620 }}>{t('sellBody')}</T>
           </View>
           <View style={{ flex: 1, gap: 14 }}>
             {(['sellPoint1', 'sellPoint2', 'sellPoint3'] as const).map((k) => (
-              <View key={k} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 12, borderBottomWidth: 1, borderColor: colors.goldLine }}>
-                <View style={{ width: 7, height: 7, backgroundColor: colors.brass, transform: [{ rotate: '45deg' }] }} />
-                <T size={15} w={500} color={colors.navy} style={{ flexShrink: 1 }}>{t(k)}</T>
+              <View key={k} style={{ paddingBottom: 12, borderBottomWidth: 1, borderColor: colors.hair }}>
+                <T size={15} color={colors.navy}>{t(k)}</T>
               </View>
             ))}
-            <Button label={t('sellCta')} href={SELL_HREF as Href} size="lg" style={{ marginTop: 8, alignSelf: wide ? 'flex-start' : 'stretch' }} />
+            <Button label={t('sellCta')} href={SELL_HREF as Href} size="lg" style={{ marginTop: 10, alignSelf: wide ? 'flex-start' : 'stretch' }} />
           </View>
-        </Container>
-      </View>
+        </View>
+      </Container>
+
+      {/* 7 · Our story */}
+      <Container style={{ paddingTop: gap }}>
+        <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 72 : 22, alignItems: wide ? 'center' : 'stretch' }}>
+          <View style={{ flex: 1, aspectRatio: wide ? 4 / 5 : 4 / 3, overflow: 'hidden', borderWidth: 1, borderColor: colors.hair, backgroundColor: colors.sand }}>
+            <Image source={{ uri: imageUrl('/images/madinah-minarets.jpg') }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} accessibilityLabel={t('heritageTitle')} />
+          </View>
+          <View style={{ flex: wide ? 1.1 : undefined, gap: wide ? 20 : 12 }}>
+            <Eyebrow size={wide ? 12 : 11}>{t('heritageKicker')}</Eyebrow>
+            <Serif role="h2" size={wide ? 50 : 32}>{t('heritageTitle')}</Serif>
+            <T size={wide ? 17 : 15} lh={1.7} color={colors.body}>{t('heritageBody')}</T>
+            <View style={{ flexDirection: wide ? 'row' : 'column', borderTopWidth: 1, borderColor: colors.goldLine, marginTop: 10 }}>
+              {(['h1', 'h2', 'h3'] as const).map((h) => (
+                <View key={h} style={{ flex: 1, paddingTop: 18, paddingEnd: 18, gap: 6 }}>
+                  <Serif size={wide ? 32 : 24} color={colors.brassText}>{t(`${h}Label` as Key)}</Serif>
+                  <T size={13.5} lh={1.55} color={colors.body} style={{ flexShrink: 1 }}>{t(`${h}Body` as Key)}</T>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Container>
 
       {/* Answers (also read by search engines and AI assistants) */}
       <Container style={{ paddingTop: gap }}>
@@ -466,17 +293,17 @@ export default function Home() {
         </View>
       </Container>
 
-      {/* 8 · Reassurance */}
-      <Container style={{ paddingTop: wide ? 64 : 28, paddingBottom: wide ? 88 : 40 }}>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', backgroundColor: colors.white, borderRadius: 6, borderWidth: 1, borderColor: colors.champagne, paddingVertical: wide ? 8 : 4 }}>
+      {/* Reassurance, as a quiet row of four */}
+      <Container style={{ paddingTop: wide ? 96 : 40, paddingBottom: wide ? 104 : 48 }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', borderTopWidth: 1, borderColor: colors.goldLine }}>
           {([
             ['bag', t('re1t'), t('re1b')], ['lock', t('re2t'), t('payNote')], ['shield', t('re3t'), t('re3b')], ['check', t('re4t'), t('re4b')],
           ] as const).map(([ic, a, b]) => (
-            <View key={a} style={{ flexGrow: 1, flexBasis: wide ? 230 : '100%', flexDirection: 'row', gap: 12, alignItems: 'flex-start', paddingVertical: wide ? 18 : 12, paddingHorizontal: wide ? 22 : 14 }}>
-              <Icon name={ic} size={22} color={colors.brass} />
-              <View style={{ flex: 1, gap: 2 }}>
-                <T w={700} size={15} color={colors.navy}>{a}</T>
-                <T size={13} color={colors.body}>{b}</T>
+            <View key={a} style={{ flexGrow: 1, flexBasis: wide ? 230 : '100%', flexDirection: 'row', gap: 12, alignItems: 'flex-start', paddingVertical: wide ? 24 : 14, paddingEnd: 20 }}>
+              <Icon name={ic} size={20} color={colors.brass} stroke={1.4} />
+              <View style={{ flex: 1, gap: 3 }}>
+                <T w={600} size={14} color={colors.navy}>{a}</T>
+                <T size={13} lh={1.5} color={colors.body}>{b}</T>
               </View>
             </View>
           ))}

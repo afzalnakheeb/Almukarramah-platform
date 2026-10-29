@@ -1,41 +1,46 @@
 // Design tokens from the AlMukarramah Platform Design (PL-06 · Shared design system).
-// Palette: Rawdah Emerald (deep Madinah green on warm ivory, antique brass used as a thin line).
-// The token names 'navy' and 'night' are kept from the first palette: 'navy' is the brand colour, 'night' the deepest shade.
+// Palette: light and modern. Warm ivory canvas, near-black ink, antique gold as hairlines, Rawdah emerald only where
+// the customer acts (buttons, selected states) and Kiswah black for a few accents (top bar, fragrance house, footer).
+// The token names 'navy' and 'night' are kept from earlier palettes: 'navy' is now the ink, 'night' the black.
 export const colors = {
-  navy: '#14392F',
-  navyDeep: '#0D2A22', // footer
-  navyLine: '#2B4B41',
-  ink: '#16211D',
-  body: '#3F443F',
-  muted: '#61665F',
-  ivory: '#F6F2EA',
-  cream: '#F6F2EA',
-  sand: '#E9E2D4',
-  sandSoft: '#F0EBE1',
-  line: '#E3DCCD',
-  lineSoft: '#EDE8DD',
-  inputLine: '#D2CABA',
-  brass: '#A07E46',
-  brassText: '#7C6236',
-  champagne: '#E6D9BE',
+  navy: '#1C1A17',
+  navyDeep: '#141210', // footer
+  navyLine: '#2E2A25',
+  ink: '#1C1A17',
+  body: '#4A453E',
+  muted: '#6E675E',
+  ivory: '#F7F3EC',
+  cream: '#F7F3EC',
+  sand: '#ECE5D9',
+  sandSoft: '#F2EDE4',
+  line: '#E6DED1',
+  lineSoft: '#EEE8DE',
+  inputLine: '#D6CCBC',
+  brass: '#9C7B45',
+  brassText: '#7D6237',
+  champagne: '#E7DAC2',
   // Gold and night (the darker, richer layer: hero, heritage, footer)
-  gold: '#C4A468', // gold on dark backgrounds (7:1 on night)
-  goldBright: '#D8BF8C',
-  goldSoft: '#F1EADA', // pale gold panels on light backgrounds
-  goldLine: 'rgba(196,164,104,0.45)',
-  night: '#0F2C25', // deepest brand shade: hero and heritage
-  nightSoft: '#173A31',
-  onNight: '#D5DED7', // body text on night
+  gold: '#B08D52', // gold on dark backgrounds (7:1 on night)
+  goldBright: '#C9A86E',
+  goldSoft: '#F3ECDD', // pale gold panels on light backgrounds
+  goldLine: 'rgba(176,141,82,0.38)',
+  night: '#151311', // deepest brand shade: hero and heritage
+  nightSoft: '#211E1A',
+  onNight: '#E4DCCD', // body text on night
   // Kiswah black: the Kaaba's black with gold thread, used for the top bar, the fragrance house and the footer,
   // so the site carries Makkah (black and gold) and Madinah (green and gold) together, like Harrods and Rolex pair green with gold.
-  kiswah: '#0F0E0C',
-  kiswahSoft: '#1B1916',
-  onNightSoft: '#B9C7BE', // secondary text on night
-  onNightFaint: '#8DA096', // fine print on night
-  scrim: 'rgba(15,44,37,0.80)', // text panel over a photo
-  scrimSoft: 'rgba(15,44,37,0.22)',
-  overlay: 'rgba(15,44,37,0.45)', // behind dialogs
-  lavender: '#EFF2EC',
+  kiswah: '#151311',
+  emerald: '#14392F', // buttons and selected states only
+  emeraldSoft: '#E7EEE9',
+  emeraldLine: 'rgba(20,57,47,0.28)',
+  hair: 'rgba(176,141,82,0.24)', // the finest gold border, for cards
+  kiswahSoft: '#211E1A',
+  onNightSoft: '#C2B8A7', // secondary text on night
+  onNightFaint: '#998F80', // fine print on night
+  scrim: 'rgba(21,19,17,0.72)', // text panel over a photo
+  scrimSoft: 'rgba(21,19,17,0.18)',
+  overlay: 'rgba(21,19,17,0.42)', // behind dialogs
+  lavender: '#F3EFE8',
   white: '#FFFFFF',
   success: '#1E6B4A',
   successBg: '#E6F2EC',
@@ -43,14 +48,14 @@ export const colors = {
   warnBg: '#FBF1E3',
   danger: '#A3271F',
   dangerBg: '#FBE9E7',
-  infoBg: '#ECF1EC',
+  infoBg: '#F1ECE3',
   sample: '#B5523A',
   sampleText: '#8A3A26',
   disabled: '#D9D2C3',
 };
 
 /** Soft image tones used where a photograph will go. */
-export const tones = ['#E9E2D4', '#E4E8E0', '#EFE6DA', '#E3EAE3', '#EEE7E0', '#F4EFE6'];
+export const tones = ['#ECE5D9', '#E9E3DA', '#EFE6DC', '#E7E4DB', '#EEE6E1', '#F4EFE7'];
 export const toneFor = (key: string) => tones[[...key].reduce((n, c) => n + c.charCodeAt(0), 0) % tones.length];
 
 export const space = (n: number) => n * 8;

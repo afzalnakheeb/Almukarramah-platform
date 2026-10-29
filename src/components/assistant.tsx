@@ -210,9 +210,8 @@ export function AssistantDock() {
 
   const fab = (
     <Pressable accessibilityRole="button" accessibilityLabel={t('assistantOpen')} onPress={() => a.setOpen(!a.open)}
-      style={[fixed, side, { bottom, zIndex: 60, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.navy, borderRadius: 999, height: 54, paddingHorizontal: wide ? 20 : 0, width: wide ? undefined : 54, justifyContent: 'center', borderWidth: 2, borderColor: colors.champagne, shadowColor: '#0B1030', shadowOpacity: 0.25, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 8 }]}>
-      <Icon name={a.open && wide ? 'close' : 'sparkle'} size={20} color={colors.champagne} />
-      {wide && <T w={700} size={14.5} color={colors.white}>{t('assistantOpen')}</T>}
+      style={[fixed, side, { bottom, zIndex: 60, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.emerald, borderRadius: 999, height: 50, width: 50, borderWidth: 1, borderColor: colors.goldBright, shadowColor: '#000', shadowOpacity: 0.16, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6 }]}>
+      <Icon name={a.open && wide ? 'close' : 'sparkle'} size={19} color={colors.white} stroke={1.5} />
     </Pressable>
   );
 

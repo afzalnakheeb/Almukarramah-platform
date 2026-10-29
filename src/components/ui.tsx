@@ -50,7 +50,7 @@ export function Serif({ children, size = 44, color = colors.navy, style, center,
 export function Eyebrow({ children, color = colors.brassText, size = 13, style }: { children: React.ReactNode; color?: string; size?: number; style?: StyleProp<TextStyle> }) {
   const { isRTL } = useI18n();
   return (
-    <Text style={[sans(700, isRTL), { fontSize: isRTL ? size + 1 : size, color }, !isRTL && { letterSpacing: size * 0.16, textTransform: 'uppercase' }, style]}>
+    <Text style={[sans(600, isRTL), { fontSize: isRTL ? size + 1 : size, color }, !isRTL && { letterSpacing: size * 0.18, textTransform: 'uppercase' }, style]}>
       {children}
     </Text>
   );
@@ -74,17 +74,14 @@ export function SectionHead({ kicker, title, sub, link, href, size }: { kicker?:
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, marginBottom: wide ? 24 : 14 }}>
       <View style={{ flexShrink: 1 }}>
-        {kicker ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <View style={{ width: 22, height: 1, backgroundColor: colors.brass }} />
-            <Eyebrow size={wide ? 13 : 11}>{kicker}</Eyebrow>
-          </View>
-        ) : null}
-        <Serif role="h2" size={size ?? (wide ? 44 : 30)} style={{ marginTop: kicker ? 4 : 0 }}>{title}</Serif>
+        {kicker ? <Eyebrow size={wide ? 12 : 11}>{kicker}</Eyebrow> : null}
+        <Serif role="h2" size={size ?? (wide ? 46 : 30)} style={{ marginTop: kicker ? 8 : 0 }}>{title}</Serif>
         {sub ? <T color={colors.muted} style={{ marginTop: 4 }}>{sub}</T> : null}
       </View>
       {link && href ? (
-        <Link href={href}><T w={700} size={14} color={colors.brassText}>{link} {isRTL ? '←' : '→'}</T></Link>
+        <Link href={href} style={{ borderBottomWidth: 1, borderColor: colors.goldLine, paddingBottom: 3 }}>
+          <T w={600} size={isRTL ? 14 : 12} color={colors.navy} style={!isRTL && { letterSpacing: 1.6, textTransform: 'uppercase' }}>{link}</T>
+        </Link>
       ) : null}
     </View>
   );
@@ -94,9 +91,9 @@ export function Button({ label, onPress, href, kind = 'primary', disabled, busy,
   label: string; onPress?: () => void; href?: Href; kind?: 'primary' | 'secondary' | 'danger' | 'light' | 'text' | 'gold' | 'outlineLight'; disabled?: boolean; busy?: boolean;
   style?: StyleProp<ViewStyle>; size?: 'sm' | 'md' | 'lg'; full?: boolean; icon?: React.ReactNode;
 }) {
-  const BG = { primary: colors.navy, danger: colors.danger, light: colors.ivory, text: 'transparent', gold: colors.gold, outlineLight: 'transparent', secondary: colors.white };
+  const BG = { primary: colors.emerald, danger: colors.danger, light: colors.ivory, text: 'transparent', gold: colors.gold, outlineLight: 'transparent', secondary: 'transparent' };
   const FG = { primary: colors.white, danger: colors.white, light: colors.navy, text: colors.navy, gold: colors.night, outlineLight: colors.white, secondary: colors.navy };
-  const BORDER = { primary: colors.navy, danger: colors.danger, light: 'transparent', text: 'transparent', gold: colors.gold, outlineLight: colors.goldLine, secondary: colors.navy };
+  const BORDER = { primary: colors.emerald, danger: colors.danger, light: 'transparent', text: 'transparent', gold: colors.gold, outlineLight: colors.goldLine, secondary: colors.navy };
   const bg = disabled ? colors.disabled : BG[kind];
   const fg = disabled ? colors.muted : FG[kind];
   const border = disabled ? colors.disabled : BORDER[kind];
@@ -210,6 +207,19 @@ export function Price({ product, style, size = 17 }: { product: Product; style?:
   return <T w={700} size={size} color={colors.navy} style={style}>{formatMoney(priceIn(product, currency), currency, lang)}</T>;
 }
 
+/** Product names without the brand in front ("Ahmed Al Maghribi Zumar Eau de Parfum" becomes "Zumar Eau de Parfum");
+ *  the brand is shown above the name instead, the way houses present a maker. */
+const BRAND_AR: Record<string, string> = { 'Ahmed Al Maghribi': 'أحمد المغربي' };
+export const brandName = (brand: string, ar: boolean) => (ar ? BRAND_AR[brand] ?? brand : brand);
+
+export function shortName(name: string, brand?: string | null) {
+  if (!brand) return name;
+  let n = name;
+  if (n.startsWith(brand)) n = n.slice(brand.length).replace(/^[\s·,:-]+/, '');
+  n = n.replace(/\s+من أحمد المغربي/, '').replace(/^أحمد المغربي\s+/, '');
+  return n || name;
+}
+
 /** Product card: 4:5 photograph, category in gold, name, price, availability. */
 export function ProductTile({ product, compact }: { product: Product; compact?: boolean }) {
   const { pick, t, isRTL } = useI18n();
@@ -221,8 +231,8 @@ export function ProductTile({ product, compact }: { product: Product; compact?: 
       <Pressable accessibilityRole="link" style={StyleSheet.flatten([styles.tile, soldOut && { opacity: 0.6 }])}>
         <Photo uri={img} tone={img ? colors.sandSoft : toneFor(product.slug)} fit="cover" motif={compact ? 54 : 80} style={{ borderRadius: 0 }} />
         <View style={{ gap: compact ? 3 : 4, paddingHorizontal: compact ? 10 : 14, paddingTop: compact ? 10 : 14, paddingBottom: compact ? 12 : 16 }}>
-          {tag && !compact ? <Eyebrow size={11}>{pick(tag, 'name')}</Eyebrow> : null}
-          <Serif size={compact ? 17 : 21} color={colors.navy} style={!isRTL && { lineHeight: Math.round((compact ? 17 : 21) * 1.15) }} numberOfLines={2}>{pick(product, 'name')}</Serif>
+          {product.brand || (tag && !compact) ? <Eyebrow size={10.5}>{product.brand ? brandName(product.brand, isRTL) : pick(tag!, 'name')}</Eyebrow> : null}
+          <Serif size={compact ? 17 : 21} color={colors.navy} style={!isRTL && { lineHeight: Math.round((compact ? 17 : 21) * 1.15) }} numberOfLines={2}>{shortName(pick(product, 'name'), product.brand)}</Serif>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, paddingTop: 4 }}>
             <Price product={product} size={compact ? 14 : 15.5} />
             {!compact && soldOut ? <T w={600} size={12} color={colors.sampleText}>{t('outOfStock')}</T> : null}
@@ -343,7 +353,7 @@ export const styles = StyleSheet.create({
   button: { borderRadius: 2, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
   input: { minHeight: 48, borderWidth: 1, borderColor: colors.inputLine, borderRadius: 4, paddingHorizontal: 12, backgroundColor: colors.white, fontSize: 16, color: colors.ink },
   card: { backgroundColor: colors.white, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line },
-  tile: { backgroundColor: colors.white, borderRadius: 4, borderWidth: 1, borderColor: colors.lineSoft, overflow: 'hidden' },
+  tile: { backgroundColor: colors.white, borderRadius: 2, borderWidth: 1, borderColor: colors.hair, overflow: 'hidden' },
   chip: { paddingHorizontal: 14, minHeight: 40, justifyContent: 'center', borderRadius: 2, borderWidth: 1, borderColor: colors.navy, backgroundColor: colors.white },
   tag: { alignSelf: 'flex-start', borderRadius: 2, paddingHorizontal: 10, paddingVertical: 3 },
   option: { flex: 1, minWidth: 220, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, borderRadius: 6, padding: 18, gap: 6 },
