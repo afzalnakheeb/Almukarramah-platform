@@ -24,7 +24,7 @@ export async function getFeatured(): Promise<Product[]> {
   if (!isConfigured) return demoProducts.filter((p) => p.is_featured);
   const { data, error } = await supabase.from('products').select(PRODUCT_FIELDS).eq('is_featured', true).eq('is_active', true).eq('listing_status', 'approved').limit(8);
   if (error) throw error;
-  return data as Product[];
+  return data as unknown as Product[];
 }
 
 export async function getCategories(): Promise<Category[]> {
@@ -44,7 +44,7 @@ export async function getProducts(filter: { tag?: string; category?: string; min
     if (filter.maxSar) q = q.lt('base_price_sar', filter.maxSar);
     const { data, error } = await q;
     if (error) throw error;
-    rows = data as Product[];
+    rows = data as unknown as Product[];
   }
   if (filter.category) rows = rows.filter((p) => p.categories?.slug === filter.category);
   if (filter.minSar) rows = rows.filter((p) => p.base_price_sar >= filter.minSar!);
@@ -56,7 +56,7 @@ export async function getProduct(slug: string): Promise<Product | null> {
   if (!isConfigured) return demoProducts.find((p) => p.slug === slug) ?? null;
   const { data, error } = await supabase.from('products').select(PRODUCT_FIELDS).eq('slug', slug).maybeSingle();
   if (error) throw error;
-  return data as Product | null;
+  return data as unknown as Product | null;
 }
 
 export async function getPlans(): Promise<Plan[]> {
@@ -92,5 +92,5 @@ export async function getSellerProducts(sellerId: string): Promise<Product[]> {
   if (!isConfigured) return [];
   const { data, error } = await supabase.from('products').select(PRODUCT_FIELDS).eq('seller_id', sellerId).eq('is_active', true).eq('listing_status', 'approved').order('created_at', { ascending: false });
   if (error) throw error;
-  return data as Product[];
+  return data as unknown as Product[];
 }

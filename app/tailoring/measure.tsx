@@ -8,14 +8,14 @@ import { MeasureGuide } from '@/components/measure';
 import { breadcrumbLd, Seo } from '@/components/seo';
 import { Breadcrumb, Button, Card, Chip, Eyebrow, Field, Notice, Serif, T, useWide } from '@/components/ui';
 import { useI18n } from '@/lib/i18n';
-import { GARMENT_STEPS, MEASURE_INTRO, type Garment, type Measurements, type Unit } from '@/lib/measurements';
+import { GARMENT_STEPS, type Garment, type Measurements, type Unit } from '@/lib/measurements';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/theme';
 
 export default function MeasurePage() {
   const wide = useWide();
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const { session } = useSession();
   const [garment, setGarment] = useState<Garment>('thobe');
   const [values, setValues] = useState<Measurements>({});
@@ -47,9 +47,6 @@ export default function MeasurePage() {
         <Ornament color={colors.brass} width={96} />
         <T size={16} lh={1.6} color={colors.body}>{t('measureGuideBody')}</T>
       </View>
-      <Card pad={wide ? 20 : 14} style={{ gap: 6, marginBottom: 16, borderColor: colors.champagne, backgroundColor: colors.goldSoft }}>
-        {MEASURE_INTRO[lang].map((l) => <T key={l} size={14} lh={1.55} color={colors.brassText}>• {l}</T>)}
-      </Card>
       <View style={{ flexDirection: 'row', gap: 8, marginBottom: 14 }}>
         <Chip label={t('garment_thobe')} active={garment === 'thobe'} onPress={() => { setGarment('thobe'); setDone(false); }} />
         <Chip label={t('garment_abaya')} active={garment === 'abaya'} onPress={() => { setGarment('abaya'); setDone(false); }} />
