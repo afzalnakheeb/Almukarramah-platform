@@ -55,7 +55,7 @@ Deno.serve(handle(async (req) => {
 
   const { data: products, error } = await db
     .from('products')
-    .select('id, name_en, name_ar, base_price_sar, stock, is_active, weight_g, restricted_countries, product_prices(currency, amount_minor)')
+    .select('id, name_en, name_ar, base_price_sar, stock, is_active, weight_g, ship_class, restricted_countries, product_prices(currency, amount_minor)')
     .in('id', items.map((i) => i.productId));
   if (error) throw error;
 
@@ -70,7 +70,8 @@ Deno.serve(handle(async (req) => {
   });
 
   const weight = lines.reduce((g, l) => g + l.product.weight_g * l.quantity, 0);
-  const quote = (await quotes(db, body.shipTo, weight)).find((q) => q.zoneId === body.zoneId);
+  const spray = lines.some((l) => l.product.ship_class === 'perfume_spray');
+  const quote = (await quotes(db, body.shipTo, weight, spray)).find((q) => q.zoneId === body.zoneId);
   if (!quote) throw new Error('Delivery option not available for this address');
 
   const subtotal = lines.reduce((s, l) => s + l.total, 0);

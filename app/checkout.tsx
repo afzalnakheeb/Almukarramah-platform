@@ -72,9 +72,10 @@ export default function Checkout() {
     setError(null);
     setBusy('rates');
     try {
-      const res = await callFunction<{ quotes: ShippingQuote[] }>('shipping-rates', { shipTo, items });
+      const res = await callFunction<{ quotes: ShippingQuote[]; reason?: string | null }>('shipping-rates', { shipTo, items });
       setQuotes(res.quotes);
       setChosen(res.quotes[0] ?? null);
+      if (!res.quotes.length) setError(t(res.reason === 'perfume_spray' ? 'noDeliveryPerfume' : 'noDeliveryHere'));
     } catch (e) {
       setError(String(e));
     } finally {

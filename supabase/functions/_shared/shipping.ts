@@ -7,13 +7,14 @@ export type Quote = { zoneId: string; carrier: string; service: string; amountSa
 
 type Zone = {
   id: string; countries: string[]; cities: string[] | null; carrier: string; service: string;
-  first_kg_sar: number; extra_kg_sar: number; days_min: number; days_max: number;
+  first_kg_sar: number; extra_kg_sar: number; days_min: number; days_max: number; accepts_perfume_spray: boolean;
 };
 
-export async function quotes(db: Db, shipTo: ShipTo, weightG: number): Promise<Quote[]> {
+/** hasPerfumeSpray: the parcel holds alcohol-based perfume, so only carriers that accept it are offered. */
+export async function quotes(db: Db, shipTo: ShipTo, weightG: number, hasPerfumeSpray = false): Promise<Quote[]> {
   const { data, error } = await db.from('shipping_zones').select('*').eq('active', true);
   if (error) throw error;
-  const zones = data as Zone[];
+  const zones = (data as Zone[]).filter((z) => !hasPerfumeSpray || z.accepts_perfume_spray);
   const country = shipTo.country.toUpperCase();
   const city = shipTo.city.trim().toLowerCase();
 
