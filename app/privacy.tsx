@@ -2,7 +2,7 @@
 import React from 'react';
 import { LegalPage, type LegalDoc } from '@/components/legal';
 
-const CONTACT = 'privacy@almukarramah.com';
+const CONTACT = 'hello@almukarramah.com';
 
 const en: LegalDoc = {
   title: 'Privacy policy',
