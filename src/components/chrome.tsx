@@ -89,6 +89,7 @@ export function SiteHeader() {
 
   const nav: { label: string; href: Href; external?: boolean }[] = [
     { label: t('shop'), href: '/shop' },
+    { label: t('navPerfumes'), href: { pathname: '/collections/[slug]', params: { slug: 'perfumes' } } },
     { label: t('navOccasions'), href: { pathname: '/', params: { s: 'occasions' } } },
     { label: t('membership'), href: '/membership' },
     { label: t('navQuran'), href: { pathname: '/apps/[slug]', params: { slug: 'recite-with-me' } } },
@@ -267,6 +268,8 @@ export function SiteFooter() {
         </View>
         {col(t('shop'), [
           { label: t('allGifts'), href: '/shop' },
+          { label: t('navPerfumes'), href: { pathname: '/collections/[slug]', params: { slug: 'perfumes' } } },
+          { label: t('fragTabOils'), href: { pathname: '/collections/[slug]', params: { slug: 'oud-oils' } } },
           { label: t('hajjTitle'), href: { pathname: '/shop', params: { tag: 'hajj' } } },
           { label: t('ramadanTitle'), href: { pathname: '/shop', params: { tag: 'ramadan' } } },
           { label: t('concierge'), href: '/concierge' },

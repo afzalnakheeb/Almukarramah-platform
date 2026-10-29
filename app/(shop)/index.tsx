@@ -9,8 +9,8 @@ import { Icon, type IconName } from '@/components/icons';
 import { Button, Card, Container, Eyebrow, Grid, Loading, OptionCard, Photo, ProductTile, SectionHead, Serif, T, useWide } from '@/components/ui';
 import { Faq } from '@/components/faq';
 import { faqLd, itemListLd, organizationLd, Seo, websiteLd } from '@/components/seo';
-import { getCategories, getFeatured } from '@/lib/catalogue';
-import { snapshot, snapshotFeatured } from '@/lib/snapshot';
+import { getCategories, getFeatured, getProducts } from '@/lib/catalogue';
+import { snapshot, snapshotByCategory, snapshotFeatured } from '@/lib/snapshot';
 import { strings, useI18n, type Key } from '@/lib/i18n';
 import { imageUrl } from '@/lib/images';
 import { convertFromSar, formatWhole } from '@/lib/money';
@@ -31,6 +31,69 @@ function Medallion({ icon }: { icon: IconName }) {
 const styles = StyleSheet.create({
   ring: { borderWidth: 1, borderColor: colors.champagne },
 });
+
+type FragTab = 'perfumes' | 'oud-oils';
+const premiumFirst = (rows: Product[]) => [...rows].sort((a, b) => b.base_price_sar - a.base_price_sar);
+
+/** Night band with gold: the fragrance collections, a tab for perfumes and one for oud oils, and links to both pages. */
+function FragranceHouse() {
+  const wide = useWide();
+  const { t } = useI18n();
+  const [tab, setTab] = useState<FragTab>('perfumes');
+  const [rows, setRows] = useState<Record<FragTab, Product[]>>(() => ({
+    perfumes: premiumFirst(snapshotByCategory('perfumes')),
+    'oud-oils': premiumFirst(snapshotByCategory('oud-oils')),
+  }));
+  useEffect(() => {
+    (['perfumes', 'oud-oils'] as FragTab[]).forEach((c) =>
+      getProducts({ category: c }).then((r) => r.length && setRows((cur) => ({ ...cur, [c]: premiumFirst(r) }))).catch(() => undefined));
+  }, []);
+  if (!rows.perfumes.length && !rows['oud-oils'].length) return null;
+  const shown = rows[tab].slice(0, 8);
+  const tabBtn = (k: FragTab, label: string) => (
+    <Pressable key={k} accessibilityRole="tab" accessibilityState={{ selected: tab === k }} onPress={() => setTab(k)}
+      style={{ minHeight: 42, paddingHorizontal: 18, borderRadius: 999, justifyContent: 'center', borderWidth: 1, borderColor: tab === k ? colors.gold : colors.goldLine, backgroundColor: tab === k ? colors.gold : 'transparent' }}>
+      <T w={700} size={14} color={tab === k ? colors.night : colors.champagne}>{label} · {rows[k].length}</T>
+    </Pressable>
+  );
+  return (
+    <View nativeID="perfumes" style={{ marginTop: wide ? 72 : 32, backgroundColor: colors.night, overflow: 'hidden' }}>
+      <StarLattice opacity={0.06} size={72} />
+      <Glow cx="80%" cy="10%" r="50%" opacity={0.2} />
+      <Container style={{ paddingVertical: wide ? 72 : 32, gap: wide ? 26 : 16 }}>
+        <View style={{ flexDirection: wide ? 'row' : 'column', justifyContent: 'space-between', alignItems: wide ? 'flex-end' : 'flex-start', gap: 16 }}>
+          <View style={{ gap: 10, maxWidth: 680 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{ width: 28, height: 1, backgroundColor: colors.gold }} />
+              <Eyebrow size={wide ? 13 : 11} color={colors.gold}>{t('fragKicker')}</Eyebrow>
+            </View>
+            <Serif role="h2" size={wide ? 52 : 32} color={colors.white}>{t('fragTitle')}</Serif>
+            <Ornament width={96} />
+            <T size={wide ? 16 : 14} lh={1.6} color={colors.onNight}>{t('fragBody')}</T>
+          </View>
+          <View accessibilityRole="tablist" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            {tabBtn('perfumes', t('fragTabPerfumes'))}
+            {tabBtn('oud-oils', t('fragTabOils'))}
+          </View>
+        </View>
+        {wide ? (
+          <Grid cols={4} gap={20}>
+            {shown.map((p) => <ProductTile key={p.id} product={p} />)}
+          </Grid>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingEnd: 16 }}>
+            {shown.map((p) => <View key={p.id} style={{ width: 168 }}><ProductTile product={p} compact /></View>)}
+          </ScrollView>
+        )}
+        <View style={{ flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'stretch', gap: 12, flexWrap: 'wrap' }}>
+          <Button label={`${t('fragAll')} · ${rows.perfumes.length}`} kind="gold" size="lg" href={{ pathname: '/collections/[slug]', params: { slug: 'perfumes' } }} />
+          <Button label={`${t('fragAllOils')} · ${rows['oud-oils'].length}`} kind="outlineLight" size="lg" href={{ pathname: '/collections/[slug]', params: { slug: 'oud-oils' } }} />
+          <T size={13} color={colors.champagne} style={{ flexShrink: 1, marginStart: wide ? 8 : 0 }}>{t('fragShipNote')}</T>
+        </View>
+      </Container>
+    </View>
+  );
+}
 
 const shop = (params: Record<string, string> = {}): Href => ({ pathname: '/shop', params });
 
@@ -92,7 +155,7 @@ export default function Home() {
     <Screen padded={false}>
       <Seo
         title="Al Mukarramah | Premium Islamic Gifts from Madinah"
-        description="Prayer mats and woven prayer rugs inspired by the Haramain, gift sets, Madinah dates and keepsakes, prepared in Madinah. Delivery to Madinah and Makkah hotels, across Saudi Arabia and worldwide."
+        description="Prayer mats and woven prayer rugs inspired by the Haramain, gift sets, Madinah dates, keepsakes and Ahmed Al Maghribi perfumes and oud oils, from Madinah. Delivery to Madinah and Makkah hotels, across Saudi Arabia and worldwide."
         path="/"
         image="/images/hero.jpg"
         jsonLd={[
@@ -221,7 +284,7 @@ export default function Home() {
       <Container style={{ paddingTop: gap }}>
         <SectionHead title={t('categoriesTitle')} link={wide ? t('allCategories') : t('all')} href="/shop" size={wide ? 44 : 28} />
         {cats.length > 0 ? (
-          <Grid cols={wide ? Math.min(cats.length, 6) : 2} gap={wide ? 18 : 10}>
+          <Grid cols={wide ? Math.min(cats.length, 7) : 2} gap={wide ? 18 : 10}>
             {cats.map((c) => (
               <Link key={c.id} href={{ pathname: '/collections/[slug]', params: { slug: c.slug } }} asChild>
                 <Pressable accessibilityRole="link" style={{ gap: wide ? 12 : 6 }}>
@@ -245,6 +308,9 @@ export default function Home() {
           </Grid>
         )}
       </Container>
+
+      {/* Fragrance house: Ahmed Al Maghribi perfumes and oud oils */}
+      <FragranceHouse />
 
       {/* Who is it for + budget, on a pale gold band */}
       <View style={{ marginTop: gap, backgroundColor: colors.goldSoft, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.champagne }}>
