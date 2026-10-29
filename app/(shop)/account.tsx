@@ -32,7 +32,12 @@ export default function Account() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
-  const { status: payStatus } = useLocalSearchParams<{ status?: string }>();
+  const { status: payStatus, next } = useLocalSearchParams<{ status?: string; next?: string }>();
+  // After signing in, go back to the page that asked for it (e.g. the admin panel).
+  const nextPath = typeof next === 'string' && next.startsWith('/') && !next.startsWith('//') ? next : undefined;
+  useEffect(() => {
+    if (session && nextPath) router.replace(nextPath as never);
+  }, [session, nextPath]);
   const [subs, setSubs] = useState<SubRow[]>([]);
   const [subBusy, setSubBusy] = useState<string | null>(null);
   const [subError, setSubError] = useState<string | null>(null);
@@ -97,7 +102,7 @@ export default function Account() {
             <Serif role="h1" size={30} style={{ marginTop: 6 }}>{t('signInTitle')}</Serif>
             <T size={14} lh={1.6} color={colors.muted}>{t('signInBody')}</T>
             {!isConfigured && <Notice text="Preview mode: sign-in works once the Supabase project is connected." />}
-            <GoogleButton onError={() => setError(t('googleError'))} dividerLabel={t('orEmail')} />
+            <GoogleButton onError={() => setError(t('googleError'))} dividerLabel={t('orEmail')} next={nextPath} />
             <Field label={t('email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" dirLtr />
             <Button
               label={t('sendCode')}
@@ -106,7 +111,10 @@ export default function Account() {
               onPress={async () => {
                 setBusy(true);
                 setError(null);
-                const { error: e } = await supabase.auth.signInWithOtp({ email: email.trim() });
+                const { error: e } = await supabase.auth.signInWithOtp({
+                  email: email.trim(),
+                  options: typeof window !== 'undefined' ? { emailRedirectTo: `${window.location.origin}/account${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ''}` } : undefined,
+                });
                 setBusy(false);
                 if (e) setError(e.message);
                 else setSent(true);

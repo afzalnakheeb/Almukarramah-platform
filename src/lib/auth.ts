@@ -6,16 +6,18 @@ import { isConfigured, supabase } from '@/lib/supabase';
 
 
 /** Opens Google sign-in. On the website the page returns to /account; in the apps an in-app browser is used. */
-export async function signInWithGoogle(): Promise<void> {
+/** `next`: a page on this site to open after signing in (e.g. /admin). */
+export async function signInWithGoogle(next?: string): Promise<void> {
+  const back = next && next.startsWith('/') && !next.startsWith('//') ? `/account?next=${encodeURIComponent(next)}` : '/account';
   if (Platform.OS === 'web') {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/account`, queryParams: { prompt: 'select_account' } },
+      options: { redirectTo: `${window.location.origin}${back}`, queryParams: { prompt: 'select_account' } },
     });
     if (error) throw error;
     return;
   }
-  const redirectTo = Linking.createURL('/account');
+  const redirectTo = Linking.createURL(back);
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } },

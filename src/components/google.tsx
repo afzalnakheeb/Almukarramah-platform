@@ -18,7 +18,7 @@ function GoogleMark({ size = 20 }: { size?: number }) {
   );
 }
 
-export function GoogleButton({ onError, dividerLabel }: { onError?: (msg: string) => void; dividerLabel?: string }) {
+export function GoogleButton({ onError, dividerLabel, next }: { onError?: (msg: string) => void; dividerLabel?: string; next?: string }) {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   // Shown only once Google is switched on in Supabase Auth, so shoppers never reach an error page.
@@ -35,7 +35,7 @@ export function GoogleButton({ onError, dividerLabel }: { onError?: (msg: string
       onPress={async () => {
         setBusy(true);
         try {
-          await signInWithGoogle();
+          await signInWithGoogle(next);
         } catch (e) {
           onError?.(e instanceof Error ? e.message : String(e));
         } finally {

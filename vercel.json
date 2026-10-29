@@ -6,6 +6,17 @@
   "framework": null,
   "redirects": [
     {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "almukarramah-platform.vercel.app"
+        }
+      ],
+      "destination": "https://almukarramah.com/:path*",
+      "permanent": false
+    },
+    {
       "source": "/trail/quran-trail",
       "destination": "/apps/recite-with-me",
       "permanent": false

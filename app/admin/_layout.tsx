@@ -23,7 +23,8 @@ export default function AdminLayout() {
   const path = usePathname();
   const { session, staffRole, loading } = useSession();
   if (loading) return <View style={{ flex: 1, backgroundColor: colors.ivory }}><Loading /></View>;
-  if (!session || !staffRole) return <Redirect href="/account" />;
+  // Not signed in (or not staff): sign in first, then come straight back here.
+  if (!session || !staffRole) return <Redirect href={{ pathname: '/account', params: { next: path } }} />;
 
   const active = (h: Href) => (h === '/admin' ? path === '/admin' : path === h);
 
