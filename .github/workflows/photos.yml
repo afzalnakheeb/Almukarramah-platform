@@ -27,7 +27,11 @@ jobs:
       - name: Install
         run: pip install "rembg[cpu]==2.0.67" pillow numpy scipy
       - name: Cut out
-        run: python scripts/product_photos.py cut --list scripts/photo-all.txt --shard ${{ matrix.shard }}/12 --out photo-cut
+        # scripts/photo-redo.txt, when present, re-runs just those photos and merges them into the earlier results
+        run: |
+          LIST=scripts/photo-all.txt; TAG=""
+          if [ -f scripts/photo-redo.txt ]; then LIST=scripts/photo-redo.txt; TAG="redo-"; fi
+          python scripts/product_photos.py cut --list $LIST --shard ${{ matrix.shard }}/12 --out photo-cut --tag "$TAG"
       - uses: actions/upload-artifact@v4
         with:
           name: cut-${{ matrix.shard }}
@@ -45,12 +49,18 @@ jobs:
           path: parts
       - name: Commit results
         run: |
-          rm -rf photo-cut photo-out && mkdir photo-cut
+          rm -rf photo-out
+          if [ ! -f scripts/photo-redo.txt ]; then rm -rf photo-cut; fi
+          mkdir -p photo-cut
           for d in parts/*/; do cp -r "$d". photo-cut/; done
           python3 - <<'EOF'
-          import glob, json
-          rows = [r for f in sorted(glob.glob('photo-cut/report-*.json')) for r in json.load(open(f))]
-          json.dump(sorted(rows, key=lambda r: r['path']), open('photo-cut/report.json', 'w'), indent=1)
+          import glob, json, os
+          old = {r['path']: r for r in json.load(open('photo-cut/report.json'))} if os.path.exists('photo-cut/report.json') else {}
+          for f in sorted(glob.glob('photo-cut/report-*.json')):
+              for r in json.load(open(f)):
+                  old[r['path']] = r
+          rows = sorted(old.values(), key=lambda r: r['path'])
+          json.dump(rows, open('photo-cut/report.json', 'w'), indent=1)
           print(sum(r['ok'] for r in rows), 'cut;', sum(not r['ok'] for r in rows), 'kept')
           EOF
           rm -f photo-cut/report-*.json

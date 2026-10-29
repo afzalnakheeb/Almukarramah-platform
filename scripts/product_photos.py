@@ -29,7 +29,20 @@ from scipy.spatial import ConvexHull
 W, H = 1200, 1500
 
 
-def load(src: str) -> Image.Image:
+MIRROR = "https://almukarramah.com"
+
+
+def load(src: str, path: str = "") -> Image.Image:
+    try:
+        return _load(src)
+    except Exception:
+        # some partner photos are served in formats Pillow cannot read; the shop's own resized copy always works
+        if path and src.startswith("http"):
+            return _load(MIRROR + path)
+        raise
+
+
+def _load(src: str) -> Image.Image:
     if src.startswith("http"):
         req = urllib.request.Request(src, headers={"User-Agent": "Mozilla/5.0"})
         data = urllib.request.urlopen(req, timeout=60).read()
@@ -105,7 +118,7 @@ def solid_mask(alpha: np.ndarray, flat: bool) -> np.ndarray:
     return out
 
 
-def check(alpha: np.ndarray) -> str:
+def check(alpha: np.ndarray, edges_matter: bool = True) -> str:
     """Returns '' when the cut-out is usable, otherwise why the original photo should be kept."""
     m = alpha > 128
     cover = m.mean()
@@ -113,7 +126,8 @@ def check(alpha: np.ndarray) -> str:
         return "nothing found"
     if cover > 0.88:
         return "fills the frame"
-    h, w = m.shape
+    if not edges_matter:
+        return ""
     edges = {"top": m[:3].any(0).mean(), "bottom": m[-3:].any(0).mean(), "left": m[:, :3].any(1).mean(), "right": m[:, -3:].any(1).mean()}
     cut = [k for k, v in edges.items() if v > 0.10]
     if cut:
@@ -121,7 +135,7 @@ def check(alpha: np.ndarray) -> str:
     return ""
 
 
-def cutout(img: Image.Image, session, flat: bool = False):
+def cutout(img: Image.Image, session, flat: bool = False, edges_matter: bool = True):
     from rembg import remove
 
     rgba = remove(img, session=session, post_process_mask=True)
@@ -129,7 +143,7 @@ def cutout(img: Image.Image, session, flat: bool = False):
     fill = solid_mask(alpha, flat)
     inner = ndimage.binary_erosion(fill, iterations=2)
     alpha = np.where(inner, 255, np.where(fill, np.maximum(alpha, 160), alpha)).astype(np.uint8)
-    why = check(alpha)
+    why = check(alpha, edges_matter)
     rgba = Image.merge("RGBA", (*img.convert("RGB").split(), Image.fromarray(alpha)))
     ys, xs = np.where(alpha > 12)
     if not len(xs):
@@ -221,8 +235,9 @@ def cmd_cut(a):
     for r in rows:
         name = r["path"].split("/")[-1].rsplit(".", 1)[0]
         try:
-            img = load(r["src"])
-            item, why = cutout(img, session, r["flat"])
+            img = load(r["src"], r["path"])
+            # partner packshots sit on white with soft shadows that can touch the frame; only our own photos are checked
+            item, why = cutout(img, session, r["flat"], edges_matter=not r["path"].startswith("/products/aam/"))
             if item is not None and not why:
                 dest = os.path.join(a.out, r["path"].lstrip("/").rsplit(".", 1)[0] + ".webp")
                 os.makedirs(os.path.dirname(dest), exist_ok=True)
@@ -237,7 +252,7 @@ def cmd_cut(a):
             review.append((name, None, None, None, f"error: {e}"))
             print("FAILED", r["path"], e, file=sys.stderr, flush=True)
     for k in range(0, len(review), 12):
-        sheet(review[k : k + 12], os.path.join(sheets_dir, f"sheet-{i:02d}-{k // 12 + 1}.jpg"))
+        sheet(review[k : k + 12], os.path.join(sheets_dir, f"{a.tag}sheet-{i:02d}-{k // 12 + 1}.jpg"))
     json.dump(report, open(os.path.join(a.out, f"report-{i:02d}.json"), "w"), indent=1)
     print(f"done: {sum(x['ok'] for x in report)} cut, {sum(not x['ok'] for x in report)} kept as original")
 
@@ -249,12 +264,17 @@ def cmd_compose(a):
             if line.strip() and not line.startswith("#"):
                 p, l = line.split()
                 looks[p] = l
+    keep = set()
+    if a.keep and os.path.exists(a.keep):
+        keep = {l.split()[0] for l in open(a.keep) if l.strip() and not l.startswith("#")}
     done = 0
     for root, _, files in os.walk(a.cut):
         for fn in files:
             if not fn.endswith(".webp"):
                 continue
             rel = os.path.relpath(os.path.join(root, fn), a.cut).rsplit(".", 1)[0] + ".jpg"
+            if "/" + rel in keep:
+                continue
             look = looks.get("/" + rel, a.look)
             item = Image.open(os.path.join(root, fn)).convert("RGBA")
             dest = os.path.join(a.dest, rel)
@@ -271,10 +291,12 @@ def main():
     c.add_argument("--list", required=True)
     c.add_argument("--shard", default="1/1")
     c.add_argument("--out", default="photo-cut")
+    c.add_argument("--tag", default="", help="prefix for review sheet names")
     m = sub.add_parser("compose")
     m.add_argument("--cut", default="photo-cut")
     m.add_argument("--look", default="ivory")
     m.add_argument("--look-map", help="optional file of '/products/x.jpg night' lines overriding the look per photo")
+    m.add_argument("--keep", default="scripts/photo-keep.txt", help="photos to leave as the original")
     m.add_argument("--dest", default="public")
     a = p.parse_args()
     cmd_cut(a) if a.cmd == "cut" else cmd_compose(a)
