@@ -1,0 +1,45 @@
+# Design preview: on any push to a shots/* branch, build the website, take screenshots and an SEO report,
+# and commit them back to that branch under shots/. Never runs on main, never deploys anything.
+name: Design preview screenshots
+on:
+  push:
+    branches: ['shots/**']
+permissions:
+  contents: write
+concurrency:
+  group: shots-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  shots:
+    if: "!contains(github.event.head_commit.message, '[shots-result]')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPO_PUBLIC_SUPABASE_URL: https://axpwiixtqkjwjbsqzwqv.supabase.co
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_9jo51p9M2YQDQkkMWbyZ8Q_bpPh7S6c
+      EXPO_PUBLIC_SITE_URL: https://almukarramah.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: npm run vercel-install
+      - name: Build website
+        run: npm run build:web
+      - name: Install browser
+        run: npm install --no-save --legacy-peer-deps playwright serve && npx playwright install --with-deps chromium
+      - name: Screenshots and SEO report (this build)
+        run: |
+          npx serve dist -l 3000 >/dev/null 2>&1 &
+          sleep 3
+          rm -rf shots && node scripts/shots.mjs http://localhost:3000 shots
+      - name: SEO report (live site)
+        run: SEO_ONLY=1 node scripts/shots.mjs https://almukarramah.com shots/live && mv shots/live/seo-report.md shots/seo-live.md && rm -rf shots/live
+      - name: Commit results
+        run: |
+          git config user.name "shots-bot"
+          git config user.email "shots-bot@users.noreply.github.com"
+          git add -f shots
+          git commit -m "Screenshots for ${GITHUB_SHA::7} [shots-result]" || exit 0
+          git push
