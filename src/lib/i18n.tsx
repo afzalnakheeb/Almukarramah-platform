@@ -283,6 +283,8 @@ const en = {
 
   // Account, Google sign-in and apps
   continueGoogle: 'Continue with Google',
+  privacyPolicy: 'Privacy policy',
+  termsOfService: 'Terms of service',
   googleError: 'Google sign-in did not work. Please try again, or use your email below.',
   orEmail: 'or sign in with your email',
   greetingName: 'Assalamu alaikum,',
@@ -687,6 +689,8 @@ const ar: typeof en = {
 
   // Account, Google sign-in and apps
   continueGoogle: 'المتابعة باستخدام Google',
+  privacyPolicy: 'سياسة الخصوصية',
+  termsOfService: 'الشروط والأحكام',
   googleError: 'تعذّر تسجيل الدخول عبر Google. حاول مرة أخرى أو استخدم بريدك الإلكتروني أدناه.',
   orEmail: 'أو سجّل الدخول ببريدك الإلكتروني',
   greetingName: 'السلام عليكم،',

@@ -272,6 +272,8 @@ export function SiteFooter() {
           { label: t('ourApps'), href: '/apps' },
           { label: t('seerahTrail'), href: SEERAH_TRAIL_URL as Href },
           { label: t('account'), href: '/account' },
+          { label: t('privacyPolicy'), href: '/privacy' },
+          { label: t('termsOfService'), href: '/terms' },
         ])}
       </Container>
       <View style={{ borderTopWidth: 1, borderColor: colors.navyLine }}>
