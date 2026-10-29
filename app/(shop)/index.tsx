@@ -22,7 +22,7 @@ import { colors, space } from '@/theme';
 /** Gold-ringed icon on a night disc. */
 function Medallion({ icon }: { icon: IconName }) {
   return (
-    <View style={{ width: 46, height: 46, borderRadius: 999, backgroundColor: colors.night, borderWidth: 1, borderColor: colors.gold, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width: 46, height: 46, borderRadius: 999, backgroundColor: colors.kiswah, borderWidth: 1, borderColor: colors.gold, alignItems: 'center', justifyContent: 'center' }}>
       <Icon name={icon} size={21} color={colors.goldBright} stroke={1.6} />
     </View>
   );
@@ -57,7 +57,7 @@ function FragranceHouse() {
     </Pressable>
   );
   return (
-    <View nativeID="perfumes" style={{ marginTop: wide ? 72 : 32, backgroundColor: colors.night, overflow: 'hidden' }}>
+    <View nativeID="perfumes" style={{ marginTop: wide ? 72 : 32, backgroundColor: colors.kiswah, overflow: 'hidden' }}>
       <StarLattice opacity={0.06} size={72} />
       <Glow cx="80%" cy="10%" r="50%" opacity={0.2} />
       <Container style={{ paddingVertical: wide ? 72 : 32, gap: wide ? 26 : 16 }}>

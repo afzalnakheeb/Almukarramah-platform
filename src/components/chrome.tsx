@@ -117,7 +117,7 @@ export function SiteHeader() {
     <View role="banner">
       {wide ? (
         <>
-          <View style={{ backgroundColor: colors.night }}>
+          <View style={{ backgroundColor: colors.kiswah }}>
             <Container style={{ paddingVertical: 9, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.goldLine }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View style={{ width: 6, height: 6, backgroundColor: colors.gold, transform: [{ rotate: '45deg' }] }} />
@@ -179,7 +179,7 @@ export function SiteHeader() {
               <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} color={colors.onNight} />
             </View>
           </View>
-          <View style={{ flexDirection: 'row', backgroundColor: colors.night, borderBottomWidth: 1, borderColor: colors.goldLine }}>
+          <View style={{ flexDirection: 'row', backgroundColor: colors.kiswah, borderBottomWidth: 1, borderColor: colors.goldLine }}>
             <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} style={{ flex: 1, minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16 }}>
               <T size={13} color={colors.onNight}>{t('deliveringTo')}:</T>
               <T w={700} size={13} color={colors.white}>{t(`dest_${destination}` as Key)}</T>
@@ -278,7 +278,7 @@ export function SiteFooter() {
     </View>
   );
   return (
-    <View role="contentinfo" style={{ backgroundColor: colors.night, marginTop: 'auto', overflow: 'hidden' }}>
+    <View role="contentinfo" style={{ backgroundColor: colors.kiswah, marginTop: 'auto', overflow: 'hidden' }}>
       <GoldRule />
       <StarLattice opacity={0.06} size={72} />
       <Container style={{ paddingTop: wide ? 56 : 28, paddingBottom: 28, flexDirection: 'row', flexWrap: 'wrap', gap: 32 }}>

@@ -26,6 +26,10 @@ export const colors = {
   night: '#0F2C25', // deepest brand shade: hero and heritage
   nightSoft: '#173A31',
   onNight: '#D5DED7', // body text on night
+  // Kiswah black: the Kaaba's black with gold thread, used for the top bar, the fragrance house and the footer,
+  // so the site carries Makkah (black and gold) and Madinah (green and gold) together, like Harrods and Rolex pair green with gold.
+  kiswah: '#0F0E0C',
+  kiswahSoft: '#1B1916',
   onNightSoft: '#B9C7BE', // secondary text on night
   onNightFaint: '#8DA096', // fine print on night
   scrim: 'rgba(15,44,37,0.80)', // text panel over a photo
