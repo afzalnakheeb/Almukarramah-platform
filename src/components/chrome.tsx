@@ -90,6 +90,7 @@ export function SiteHeader() {
   const nav: { label: string; href: Href; external?: boolean }[] = [
     { label: t('shop'), href: '/shop' },
     { label: t('navPerfumes'), href: { pathname: '/collections/[slug]', params: { slug: 'perfumes' } } },
+    { label: t('navFashion'), href: '/fashion' },
     { label: t('navOccasions'), href: { pathname: '/', params: { s: 'occasions' } } },
     { label: t('membership'), href: '/membership' },
     { label: t('navQuran'), href: { pathname: '/apps/[slug]', params: { slug: 'recite-with-me' } } },
@@ -108,6 +109,7 @@ export function SiteHeader() {
                 <T size={13} color={colors.champagne}>{t('topBar')}</T>
               </View>
               <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center' }}>
+                <Link href="/sell"><T size={13} color={colors.goldBright}>{t('sellOnAM')}</T></Link>
                 <Link href="/membership"><T size={13} color={colors.white}>{t('membership')}</T></Link>
                 <Link href="/concierge"><T size={13} color={colors.white}>{t('concierge')}</T></Link>
                 <Pressable accessibilityRole="button" onPress={toggleLang} style={{ borderStartWidth: 1, borderColor: colors.goldLine, paddingStart: 16 }}>
@@ -270,6 +272,8 @@ export function SiteFooter() {
           { label: t('allGifts'), href: '/shop' },
           { label: t('navPerfumes'), href: { pathname: '/collections/[slug]', params: { slug: 'perfumes' } } },
           { label: t('fragTabOils'), href: { pathname: '/collections/[slug]', params: { slug: 'oud-oils' } } },
+          { label: t('navFashion'), href: '/fashion' },
+          { label: t('measureGuideTitle'), href: '/tailoring/measure' },
           { label: t('hajjTitle'), href: { pathname: '/shop', params: { tag: 'hajj' } } },
           { label: t('ramadanTitle'), href: { pathname: '/shop', params: { tag: 'ramadan' } } },
           { label: t('concierge'), href: '/concierge' },
@@ -278,6 +282,9 @@ export function SiteFooter() {
           { label: t('footHotel') }, { label: t('footSaudi') }, { label: t('footIntl') }, { label: t('footOrders'), href: '/account' },
         ])}
         {col(t('footerCompany'), [
+          { label: t('sellOnAM'), href: '/sell' },
+          { label: t('sellerGuidelines'), href: '/sell/guidelines' },
+          { label: t('ourSellers'), href: '/sellers' },
           { label: t('membership'), href: '/membership' },
           { label: t('navQuran'), href: { pathname: '/apps/[slug]', params: { slug: 'recite-with-me' } } },
           { label: t('navSeerah'), href: { pathname: '/apps/[slug]', params: { slug: 'seerah-trails' } } },

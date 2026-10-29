@@ -58,20 +58,28 @@ Deno.serve(handle(async (req) => {
   // Live facts the assistant may use.
   const [{ data: products }, { data: categories }, { data: settings }] = await Promise.all([
     db.from('products')
-      .select('slug, name_en, name_ar, base_price_sar, stock, description_en, description_ar, images, categories(slug, name_en), product_tags(tags(slug, kind))')
-      .eq('is_active', true).limit(300),
+      .select('slug, name_en, name_ar, base_price_sar, stock, description_en, description_ar, images, seller_id, made_to_measure, ship_class, categories(slug, name_en), product_tags(tags(slug, kind)), sellers(name_en, status, kind)')
+      .eq('is_active', true).eq('listing_status', 'approved').limit(400),
     db.from('categories').select('slug, name_en, name_ar').eq('is_active', true).order('sort'),
     db.from('store_settings').select('store_open, checkout_open, banner_en, banner_ar').eq('id', 1).maybeSingle(),
   ]);
   type P = NonNullable<typeof products>[number];
   const all_ = (products ?? []) as P[];
-  const catalogue = all_.filter((p) => p.stock > 0).map((p) => ({
+  // Only what customers can see: approved listings from approved sellers, in stock (tailor-made items are made to order).
+  const visible = all_.filter((p) => {
+    const s = p.sellers as unknown as { status?: string } | null;
+    return (!p.seller_id || s?.status === 'approved') && (p.stock > 0 || p.made_to_measure);
+  });
+  const catalogue = visible.map((p) => ({
     slug: p.slug,
     name: lang === 'ar' ? p.name_ar : p.name_en,
     price_sar: p.base_price_sar / 100,
     category: (p.categories as unknown as { slug: string } | null)?.slug,
     tags: ((p.product_tags ?? []) as unknown as { tags: { slug: string } }[]).map((t) => t.tags?.slug).filter(Boolean),
     about: clip(lang === 'ar' ? p.description_ar : p.description_en, 220),
+    ...((p.sellers as unknown as { kind?: string; name_en?: string } | null)?.kind === 'marketplace' ? { sold_by: (p.sellers as unknown as { name_en: string }).name_en } : {}),
+    ...(p.made_to_measure ? { tailor_made: true } : {}),
+    ...(p.ship_class === 'perfume_spray' ? { saudi_delivery_only: true } : {}),
   }));
 
   const page = body.page ?? {};
@@ -162,8 +170,8 @@ TODAY: ${new Date().toISOString().slice(0, 10)}`;
     /* plain-text reply */
   }
 
-  const picked = all_
-    .filter((p) => p.stock > 0 && (parsed.slugs ?? []).slice(0, 3).includes(p.slug))
+  const picked = visible
+    .filter((p) => (p.stock > 0 || p.made_to_measure) && (parsed.slugs ?? []).slice(0, 3).includes(p.slug))
     .map((p) => ({ slug: p.slug, name: lang === 'ar' ? p.name_ar : p.name_en, price_sar: p.base_price_sar, image: (p.images as string[] | null)?.[0] ?? null }));
 
   // Only well-formed, safe actions reach the app.

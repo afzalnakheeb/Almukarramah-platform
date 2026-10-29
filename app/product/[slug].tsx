@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { destIcon, Screen } from '@/components/chrome';
 import { Ornament } from '@/components/decor';
+import { countryName } from '@/components/country';
+import { SizePicker, TailorConfigurator } from '@/components/tailoring';
 import { Icon } from '@/components/icons';
 import { Breadcrumb, Button, Card, Divider, Eyebrow, Grid, Loading, Notice, Photo, Price, Row, Serif, Stepper, T, useWide } from '@/components/ui';
 import { useCart } from '@/lib/cart';
@@ -35,6 +37,8 @@ export default function ProductScreen() {
   const [image, setImage] = useState(0);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState<string | null>(null);
+  const [size, setSize] = useState<string | undefined>(undefined);
+  const [needSize, setNeedSize] = useState(false);
 
   useEffect(() => {
     setProduct((cur) => (cur?.slug === slug ? cur : snapshotProduct(slug) ?? undefined));
@@ -75,8 +79,12 @@ export default function ProductScreen() {
   const unit = priceIn(product, currency);
   const total = formatMoney(unit * qty, currency, lang);
   const tag = product.product_tags?.[0]?.tags;
+  const tailored = !!product.made_to_measure && !!product.tailoring;
+  const hasSizes = !tailored && (product.sizes?.length ?? 0) > 0;
+  const seller = product.sellers?.kind === 'marketplace' ? product.sellers : null;
   const addToBag = () => {
-    add(product, qty);
+    if (hasSizes && !size) return setNeedSize(true);
+    add(product, qty, hasSizes ? { size } : undefined);
     router.push('/cart');
   };
   const addLabel = soldOut ? t('outOfStock') : `${t('addToBag')} · ${total}`;
@@ -99,10 +107,16 @@ export default function ProductScreen() {
   const details = (
     <View style={{ gap: 20 }}>
       <View style={{ gap: 8 }}>
-        <Eyebrow size={12}>{product.brand ? product.brand : tag ? `${t('appName')} · ${pick(tag, 'name')}` : t('appName')}</Eyebrow>
+        <Eyebrow size={12}>{seller ? pick(seller as unknown as Record<string, unknown>, 'name') || seller.name_en : product.brand ? product.brand : tag ? `${t('appName')} · ${pick(tag, 'name')}` : t('appName')}</Eyebrow>
         <Serif role="h1" size={wide ? 50 : 30}>{pick(product, 'name')}</Serif>
         <Ornament color={colors.brass} width={84} style={{ marginVertical: 2 }} />
-        <T size={wide ? 15 : 12.5} color={colors.body}>{product.brand ? t('soldByReseller') : t('preparedLine')}</T>
+        {seller ? (
+          <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/sellers/[slug]', params: { slug: seller.slug } })}>
+            <T size={wide ? 15 : 12.5} color={colors.body}>{t('soldBy')} <T w={700} size={wide ? 15 : 12.5} color={colors.brassText} style={{ textDecorationLine: 'underline' }}>{seller.name_en}</T> · {t('shipsFrom')} {countryName(seller.country, lang)}</T>
+          </Pressable>
+        ) : (
+          <T size={wide ? 15 : 12.5} color={colors.body}>{product.brand ? t('soldByReseller') : t('preparedLine')}</T>
+        )}
         {wide && <Price product={product} size={26} />}
       </View>
 
@@ -112,17 +126,25 @@ export default function ProductScreen() {
         <Notice text={`${t('notToCountry')}: ${product.restricted_countries.join(', ')}`} />
       )}
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <T w={700} size={14}>{t('quantity')}</T>
-        <Stepper value={qty} min={1} onChange={setQty} />
-      </View>
+      {tailored ? (
+        <TailorConfigurator product={product} onAdd={(custom) => { add(product, 1, custom); router.push('/cart'); }} />
+      ) : (
+        <>
+          {hasSizes && <SizePicker product={product} value={size} onChange={(s) => { setSize(s); setNeedSize(false); }} />}
+          {needSize && <Notice tone="warn" text={t('chooseSize')} />}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <T w={700} size={14}>{t('quantity')}</T>
+            <Stepper value={qty} min={1} onChange={setQty} />
+          </View>
 
-      <View style={{ backgroundColor: colors.sandSoft, borderRadius: 18, paddingVertical: 16, paddingHorizontal: 18, gap: 6 }}>
-        <Row label={`${pick(product, 'name')}${qty > 1 ? ` × ${qty}` : ''}`} value={total} />
-        <Divider style={{ backgroundColor: '#DDD2BF', marginVertical: 4 }} />
-        <Row label={t('total')} value={total} bold />
-        <T size={12} color={colors.muted}>{t('includesVatDelivery')}</T>
-      </View>
+          <View style={{ backgroundColor: colors.sandSoft, borderRadius: 18, paddingVertical: 16, paddingHorizontal: 18, gap: 6 }}>
+            <Row label={`${pick(product, 'name')}${qty > 1 ? ` × ${qty}` : ''}`} value={total} />
+            <Divider style={{ backgroundColor: '#DDD2BF', marginVertical: 4 }} />
+            <Row label={t('total')} value={total} bold />
+            <T size={12} color={colors.muted}>{t('includesVatDelivery')}</T>
+          </View>
+        </>
+      )}
 
       <Card pad={14} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', borderRadius: 16 }}>
         <Icon name={destIcon(destination)} size={22} color={colors.success} />
@@ -132,7 +154,7 @@ export default function ProductScreen() {
         </View>
       </Card>
 
-      {wide && <Button size="lg" label={addLabel} disabled={soldOut} onPress={addToBag} />}
+      {wide && !tailored && <Button size="lg" label={addLabel} disabled={soldOut} onPress={addToBag} />}
 
       <Facts
         title={t('quickFacts')}
@@ -220,7 +242,7 @@ export default function ProductScreen() {
         )}
       </Screen>
 
-      {!wide && (
+      {!wide && !tailored && (
         <View style={{ backgroundColor: colors.white, borderTopWidth: 1, borderColor: colors.line, paddingTop: 10, paddingBottom: 22, paddingHorizontal: 16, flexDirection: 'row', gap: 12, alignItems: 'center', shadowColor: colors.navy, shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: -6 } }}>
           <View>
             <T w={700} size={18} color={colors.navy}>{total}</T>

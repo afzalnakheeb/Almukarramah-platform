@@ -1,11 +1,12 @@
 // Creates an order (or a first membership/box payment) and a Moyasar hosted payment page.
 // Prices, shipping and totals are always recalculated here from the database; the app's numbers are never trusted.
 import { createInvoice } from '../_shared/moyasar.ts';
+import { priceCart, type CartItem } from '../_shared/cart.ts';
 import { quotes } from '../_shared/shipping.ts';
 import { admin, caller, env, fxPerSar, handle, json, vatIncluded } from '../_shared/util.ts';
 
 type Body = {
-  items?: { productId: string; quantity: number }[];
+  items?: CartItem[];
   shipTo?: { kind: string; recipient_name: string; phone: string; country: string; city: string; line1: string; line2?: string; hotel_name?: string; check_in?: string; check_out?: string };
   email?: string;
   currency?: string;
@@ -49,46 +50,54 @@ Deno.serve(handle(async (req) => {
 
   // ------------------------------------------------ shop order
   const items = body.items ?? [];
-  if (!items.length || !body.shipTo || !body.zoneId || !body.email) throw new Error('Missing order details');
+  if (!items.length || !body.shipTo || !body.email) throw new Error('Missing order details');
   const currency = (body.currency ?? 'SAR').toUpperCase();
   const perSar = await fxPerSar(db, currency);
 
-  const { data: products, error } = await db
-    .from('products')
-    .select('id, name_en, name_ar, base_price_sar, stock, is_active, weight_g, ship_class, restricted_countries, product_prices(currency, amount_minor)')
-    .in('id', items.map((i) => i.productId));
-  if (error) throw error;
+  // Products, sizes, tailoring and each seller's delivery charge, recalculated here.
+  const cart = await priceCart(db, items, body.shipTo);
+  let houseShippingSar = 0;
+  let carrierLabel: string | null = null;
+  if (cart.needsZone) {
+    if (!body.zoneId) throw new Error('Choose a delivery option');
+    const quote = (await quotes(db, body.shipTo, cart.houseWeightG, cart.houseSpray)).find((q) => q.zoneId === body.zoneId);
+    if (!quote) throw new Error('Delivery option not available for this address');
+    houseShippingSar = quote.amountSar;
+    carrierLabel = `${quote.carrier} ${quote.service}`;
+  }
 
-  const lines = items.map((i) => {
-    const p = products!.find((x) => x.id === i.productId);
-    if (!p || !p.is_active) throw new Error('A product is no longer available');
-    if (p.stock < i.quantity) throw new Error(`Only ${p.stock} left of ${p.name_en}`);
-    if ((p.restricted_countries as string[]).includes(body.shipTo!.country)) throw new Error(`${p.name_en} cannot be sent to ${body.shipTo!.country}`);
-    const fixed = (p.product_prices as { currency: string; amount_minor: number }[]).find((x) => x.currency === currency);
-    const unit = fixed ? fixed.amount_minor : Math.round(p.base_price_sar * perSar);
-    return { product: p, quantity: i.quantity, unit, total: unit * i.quantity };
+  const lines = cart.lines.map((l) => {
+    const p = l.product as unknown as { id: string; name_en: string; name_ar: string; product_prices: { currency: string; amount_minor: number }[] };
+    // A fixed price in the shopper's currency applies only when nothing was added (sizes keep it; tailoring add-ons do not).
+    const fixed = !l.custom?.options ? p.product_prices.find((x) => x.currency === currency) : undefined;
+    const unit = fixed ? fixed.amount_minor : Math.round(l.unitSar * perSar);
+    const total = unit * l.quantity;
+    const bps = l.seller?.commission_bps ?? null;
+    return { l, unit, total, bps, commission: bps === null ? null : Math.round((total * bps) / 10000) };
   });
 
-  const weight = lines.reduce((g, l) => g + l.product.weight_g * l.quantity, 0);
-  const spray = lines.some((l) => l.product.ship_class === 'perfume_spray');
-  const quote = (await quotes(db, body.shipTo, weight, spray)).find((q) => q.zoneId === body.zoneId);
-  if (!quote) throw new Error('Delivery option not available for this address');
-
-  const subtotal = lines.reduce((s, l) => s + l.total, 0);
-  const shipping = Math.round(quote.amountSar * perSar);
+  const subtotal = lines.reduce((s, x) => s + x.total, 0);
+  const sellerShipping = cart.sellerShipping.map((s) => ({ ...s, minor: Math.round(s.amountSar * perSar) }));
+  const shipping = Math.round(houseShippingSar * perSar) + sellerShipping.reduce((s, x) => s + x.minor, 0);
   const total = subtotal + shipping;
 
   const { data: order, error: oErr } = await db.from('orders').insert({
     user_id: user?.id ?? null, email: body.email, currency, subtotal_minor: subtotal, shipping_minor: shipping,
     total_minor: total, vat_minor: vatIncluded(total, settings.vat_rate_bp), ship_to: body.shipTo,
-    gift_message: body.giftMessage, partner_code: body.partnerCode?.toUpperCase() ?? null, shipping_carrier: `${quote.carrier} ${quote.service}`,
+    gift_message: body.giftMessage, partner_code: body.partnerCode?.toUpperCase() ?? null, shipping_carrier: carrierLabel,
   }).select('id, number').single();
   if (oErr) throw oErr;
 
-  await db.from('order_items').insert(lines.map((l) => ({
-    order_id: order.id, product_id: l.product.id, name_en: l.product.name_en, name_ar: l.product.name_ar,
-    unit_price_minor: l.unit, quantity: l.quantity, line_total_minor: l.total,
+  await db.from('order_items').insert(lines.map((x) => ({
+    order_id: order.id, product_id: x.l.product.id, name_en: x.l.product.name_en, name_ar: x.l.product.name_ar,
+    unit_price_minor: x.unit, quantity: x.l.quantity, line_total_minor: x.total,
+    seller_id: x.l.seller?.id ?? null, commission_bps: x.bps, commission_minor: x.commission, custom: x.l.custom,
   })));
+  // One shipment per seller (and one for anything we ship ourselves), each with its own tracking.
+  await db.from('order_shipments').insert([
+    ...(cart.needsZone ? [{ order_id: order.id, seller_id: null, shipping_minor: Math.round(houseShippingSar * perSar), carrier: carrierLabel }] : []),
+    ...sellerShipping.map((s) => ({ order_id: order.id, seller_id: s.sellerId, shipping_minor: s.minor })),
+  ]);
 
   const inv = await createInvoice({
     amount: total, currency, description: `Al Mukarramah order AM-${order.number}`,

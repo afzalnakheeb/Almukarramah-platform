@@ -63,7 +63,7 @@ export default function CartScreen() {
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 32 : 18, alignItems: 'flex-start' }}>
         <View style={{ flex: 1, alignSelf: 'stretch', gap: 14 }}>
           {lines.map((l) => (
-            <Card key={l.productId} pad={16} style={{ flexDirection: 'row', gap: 16, borderRadius: 20 }}>
+            <Card key={l.key ?? l.productId} pad={16} style={{ flexDirection: 'row', gap: 16, borderRadius: 20 }}>
               <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/product/[slug]', params: { slug: l.slug } })} style={{ width: wide ? 120 : 84 }}>
                 <Photo uri={l.image} ratio={4 / 5} tone={l.image ? colors.white : toneFor(l.slug)} fit="contain" style={{ borderRadius: 14, borderWidth: 1, borderColor: colors.line }} />
               </Pressable>
@@ -72,10 +72,14 @@ export default function CartScreen() {
                   <T w={700} size={wide ? 16 : 14.5} style={{ flex: 1 }}>{pick(l, 'name')}</T>
                   <T w={700} size={wide ? 16 : 14.5} color={colors.navy}>{money(l.unitPriceSar * l.quantity)}</T>
                 </View>
-                <T size={13} color={colors.success} w={600}>{t('inStock')}</T>
+                {l.sellerName ? <T size={12.5} color={colors.brassText} w={600}>{t('soldBy')} {l.sellerName}</T> : null}
+                {l.custom?.size ? <T size={13} color={colors.body}>{t('size')}: {l.custom.size}</T> : null}
+                {l.custom?.measurements ? <T size={13} color={colors.body}>{t('madeToMeasure')}{l.custom.profileName ? ` · ${l.custom.profileName}` : ''}</T> : null}
+                {l.custom?.options ? <T size={12.5} color={colors.muted} numberOfLines={2}>{Object.values(l.custom.options).length} {t('designChoices')}</T> : null}
+                {!l.custom ? <T size={13} color={colors.success} w={600}>{t('inStock')}</T> : null}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 'auto', flexWrap: 'wrap' }}>
-                  <Stepper value={l.quantity} min={1} onChange={(n) => setQty(l.productId, n)} />
-                  <Pressable accessibilityRole="button" onPress={() => setQty(l.productId, 0)}>
+                  <Stepper value={l.quantity} min={1} onChange={(n) => setQty(l.key ?? l.productId, n)} />
+                  <Pressable accessibilityRole="button" onPress={() => setQty(l.key ?? l.productId, 0)}>
                     <T w={700} size={14} color={colors.navy} style={{ textDecorationLine: 'underline' }}>{t('remove')}</T>
                   </Pressable>
                 </View>

@@ -312,6 +312,23 @@ export default function Home() {
       {/* Fragrance house: Ahmed Al Maghribi perfumes and oud oils */}
       <FragranceHouse />
 
+      {/* Modest fashion: ready-made or tailor-made */}
+      <Container style={{ paddingTop: wide ? 64 : 28 }}>
+        <SectionHead kicker={t('fashionKicker')} title={t('fashionTitle')} link={wide ? t('fashionBrowse') : t('all')} href="/fashion" size={wide ? 44 : 28} />
+        <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 18 : 10 }}>
+          {(['ready', 'tailored'] as const).map((k) => (
+            <Link key={k} href="/fashion" asChild>
+              <Pressable accessibilityRole="link" style={{ flex: 1, borderRadius: wide ? 24 : 18, padding: wide ? 28 : 18, gap: 8, overflow: 'hidden', backgroundColor: k === 'tailored' ? colors.night : colors.white, borderWidth: 1, borderColor: k === 'tailored' ? colors.gold : colors.champagne }}>
+                {k === 'tailored' && <StarLattice opacity={0.08} size={56} />}
+                <Eyebrow size={12} color={k === 'tailored' ? colors.gold : colors.brassText}>{t(k === 'tailored' ? 'tailorMade' : 'readyMade')}</Eyebrow>
+                <Serif size={wide ? 34 : 26} color={k === 'tailored' ? colors.white : colors.navy}>{t(k === 'tailored' ? 'fashionTailoredTitle' : 'fashionReadyTitle')}</Serif>
+                <T size={14} lh={1.6} color={k === 'tailored' ? colors.onNight : colors.body}>{t(k === 'tailored' ? 'fashionTailoredBody' : 'fashionReadyBody')}</T>
+              </Pressable>
+            </Link>
+          ))}
+        </View>
+      </Container>
+
       {/* Who is it for + budget, on a pale gold band */}
       <View style={{ marginTop: gap, backgroundColor: colors.goldSoft, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.champagne }}>
       <Container style={{ paddingVertical: wide ? 64 : 28 }}>

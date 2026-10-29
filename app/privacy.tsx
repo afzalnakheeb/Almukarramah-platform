@@ -22,7 +22,12 @@ const en: LegalDoc = {
     ] },
     { h: 'Who we share it with', p: [
       'Only with the companies that help us provide the service, and only what each needs: Supabase (accounts and database), Vercel (website hosting), Moyasar (payments), delivery companies (the delivery details of your order), Anthropic (to generate the assistant’s replies), Google (if you choose Google sign-in), and ZATCA (tax invoices, as the law requires).',
+      'Independent sellers and partners on our marketplace: when they make or ship part of your order, we share only what they need to deliver it: the recipient name, phone, delivery address, gift message and the items (and, for tailor-made items, your measurements and design choices). They may use it only for your order.',
       'We may also share information if Saudi law or an authority requires it.',
+    ] },
+    { h: 'Measurements and seller accounts', p: [
+      'Measurements you save for tailor-made clothing are kept in your account until you delete them, and are used only for the orders you place.',
+      'If you apply to sell, we keep your business and contact details to review your application, run your shop and pay you, and for as long as tax law requires.',
     ] },
     { h: 'How long we keep it', p: [
       'We keep your account while it is open. Tax invoices and order records are kept for as long as Saudi tax law requires, even after an account is closed. Assistant messages are not stored by us after the conversation.',
@@ -53,7 +58,12 @@ const ar: LegalDoc = {
     ] },
     { h: 'مع من نشاركها', p: [
       'فقط مع الشركات التي تساعدنا في تقديم الخدمة، وبقدر ما تحتاجه كل منها: Supabase (الحسابات وقاعدة البيانات)، وVercel (استضافة الموقع)، وميسر (المدفوعات)، وشركات التوصيل (بيانات توصيل طلبك)، وAnthropic (لإنشاء ردود المساعد)، وGoogle (إذا اخترت الدخول عبرها)، وهيئة الزكاة والضريبة والجمارك (الفواتير الضريبية كما يقتضي النظام).',
+      'البائعون والشركاء المستقلون في سوقنا: عندما يصنعون جزءًا من طلبك أو يشحنونه، نشاركهم فقط ما يحتاجونه لتوصيله: اسم المستلم والجوال وعنوان التوصيل ورسالة الإهداء والمنتجات (ومقاساتك واختيارات التصميم للقطع المفصّلة). ولا يجوز لهم استخدامها إلا لطلبك.',
       'وقد نشارك المعلومات إذا اقتضى ذلك النظام السعودي أو طلبته جهة مختصة.',
+    ] },
+    { h: 'المقاسات وحسابات البائعين', p: [
+      'تُحفظ المقاسات التي تحفظها للملابس المفصّلة في حسابك حتى تحذفها، ولا تُستخدم إلا للطلبات التي تقدّمها.',
+      'إذا تقدّمت للبيع لدينا، نحتفظ ببيانات نشاطك والتواصل معك لمراجعة طلبك وإدارة متجرك والدفع لك، وللمدة التي يقتضيها النظام الضريبي.',
     ] },
     { h: 'مدة الاحتفاظ', p: [
       'نحتفظ بحسابك ما دام مفتوحًا. وتُحفظ الفواتير الضريبية وسجلات الطلبات المدة التي يقتضيها النظام الضريبي السعودي حتى بعد إغلاق الحساب. ولا نحتفظ برسائل المساعد بعد انتهاء المحادثة.',

@@ -212,18 +212,19 @@ export function Price({ product, style, size = 17 }: { product: Product; style?:
 export function ProductTile({ product, compact }: { product: Product; compact?: boolean }) {
   const { pick, t } = useI18n();
   const tag = product.categories ?? product.product_tags?.[0]?.tags;
-  const soldOut = product.stock <= 0;
+  const seller = product.sellers?.kind === 'marketplace' ? product.sellers : null;
+  const soldOut = product.stock <= 0 && !product.made_to_measure;
   const img = product.images[0];
   return (
     <Link href={{ pathname: '/product/[slug]', params: { slug: product.slug } }} asChild>
       <Pressable accessibilityRole="link" style={StyleSheet.flatten([styles.tile, compact && { borderRadius: 16 }, soldOut && { opacity: 0.6 }])}>
         <Photo uri={img} tone={img ? colors.sandSoft : toneFor(product.slug)} fit="cover" motif={compact ? 54 : 80} style={{ borderRadius: 0 }} />
         <View style={{ gap: compact ? 3 : 4, paddingHorizontal: compact ? 10 : 14, paddingTop: compact ? 10 : 14, paddingBottom: compact ? 12 : 16 }}>
-          {tag && !compact ? <Eyebrow size={11}>{pick(tag, 'name')}</Eyebrow> : null}
+          {seller ? <Eyebrow size={compact ? 10 : 11}>{seller.name_en}</Eyebrow> : tag && !compact ? <Eyebrow size={11}>{pick(tag, 'name')}</Eyebrow> : null}
           <T w={700} size={compact ? 13.5 : 15.5} lh={1.35} numberOfLines={2}>{pick(product, 'name')}</T>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, paddingTop: 2 }}>
             <Price product={product} size={compact ? 15 : 17} />
-            {!compact ? <T w={600} size={12} color={soldOut ? colors.sampleText : colors.success}>{soldOut ? t('outOfStock') : t('inStock')}</T> : null}
+            {!compact ? <T w={600} size={12} color={soldOut ? colors.sampleText : colors.success}>{product.made_to_measure ? t('tailorMade') : soldOut ? t('outOfStock') : t('inStock')}</T> : null}
           </View>
         </View>
       </Pressable>

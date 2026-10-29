@@ -25,6 +25,11 @@ const en: LegalDoc = {
       'Because of hygiene and food safety, opened perfumes, oils, bakhoor and food items such as dates cannot be returned unless faulty. Other unused items may be returned within 7 days of delivery in their original condition; return shipping is paid by the customer unless the item was faulty.',
       'Refunds go back to the original payment method. A credit note is issued for every refund.',
     ] },
+    { h: 'Marketplace sellers and tailor-made items', p: [
+      'Some products are made and shipped by independent sellers and partners. Al Mukarramah approves every seller and every product, takes your payment and issues your tax invoice. Products from different sellers arrive in separate parcels, each with its own tracking.',
+      'Delivery times for these products start when the seller dispatches them, as shown on the product and at checkout. Returns follow these terms and the seller\u2019s returns policy shown on their shop page; contact us and we will arrange it with the seller.',
+      'Tailor-made clothing is made to the design and measurements you give, so it cannot be returned unless it differs from them or is faulty. Please measure carefully using our guide.',
+    ] },
     { h: 'Subscriptions', p: [
       'Memberships and boxes renew every month until you cancel. You can cancel at any time in your account; you will not be charged again and the subscription continues until the end of the period already paid. Subscriptions bought inside the iPhone or Android app are managed in the App Store or Google Play.',
     ] },
@@ -58,6 +63,11 @@ const ar: LegalDoc = {
       'إذا وصلك منتج تالف أو مختلف عما طلبت، فتواصل معنا خلال ٧ أيام من الاستلام مع صورة، وسنستبدله أو نعيد لك المبلغ.',
       'لأسباب صحية وتتعلق بسلامة الغذاء، لا يمكن إرجاع العطور والدهون والبخور المفتوحة ولا المواد الغذائية كالتمور إلا إذا كان بها عيب. ويمكن إرجاع المنتجات الأخرى غير المستخدمة خلال ٧ أيام من الاستلام بحالتها الأصلية، ويتحمل العميل رسوم الشحن إلا إذا كان المنتج معيبًا.',
       'يُعاد المبلغ إلى وسيلة الدفع الأصلية، ويصدر إشعار دائن لكل استرداد.',
+    ] },
+    { h: 'البائعون في السوق والقطع المفصّلة', p: [
+      'بعض المنتجات يصنعها ويشحنها بائعون وشركاء مستقلون. توافق المكرمة على كل بائع وكل منتج، وتستلم المبلغ منك وتصدر فاتورتك الضريبية. تصل منتجات البائعين المختلفين في طرود منفصلة لكل منها رقم تتبع.',
+      'تبدأ مواعيد توصيل هذه المنتجات من إرسال البائع لها كما يظهر في صفحة المنتج وعند الدفع. ويخضع الإرجاع لهذه الشروط ولسياسة الإرجاع المعروضة في صفحة متجر البائع، وتواصل معنا لنرتّبه مع البائع.',
+      'تُصنع الملابس المفصّلة حسب التصميم والمقاسات التي تقدّمها، لذا لا يمكن إرجاعها إلا إذا اختلفت عنها أو كان بها عيب. يرجى القياس بعناية باستخدام دليلنا.',
     ] },
     { h: 'الاشتراكات', p: [
       'تتجدد العضويات والصناديق شهريًا حتى تلغيها. يمكنك الإلغاء في أي وقت من حسابك، ولن يُخصم منك مبلغ آخر، ويستمر الاشتراك حتى نهاية الفترة المدفوعة. أما الاشتراكات المشتراة من تطبيق iPhone أو Android فتُدار من App Store أو Google Play.',

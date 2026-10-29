@@ -22,13 +22,17 @@ async function fetchJson(path) {
 
 async function snapshot() {
   if (!URL_ || !KEY) throw new Error('Supabase env not set');
-  const categories = await fetchJson('categories?select=id,slug,name_en,name_ar,sort,image,blurb_en,blurb_ar&is_active=eq.true&order=sort');
+  const categories = await fetchJson('categories?select=id,slug,name_en,name_ar,sort,image,blurb_en,blurb_ar,department&is_active=eq.true&order=sort');
   const products = await fetchJson(
     'products?select=id,slug,sku,brand,ship_class,name_en,name_ar,description_en,description_ar,base_price_sar,stock,images,is_featured,restricted_countries,' +
       'seo_title_en,seo_title_ar,seo_description_en,seo_description_ar,updated_at,category_id,categories(slug,name_en,name_ar),' +
-      'product_tags(tags(id,kind,slug,name_en,name_ar,icon))&is_active=eq.true&order=is_featured.desc,created_at',
+      'product_tags(tags(id,kind,slug,name_en,name_ar,icon)),seller_id,made_to_measure,garment,sizes,size_chart,tailoring,sellers(slug,name_en,name_ar,country,kind)' +
+      '&is_active=eq.true&listing_status=eq.approved&order=is_featured.desc,created_at',
   );
-  return { categories, products, generated_at: new Date().toISOString() };
+  const sellers = await fetchJson('sellers?select=id,slug,name_en,name_ar,tagline_en,tagline_ar,about_en,about_ar,country,city,logo,banner,website,ships_to,handling_days,returns_en,returns_ar,kind,status,created_at&status=eq.approved&kind=eq.marketplace&order=name_en');
+  // A suspended seller's products are hidden by the database; keep the snapshot consistent with that.
+  const live = products.filter((p) => !p.seller_id || p.sellers);
+  return { categories, products: live, sellers, generated_at: new Date().toISOString() };
 }
 
 let data;
@@ -79,10 +83,11 @@ const abs = (p) => (p?.startsWith('http') ? p : `${SITE}${p}`);
 const sar = (h) => (h / 100).toFixed(2);
 
 // sitemap.xml (with image extension)
-const pages = ['/', '/shop', '/apps', '/membership', '/concierge', '/apps/recite-with-me', '/apps/seerah-trails', '/privacy', '/terms'];
+const pages = ['/', '/shop', '/fashion', '/sellers', '/sell', '/sell/guidelines', '/tailoring/measure', '/apps', '/membership', '/concierge', '/apps/recite-with-me', '/apps/seerah-trails', '/privacy', '/terms'];
 const urls = [
   ...pages.map((p) => `<url><loc>${SITE}${p}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>${p === '/' ? '1.0' : '0.6'}</priority></url>`),
   ...categories.map((c) => `<url><loc>${SITE}/collections/${c.slug}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>${c.image ? `<image:image><image:loc>${esc(abs(c.image))}</image:loc></image:image>` : ''}</url>`),
+  ...(data.sellers ?? []).map((s) => `<url><loc>${SITE}/sellers/${s.slug}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`),
   ...products.map((p) => `<url><loc>${SITE}/product/${p.slug}</loc><lastmod>${(p.updated_at || today).slice(0, 10)}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>${(p.images || []).map((i) => `<image:image><image:loc>${esc(abs(i))}</image:loc><image:title>${esc(p.name_en)}</image:title></image:image>`).join('')}</url>`),
 ];
 writeFileSync(join(PUBLIC, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${urls.join('\n')}\n</urlset>\n`);
@@ -97,6 +102,8 @@ Disallow: /checkout
 Disallow: /cart
 Disallow: /pay
 Disallow: /subscribe
+Disallow: /seller$
+Disallow: /seller/
 
 # AI assistants and answer engines may read and cite the catalogue (same private areas excluded)
 User-agent: GPTBot
@@ -119,6 +126,8 @@ Disallow: /checkout
 Disallow: /cart
 Disallow: /pay
 Disallow: /subscribe
+Disallow: /seller$
+Disallow: /seller/
 
 Sitemap: ${SITE}/sitemap.xml
 `);

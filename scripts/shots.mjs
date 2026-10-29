@@ -10,7 +10,7 @@ const base = (process.argv[2] || 'http://localhost:3000').replace(/\/$/, '');
 const out = process.argv[3] || 'shots';
 mkdirSync(out, { recursive: true });
 
-const pages = (process.env.SHOT_PAGES || '/,/collections/perfumes,/collections/oud-oils,/product/aam-zumar-60-ml,/product/kaaba-door-prayer-mat,/shop,/membership,/apps').split(',');
+const pages = (process.env.SHOT_PAGES || '/,/fashion,/sell,/sell/guidelines,/tailoring/measure,/sellers,/product/kaaba-door-prayer-mat,/checkout').split(',');
 const views = [
   { name: 'd', width: 1440, height: 900, dsf: 1, chunk: 1100, locale: 'en-GB' },
   { name: 'm', width: 390, height: 844, dsf: 2, chunk: 1300, locale: 'en-GB' },

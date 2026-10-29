@@ -40,6 +40,8 @@ export default function Checkout() {
   const [partner, setPartner] = useState('');
   const [quotes, setQuotes] = useState<ShippingQuote[] | null>(null);
   const [chosen, setChosen] = useState<ShippingQuote | null>(null);
+  const [sellerShip, setSellerShip] = useState<{ name: string; amountSar: number; handlingDays: number }[]>([]);
+  const [needsZone, setNeedsZone] = useState(true);
   const [busy, setBusy] = useState<'rates' | 'pay' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(true);
@@ -64,7 +66,7 @@ export default function Checkout() {
     setChosen(null);
   };
   const money = (sar: number) => formatMoney(convertFromSar(sar, currency), currency, lang);
-  const items = lines.map((l) => ({ productId: l.productId, quantity: l.quantity }));
+  const items = lines.map((l) => ({ productId: l.productId, quantity: l.quantity, custom: l.custom }));
   const emailOk = EMAIL.test(email.trim());
   const ready = emailOk && !!shipTo.recipient_name && !!shipTo.phone && !!shipTo.city && shipTo.country.length === 2 && (shipTo.kind === 'hotel' ? !!shipTo.hotel_name : !!shipTo.line1);
 
@@ -72,24 +74,27 @@ export default function Checkout() {
     setError(null);
     setBusy('rates');
     try {
-      const res = await callFunction<{ quotes: ShippingQuote[]; reason?: string | null }>('shipping-rates', { shipTo, items });
+      const res = await callFunction<{ quotes: ShippingQuote[]; needsZone?: boolean; sellerShipping?: { name: string; amountSar: number; handlingDays: number }[]; reason?: string | null }>('shipping-rates', { shipTo, items });
       setQuotes(res.quotes);
       setChosen(res.quotes[0] ?? null);
-      if (!res.quotes.length) setError(t(res.reason === 'perfume_spray' ? 'noDeliveryPerfume' : 'noDeliveryHere'));
+      setSellerShip(res.sellerShipping ?? []);
+      setNeedsZone(res.needsZone !== false);
+      if (res.needsZone !== false && !res.quotes.length) setError(t(res.reason === 'perfume_spray' ? 'noDeliveryPerfume' : 'noDeliveryHere'));
     } catch (e) {
-      setError(String(e));
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(null);
     }
   }
 
+  const ratesReady = !!quotes && (needsZone ? !!chosen : true);
   async function pay() {
-    if (!chosen) return;
+    if (!ratesReady) return;
     setError(null);
     setBusy('pay');
     try {
       const res = await callFunction<{ paymentUrl: string; orderId: string }>('create-payment', {
-        items, shipTo, email: email.trim(), currency, zoneId: chosen.zoneId, giftMessage: giftMessage || null, partnerCode: partner || null, lang,
+        items, shipTo, email: email.trim(), currency, zoneId: chosen?.zoneId, giftMessage: giftMessage || null, partnerCode: partner || null, lang,
       });
       if (Platform.OS === 'web') {
         window.location.href = res.paymentUrl;
@@ -99,7 +104,7 @@ export default function Checkout() {
         router.replace('/account');
       }
     } catch (e) {
-      setError(String(e));
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(null);
     }
@@ -115,7 +120,9 @@ export default function Checkout() {
     );
   }
 
-  const total = subtotalSar + (chosen?.amountSar ?? 0);
+  const sellerShipSar = sellerShip.reduce((s, x) => s + x.amountSar, 0);
+  const shippingSar = (needsZone ? chosen?.amountSar ?? 0 : 0) + sellerShipSar;
+  const total = subtotalSar + shippingSar;
   const section = (title: string, children: React.ReactNode, right?: React.ReactNode) => (
     <Card pad={wide ? 24 : 16} style={{ borderRadius: 20, gap: 14 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
@@ -180,9 +187,18 @@ export default function Checkout() {
 
           {quotes && section(t('deliveryOptions'), (
             <View style={{ gap: 10 }}>
-              {quotes.map((q) => (
+              {needsZone && quotes.map((q) => (
                 <OptionCard key={q.zoneId} selected={chosen?.zoneId === q.zoneId} onPress={() => setChosen(q)} title={`${q.carrier} · ${q.service}`}
                   body={`${money(q.amountSar)} · ${q.daysMin}–${q.daysMax} ${t('days')}`} />
+              ))}
+              {sellerShip.map((s) => (
+                <View key={s.name} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, borderWidth: 1, borderColor: colors.line, borderRadius: 14, padding: 14 }}>
+                  <View style={{ flex: 1 }}>
+                    <T w={700} size={14.5} color={colors.navy}>{t('shippedBy')} {s.name}</T>
+                    <T size={13} color={colors.muted}>{t('dispatchWithin')} {s.handlingDays} {t('businessDays')} · {t('withTracking')}</T>
+                  </View>
+                  <T w={700} size={14.5}>{s.amountSar ? money(s.amountSar) : t('free')}</T>
+                </View>
               ))}
             </View>
           ))}
@@ -205,14 +221,14 @@ export default function Checkout() {
         <View style={{ width: wide ? 380 : '100%' }}>
           <Card pad={20} style={{ gap: 10, borderRadius: 20 }}>
             <T w={700} size={17} color={colors.navy}>{t('yourOrder')}</T>
-            {lines.map((l) => <Row key={l.productId} label={`${pick(l, 'name')}${l.quantity > 1 ? ` × ${l.quantity}` : ''}`} value={money(l.unitPriceSar * l.quantity)} />)}
-            <Row label={t('shipping')} value={chosen ? money(chosen.amountSar) : t('deliveryNext')} color={chosen ? undefined : colors.muted} />
+            {lines.map((l) => <Row key={l.key ?? l.productId} label={`${pick(l, 'name')}${l.quantity > 1 ? ` × ${l.quantity}` : ''}`} value={money(l.unitPriceSar * l.quantity)} />)}
+            <Row label={t('shipping')} value={ratesReady ? money(shippingSar) : t('deliveryNext')} color={ratesReady ? undefined : colors.muted} />
             <Divider />
             <Row label={t('total')} value={money(total)} bold />
             <T size={12} color={colors.muted}>{t('vatIncluded')}</T>
             {error && <Notice tone="warn" text={error} />}
-            <Button size="lg" label={chosen ? `${t('payPrefix')} ${money(total)}` : t('pay')} onPress={pay} busy={busy === 'pay'} disabled={!chosen || !checkoutOpen} style={{ marginTop: 6 }}
-              icon={<Icon name="lock" size={18} color={chosen && checkoutOpen ? colors.white : colors.muted} />} />
+            <Button size="lg" label={ratesReady ? `${t('payPrefix')} ${money(total)}` : t('pay')} onPress={pay} busy={busy === 'pay'} disabled={!ratesReady || !checkoutOpen} style={{ marginTop: 6 }}
+              icon={<Icon name="lock" size={18} color={ratesReady && checkoutOpen ? colors.white : colors.muted} />} />
           </Card>
         </View>
       </View>
