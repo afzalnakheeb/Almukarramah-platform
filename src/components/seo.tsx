@@ -52,7 +52,7 @@ export const organizationLd = {
   '@id': `${SITE_URL}/#organization`,
   name: BRAND,
   alternateName: BRAND_AR,
-  slogan: 'Treasures of the Ummah',
+  slogan: 'For every Muslim home',
   url: SITE_URL,
   logo: `${SITE_URL}/images/logo.png`,
   foundingDate: '2020',
