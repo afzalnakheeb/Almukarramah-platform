@@ -79,7 +79,7 @@ const abs = (p) => (p?.startsWith('http') ? p : `${SITE}${p}`);
 const sar = (h) => (h / 100).toFixed(2);
 
 // sitemap.xml (with image extension)
-const pages = ['/', '/shop', '/membership', '/concierge', '/trail/quran-trail', '/trail/seerah-trail'];
+const pages = ['/', '/shop', '/apps', '/membership', '/concierge', '/trail/quran-trail', '/trail/seerah-trail'];
 const urls = [
   ...pages.map((p) => `<url><loc>${SITE}${p}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>${p === '/' ? '1.0' : '0.6'}</priority></url>`),
   ...categories.map((c) => `<url><loc>${SITE}/collections/${c.slug}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>${c.image ? `<image:image><image:loc>${esc(abs(c.image))}</image:loc></image:image>` : ''}</url>`),
@@ -139,6 +139,11 @@ ${byCat.map(({ c, items }) => `- [${c.name_en} / ${c.name_ar}](${SITE}/collectio
 
 ## Featured products
 ${products.filter((p) => p.is_featured).map((p) => `- [${p.name_en}](${SITE}/product/${p.slug}): SAR ${sar(p.base_price_sar)}`).join('\n')}
+
+## Apps by Al Mukarramah
+- [Recite With Me (رتّل معي)](https://rattilmai.com): Quran memorisation and tajweed to the standard of the Two Holy Mosques, with a daily plan, AI listening and live teacher sessions.
+- [Seerah Trails (دروب السيرة)](https://seerahtrails.com): a halal, child-friendly 3D journey through the Seerah: Makkah, the Hijra and Madinah.
+- All apps: ${SITE}/apps
 
 ## Policies
 - Prices include 15% VAT (Saudi Arabia). Delivery charge is shown at checkout before payment.

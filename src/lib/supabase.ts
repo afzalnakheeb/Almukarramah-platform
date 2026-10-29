@@ -15,6 +15,8 @@ export const supabase = createClient(isConfigured ? url : 'https://demo.supabase
     autoRefreshToken: isConfigured,
     persistSession: isConfigured,
     detectSessionInUrl: Platform.OS === 'web' && isConfigured,
+    // PKCE: Google sign-in returns a one-time code that is exchanged for the session (web and apps).
+    flowType: 'pkce',
   },
 });
 

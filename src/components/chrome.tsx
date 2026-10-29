@@ -91,7 +91,7 @@ export function SiteHeader() {
     { label: t('navOccasions'), href: { pathname: '/', params: { s: 'occasions' } } },
     { label: t('membership'), href: '/membership' },
     { label: t('quranTrail'), href: { pathname: '/trail/[slug]', params: { slug: 'quran-trail' } } },
-    { label: t('seerahTrail'), href: SEERAH_TRAIL_URL as Href, external: true },
+    { label: t('ourApps'), href: '/apps' },
   ];
 
   return (
@@ -269,9 +269,9 @@ export function SiteFooter() {
         {col(t('footerCompany'), [
           { label: t('membership'), href: '/membership' },
           { label: t('quranTrail'), href: { pathname: '/trail/[slug]', params: { slug: 'quran-trail' } } },
+          { label: t('ourApps'), href: '/apps' },
           { label: t('seerahTrail'), href: SEERAH_TRAIL_URL as Href },
           { label: t('account'), href: '/account' },
-          { label: t('appSoon') },
         ])}
       </Container>
       <View style={{ borderTopWidth: 1, borderColor: colors.navyLine }}>

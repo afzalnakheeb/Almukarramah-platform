@@ -6,12 +6,15 @@ import { Logo, Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
 import { Button, Card, Eyebrow, Field, H1, Notice, Photo, Serif, T, Tag, useWide } from '@/components/ui';
 import { useI18n, type Key } from '@/lib/i18n';
-import { openExternal, SEERAH_TRAIL_URL } from '@/lib/links';
+import { openExternal } from '@/lib/links';
 import { formatMoney } from '@/lib/money';
 import { useSession } from '@/lib/session';
 import { callFunction, isConfigured, supabase } from '@/lib/supabase';
 import { colors, toneFor } from '@/theme';
 import { Seo } from '@/components/seo';
+import { GoogleButton } from '@/components/google';
+import { AppCard } from '@/components/apps';
+import { APPS } from '@/lib/apps';
 
 type SubRow = { id: string; source: string; status: string; cancel_at_period_end: boolean; current_period_end: string | null; plans: { name_en: string; name_ar: string; price_sar: number; kind: string } | null };
 type OrderRow = { id: string; number: number; status: string; currency: string; total_minor: number; created_at: string; invoices: { id: string; number: string }[] };
@@ -55,14 +58,32 @@ export default function Account() {
     }
   }
 
+  const [profile, setProfile] = useState<{ full_name: string | null; phone: string | null; marketing_opt_in: boolean } | null>(null);
+  const [profileSaved, setProfileSaved] = useState(false);
+
   useEffect(() => {
     if (!session) return;
-    supabase
+    supabase.from('profiles').select('full_name, phone, marketing_opt_in').eq('id', session.user.id).maybeSingle()
+      .then(({ data }) => setProfile(data ?? { full_name: (session.user.user_metadata?.full_name as string) ?? null, phone: null, marketing_opt_in: false }));
+  }, [session]);
+
+  async function saveProfile() {
+    if (!session || !profile) return;
+    setProfileSaved(false);
+    // Marketing consent is only ever changed by the shopper here; it is never switched on automatically.
+    const { error: e } = await supabase.from('profiles').upsert({ id: session.user.id, full_name: profile.full_name, phone: profile.phone, marketing_opt_in: profile.marketing_opt_in });
+    if (!e) setProfileSaved(true);
+  }
+
+  useEffect(() => {
+    if (!session) return;
+    // Link orders placed as a guest with the same email, then show them.
+    supabase.rpc('claim_my_orders').then(() => undefined, () => undefined).then(() => supabase
       .from('orders')
       .select('id, number, status, currency, total_minor, created_at, invoices(id, number)')
       .order('created_at', { ascending: false })
       .limit(10)
-      .then(({ data }) => setOrders((data as OrderRow[]) ?? []));
+      .then(({ data }) => setOrders((data as OrderRow[]) ?? [])));
     loadSubs();
   }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -76,6 +97,8 @@ export default function Account() {
             <Serif role="h1" size={30} style={{ marginTop: 6 }}>{t('signInTitle')}</Serif>
             <T size={14} lh={1.6} color={colors.muted}>{t('signInBody')}</T>
             {!isConfigured && <Notice text="Preview mode: sign-in works once the Supabase project is connected." />}
+            <GoogleButton onError={() => setError(t('googleError'))} />
+            <T size={12.5} color={colors.muted} center>{t('orEmail')}</T>
             <Field label={t('email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" dirLtr />
             <Button
               label={t('sendCode')}
@@ -101,10 +124,10 @@ export default function Account() {
     );
   }
 
-  const tiles: { kicker: string; title: string; body: string; href: Parameters<typeof router.push>[0]; icon: 'book' | 'gift' | 'shield'; external?: boolean }[] = [
+  const tiles: { kicker: string; title: string; body: string; href: Parameters<typeof router.push>[0]; icon: 'book' | 'gift' | 'shield' | 'grid'; external?: boolean }[] = [
     { kicker: t('membership'), title: t('membership'), body: t('circleBody'), href: '/membership', icon: 'gift' },
     { kicker: t('learning'), title: t('quranTrail'), body: t('membersOnlyBody'), href: { pathname: '/trail/[slug]', params: { slug: 'quran-trail' } }, icon: 'book' },
-    { kicker: t('learning'), title: t('seerahTrail'), body: t('seerahExternal'), href: SEERAH_TRAIL_URL as never, icon: 'book', external: true },
+    { kicker: t('ourApps'), title: t('ourApps'), body: t('appsTileBody'), href: '/apps', icon: 'grid' },
   ];
   if (staffRole) tiles.unshift({ kicker: staffRole, title: t('admin'), body: t('adminBody'), href: '/admin', icon: 'shield' });
 
@@ -112,7 +135,7 @@ export default function Account() {
     <Screen>
       <Seo title="Your account | Al Mukarramah" description="Orders, tax invoices and membership." path="/account" noindex />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-        <H1 size={wide ? 44 : 32}>{t('greeting')}</H1>
+        <H1 size={wide ? 44 : 32}>{profile?.full_name ? `${t('greetingName')} ${profile.full_name.split(' ')[0]}` : t('greeting')}</H1>
       </View>
       <T size={14} color={colors.muted} style={{ marginBottom: 22 }}>{session.user.email}</T>
       {payStatus === 'paid' && <Notice tone="ok" text={t('paymentReceived')} />}
@@ -165,7 +188,8 @@ export default function Account() {
       <Card pad={wide ? 22 : 16} style={{ marginTop: 20, borderRadius: 20, gap: 4 }}>
         <T w={700} size={17} color={colors.navy} style={{ marginBottom: 8 }}>{t('myOrders')}</T>
         {orders.length === 0 ? <T color={colors.muted}>{t('noOrders')}</T> : orders.map((o, i) => (
-          <View key={o.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, borderTopWidth: i ? 1 : 0, borderColor: colors.lineSoft, flexWrap: 'wrap' }}>
+          <Pressable key={o.id} accessibilityRole="link" onPress={() => router.push({ pathname: '/order', params: { id: o.id } })}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, borderTopWidth: i ? 1 : 0, borderColor: colors.lineSoft, flexWrap: 'wrap' }}>
             <View style={{ width: 52 }}><Photo ratio={1} tone={toneFor(String(o.number))} style={{ borderRadius: 12 }} /></View>
             <View style={{ flex: 1, minWidth: 180, gap: 2 }}>
               <T w={700} size={15}>AM-{o.number}</T>
@@ -175,9 +199,42 @@ export default function Account() {
               {o.invoices?.[0] && <T size={12.5} color={colors.muted}>{t('invoice')}: {o.invoices[0].number}</T>}
             </View>
             <Tag label={t(`status_${o.status}` as Key) ?? o.status} tone={STATUS_TONE[o.status] ?? 'mute'} />
-          </View>
+            <Icon name={isRTL ? 'chevronLeft' : 'chevronRight'} size={18} color={colors.muted} />
+          </Pressable>
         ))}
+        {orders.length > 0 && <T size={12.5} color={colors.muted} style={{ marginTop: 6 }}>{t('guestOrdersNote')}</T>}
       </Card>
+
+      <View style={{ marginTop: 28, gap: 12 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+          <T w={700} size={17} color={colors.navy}>{t('ourApps')}</T>
+          <Button kind="text" size="sm" label={t('seeAllApps')} href="/apps" />
+        </View>
+        <View style={{ flexDirection: wide ? 'row' : 'column', gap: 14 }}>
+          {APPS.map((a) => <AppCard key={a.slug} a={a} compact />)}
+        </View>
+      </View>
+
+      {profile && (
+        <Card pad={wide ? 22 : 16} style={{ marginTop: 28, borderRadius: 20, gap: 4 }}>
+          <T w={700} size={17} color={colors.navy} style={{ marginBottom: 4 }}>{t('yourDetails')}</T>
+          <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 14 : 0 }}>
+            <View style={{ flex: 1 }}><Field label={t('fullName')} value={profile.full_name ?? ''} onChangeText={(v) => { setProfileSaved(false); setProfile({ ...profile, full_name: v }); }} autoComplete="name" /></View>
+            <View style={{ flex: 1 }}><Field label={t('phone')} value={profile.phone ?? ''} onChangeText={(v) => { setProfileSaved(false); setProfile({ ...profile, phone: v }); }} keyboardType="phone-pad" autoComplete="tel" dirLtr /></View>
+          </View>
+          <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: profile.marketing_opt_in }} onPress={() => { setProfileSaved(false); setProfile({ ...profile, marketing_opt_in: !profile.marketing_opt_in }); }}
+            style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingVertical: 8 }}>
+            <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: profile.marketing_opt_in ? colors.navy : colors.inputLine, backgroundColor: profile.marketing_opt_in ? colors.navy : colors.white, alignItems: 'center', justifyContent: 'center' }}>
+              {profile.marketing_opt_in && <Icon name="check" size={14} color={colors.white} />}
+            </View>
+            <T size={14} lh={1.5} style={{ flex: 1 }}>{t('marketingOptIn')}</T>
+          </Pressable>
+          <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center', marginTop: 4 }}>
+            <Button label={t('save')} size="sm" onPress={saveProfile} />
+            {profileSaved && <T size={13} color={colors.success} w={600}>{t('saved')}</T>}
+          </View>
+        </Card>
+      )}
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 24 }}>
         <T size={13} color={colors.muted} style={{ flexShrink: 1 }}>{t('accountOptional')}</T>
