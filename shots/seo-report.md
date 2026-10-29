@@ -8,9 +8,9 @@ og:title: Al Mukarramah | Premium Islamic Gifts from Madinah
 og:image: https://almukarramah.com/images/hero.jpg
 twitter:card: summary_large_image
 html lang/dir: lang="en"
-h1: Meaningful gifts, prepared in Madinah
+h1: Your deen and your dunya, in one home
 json-ld: Organization, WebSite, ItemList, FAQPage
-visible text without JS: 4995 chars: "Al Mukarramah | Premium Islamic Gifts from Madinah Delivering to : Saudi address SAR Premium Islamic gifting Meaningful gifts, prepared in Madinah Dates, oud, p…"
+visible text without JS: 5053 chars: "Al Mukarramah | Premium Islamic Gifts from Madinah Delivering to : Saudi address SAR Prepared in Madinah, for the whole Ummah Your deen and your dunya, in one h…"
 
 ## /collections/perfumes  (HTTP 200)
 title: Perfumes | Al Mukarramah
@@ -24,7 +24,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Perfumes
 json-ld: CollectionPage, ItemList, BreadcrumbList, FAQPage
-visible text without JS: 6061 chars: "Perfumes | Al Mukarramah Delivering to : Saudi address SAR Home / Shop / Perfumes Ahmed Al Maghribi · Official Saudi prices Perfumes Ahmed Al Maghribi eau de pa…"
+visible text without JS: 6050 chars: "Perfumes | Al Mukarramah Delivering to : Saudi address SAR Home / Shop / Perfumes Ahmed Al Maghribi · Official Saudi prices Perfumes Ahmed Al Maghribi eau de pa…"
 
 ## /collections/oud-oils  (HTTP 200)
 title: Oud and Perfume Oils | Al Mukarramah
@@ -38,7 +38,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Oud and Perfume Oils
 json-ld: CollectionPage, ItemList, BreadcrumbList, FAQPage
-visible text without JS: 2448 chars: "Oud and Perfume Oils | Al Mukarramah Delivering to : Saudi address SAR Home / Shop / Oud and Perfume Oils Ahmed Al Maghribi · Official Saudi prices Oud and Perf…"
+visible text without JS: 2437 chars: "Oud and Perfume Oils | Al Mukarramah Delivering to : Saudi address SAR Home / Shop / Oud and Perfume Oils Ahmed Al Maghribi · Official Saudi prices Oud and Perf…"
 
 ## /product/aam-zumar-60-ml  (HTTP 200)
 title: Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml | Al Mukarramah
@@ -52,7 +52,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml
 json-ld: Product, BreadcrumbList, FAQPage
-visible text without JS: 2737 chars: "Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml | Al Mukarramah Delivering to : Saudi address SAR Ahmed Al Maghribi Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml Ge…"
+visible text without JS: 2726 chars: "Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml | Al Mukarramah Delivering to : Saudi address SAR Ahmed Al Maghribi Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml Ge…"
 
 ## /product/kaaba-door-prayer-mat  (HTTP 200)
 title: Kaaba Door Prayer Mat, Black and Gold | Al Mukarramah
@@ -66,7 +66,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Kaaba Door Prayer Mat, Black and Gold
 json-ld: Product, BreadcrumbList, FAQPage
-visible text without JS: 2373 chars: "Kaaba Door Prayer Mat, Black and Gold | Al Mukarramah Delivering to : Saudi address SAR Al Mukarramah · Hajj Kaaba Door Prayer Mat, Black and Gold Prepared and …"
+visible text without JS: 2362 chars: "Kaaba Door Prayer Mat, Black and Gold | Al Mukarramah Delivering to : Saudi address SAR Al Mukarramah · Hajj Kaaba Door Prayer Mat, Black and Gold Prepared and …"
 
 ## /shop  (HTTP 200)
 title: All gifts | Al Mukarramah — Islamic gifts from Madinah
@@ -80,7 +80,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: All gifts
 json-ld: CollectionPage, ItemList, BreadcrumbList
-visible text without JS: 8479 chars: "All gifts | Al Mukarramah — Islamic gifts from Madinah Delivering to : Saudi address SAR Home / Shop All gifts Prepared and packed in Madinah, presented for gif…"
+visible text without JS: 8468 chars: "All gifts | Al Mukarramah — Islamic gifts from Madinah Delivering to : Saudi address SAR Home / Shop All gifts Prepared and packed in Madinah, presented for gif…"
 
 ## /membership  (HTTP 200)
 title: Membership | Al Mukarramah
@@ -94,7 +94,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Learn, give and save through the year
 json-ld: FAQPage
-visible text without JS: 888 chars: "Membership | Al Mukarramah Delivering to : Saudi address SAR Membership Learn, give and save through the year Join for the Quran Trail and Seerah Trail and memb…"
+visible text without JS: 877 chars: "Membership | Al Mukarramah Delivering to : Saudi address SAR Membership Learn, give and save through the year Join for the Quran Trail and Seerah Trail and memb…"
 
 ## /apps  (HTTP 200)
 title: Our apps | Al Mukarramah
@@ -108,7 +108,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Apps for learning and living the deen
 json-ld: SoftwareApplication, SoftwareApplication, BreadcrumbList
-visible text without JS: 2023 chars: "Our apps | Al Mukarramah Delivering to : Saudi address SAR Our apps Apps for learning and living the deen Al Mukarramah builds apps from Madinah for families an…"
+visible text without JS: 2012 chars: "Our apps | Al Mukarramah Delivering to : Saudi address SAR Our apps Apps for learning and living the deen Al Mukarramah builds apps from Madinah for families an…"
 
 ## /collections/prayer-mats  (HTTP 200)
 title: Prayer Mats | Al Mukarramah
@@ -122,7 +122,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Prayer Mats
 json-ld: CollectionPage, ItemList, BreadcrumbList, FAQPage
-visible text without JS: 1921 chars: "Prayer Mats | Al Mukarramah Delivering to : Saudi address SAR Home / Shop / Prayer Mats Prayer Mats Embroidered calligraphy and Haramain designs, prepared and p…"
+visible text without JS: 1910 chars: "Prayer Mats | Al Mukarramah Delivering to : Saudi address SAR Home / Shop / Prayer Mats Prayer Mats Embroidered calligraphy and Haramain designs, prepared and p…"
 
 ## /privacy  (HTTP 200)
 title: Privacy policy | Al Mukarramah
@@ -136,7 +136,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Privacy policy
 json-ld: NONE
-visible text without JS: 3167 chars: "Privacy policy | Al Mukarramah Delivering to : Saudi address SAR Privacy policy Last updated 29 October 2026 Al Mukarramah is a gift house in Madinah, Saudi Ara…"
+visible text without JS: 3156 chars: "Privacy policy | Al Mukarramah Delivering to : Saudi address SAR Privacy policy Last updated 29 October 2026 Al Mukarramah is a gift house in Madinah, Saudi Ara…"
 
 ## /terms  (HTTP 200)
 title: Terms of service | Al Mukarramah
@@ -150,7 +150,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Terms of service
 json-ld: NONE
-visible text without JS: 3053 chars: "Terms of service | Al Mukarramah Delivering to : Saudi address SAR Terms of service Last updated 29 October 2026 These terms apply when you shop at almukarramah…"
+visible text without JS: 3042 chars: "Terms of service | Al Mukarramah Delivering to : Saudi address SAR Terms of service Last updated 29 October 2026 These terms apply when you shop at almukarramah…"
 
 /robots.txt: HTTP 200, 760 bytes
 /sitemap.xml: HTTP 200, 74440 bytes, 148 URLs
