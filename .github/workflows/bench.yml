@@ -1,0 +1,29 @@
+# Benchmark screenshots of our site and premium houses, on bench/* branches only. Never deploys anything.
+name: Premium benchmark
+on:
+  push:
+    branches: ['bench/**']
+permissions:
+  contents: write
+jobs:
+  bench:
+    if: "!contains(github.event.head_commit.message, '[bench-result]')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save --legacy-peer-deps playwright@1.49.1 && npx playwright install --with-deps chromium
+      - name: Screenshots
+        env:
+          SITES: "almukarramah|https://almukarramah.com/,rolex|https://www.rolex.com/en-us,harrods|https://www.harrods.com/en-gb/,amouage|https://amouage.com/,cartier|https://www.cartier.com/en-gb/,hermes|https://www.hermes.com/uk/en/,ounass|https://www.ounass.ae/,bateel|https://bateel.com/,mfk|https://www.franciskurkdjian.com/int-en"
+        run: node scripts/bench.mjs bench
+      - name: Commit results
+        run: |
+          git config user.name "bench-bot"
+          git config user.email "bench-bot@users.noreply.github.com"
+          git add -f bench
+          git commit -m "Benchmark screenshots [bench-result]" || exit 0
+          git push
