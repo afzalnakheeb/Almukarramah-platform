@@ -6,7 +6,7 @@ import type { Lang } from './types';
 
 const en = {
   appName: 'Al Mukarramah',
-  logoLine: 'The Marketplace of Muslim Luxury',
+  logoLine: 'Treasures of the Ummah',
   tagline: 'Gifts from Madinah, delivered with care',
   occasionTitle: 'What’s the occasion?',
   forWhom: 'Who is it for?',
@@ -451,7 +451,7 @@ const en = {
 
 const ar: typeof en = {
   appName: 'المكرمة',
-  logoLine: 'سوق النفائس للمسلمين حول العالم',
+  logoLine: 'نفائس الأمة',
   tagline: 'هدايا من المدينة المنورة، تصلك بعناية',
   occasionTitle: 'ما المناسبة؟',
   forWhom: 'لمن الهدية؟',

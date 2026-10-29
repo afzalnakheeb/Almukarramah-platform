@@ -22,7 +22,7 @@ const LOGO_RATIO = 917 / 264;
 export const destIcon = (d: Destination): IconName => (d === 'saudi' ? 'house' : d === 'international' ? 'globe' : 'bed');
 
 /** The logo: emerald on light backgrounds, satin gold on dark ones (white). With line, the descriptor
- *  "The Marketplace of Muslim Luxury" sits under it in spaced capitals, which tells this house apart from the group's other work. */
+ *  "Treasures of the Ummah" (نفائس الأمة) sits under it in spaced capitals, which tells this house apart from the group's other work. */
 export function Logo({ height = 44, white, line }: { height?: number; white?: boolean; line?: boolean }) {
   const { t, isRTL } = useI18n();
   const img = <Image source={white ? LOGO_GOLD : LOGO} style={{ height, width: height * LOGO_RATIO }} contentFit="contain" accessibilityLabel={t('appName')} />;
