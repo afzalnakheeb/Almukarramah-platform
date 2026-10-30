@@ -11,7 +11,8 @@
     "build:web": "node scripts/build-catalogue.mjs && node scripts/build-intro.mjs && expo export --platform web",
     "typecheck": "tsc --noEmit",
     "fix-deps": "expo install --fix",
-    "vercel-install": "npm install --legacy-peer-deps && npx expo install --fix -- --legacy-peer-deps"
+    "vercel-install": "npm install --legacy-peer-deps && npx expo install --fix -- --legacy-peer-deps",
+    "icons": "node scripts/app-icons.mjs"
   },
   "dependencies": {
     "expo": "~57.0.0",
@@ -38,7 +39,11 @@
     "@expo-google-fonts/cormorant-garamond": "*",
     "@expo-google-fonts/manrope": "*",
     "@expo-google-fonts/amiri": "*",
-    "@expo-google-fonts/readex-pro": "*"
+    "@expo-google-fonts/readex-pro": "*",
+    "expo-apple-authentication": "*",
+    "expo-crypto": "*",
+    "expo-splash-screen": "*",
+    "expo-dev-client": "*"
   },
   "devDependencies": {
     "typescript": "*",

@@ -4,6 +4,7 @@ import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700
 import { ReadexPro_400Regular, ReadexPro_500Medium, ReadexPro_600SemiBold } from '@expo-google-fonts/readex-pro';
 import { useFonts } from 'expo-font';
 import { router, Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
@@ -18,6 +19,13 @@ import { PrefsProvider } from '@/lib/prefs';
 import { initPurchases } from '@/lib/purchases';
 import { SessionProvider, useSession } from '@/lib/session';
 import { colors } from '@/theme';
+
+// Apps: the launch screen (ivory with the logo, app.json) stays until the fonts are ready, then fades away, so the
+// first thing after it is the finished page rather than a blank one.
+if (Platform.OS !== 'web') {
+  SplashScreen.preventAutoHideAsync().catch(() => undefined);
+  SplashScreen.setOptions({ duration: 300, fade: true });
+}
 
 function Boot() {
   const { session } = useSession();
@@ -51,8 +59,12 @@ export default function RootLayout() {
     const id = setTimeout(() => setTimedOut(true), 2500);
     return () => clearTimeout(id);
   }, []);
+  const fontsReady = fontsLoaded || !!fontError || timedOut;
+  useEffect(() => {
+    if (Platform.OS !== 'web' && fontsReady) SplashScreen.hideAsync().catch(() => undefined);
+  }, [fontsReady]);
   // On the website the page renders straight away (pre-rendered HTML must never be blank); the apps wait briefly for fonts.
-  if (Platform.OS !== 'web' && !fontsLoaded && !fontError && !timedOut) return <View style={{ flex: 1, backgroundColor: colors.ivory }} />;
+  if (Platform.OS !== 'web' && !fontsReady) return <View style={{ flex: 1, backgroundColor: colors.ivory }} />;
 
   const web = Platform.OS === 'web';
   return (
