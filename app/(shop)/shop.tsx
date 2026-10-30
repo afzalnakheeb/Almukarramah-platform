@@ -145,7 +145,7 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
     <Sheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title={t('filterSort')}>
       <ScrollView style={{ maxHeight: 460 }} contentContainerStyle={{ paddingBottom: 8 }}>
         {group(t('sortBy'), (['rec', 'low', 'high'] as Sort[]).map((k) => (
-          <FilterOption key={k} label={t(k === 'rec' ? 'sortRec' : k === 'low' ? 'sortLow' : 'sortHigh')} active={sort === k} onPress={() => setSort(k)} />
+          <FilterOption radio key={k} label={t(k === 'rec' ? 'sortRec' : k === 'low' ? 'sortLow' : 'sortHigh')} active={sort === k} onPress={() => setSort(k)} />
         )), true)}
         {frag ? (hasSprays ? group(t('fragType'), shipOptions) : null) : (
           <>

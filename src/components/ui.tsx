@@ -239,13 +239,19 @@ export function Chip({ label, onPress, active, size = 'md' }: { label: string; o
 }
 
 /** A filter row for the desktop sidebar: a small square that takes a green tick, then the label. */
-export function FilterOption({ label, active, onPress, count }: { label: string; active?: boolean; onPress?: () => void; count?: number }) {
+export function FilterOption({ label, active, onPress, count, radio }: { label: string; active?: boolean; onPress?: () => void; count?: number; radio?: boolean }) {
   return (
-    <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: !!active }} onPress={onPress} {...data({ opt: active ? 'on' : 'off' })}
+    <Pressable accessibilityRole={radio ? 'radio' : 'checkbox'} accessibilityState={{ checked: !!active }} onPress={onPress} {...data({ opt: active ? 'on' : 'off' })}
       style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 34 }}>
-      <View style={{ width: 14, height: 14, borderWidth: 1, borderColor: active ? colors.emerald : colors.inputLine, backgroundColor: active ? colors.emerald : colors.porcelain, alignItems: 'center', justifyContent: 'center' }}>
-        {active ? <Icon name="check" size={11} color={colors.ivory} stroke={2.2} /> : null}
-      </View>
+      {radio ? (
+        <View style={{ width: 15, height: 15, borderRadius: 999, borderWidth: 1, borderColor: active ? colors.emerald : colors.inputLine, backgroundColor: colors.porcelain, alignItems: 'center', justifyContent: 'center' }}>
+          {active ? <View style={{ width: 7, height: 7, borderRadius: 999, backgroundColor: colors.emerald }} /> : null}
+        </View>
+      ) : (
+        <View style={{ width: 14, height: 14, borderWidth: 1, borderColor: active ? colors.emerald : colors.inputLine, backgroundColor: active ? colors.emerald : colors.porcelain, alignItems: 'center', justifyContent: 'center' }}>
+          {active ? <Icon name="check" size={11} color={colors.ivory} stroke={2.2} /> : null}
+        </View>
+      )}
       <T size={13.5} w={active ? 500 : 400} color={active ? colors.navy : colors.body} style={{ flex: 1 }}>{label}</T>
       {count !== undefined ? <T size={12} num color={colors.muted}>{count}</T> : null}
     </Pressable>
@@ -297,6 +303,9 @@ export function Price({ product, style, size = 15 }: { product: Product; style?:
  *  the brand is shown above the name instead, the way houses present a maker. */
 const BRAND_AR: Record<string, string> = { 'Ahmed Al Maghribi': 'أحمد المغربي' };
 export const brandName = (brand: string, ar: boolean) => (ar ? BRAND_AR[brand] ?? brand : brand);
+/** The maker named at the start (or, in Arabic, the end) of a product name, when it is one of the houses we carry. */
+export const makerOf = (name: string): string | undefined =>
+  Object.keys(BRAND_AR).find((b) => name.startsWith(b) || name.includes(BRAND_AR[b]));
 
 export function shortName(name: string, brand?: string | null) {
   let n = name;

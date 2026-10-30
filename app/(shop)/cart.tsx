@@ -4,7 +4,7 @@ import React from 'react';
 import { Pressable, View } from 'react-native';
 import { destIcon, Screen } from '@/components/chrome';
 import { data } from '@/components/motion';
-import { Button, Divider, EmptyState, Eyebrow, Field, H1, Photo, Row, Serif, Stepper, T, Tag, useWide } from '@/components/ui';
+import { brandName, Button, Divider, EmptyState, Eyebrow, Field, H1, makerOf, Photo, Row, Serif, shortName, Stepper, T, useWide } from '@/components/ui';
 import { Icon } from '@/components/icons';
 import { useCart } from '@/lib/cart';
 import { useI18n, type Key } from '@/lib/i18n';
@@ -95,7 +95,10 @@ export default function CartScreen() {
                 </Pressable>
                 <View style={{ flex: 1, gap: 8 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14 }}>
-                    <Serif size={wide ? 22 : 18} style={{ flex: 1 }}>{pick(l, 'name')}</Serif>
+                    <View style={{ flex: 1, gap: 4 }}>
+                      {makerOf(pick(l, 'name')) ? <Eyebrow size={9.5}>{brandName(makerOf(pick(l, 'name'))!, lang === 'ar')}</Eyebrow> : null}
+                      <Serif size={wide ? 22 : 18}>{shortName(pick(l, 'name'), makerOf(pick(l, 'name')))}</Serif>
+                    </View>
                     <T w={500} size={wide ? 15 : 14} num color={colors.navy}>{money(l.unitPriceSar * l.quantity)}</T>
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -116,7 +119,7 @@ export default function CartScreen() {
           <View style={{ marginTop: wide ? 40 : 28, gap: 14 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <Serif role="h2" size={wide ? 30 : 24}>{t('gifting')}</Serif>
-              <Tag label={t('optional')} />
+              <T w={500} size={10.5} caps color={colors.muted} style={{ marginTop: 4 }}>{t('optional')}</T>
             </View>
             <Field label={t('giftMessage')} hint={`${t('giftMessageHint')} · ${giftMessage.length}/200`} value={giftMessage} onChangeText={(v) => setGiftMessage(v.slice(0, 200))} multiline maxLength={200} />
             <AskAssistant label={t('writeForMe')} />

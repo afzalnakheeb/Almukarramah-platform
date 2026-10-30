@@ -14,6 +14,9 @@ a,[role="button"],[role="link"],[role="tab"],[role="checkbox"],[role="radio"],[d
 [id]:not(#root){scroll-margin-top:112px}
 ::selection{background:${colors.champagne};color:${colors.ink}}
 html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+/* typesetting: headings balanced (no lone word on a last line), running text without orphans */
+h1,h2,h3,[role="heading"]{text-wrap:balance}
+[dir="auto"]{text-wrap:pretty}
 
 /* focus: a fine Madinah-green ring for keyboard users, never for mouse clicks */
 :focus{outline:none}

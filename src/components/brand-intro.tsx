@@ -72,7 +72,6 @@ function BrandIntroWeb() {
     // A very slow script load: the dark field has already faded (failsafe in +html.tsx); do not start late.
     if (!forced && typeof performance !== 'undefined' && performance.now() > 3300) { html.removeAttribute('data-intro'); return; }
     const freeze = q && /^\d+(\.\d+)?$/.test(q) ? parseFloat(q) : undefined;
-    html.setAttribute('data-intro', 'live');
     setMode({ freeze });
   }, []);
 
@@ -131,8 +130,8 @@ function BrandIntroWeb() {
       if (lineBox && lineRule) {
         const hasLine = !!document.querySelector('[data-brandline]') && hasSlot;
         const f = S / g0.fs;
-        const L = lockup(LOGO_H * g0.fs, isRTL);
-        lineBox.style.transform = `translate(${(X + (LOGO_W * S) / 2).toFixed(2)}px, ${(Y + LOGO_H * S + L.gap * f).toFixed(2)}px) scale(${f.toFixed(5)}) translateX(-50%)`;
+        const gap = lockup(LOGO_H * g0.fs).gap; // the same in both languages
+        lineBox.style.transform = `translate(${(X + (LOGO_W * S) / 2).toFixed(2)}px, ${(Y + LOGO_H * S + gap * f).toFixed(2)}px) scale(${f.toFixed(5)}) translateX(-50%)`;
         lineBox.style.opacity = String(io(r(tt, 6.0, 6.5)) * (hasLine ? 1 : 1 - r(tt, 6.8, 7.15)));
         lineRule.style.transform = `scaleX(${eo(r(tt, 6.0, 6.6)).toFixed(4)})`;
         // the rule reads 1.5 px in the large lock-up and lands as the header's 1 px hairline
@@ -157,7 +156,10 @@ function BrandIntroWeb() {
       if (!hasSlot) el.style.opacity = String(1 - io(r(tt, 7.1, 7.7)));
     };
 
+    // The overlay has painted its dark field: the pre-paint cover (+html.tsx) can go, and the header's logo stays
+    // hidden until the intro's logo lands on it.
     const html = document.documentElement;
+    html.setAttribute('data-intro', 'live');
     let raf = 0;
     let done = false;
     const finish = (skip: boolean) => {
@@ -201,7 +203,7 @@ function BrandIntroWeb() {
       window.removeEventListener('wheel', skip);
       window.removeEventListener('touchstart', skip);
     };
-  }, [mode, isRTL]);
+  }, [mode]); // the language may settle just after the start: React updates the tagline, the timeline runs on
 
   if (!mode) return null;
   const W = typeof window !== 'undefined' ? window.innerWidth : 1440;
