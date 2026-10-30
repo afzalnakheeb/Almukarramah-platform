@@ -208,6 +208,20 @@ h1: NONE
 json-ld: NONE
 visible text without JS: 0 chars: "…"
 
+## /seller/orders  (HTTP 200)
+title: 
+description: undefined
+robots: -
+canonical: undefined
+hreflang: -
+og:title: undefined
+og:image: undefined
+twitter:card: undefined
+html lang/dir: lang="en"
+h1: NONE
+json-ld: NONE
+visible text without JS: 0 chars: "…"
+
 ## /seller/product?id=demo-blocked  (HTTP 200)
 title: 
 description: undefined
