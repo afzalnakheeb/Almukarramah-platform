@@ -46,6 +46,20 @@ try {
   data = JSON.parse(readFileSync(SNAPSHOT, 'utf8'));
 }
 
+// The seller handbook (category tree, policies, the Islamic standard): refreshed from the live database once the
+// marketplace is switched on; until then the committed snapshot (exported from the migrations) is used.
+try {
+  if (!URL_ || !KEY) throw new Error('Supabase env not set');
+  const res = await fetch(`${URL_}/rest/v1/rpc/mp_guidance`, { method: 'POST', headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' }, body: '{}' });
+  if (!res.ok) throw new Error(String(res.status));
+  const g = await res.json();
+  if (!g?.categories?.length) throw new Error('empty');
+  writeFileSync(join(root, 'src/generated/market-guidance.json'), JSON.stringify({ ...g, generated_at: new Date().toISOString() }, null, 1) + '\n');
+  console.log(`seller handbook snapshot: ${g.categories.length} categories, ${g.rules.length} rules`);
+} catch (e) {
+  console.warn(`seller handbook snapshot skipped (${e.message}); using the committed one`);
+}
+
 // Partner photos (e.g. Ahmed Al Maghribi, used with permission) are fetched from the brand's server at build time,
 // resized and served from our own domain, so pages never depend on someone else's server.
 async function mirrorRemoteImages() {
@@ -83,7 +97,8 @@ const abs = (p) => (p?.startsWith('http') ? p : `${SITE}${p}`);
 const sar = (h) => (h / 100).toFixed(2);
 
 // sitemap.xml (with image extension)
-const pages = ['/', '/shop', '/fashion', '/sellers', '/sell', '/sell/guidelines', '/tailoring/measure', '/apps', '/membership', '/concierge', '/apps/recite-with-me', '/apps/seerah-trails', '/privacy', '/terms'];
+const pages = ['/', '/shop', '/fashion', '/sellers', '/sell', '/sell/guidelines', '/sell/categories', '/sell/islamic-standard', '/sell/premium-standard',
+  '/sell/photos', '/sell/prohibited', '/tailoring/measure', '/apps', '/membership', '/concierge', '/apps/recite-with-me', '/apps/seerah-trails', '/privacy', '/terms'];
 const urls = [
   ...pages.map((p) => `<url><loc>${SITE}${p}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>${p === '/' ? '1.0' : '0.6'}</priority></url>`),
   ...categories.map((c) => `<url><loc>${SITE}/collections/${c.slug}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>${c.image ? `<image:image><image:loc>${esc(abs(c.image))}</image:loc></image:image>` : ''}</url>`),

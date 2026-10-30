@@ -1,0 +1,4379 @@
+{
+ "rules": [
+  {
+   "code": "alcohol_drinks",
+   "level": "prohibited",
+   "severity": "hard",
+   "title_ar": "المشروبات الكحولية",
+   "title_en": "Alcoholic drinks",
+   "guidance_ar": "لا مشروبات كحولية ولا ما صُنع لشربها. أما العطر المحتوي على الكحول فهو عطر لا شراب، ومسموح في فئة العطور البخاخة (داخل السعودية فقط).",
+   "guidance_en": "No alcoholic drinks, and nothing made for drinking alcohol. Alcohol-based perfume is a fragrance, not a drink: it is allowed under Perfume sprays (Saudi Arabia only).",
+   "accepted_examples": [
+    {
+     "ar": "ماء عطر يحتوي على كحول مُدرج بصدق على أنه كحولي",
+     "en": "An eau de parfum that contains alcohol, listed honestly as alcohol-based"
+    }
+   ],
+   "rejected_examples": [
+    {
+     "ar": "زجاجة نبيذ أو طقم دورق ويسكي",
+     "en": "A bottle of wine or a whisky decanter set"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "pork_non_halal",
+   "level": "prohibited",
+   "severity": "hard",
+   "title_ar": "لحم الخنزير والأطعمة غير الحلال",
+   "title_en": "Pork and non-halal food",
+   "guidance_ar": "لا لحم خنزير ولا منتجاته ولا أي طعام غير حلال. والأطعمة التي تحتوي على مكونات حيوانية (كالجيلاتين) تحتاج إلى شهادة حلال.",
+   "guidance_en": "No pork, pork products or food that is not halal. Food containing animal ingredients (such as gelatine) needs a halal certificate.",
+   "accepted_examples": [],
+   "rejected_examples": [
+    {
+     "ar": "حلويات مصنوعة بجيلاتين الخنزير",
+     "en": "Sweets made with pork gelatine"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "gambling",
+   "level": "prohibited",
+   "severity": "hard",
+   "title_ar": "القمار",
+   "title_en": "Gambling",
+   "guidance_ar": "لا شيء مما صُنع للقمار أو المراهنة.",
+   "guidance_en": "Nothing made for gambling or betting.",
+   "accepted_examples": [],
+   "rejected_examples": [
+    {
+     "ar": "رقائق البوكر أو عجلات الروليت أو منتجات اليانصيب",
+     "en": "Poker chips, roulette wheels or lottery products"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "drugs",
+   "level": "prohibited",
+   "severity": "severe",
+   "title_ar": "المخدرات",
+   "title_en": "Drugs",
+   "guidance_ar": "لا مخدرات ولا ما يُباع لتعاطيها.",
+   "guidance_en": "No drugs, narcotics or anything sold for their use.",
+   "accepted_examples": [],
+   "rejected_examples": [
+    {
+     "ar": "منتجات القنب أو الـCBD أو أدوات تعاطيها",
+     "en": "Cannabis or CBD products, or smoking paraphernalia for them"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "weapons",
+   "level": "prohibited",
+   "severity": "severe",
+   "title_ar": "الأسلحة",
+   "title_en": "Weapons",
+   "guidance_ar": "لا أسلحة نارية ولا ذخيرة ولا سكاكين قتالية ولا أجهزة صعق أو بخاخات. أما السيوف والخناجر التراثية فقرارها لفريقنا (انظر المنتجات المقيّدة).",
+   "guidance_en": "No firearms, ammunition, combat knives, stun devices or sprays. Ceremonial swords and khanjars are a staff decision (see restricted items).",
+   "accepted_examples": [],
+   "rejected_examples": [
+    {
+     "ar": "مسدس مقلّد أو سكين تكتيكية",
+     "en": "A replica pistol or a tactical knife"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "adult_immodest",
+   "level": "prohibited",
+   "severity": "severe",
+   "title_ar": "المنتجات والصور غير المحتشمة أو الخاصة بالبالغين",
+   "title_en": "Adult or immodest products and imagery",
+   "guidance_ar": "لا منتجات للبالغين، ولا صور غير محتشمة في أي مكان: لا عري ولا ملابس كاشفة أو ضيقة ولا أوضاع موحية ولا استخدام النساء عارضاتٍ للتسويق.",
+   "guidance_en": "No adult products, and no immodest imagery anywhere: no nudity, revealing or tight clothing, suggestive poses, or women used as marketing models.",
+   "accepted_examples": [
+    {
+     "ar": "عباية على مجسّم شفاف",
+     "en": "An abaya on a ghost mannequin"
+    }
+   ],
+   "rejected_examples": [
+    {
+     "ar": "عطر مصوّر مع امرأة بملابس كاشفة",
+     "en": "A perfume photographed with a woman in revealing clothes"
+    },
+    {
+     "ar": "فستان شفاف أو ضيّق",
+     "en": "A see-through or tight dress"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "idols_other_worship",
+   "level": "prohibited",
+   "severity": "hard",
+   "title_ar": "الأصنام وما يُستعمل لعبادة غير الله",
+   "title_en": "Idols and items for the worship of other faiths",
+   "guidance_ar": "لا أصنام ولا تماثيل آلهة ولا ما صُنع لعبادة غير الله أو طقوسها.",
+   "guidance_en": "No idols, statues of deities or items made for the worship or rituals of other faiths.",
+   "accepted_examples": [],
+   "rejected_examples": [
+    {
+     "ar": "تمثال بوذا أو صليب",
+     "en": "A Buddha statue or a crucifix"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "sorcery_fortune",
+   "level": "prohibited",
+   "severity": "hard",
+   "title_ar": "السحر والكهانة",
+   "title_en": "Sorcery and fortune-telling",
+   "guidance_ar": "لا شيء مما يُستعمل للسحر أو الكهانة أو التنجيم، ولا ادعاء أن قطعة تجلب الحظ أو تدفع الضر.",
+   "guidance_en": "No items for sorcery, magic, fortune-telling or astrology, and no claims that an item brings luck or wards off harm.",
+   "accepted_examples": [],
+   "rejected_examples": [
+    {
+     "ar": "بطاقات تاروت أو أدوات سحر أو تعويذة أبراج",
+     "en": "Tarot cards, a spell kit or a horoscope charm"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "counterfeit",
+   "level": "prohibited",
+   "severity": "hard",
+   "title_ar": "المنتجات المقلّدة",
+   "title_en": "Counterfeits",
+   "guidance_ar": "لا منتجات مقلّدة أو مستنسخة أو «مستوحاة» أو «بديلة»، ولا علامة تجارية غير مفوَّض ببيعها.",
+   "guidance_en": "No fakes, replicas, \"inspired by\" or \"dupe\" products, and no brand you are not authorised to sell.",
+   "accepted_examples": [],
+   "rejected_examples": [
+    {
+     "ar": "عطر «مستوحى من» عطر مصمم، أو حقيبة بشعار منسوخ",
+     "en": "A perfume \"inspired by\" a designer fragrance, or a bag with a copied logo"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "zamzam",
+   "level": "prohibited",
+   "severity": "hard",
+   "title_ar": "ماء زمزم",
+   "title_en": "Zamzam water",
+   "guidance_ar": "لا يُباع ماء زمزم في المكرمة.",
+   "guidance_en": "Zamzam water is not sold on Al Mukarramah.",
+   "accepted_examples": [],
+   "rejected_examples": [
+    {
+     "ar": "ماء زمزم معبأ أو أطقم هدايا بماء زمزم",
+     "en": "Bottled Zamzam water or Zamzam gift sets"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "sacred_text_misuse",
+   "level": "prohibited",
+   "severity": "severe",
+   "title_ar": "النصوص المقدسة في مواضع الامتهان",
+   "title_en": "Sacred text where it is disrespected",
+   "guidance_ar": "لا تظهر الآيات القرآنية ولا اسم الله ولا اسم النبي ﷺ أبدًا على ما يُفرش على الأرض أو يُلبس في القدمين أو يُستعمل في دورات المياه أو ما يُرجّح رميه.",
+   "guidance_en": "Quran verses, the name of Allah or the name of the Prophet ﷺ must never appear on things for the floor, the feet or the bathroom, or on things likely to be thrown away.",
+   "accepted_examples": [
+    {
+     "ar": "لوحة خط لآية الكرسي في إطار للتعليق",
+     "en": "Framed calligraphy of Ayat al-Kursi to hang on a wall"
+    }
+   ],
+   "rejected_examples": [
+    {
+     "ar": "سجادة أرضية أو ممسحة أرجل أو دواسة حمّام عليها آية",
+     "en": "A floor rug, doormat or bath mat with a verse"
+    },
+    {
+     "ar": "أطباق أو مناديل أو ورق تغليف للاستعمال مرة واحدة مطبوع عليها اسم الله",
+     "en": "Disposable plates, napkins or gift wrap printed with the name of Allah"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "gold_silk_men",
+   "level": "prohibited",
+   "severity": "hard",
+   "title_ar": "الذهب والحرير للرجال",
+   "title_en": "Gold jewellery and silk garments for men",
+   "guidance_ar": "لا مجوهرات ذهبية ولا ملابس من الحرير الخالص للرجال. وخواتم الفضة للرجال مرحّب بها.",
+   "guidance_en": "No gold jewellery and no pure-silk garments for men. Silver rings for men are welcome.",
+   "accepted_examples": [
+    {
+     "ar": "خاتم رجالي من الفضة ٩٢٥ بحجر عقيق",
+     "en": "A men's sterling silver ring with an agate stone"
+    }
+   ],
+   "rejected_examples": [
+    {
+     "ar": "خاتم رجالي من الذهب عيار ٢١",
+     "en": "A men's 21-karat gold ring"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "tobacco_shisha_vapes",
+   "level": "prohibited",
+   "severity": "hard",
+   "title_ar": "التبغ والشيشة والسجائر الإلكترونية",
+   "title_en": "Tobacco, shisha and vapes",
+   "guidance_ar": "لا تبغ ولا شيشة ولا سجائر إلكترونية ولا ملحقاتها.",
+   "guidance_en": "No tobacco, shisha, vapes or their accessories.",
+   "accepted_examples": [],
+   "rejected_examples": [
+    {
+     "ar": "طقم شيشة أو سجائر إلكترونية أو معسّل",
+     "en": "A shisha set, vape pens or flavoured tobacco"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "prophet_depictions",
+   "level": "prohibited",
+   "severity": "severe",
+   "title_ar": "تصوير الأنبياء والصحابة",
+   "title_en": "Depictions of prophets and Companions",
+   "guidance_ar": "لا صور ولا مجسمات ولا رسومات لأي نبي أو لآل بيت النبي أو للصحابة.",
+   "guidance_en": "No images, figures or illustrations of any prophet, the Prophet's family or the Companions.",
+   "accepted_examples": [],
+   "rejected_examples": [
+    {
+     "ar": "كتاب أطفال يرسم وجه نبي",
+     "en": "A children's book illustrating a prophet's face"
+    }
+   ],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "extremist_sectarian",
+   "level": "prohibited",
+   "severity": "hard",
+   "title_ar": "المحتوى المتطرف أو الطائفي أو المسيء",
+   "title_en": "Extremist, sectarian or offensive material",
+   "guidance_ar": "لا محتوى متطرفًا أو طائفيًا أو سياسيًا، ولا ما يسخر من أي دين أو قوم.",
+   "guidance_en": "No extremist, sectarian or political material, and nothing that mocks any faith or people.",
+   "accepted_examples": [],
+   "rejected_examples": [],
+   "needs_scholar_confirmation": false
+  },
+  {
+   "code": "musical_instruments",
+   "level": "restricted",
+   "severity": "hard",
+   "title_ar": "الآلات الموسيقية",
+   "title_en": "Musical instruments",
+   "guidance_ar": "الآلات الموسيقية قرارها لفريقنا إلى أن يؤكد عالمنا المعيار. والدف مقبول على نطاق واسع للأعراس والأعياد.",
+   "guidance_en": "Musical instruments are a staff decision while our scholar confirms the standard. The daff is widely accepted for weddings and Eid.",
+   "accepted_examples": [],
+   "rejected_examples": [],
+   "needs_scholar_confirmation": true
+  },
+  {
+   "code": "figurines_living_beings",
+   "level": "restricted",
+   "severity": "hard",
+   "title_ar": "المجسمات والدمى وصور ذوات الأرواح",
+   "title_en": "Figurines, dolls and images of living beings",
+   "guidance_ar": "الدمى والمجسمات والألعاب ذات الوجوه، والصور الزخرفية للناس أو الحيوانات، قرارها لفريقنا إلى أن يؤكد عالمنا المعيار.",
+   "guidance_en": "Dolls, figurines and toys with faces, and decorative images of people or animals, are a staff decision while our scholar confirms the standard.",
+   "accepted_examples": [
+    {
+     "ar": "مكعبات حروف عربية خشبية بلا وجوه",
+     "en": "Wooden Arabic-letter blocks without faces"
+    }
+   ],
+   "rejected_examples": [],
+   "needs_scholar_confirmation": true
+  },
+  {
+   "code": "amulets_taweez",
+   "level": "restricted",
+   "severity": "hard",
+   "title_ar": "التمائم والتعاويذ",
+   "title_en": "Amulets and ta'weez",
+   "guidance_ar": "التمائم والتعاويذ وما يُعلّق لدفع العين قرارها لفريقنا إلى أن يؤكد عالمنا المعيار، ولا تُقبل أبدًا ادعاءات الحماية أو الشفاء.",
+   "guidance_en": "Amulets, ta'weez and \"evil eye\" items are a staff decision while our scholar confirms the standard. Claims of protection or healing are never allowed.",
+   "accepted_examples": [],
+   "rejected_examples": [],
+   "needs_scholar_confirmation": true
+  },
+  {
+   "code": "antiques",
+   "level": "restricted",
+   "severity": "hard",
+   "title_ar": "القطع الأثرية",
+   "title_en": "Antiques",
+   "guidance_ar": "تحتاج القطع الأثرية إلى وثائق المصدر وأي تصاريح تصدير، ويقرر فريقنا في كل قطعة.",
+   "guidance_en": "Antiques need provenance documents and any export permits; our team decides each one.",
+   "accepted_examples": [],
+   "rejected_examples": [],
+   "needs_scholar_confirmation": true
+  },
+  {
+   "code": "kiswah_claims",
+   "level": "restricted",
+   "severity": "hard",
+   "title_ar": "قطع يُدّعى أنها من الكسوة",
+   "title_en": "Claimed Kiswah pieces",
+   "guidance_ar": "القطع التي يُدّعى أنها من كسوة الكعبة أو من الحرمين تحتاج إلى وثائق رسمية، ويقرر فريقنا في كل قطعة.",
+   "guidance_en": "Pieces claimed to be from the Kiswah of the Kaaba or the Haramain need official documents; our team decides each one.",
+   "accepted_examples": [
+    {
+     "ar": "لوحة خط مستوحاة من الكسوة موصوفة بوضوح بأنها عمل فني جديد",
+     "en": "Calligraphy inspired by the Kiswah, clearly described as a new artwork"
+    }
+   ],
+   "rejected_examples": [],
+   "needs_scholar_confirmation": true
+  },
+  {
+   "code": "books_content_review",
+   "level": "restricted",
+   "severity": "hard",
+   "title_ar": "الكتب التي تحتاج إلى مراجعة المحتوى",
+   "title_en": "Books needing content review",
+   "guidance_ar": "يراجع فريقنا كل كتاب قبل نشره.",
+   "guidance_en": "Every book is checked by our team before it goes live.",
+   "accepted_examples": [],
+   "rejected_examples": [],
+   "needs_scholar_confirmation": true
+  },
+  {
+   "code": "ceremonial_blades",
+   "level": "restricted",
+   "severity": "hard",
+   "title_ar": "السيوف والخناجر التراثية",
+   "title_en": "Ceremonial swords and khanjars",
+   "guidance_ar": "السيوف والخناجر التقليدية المباعة قطعًا تراثية قرارها لفريقنا.",
+   "guidance_en": "Traditional swords and khanjars sold as heritage pieces are a staff decision.",
+   "accepted_examples": [],
+   "rejected_examples": [],
+   "needs_scholar_confirmation": true
+  }
+ ],
+ "permits": [
+  {
+   "label_ar": "إدراج في نظام eCosma لدى هيئة الغذاء والدواء (العطور ومستحضرات التجميل)",
+   "label_en": "SFDA eCosma listing (perfume and cosmetics)",
+   "permit_key": "sfda_ecosma",
+   "to_country": "SA",
+   "category_slugs": [
+    "perfumes",
+    "attar",
+    "oud-oils",
+    "perfume-sprays",
+    "halal-cosmetics",
+    "natural-care-cosmetics"
+   ]
+  },
+  {
+   "label_ar": "تسجيل الغذاء لدى هيئة الغذاء والدواء",
+   "label_en": "SFDA food registration",
+   "permit_key": "sfda_food",
+   "to_country": "SA",
+   "category_slugs": [
+    "dates",
+    "honey",
+    "arabic-coffee",
+    "sweets",
+    "black-seed-oil",
+    "dates-food"
+   ]
+  }
+ ],
+ "settings": {
+  "strike_limit": 3,
+  "upload_types": [
+   "image/jpeg",
+   "image/png",
+   "image/webp"
+  ],
+  "perf_thresholds": {
+   "min_orders": 10,
+   "return_bps": {
+    "warn": 1000,
+    "suspend": 2500
+   },
+   "rating_x100": {
+    "warn": 400,
+    "suspend": 350
+   },
+   "cancellation_bps": {
+    "warn": 250,
+    "suspend": 1000
+   },
+   "late_shipment_bps": {
+    "warn": 500,
+    "suspend": 1500
+   }
+  },
+  "quality_weights": {
+   "bilingual": 15,
+   "attributes": 20,
+   "photo_clean": 20,
+   "photo_count": 20,
+   "photo_background": 10,
+   "photo_resolution": 15
+  },
+  "max_upload_bytes": 10485760,
+  "perf_window_days": 90,
+  "min_quality_score": 70,
+  "default_min_photos": 3,
+  "strike_window_days": 90,
+  "price_change_review_bps": 3000,
+  "default_min_long_side_px": 1600,
+  "allow_modest_models_in_fashion": false
+ },
+ "documents": [
+  {
+   "code": "commercial_registration",
+   "sort": 1,
+   "scope": "kyc",
+   "help_ar": null,
+   "help_en": null,
+   "label_ar": "السجل التجاري",
+   "label_en": "Commercial registration (CR)"
+  },
+  {
+   "code": "vat_certificate",
+   "sort": 2,
+   "scope": "kyc",
+   "help_ar": null,
+   "help_en": null,
+   "label_ar": "شهادة التسجيل في ضريبة القيمة المضافة",
+   "label_en": "VAT registration certificate"
+  },
+  {
+   "code": "trade_licence",
+   "sort": 3,
+   "scope": "kyc",
+   "help_ar": null,
+   "help_en": null,
+   "label_ar": "الرخصة التجارية",
+   "label_en": "Trade licence"
+  },
+  {
+   "code": "trn_certificate",
+   "sort": 4,
+   "scope": "kyc",
+   "help_ar": null,
+   "help_en": null,
+   "label_ar": "شهادة رقم التسجيل الضريبي",
+   "label_en": "Tax registration number (TRN) certificate"
+  },
+  {
+   "code": "commercial_licence",
+   "sort": 5,
+   "scope": "kyc",
+   "help_ar": null,
+   "help_en": null,
+   "label_ar": "الرخصة التجارية",
+   "label_en": "Commercial licence"
+  },
+  {
+   "code": "gstin_certificate",
+   "sort": 6,
+   "scope": "kyc",
+   "help_ar": null,
+   "help_en": null,
+   "label_ar": "شهادة التسجيل في ضريبة السلع والخدمات (GSTIN)",
+   "label_en": "GST registration (GSTIN)"
+  },
+  {
+   "code": "iec_certificate",
+   "sort": 7,
+   "scope": "kyc",
+   "help_ar": null,
+   "help_en": null,
+   "label_ar": "رمز المستورد والمصدّر (IEC)",
+   "label_en": "Importer-Exporter Code (IEC)"
+  },
+  {
+   "code": "bank_letter",
+   "sort": 8,
+   "scope": "kyc",
+   "help_ar": "يثبت أن اسم صاحب الحساب يطابق الكيان النظامي.",
+   "help_en": "Shows the account holder name matches your legal entity.",
+   "label_ar": "خطاب بنكي أو شهادة الآيبان",
+   "label_en": "Bank letter or IBAN certificate"
+  },
+  {
+   "code": "authorised_distributor_letter",
+   "sort": 20,
+   "scope": "brand",
+   "help_ar": "مطلوب لكل علامة تجارية لا تملكها: خطاب موقّع من مالك العلامة يسمّيك بائعًا معتمدًا.",
+   "help_en": "Needed for every brand you do not own: a signed letter from the brand owner naming you as an authorised seller.",
+   "label_ar": "خطاب الموزّع المعتمد",
+   "label_en": "Authorised distributor letter"
+  },
+  {
+   "code": "brand_registration",
+   "sort": 21,
+   "scope": "brand",
+   "help_ar": "لعلامتك التجارية الخاصة.",
+   "help_en": "For your own brand.",
+   "label_ar": "شهادة تسجيل العلامة التجارية",
+   "label_en": "Trademark registration"
+  },
+  {
+   "code": "halal_certificate",
+   "sort": 30,
+   "scope": "product",
+   "help_ar": "صادرة من جهة اعتماد حلال معترف بها وسارية عند الإدراج.",
+   "help_en": "From a recognised halal certification body, valid on the day you list.",
+   "label_ar": "شهادة الحلال",
+   "label_en": "Halal certificate"
+  },
+  {
+   "code": "printer_licence",
+   "sort": 31,
+   "scope": "product",
+   "help_ar": "لا تُقبل المصاحف المطبوعة إلا من مطابع مرخّص لها بطباعة المصحف، مع الترخيص أو ما يثبت أن النسخة معتمدة.",
+   "help_en": "Printed mushafs are accepted only from printers licensed to print the Quran, with the licence or authorised copy.",
+   "label_ar": "ترخيص مطبعة المصحف",
+   "label_en": "Licensed Quran printer certificate"
+  },
+  {
+   "code": "content_approval",
+   "sort": 32,
+   "scope": "product",
+   "help_ar": "فسح النشر أو موافقة المحتوى لهذا العنوان.",
+   "help_en": "The publishing permit or content approval for the title.",
+   "label_ar": "فسح المحتوى للكتب",
+   "label_en": "Content approval for books"
+  },
+  {
+   "code": "lab_report",
+   "sort": 33,
+   "scope": "product",
+   "help_ar": null,
+   "help_en": null,
+   "label_ar": "تقرير مختبر",
+   "label_en": "Laboratory test report"
+  },
+  {
+   "code": "provenance",
+   "sort": 34,
+   "scope": "product",
+   "help_ar": "للقطع الأثرية والقطع التي يُدّعى لها مصدر معيّن.",
+   "help_en": "For antiques and items with an origin claim.",
+   "label_ar": "وثائق المصدر",
+   "label_en": "Provenance documents"
+  }
+ ],
+ "categories": [
+  {
+   "id": "97de4c33-9be2-4991-b07d-aee7612e946f",
+   "kind": "category",
+   "slug": "prayer-mats",
+   "sort": 1,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "سجادات الصلاة",
+   "name_en": "Prayer Mats",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": true,
+   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "7e080846-c4f3-4b03-840c-a6bd84647338",
+   "kind": "category",
+   "slug": "gift-sets",
+   "sort": 2,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "أطقم الهدايا",
+   "name_en": "Gift Sets",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": true,
+   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "107e2757-9142-4f53-a5e5-30e203f168be",
+   "kind": "category",
+   "slug": "prayer",
+   "sort": 2,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "مستلزمات الصلاة",
+   "name_en": "Prayer essentials",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": false,
+   "is_active": false,
+   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "108e3169-a288-4b0f-b455-42b06f430930",
+   "kind": "category",
+   "slug": "fragrance",
+   "sort": 3,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "unopened_only",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 7,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "العود والعطور",
+   "name_en": "Oud and fragrance",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": false,
+   "is_active": false,
+   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "6e054bdb-68ea-4825-9f70-bf8718820046",
+   "kind": "category",
+   "slug": "woven-rugs",
+   "sort": 3,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "سجادات الروضة المنسوجة",
+   "name_en": "Rawdah Woven Rugs",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": true,
+   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "9e9b1b87-f96a-4f3b-b2ee-09a9bec7a139",
+   "kind": "category",
+   "slug": "hampers",
+   "sort": 4,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "سلال الهدايا",
+   "name_en": "Gift hampers",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "ad719bfe-b718-430b-bbf7-f42dfc35efde",
+   "kind": "category",
+   "slug": "dates",
+   "sort": 4,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "faulty_only",
+    "commission_bps": 2500,
+    "min_shelf_days": 90,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 3,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "تمور المدينة",
+   "name_en": "Madinah Dates",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": true,
+   "parent_id": "7a9b5ebb-6bea-4c51-90dc-4b8b77face8a",
+   "attributes": [
+    {
+     "key": "variety",
+     "sort": 20,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "عجوة",
+       "en": "Ajwa",
+       "value": "ajwa"
+      },
+      {
+       "ar": "سكري",
+       "en": "Sukkari",
+       "value": "sukkari"
+      },
+      {
+       "ar": "صفاوي",
+       "en": "Safawi",
+       "value": "safawi"
+      },
+      {
+       "ar": "مجدول",
+       "en": "Medjool",
+       "value": "medjool"
+      },
+      {
+       "ar": "خضري",
+       "en": "Khudri",
+       "value": "khudri"
+      },
+      {
+       "ar": "صقعي",
+       "en": "Sagai",
+       "value": "sagai"
+      },
+      {
+       "ar": "ربيعة",
+       "en": "Rabia",
+       "value": "rabia"
+      },
+      {
+       "ar": "مبروم",
+       "en": "Mabroom",
+       "value": "mabroom"
+      },
+      {
+       "ar": "أخرى",
+       "en": "Other",
+       "value": "other"
+      }
+     ],
+     "label_ar": "الصنف",
+     "label_en": "Variety",
+     "required": true,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "5df39094-3a8f-4563-83eb-b240f5200994",
+   "kind": "category",
+   "slug": "keepsakes",
+   "sort": 5,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "تذكارات المدينة",
+   "name_en": "Madinah Keepsakes",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": true,
+   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "9c69555e-66ff-4d03-a10e-90e38ba61a6a",
+   "kind": "category",
+   "slug": "perfumes",
+   "sort": 6,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "unopened_only",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": true,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": [
+     "SA"
+    ],
+    "required_documents": [],
+    "return_window_days": 7,
+    "ship_domestic_only": true,
+    "ship_from_countries": [
+     "SA"
+    ],
+    "allow_made_to_measure": false
+   },
+   "name_ar": "العطور",
+   "name_en": "Perfumes",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": true,
+   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": "العطر المحتوي على الكحول من البضائع الخطرة (UN1266)، ولا يُباع حاليًا إلا من بائعين في السعودية إلى عملاء في السعودية عبر الشحن البري.",
+   "guidance_en": "Alcohol-based perfume is dangerous goods (UN1266). For now it can only be sold by sellers in Saudi Arabia to customers in Saudi Arabia, by road courier.",
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "fbdb99bd-8c36-4d47-b0ae-899aabf345c5",
+   "kind": "category",
+   "slug": "oud-oils",
+   "sort": 7,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "unopened_only",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 7,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "دهن العود والعطور الزيتية",
+   "name_en": "Oud and Perfume Oils",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": true,
+   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "attributes": [
+    {
+     "key": "oud_origin",
+     "sort": 20,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "كمبودي",
+       "en": "Cambodian",
+       "value": "cambodi"
+      },
+      {
+       "ar": "هندي",
+       "en": "Indian (Hindi)",
+       "value": "hindi"
+      },
+      {
+       "ar": "ماليزي",
+       "en": "Malaysian",
+       "value": "malaysian"
+      },
+      {
+       "ar": "إندونيسي",
+       "en": "Indonesian",
+       "value": "indonesian"
+      },
+      {
+       "ar": "تايلندي",
+       "en": "Thai",
+       "value": "thai"
+      },
+      {
+       "ar": "أخرى",
+       "en": "Other",
+       "value": "other"
+      }
+     ],
+     "label_ar": "منشأ العود",
+     "label_en": "Oud origin",
+     "required": false,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "e841eecf-ad18-4a47-b528-d8aa88f63cb0",
+   "kind": "category",
+   "slug": "thobes",
+   "sort": 20,
+   "image": null,
+   "policy": {
+    "min_photos": 5,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": true
+   },
+   "name_ar": "الثياب",
+   "name_en": "Thobes",
+   "blurb_ar": "ثياب جاهزة وتفصيل للرجال والأولاد.",
+   "blurb_en": "Ready-made and tailor-made thobes for men and boys.",
+   "listable": true,
+   "is_active": false,
+   "parent_id": "4771f146-fef1-47d1-9f15-cd56773beae9",
+   "attributes": [],
+   "department": "fashion",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "e86a969e-3373-44d4-878d-60e8f122f451",
+   "kind": "category",
+   "slug": "abayas",
+   "sort": 21,
+   "image": null,
+   "policy": {
+    "min_photos": 5,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": true
+   },
+   "name_ar": "العبايات",
+   "name_en": "Abayas",
+   "blurb_ar": "عبايات جاهزة وتفصيل.",
+   "blurb_en": "Ready-made and tailor-made abayas.",
+   "listable": true,
+   "is_active": false,
+   "parent_id": "147ea77b-25fb-43b7-bf5d-9a982289f870",
+   "attributes": [],
+   "department": "fashion",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "a9d5e6f0-9868-48d2-9c89-0d0360e37ad1",
+   "kind": "category",
+   "slug": "modest-dresses",
+   "sort": 22,
+   "image": null,
+   "policy": {
+    "min_photos": 5,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": true
+   },
+   "name_ar": "الفساتين المحتشمة والجلابيب",
+   "name_en": "Modest dresses and jilbabs",
+   "blurb_ar": "فساتين محتشمة وجلابيب وأثواب صلاة.",
+   "blurb_en": "Modest dresses, jilbabs and prayer dresses.",
+   "listable": true,
+   "is_active": false,
+   "parent_id": "147ea77b-25fb-43b7-bf5d-9a982289f870",
+   "attributes": [],
+   "department": "fashion",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "8e3c9542-34ef-4dd8-98c8-ec2eb0adb72d",
+   "kind": "category",
+   "slug": "hijabs",
+   "sort": 23,
+   "image": null,
+   "policy": {
+    "min_photos": 5,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": true
+   },
+   "name_ar": "الحجابات والشالات",
+   "name_en": "Hijabs and scarves",
+   "blurb_ar": "حجابات وشيلات ونقابات وشالات.",
+   "blurb_en": "Hijabs, shaylas, niqabs and scarves.",
+   "listable": true,
+   "is_active": false,
+   "parent_id": "147ea77b-25fb-43b7-bf5d-9a982289f870",
+   "attributes": [],
+   "department": "fashion",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "cc00eb5a-0e32-4dd3-b944-8b8198793c4e",
+   "kind": "category",
+   "slug": "kids-modest",
+   "sort": 24,
+   "image": null,
+   "policy": {
+    "min_photos": 5,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": true
+   },
+   "name_ar": "ملابس الأطفال المحتشمة",
+   "name_en": "Kids’ modest wear",
+   "blurb_ar": "ثياب وعبايات وملابس محتشمة للأطفال.",
+   "blurb_en": "Thobes, abayas and modest wear for children.",
+   "listable": true,
+   "is_active": false,
+   "parent_id": "0718bac0-03c4-4659-a324-e5ff48b1645e",
+   "attributes": [],
+   "department": "fashion",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "e0b2a362-e8ee-4c55-8662-c4b541c68f8a",
+   "kind": "category",
+   "slug": "bakhoor",
+   "sort": 80,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "unopened_only",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 7,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "البخور والعود",
+   "name_en": "Bakhoor and Oud",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "attributes": [
+    {
+     "key": "volume_ml",
+     "sort": 10,
+     "type": "number",
+     "unit": "ml",
+     "active": false,
+     "options": [],
+     "label_ar": "الحجم",
+     "label_en": "Volume",
+     "required": false,
+     "filterable": false
+    },
+    {
+     "key": "contains_alcohol",
+     "sort": 11,
+     "type": "boolean",
+     "active": false,
+     "options": [],
+     "label_ar": "يحتوي على كحول",
+     "label_en": "Contains alcohol",
+     "required": false,
+     "filterable": false
+    },
+    {
+     "key": "notes",
+     "sort": 12,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "النفحات العطرية",
+     "label_en": "Fragrance notes",
+     "required": false,
+     "filterable": false
+    },
+    {
+     "key": "concentration",
+     "sort": 13,
+     "type": "select",
+     "active": false,
+     "options": [],
+     "label_ar": "التركيز",
+     "label_en": "Concentration",
+     "required": false,
+     "filterable": false
+    },
+    {
+     "key": "weight_g",
+     "sort": 20,
+     "type": "number",
+     "unit": "g",
+     "active": true,
+     "options": [],
+     "label_ar": "الوزن الصافي",
+     "label_en": "Net weight",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "form",
+     "sort": 21,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "رقائق عود",
+       "en": "Oud chips",
+       "value": "chips"
+      },
+      {
+       "ar": "معطّر",
+       "en": "Muattar (scented)",
+       "value": "muattar"
+      },
+      {
+       "ar": "مبثوث",
+       "en": "Mabthooth",
+       "value": "mabthooth"
+      },
+      {
+       "ar": "أقراص",
+       "en": "Tablets",
+       "value": "tablets"
+      }
+     ],
+     "label_ar": "الشكل",
+     "label_en": "Form",
+     "required": true,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": "البخور ورقائق العود: اذكر الوزن ومنشأ الخشب وطريقة الخلط، ولا ادعاءات للشفاء أو الحماية.",
+   "guidance_en": "Bakhoor and oud chips: state the weight, the wood's origin and how it was blended. No claims of healing or protection.",
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "kind": "department",
+   "slug": "fragrance-oud",
+   "sort": 100,
+   "image": null,
+   "policy": null,
+   "name_ar": "العطور والعود",
+   "name_en": "Fragrance & oud",
+   "blurb_ar": "العطور الزيتية والعود والبخور وما يحملها.",
+   "blurb_en": "Perfume oils, oud, bakhoor and the vessels that carry them.",
+   "listable": false,
+   "is_active": false,
+   "parent_id": null,
+   "attributes": [
+    {
+     "key": "brand",
+     "sort": 1,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "العلامة التجارية أو الصانع",
+     "label_en": "Brand or maker",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "brand_relationship",
+     "sort": 2,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "علامتي الخاصة أو أنا الصانع",
+       "en": "It is my own brand or I make it",
+       "value": "own"
+      },
+      {
+       "ar": "موزّع أو بائع معتمد",
+       "en": "Authorised distributor or reseller",
+       "value": "authorised"
+      }
+     ],
+     "label_ar": "علاقتك بالعلامة التجارية",
+     "label_en": "Your relationship to the brand",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "origin_country",
+     "sort": 3,
+     "type": "country",
+     "active": true,
+     "options": [],
+     "label_ar": "بلد المنشأ",
+     "label_en": "Country of origin",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "volume_ml",
+     "sort": 10,
+     "type": "number",
+     "unit": "ml",
+     "active": true,
+     "options": [],
+     "label_ar": "الحجم",
+     "label_en": "Volume",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "contains_alcohol",
+     "sort": 11,
+     "type": "boolean",
+     "active": true,
+     "options": [],
+     "label_ar": "يحتوي على كحول",
+     "label_en": "Contains alcohol",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "notes",
+     "sort": 12,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "النفحات العطرية",
+     "label_en": "Fragrance notes",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "concentration",
+     "sort": 13,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "دهن صافٍ",
+       "en": "Pure oil",
+       "value": "pure_oil"
+      },
+      {
+       "ar": "دهن ممزوج",
+       "en": "Blended perfume oil",
+       "value": "blended_oil"
+      },
+      {
+       "ar": "عطر زيتي (عطّار)",
+       "en": "Attar",
+       "value": "attar"
+      },
+      {
+       "ar": "خلاصة عطر",
+       "en": "Extrait de parfum",
+       "value": "extrait"
+      },
+      {
+       "ar": "ماء عطر (EDP)",
+       "en": "Eau de parfum",
+       "value": "edp"
+      },
+      {
+       "ar": "ماء تواليت (EDT)",
+       "en": "Eau de toilette",
+       "value": "edt"
+      }
+     ],
+     "label_ar": "التركيز",
+     "label_en": "Concentration",
+     "required": true,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": "يجب أن يذكر كل عطر حجمه وتركيزه ونفحاته وبلد منشئه، وأن يبيّن بصدق هل يحتوي على كحول. والعلامات التي لا تملكها تحتاج إلى خطاب موزّع معتمد.",
+   "guidance_en": "Every fragrance needs its volume, concentration, notes and origin, and an honest statement of whether it contains alcohol. Brands you do not own need an authorised-distributor letter.",
+   "accepted_examples": [
+    {
+     "ar": "دهن عود كمبودي صافٍ ٣ مل في زجاجة كريستال مختومة مصوّرة على سطح حجري سادة",
+     "en": "Pure Cambodian oud oil, 3 ml, in a sealed crystal bottle, photographed on a plain stone surface"
+    }
+   ],
+   "rejected_examples": [
+    {
+     "ar": "عطر بخاخ موصوف بأنه «مستوحى من» عطر مصمم عالمي",
+     "en": "A spray described as \"inspired by\" a designer perfume"
+    },
+    {
+     "ar": "زجاجة مصوّرة في يد عارضة يظهر وجهها",
+     "en": "A bottle photographed in a model's hand with her face visible"
+    }
+   ]
+  },
+  {
+   "id": "ecf6d5de-aacf-42e0-96be-7ea2e2d825eb",
+   "kind": "category",
+   "slug": "attar",
+   "sort": 101,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "unopened_only",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 7,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "العطور الزيتية والدهن",
+   "name_en": "Perfume oils & attar",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "9c46d139-12c7-498d-ac87-a9c03c658773",
+   "kind": "category",
+   "slug": "incense-burners",
+   "sort": 105,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "unopened_only",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 7,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "المباخر",
+   "name_en": "Incense burners",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "attributes": [
+    {
+     "key": "volume_ml",
+     "sort": 10,
+     "type": "number",
+     "unit": "ml",
+     "active": false,
+     "options": [],
+     "label_ar": "الحجم",
+     "label_en": "Volume",
+     "required": false,
+     "filterable": false
+    },
+    {
+     "key": "contains_alcohol",
+     "sort": 11,
+     "type": "boolean",
+     "active": false,
+     "options": [],
+     "label_ar": "يحتوي على كحول",
+     "label_en": "Contains alcohol",
+     "required": false,
+     "filterable": false
+    },
+    {
+     "key": "notes",
+     "sort": 12,
+     "type": "text",
+     "active": false,
+     "options": [],
+     "label_ar": "النفحات العطرية",
+     "label_en": "Fragrance notes",
+     "required": false,
+     "filterable": false
+    },
+    {
+     "key": "concentration",
+     "sort": 13,
+     "type": "select",
+     "active": false,
+     "options": [],
+     "label_ar": "التركيز",
+     "label_en": "Concentration",
+     "required": false,
+     "filterable": false
+    },
+    {
+     "key": "material",
+     "sort": 20,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "الخامة",
+     "label_en": "Material",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "power",
+     "sort": 21,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "فحم",
+       "en": "Charcoal",
+       "value": "charcoal"
+      },
+      {
+       "ar": "كهربائي",
+       "en": "Electric",
+       "value": "electric"
+      },
+      {
+       "ar": "قابل للشحن",
+       "en": "Rechargeable (USB)",
+       "value": "usb"
+      }
+     ],
+     "label_ar": "طريقة التشغيل",
+     "label_en": "Power",
+     "required": true,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "c3e3d0ea-25aa-44d7-a340-53747703ff44",
+   "kind": "category",
+   "slug": "fragrance-gift-sets",
+   "sort": 106,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "unopened_only",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 7,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "أطقم العطور",
+   "name_en": "Fragrance gift sets",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "attributes": [
+    {
+     "key": "volume_ml",
+     "sort": 10,
+     "type": "number",
+     "unit": "ml",
+     "active": true,
+     "options": [],
+     "label_ar": "الحجم",
+     "label_en": "Volume",
+     "required": false,
+     "filterable": false
+    },
+    {
+     "key": "notes",
+     "sort": 12,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "النفحات العطرية",
+     "label_en": "Fragrance notes",
+     "required": false,
+     "filterable": false
+    },
+    {
+     "key": "concentration",
+     "sort": 13,
+     "type": "select",
+     "active": false,
+     "options": [],
+     "label_ar": "التركيز",
+     "label_en": "Concentration",
+     "required": false,
+     "filterable": false
+    },
+    {
+     "key": "contents",
+     "sort": 20,
+     "type": "textarea",
+     "active": true,
+     "options": [],
+     "label_ar": "محتويات الطقم",
+     "label_en": "What is in the set",
+     "required": true,
+     "filterable": false
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "kind": "department",
+   "slug": "prayer-worship",
+   "sort": 200,
+   "image": null,
+   "policy": null,
+   "name_ar": "الصلاة والعبادة",
+   "name_en": "Prayer & worship",
+   "blurb_ar": "للصلاة وذكر الله.",
+   "blurb_en": "For the prayer and the remembrance of Allah.",
+   "listable": false,
+   "is_active": false,
+   "parent_id": null,
+   "attributes": [
+    {
+     "key": "brand",
+     "sort": 1,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "العلامة التجارية أو الصانع",
+     "label_en": "Brand or maker",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "brand_relationship",
+     "sort": 2,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "علامتي الخاصة أو أنا الصانع",
+       "en": "It is my own brand or I make it",
+       "value": "own"
+      },
+      {
+       "ar": "موزّع أو بائع معتمد",
+       "en": "Authorised distributor or reseller",
+       "value": "authorised"
+      }
+     ],
+     "label_ar": "علاقتك بالعلامة التجارية",
+     "label_en": "Your relationship to the brand",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "origin_country",
+     "sort": 3,
+     "type": "country",
+     "active": true,
+     "options": [],
+     "label_ar": "بلد المنشأ",
+     "label_en": "Country of origin",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "material",
+     "sort": 10,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "الخامة",
+     "label_en": "Material",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "dimensions_cm",
+     "sort": 11,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "المقاس (سم)",
+     "label_en": "Size (cm)",
+     "required": false,
+     "filterable": false
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": "يجب أن تكون مستلزمات الصلاة لائقة بها: بلا صور لذوات الأرواح، ولا آيات قرآنية أو اسم الله على ما يُداس.",
+   "guidance_en": "Prayer items must be fit for the prayer: no images of living beings, and never Quran verses or the name of Allah on anything that is stepped on.",
+   "accepted_examples": [
+    {
+     "ar": "سجادة صلاة منسوجة بتصميم محراب هندسي مصوّرة مسطّحة من الأعلى",
+     "en": "A woven prayer mat with a geometric mihrab design, shown flat from above"
+    }
+   ],
+   "rejected_examples": [
+    {
+     "ar": "سجادة صلاة أو ممسحة أرجل نُسج عليها اسم الله",
+     "en": "A prayer mat or doormat with the name of Allah woven into it"
+    }
+   ]
+  },
+  {
+   "id": "fa2a16ea-b1b5-4e52-84af-1dfffe1aece5",
+   "kind": "category",
+   "slug": "tasbih",
+   "sort": 203,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "السبح والمسابح",
+   "name_en": "Tasbih & misbaha",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "attributes": [
+    {
+     "key": "bead_count",
+     "sort": 20,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "٣٣",
+       "en": "33",
+       "value": "33"
+      },
+      {
+       "ar": "٩٩",
+       "en": "99",
+       "value": "99"
+      },
+      {
+       "ar": "١٠٠",
+       "en": "100",
+       "value": "100"
+      },
+      {
+       "ar": "١٠٠٠",
+       "en": "1000",
+       "value": "1000"
+      }
+     ],
+     "label_ar": "عدد الحبات",
+     "label_en": "Number of beads",
+     "required": true,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "4da92870-7fb5-4a05-967f-c1bd66f7dd55",
+   "kind": "category",
+   "slug": "prayer-clothing",
+   "sort": 204,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "ملابس الصلاة",
+   "name_en": "Prayer clothing",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "attributes": [
+    {
+     "key": "care",
+     "sort": 20,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "طريقة العناية",
+     "label_en": "Care",
+     "required": true,
+     "filterable": false
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "0c7b2e9e-cf24-45df-9a33-4c1a954aa56d",
+   "kind": "category",
+   "slug": "quran-stands",
+   "sort": 205,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "حوامل المصحف",
+   "name_en": "Quran stands",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "f0fad121-1d8e-40f7-a701-8699cf57c802",
+   "kind": "category",
+   "slug": "qibla-tools",
+   "sort": 206,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "أدوات تحديد القبلة",
+   "name_en": "Qibla compasses & tools",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "attributes": [
+    {
+     "key": "tool_type",
+     "sort": 20,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "بوصلة",
+       "en": "Compass",
+       "value": "compass"
+      },
+      {
+       "ar": "رقمي",
+       "en": "Digital",
+       "value": "digital"
+      }
+     ],
+     "label_ar": "النوع",
+     "label_en": "Type",
+     "required": true,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "3048b0dd-6393-42ad-98ee-ccea2b64279a",
+   "kind": "category",
+   "slug": "miswak",
+   "sort": 207,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "unopened_only",
+    "commission_bps": 2500,
+    "min_shelf_days": 180,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 7,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "المسواك",
+   "name_en": "Miswak",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "attributes": [
+    {
+     "key": "pack_count",
+     "sort": 20,
+     "type": "number",
+     "unit": "pcs",
+     "active": true,
+     "options": [],
+     "label_ar": "عدد الأعواد",
+     "label_en": "Sticks in a pack",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "best_before",
+     "sort": 21,
+     "type": "date",
+     "active": true,
+     "options": [],
+     "label_ar": "يُستهلك قبل",
+     "label_en": "Best before",
+     "required": true,
+     "filterable": false
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "72ddb074-e1dc-4a58-8bdc-7eda8c6f5655",
+   "kind": "department",
+   "slug": "quran-books",
+   "sort": 300,
+   "image": null,
+   "policy": null,
+   "name_ar": "المصاحف والكتب الإسلامية",
+   "name_en": "Quran & Islamic books",
+   "blurb_ar": "مصاحف من مطابع مرخّصة وكتب تمت مراجعتها.",
+   "blurb_en": "Mushafs from licensed printers and reviewed books.",
+   "listable": false,
+   "is_active": false,
+   "parent_id": null,
+   "attributes": [
+    {
+     "key": "brand",
+     "sort": 1,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "العلامة التجارية أو الصانع",
+     "label_en": "Brand or maker",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "brand_relationship",
+     "sort": 2,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "علامتي الخاصة أو أنا الصانع",
+       "en": "It is my own brand or I make it",
+       "value": "own"
+      },
+      {
+       "ar": "موزّع أو بائع معتمد",
+       "en": "Authorised distributor or reseller",
+       "value": "authorised"
+      }
+     ],
+     "label_ar": "علاقتك بالعلامة التجارية",
+     "label_en": "Your relationship to the brand",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "origin_country",
+     "sort": 3,
+     "type": "country",
+     "active": true,
+     "options": [],
+     "label_ar": "بلد المنشأ",
+     "label_en": "Country of origin",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "publisher",
+     "sort": 10,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "الناشر",
+     "label_en": "Publisher",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "language",
+     "sort": 11,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "العربية",
+       "en": "Arabic",
+       "value": "ar"
+      },
+      {
+       "ar": "الإنجليزية",
+       "en": "English",
+       "value": "en"
+      },
+      {
+       "ar": "الأردية",
+       "en": "Urdu",
+       "value": "ur"
+      },
+      {
+       "ar": "الفرنسية",
+       "en": "French",
+       "value": "fr"
+      },
+      {
+       "ar": "الإندونيسية",
+       "en": "Indonesian",
+       "value": "id"
+      },
+      {
+       "ar": "التركية",
+       "en": "Turkish",
+       "value": "tr"
+      },
+      {
+       "ar": "عربي مع ترجمة",
+       "en": "Arabic with translation",
+       "value": "bilingual"
+      }
+     ],
+     "label_ar": "اللغة",
+     "label_en": "Language",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "pages",
+     "sort": 12,
+     "type": "number",
+     "unit": "pages",
+     "active": true,
+     "options": [],
+     "label_ar": "عدد الصفحات",
+     "label_en": "Pages",
+     "required": false,
+     "filterable": false
+    },
+    {
+     "key": "isbn",
+     "sort": 13,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "الرقم الدولي (ISBN)",
+     "label_en": "ISBN",
+     "required": false,
+     "filterable": false
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": "يراجع فريقنا كل كتاب قبل نشره. اذكر الناشر والمؤلف واللغة. ولا تُقبل المصاحف المطبوعة إلا من مطابع المصحف المرخّصة.",
+   "guidance_en": "Every book is reviewed by our team before it goes live. Give the publisher, author and language. Printed mushafs are accepted only from licensed Quran printers.",
+   "accepted_examples": [
+    {
+     "ar": "مجموعة تفسير من ناشر معروف مع ذكر الناشر والطبعة في التفاصيل",
+     "en": "A tafsir set from a known publisher, with the publisher and edition in the details"
+    }
+   ],
+   "rejected_examples": [
+    {
+     "ar": "مصحف من مطبعة غير معروفة أو نسخة مطبوعة ذاتيًا",
+     "en": "A mushaf from an unknown printer, or a self-printed copy"
+    }
+   ]
+  },
+  {
+   "id": "e10e1cc9-8b86-46a4-8197-fe92598f0a55",
+   "kind": "category",
+   "slug": "mushaf",
+   "sort": 301,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": true,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [
+     "printer_licence"
+    ],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "المصاحف المطبوعة",
+   "name_en": "Printed mushafs",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "72ddb074-e1dc-4a58-8bdc-7eda8c6f5655",
+   "attributes": [
+    {
+     "key": "printer",
+     "sort": 20,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "المطبعة المرخّصة",
+     "label_en": "Licensed printer",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "riwayah",
+     "sort": 21,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "حفص عن عاصم",
+       "en": "Hafs 'an 'Asim",
+       "value": "hafs"
+      },
+      {
+       "ar": "ورش عن نافع",
+       "en": "Warsh 'an Nafi'",
+       "value": "warsh"
+      },
+      {
+       "ar": "قالون عن نافع",
+       "en": "Qalun 'an Nafi'",
+       "value": "qalun"
+      },
+      {
+       "ar": "شعبة عن عاصم",
+       "en": "Shu'bah 'an 'Asim",
+       "value": "shubah"
+      },
+      {
+       "ar": "الدوري عن أبي عمرو",
+       "en": "Al-Duri 'an Abi 'Amr",
+       "value": "duri"
+      }
+     ],
+     "label_ar": "الرواية",
+     "label_en": "Riwayah",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "licence_no",
+     "sort": 22,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "رقم ترخيص الطباعة أو الاعتماد",
+     "label_en": "Printing licence or approval number",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "mushaf_size",
+     "sort": 23,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "جيب",
+       "en": "Pocket",
+       "value": "pocket"
+      },
+      {
+       "ar": "وسط",
+       "en": "Medium",
+       "value": "medium"
+      },
+      {
+       "ar": "كبير",
+       "en": "Large",
+       "value": "large"
+      }
+     ],
+     "label_ar": "الحجم",
+     "label_en": "Size",
+     "required": true,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "8782648c-dda5-48ad-aaee-d191c0d939d9",
+   "kind": "category",
+   "slug": "islamic-books",
+   "sort": 302,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": true,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [
+     "content_approval"
+    ],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "الكتب الإسلامية",
+   "name_en": "Islamic books",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "72ddb074-e1dc-4a58-8bdc-7eda8c6f5655",
+   "attributes": [
+    {
+     "key": "author",
+     "sort": 20,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "المؤلف",
+     "label_en": "Author",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "subject",
+     "sort": 21,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "التفسير",
+       "en": "Tafsir",
+       "value": "tafsir"
+      },
+      {
+       "ar": "السيرة",
+       "en": "Seerah",
+       "value": "seerah"
+      },
+      {
+       "ar": "الحديث",
+       "en": "Hadith",
+       "value": "hadith"
+      },
+      {
+       "ar": "الفقه",
+       "en": "Fiqh",
+       "value": "fiqh"
+      },
+      {
+       "ar": "العقيدة",
+       "en": "Aqeedah",
+       "value": "aqeedah"
+      },
+      {
+       "ar": "اللغة العربية",
+       "en": "Arabic language",
+       "value": "arabic"
+      },
+      {
+       "ar": "الأسرة",
+       "en": "Family",
+       "value": "family"
+      },
+      {
+       "ar": "أخرى",
+       "en": "Other",
+       "value": "other"
+      }
+     ],
+     "label_ar": "الموضوع",
+     "label_en": "Subject",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "translator",
+     "sort": 22,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "المترجم",
+     "label_en": "Translator",
+     "required": false,
+     "filterable": false
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "18c7c373-f33e-4621-8fb9-a918c524f807",
+   "kind": "department",
+   "slug": "modest-fashion",
+   "sort": 400,
+   "image": null,
+   "policy": null,
+   "name_ar": "الأزياء المحتشمة",
+   "name_en": "Modest fashion",
+   "blurb_ar": "ثياب وعبايات وأزياء محتشمة، جاهزة أو مفصّلة.",
+   "blurb_en": "Thobes, abayas and modest wear, ready-made or made to measure.",
+   "listable": false,
+   "is_active": false,
+   "parent_id": null,
+   "attributes": [
+    {
+     "key": "brand",
+     "sort": 1,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "العلامة التجارية أو الصانع",
+     "label_en": "Brand or maker",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "brand_relationship",
+     "sort": 2,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "علامتي الخاصة أو أنا الصانع",
+       "en": "It is my own brand or I make it",
+       "value": "own"
+      },
+      {
+       "ar": "موزّع أو بائع معتمد",
+       "en": "Authorised distributor or reseller",
+       "value": "authorised"
+      }
+     ],
+     "label_ar": "علاقتك بالعلامة التجارية",
+     "label_en": "Your relationship to the brand",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "origin_country",
+     "sort": 3,
+     "type": "country",
+     "active": true,
+     "options": [],
+     "label_ar": "بلد المنشأ",
+     "label_en": "Country of origin",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "material",
+     "sort": 10,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "القماش",
+     "label_en": "Fabric",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "care",
+     "sort": 11,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "طريقة العناية",
+     "label_en": "Care",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "colour",
+     "sort": 12,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "اللون",
+     "label_en": "Colour",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "season",
+     "sort": 13,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "صيفي",
+       "en": "Summer",
+       "value": "summer"
+      },
+      {
+       "ar": "شتوي",
+       "en": "Winter",
+       "value": "winter"
+      },
+      {
+       "ar": "طوال العام",
+       "en": "All year",
+       "value": "all"
+      }
+     ],
+     "label_ar": "الموسم",
+     "label_en": "Season",
+     "required": false,
+     "filterable": true
+    }
+   ],
+   "department": "fashion",
+   "guidance_ar": "اعرض الملابس مسطّحة أو على علّاقة أو على مجسّم أو مجسّم شفاف. اذكر القماش وطريقة العناية والمقاسات (أو المقاسات المطلوبة للتفصيل). ولا تُرجع القطع المفصّلة إلا إذا كان بها عيب أو اختلفت عن الطلب.",
+   "guidance_en": "Show garments flat, on a hanger, on a mannequin or a ghost mannequin. Give the fabric, care and sizes (or the measurements you need for made to measure). Made-to-measure pieces can only be returned if they are faulty or differ from the order.",
+   "accepted_examples": [
+    {
+     "ar": "عباية سوداء على مجسّم شفاف أمام جدار عاجي، خمس صور منها صورة قريبة للقماش",
+     "en": "A black abaya on a ghost mannequin against an ivory wall, five photos including the fabric close-up"
+    }
+   ],
+   "rejected_examples": [
+    {
+     "ar": "عباية ترتديها عارضة يظهر وجهها",
+     "en": "An abaya worn by a model with her face showing"
+    },
+    {
+     "ar": "فستان ضيّق أو شفاف",
+     "en": "A tight or see-through dress"
+    }
+   ]
+  },
+  {
+   "id": "4771f146-fef1-47d1-9f15-cd56773beae9",
+   "kind": "group",
+   "slug": "mens-fashion",
+   "sort": 410,
+   "image": null,
+   "policy": null,
+   "name_ar": "الرجال",
+   "name_en": "Men",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": false,
+   "is_active": false,
+   "parent_id": "18c7c373-f33e-4621-8fb9-a918c524f807",
+   "attributes": [],
+   "department": "fashion",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "ae3ed37f-c90d-4b7a-9e0e-58d6a563ad5a",
+   "kind": "category",
+   "slug": "ghutra-shemagh",
+   "sort": 412,
+   "image": null,
+   "policy": {
+    "min_photos": 5,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": true
+   },
+   "name_ar": "الغتر والشماغ",
+   "name_en": "Ghutra & shemagh",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "4771f146-fef1-47d1-9f15-cd56773beae9",
+   "attributes": [],
+   "department": "fashion",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "e05b14a1-0003-4d98-8f87-1c50622d075a",
+   "kind": "category",
+   "slug": "bisht",
+   "sort": 413,
+   "image": null,
+   "policy": {
+    "min_photos": 5,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": true
+   },
+   "name_ar": "البشوت",
+   "name_en": "Bisht",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "4771f146-fef1-47d1-9f15-cd56773beae9",
+   "attributes": [],
+   "department": "fashion",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "266ad2fe-e8ef-4212-92d4-e2764d0aa05d",
+   "kind": "category",
+   "slug": "kufi",
+   "sort": 414,
+   "image": null,
+   "policy": {
+    "min_photos": 5,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": true
+   },
+   "name_ar": "الطواقي والكوفيات",
+   "name_en": "Kufi & prayer caps",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "4771f146-fef1-47d1-9f15-cd56773beae9",
+   "attributes": [],
+   "department": "fashion",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "147ea77b-25fb-43b7-bf5d-9a982289f870",
+   "kind": "group",
+   "slug": "womens-fashion",
+   "sort": 420,
+   "image": null,
+   "policy": null,
+   "name_ar": "النساء",
+   "name_en": "Women",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": false,
+   "is_active": false,
+   "parent_id": "18c7c373-f33e-4621-8fb9-a918c524f807",
+   "attributes": [],
+   "department": "fashion",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "0718bac0-03c4-4659-a324-e5ff48b1645e",
+   "kind": "group",
+   "slug": "kids-fashion",
+   "sort": 430,
+   "image": null,
+   "policy": null,
+   "name_ar": "الأطفال",
+   "name_en": "Children",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": false,
+   "is_active": false,
+   "parent_id": "18c7c373-f33e-4621-8fb9-a918c524f807",
+   "attributes": [],
+   "department": "fashion",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "f5005be9-8235-46e6-adcc-6a46ce52ef7c",
+   "kind": "department",
+   "slug": "home-art",
+   "sort": 500,
+   "image": null,
+   "policy": null,
+   "name_ar": "المنزل والفن الإسلامي",
+   "name_en": "Home & Islamic art",
+   "blurb_ar": "الخط العربي والفوانيس وقطع لبيت المسلم.",
+   "blurb_en": "Calligraphy, lanterns and pieces for a Muslim home.",
+   "listable": false,
+   "is_active": false,
+   "parent_id": null,
+   "attributes": [
+    {
+     "key": "brand",
+     "sort": 1,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "العلامة التجارية أو الصانع",
+     "label_en": "Brand or maker",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "brand_relationship",
+     "sort": 2,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "علامتي الخاصة أو أنا الصانع",
+       "en": "It is my own brand or I make it",
+       "value": "own"
+      },
+      {
+       "ar": "موزّع أو بائع معتمد",
+       "en": "Authorised distributor or reseller",
+       "value": "authorised"
+      }
+     ],
+     "label_ar": "علاقتك بالعلامة التجارية",
+     "label_en": "Your relationship to the brand",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "origin_country",
+     "sort": 3,
+     "type": "country",
+     "active": true,
+     "options": [],
+     "label_ar": "بلد المنشأ",
+     "label_en": "Country of origin",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "material",
+     "sort": 10,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "الخامة",
+     "label_en": "Material",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "dimensions_cm",
+     "sort": 11,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "المقاس (سم)",
+     "label_en": "Size (cm)",
+     "required": true,
+     "filterable": false
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": "يجب أن تُعلّق أو توضع اللوحات التي تحمل آيات قرآنية أو أسماء الله بما يليق بها: لا على سجاد الأرضيات ولا ممسحات الأرجل ولا الوسائد التي يُجلس عليها ولا ما يُرمى. واكتب النص الظاهر ليراجعه فريقنا.",
+   "guidance_en": "Calligraphy and art carrying Quran verses or the names of Allah must be made to hang or stand with respect: never on floor rugs, doormats, cushions to sit on or anything disposable. Write out the text shown so our team can check it.",
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "a3456c3d-38a8-434b-9944-8dd05436d500",
+   "kind": "category",
+   "slug": "calligraphy",
+   "sort": 501,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": true,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "الخط العربي واللوحات",
+   "name_en": "Calligraphy & wall art",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "f5005be9-8235-46e6-adcc-6a46ce52ef7c",
+   "attributes": [
+    {
+     "key": "technique",
+     "sort": 20,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "خط يدوي",
+       "en": "Hand-written",
+       "value": "hand"
+      },
+      {
+       "ar": "طباعة فنية",
+       "en": "Fine art print",
+       "value": "print"
+      },
+      {
+       "ar": "محفور أو منقوش",
+       "en": "Carved or engraved",
+       "value": "carved"
+      },
+      {
+       "ar": "مطرّز",
+       "en": "Embroidered",
+       "value": "embroidered"
+      }
+     ],
+     "label_ar": "طريقة التنفيذ",
+     "label_en": "Technique",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "text_shown",
+     "sort": 21,
+     "type": "textarea",
+     "active": true,
+     "options": [],
+     "label_ar": "النص الظاهر في العمل",
+     "label_en": "The words shown (in Arabic)",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "script",
+     "sort": 22,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "الثلث",
+       "en": "Thuluth",
+       "value": "thuluth"
+      },
+      {
+       "ar": "النسخ",
+       "en": "Naskh",
+       "value": "naskh"
+      },
+      {
+       "ar": "الديواني",
+       "en": "Diwani",
+       "value": "diwani"
+      },
+      {
+       "ar": "الكوفي",
+       "en": "Kufic",
+       "value": "kufi"
+      },
+      {
+       "ar": "الرقعة",
+       "en": "Ruq'ah",
+       "value": "ruqah"
+      },
+      {
+       "ar": "أخرى",
+       "en": "Other",
+       "value": "other"
+      }
+     ],
+     "label_ar": "نوع الخط",
+     "label_en": "Script",
+     "required": false,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "982bef0a-cf72-400e-ac61-4ab299a78cb5",
+   "kind": "category",
+   "slug": "lanterns",
+   "sort": 502,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "الفوانيس والإضاءة",
+   "name_en": "Lanterns & lighting",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "f5005be9-8235-46e6-adcc-6a46ce52ef7c",
+   "attributes": [
+    {
+     "key": "power",
+     "sort": 20,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "كهربائي",
+       "en": "Electric",
+       "value": "electric"
+      },
+      {
+       "ar": "بطارية",
+       "en": "Battery",
+       "value": "battery"
+      },
+      {
+       "ar": "شمعة",
+       "en": "Candle",
+       "value": "candle"
+      }
+     ],
+     "label_ar": "طريقة الإضاءة",
+     "label_en": "Power",
+     "required": true,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "2671daad-670f-4001-a468-e7d712d31978",
+   "kind": "category",
+   "slug": "ramadan-eid-decor",
+   "sort": 503,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "زينة رمضان والعيد",
+   "name_en": "Ramadan & Eid décor",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "f5005be9-8235-46e6-adcc-6a46ce52ef7c",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "2b3fe2dd-9891-4aa1-9bdd-446a7cc00f98",
+   "kind": "category",
+   "slug": "coffee-sets",
+   "sort": 504,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "أطقم القهوة العربية",
+   "name_en": "Arabic coffee sets",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "f5005be9-8235-46e6-adcc-6a46ce52ef7c",
+   "attributes": [
+    {
+     "key": "pieces",
+     "sort": 20,
+     "type": "number",
+     "unit": "pcs",
+     "active": true,
+     "options": [],
+     "label_ar": "عدد القطع",
+     "label_en": "Pieces in the set",
+     "required": true,
+     "filterable": false
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "a0eceed7-3b4e-49e9-89b4-b11b8715f1f3",
+   "kind": "category",
+   "slug": "home-textiles",
+   "sort": 505,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "المنسوجات والوسائد",
+   "name_en": "Textiles & cushions",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "f5005be9-8235-46e6-adcc-6a46ce52ef7c",
+   "attributes": [
+    {
+     "key": "care",
+     "sort": 20,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "طريقة العناية",
+     "label_en": "Care",
+     "required": true,
+     "filterable": false
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "7a9b5ebb-6bea-4c51-90dc-4b8b77face8a",
+   "kind": "department",
+   "slug": "dates-food",
+   "sort": 600,
+   "image": null,
+   "policy": null,
+   "name_ar": "التمور والأطعمة",
+   "name_en": "Dates & food",
+   "blurb_ar": "التمور والعسل والقهوة العربية والحلويات.",
+   "blurb_en": "Dates, honey, Arabic coffee and sweets.",
+   "listable": false,
+   "is_active": false,
+   "parent_id": null,
+   "attributes": [
+    {
+     "key": "brand",
+     "sort": 1,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "العلامة التجارية أو الصانع",
+     "label_en": "Brand or maker",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "brand_relationship",
+     "sort": 2,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "علامتي الخاصة أو أنا الصانع",
+       "en": "It is my own brand or I make it",
+       "value": "own"
+      },
+      {
+       "ar": "موزّع أو بائع معتمد",
+       "en": "Authorised distributor or reseller",
+       "value": "authorised"
+      }
+     ],
+     "label_ar": "علاقتك بالعلامة التجارية",
+     "label_en": "Your relationship to the brand",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "origin_country",
+     "sort": 3,
+     "type": "country",
+     "active": true,
+     "options": [],
+     "label_ar": "بلد المنشأ",
+     "label_en": "Country of origin",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "net_weight_g",
+     "sort": 10,
+     "type": "number",
+     "unit": "g",
+     "active": true,
+     "options": [],
+     "label_ar": "الوزن الصافي",
+     "label_en": "Net weight",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "best_before",
+     "sort": 11,
+     "type": "date",
+     "active": true,
+     "options": [],
+     "label_ar": "تاريخ الانتهاء (للمخزون الحالي)",
+     "label_en": "Best before (current stock)",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "storage",
+     "sort": 12,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "مكان بارد وجاف",
+       "en": "Cool and dry place",
+       "value": "ambient"
+      },
+      {
+       "ar": "مبرّد",
+       "en": "Refrigerated",
+       "value": "chilled"
+      },
+      {
+       "ar": "مجمّد",
+       "en": "Frozen",
+       "value": "frozen"
+      }
+     ],
+     "label_ar": "طريقة الحفظ",
+     "label_en": "Storage",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "ingredients",
+     "sort": 13,
+     "type": "textarea",
+     "active": true,
+     "options": [],
+     "label_ar": "المكونات",
+     "label_en": "Ingredients",
+     "required": true,
+     "filterable": false
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": "يجب أن يكون الطعام مغلّفًا ومُعلَّمًا، مع بلد المنشأ والوزن الصافي وتاريخ انتهاء لا يقل عن ٩٠ يومًا عند الإدراج وطريقة الحفظ والمكونات، وتسجيل هيئة الغذاء والدواء للبيع في السعودية.",
+   "guidance_en": "Food must be sealed and labelled, with origin, net weight, best-before date (at least 90 days away when you list), storage and ingredients, and SFDA registration for Saudi Arabia.",
+   "accepted_examples": [
+    {
+     "ar": "تمر عجوة ١ كغ في علبة مختومة، ينتهي بعد ثمانية أشهر، مسجّل لدى هيئة الغذاء والدواء",
+     "en": "Ajwa dates, 1 kg, sealed box, best before in eight months, SFDA registered"
+    }
+   ],
+   "rejected_examples": [
+    {
+     "ar": "تمر سائب في كيس بلا بطاقة",
+     "en": "Loose dates in an unlabelled bag"
+    }
+   ]
+  },
+  {
+   "id": "859b990b-bab1-41fe-93af-27ddddd02fda",
+   "kind": "category",
+   "slug": "honey",
+   "sort": 602,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "faulty_only",
+    "commission_bps": 2500,
+    "min_shelf_days": 90,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 3,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "العسل",
+   "name_en": "Honey",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "7a9b5ebb-6bea-4c51-90dc-4b8b77face8a",
+   "attributes": [
+    {
+     "key": "floral_source",
+     "sort": 20,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "المصدر الزهري",
+     "label_en": "Floral source",
+     "required": true,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "08c62dda-7ff8-439c-9b8b-367351aee330",
+   "kind": "category",
+   "slug": "arabic-coffee",
+   "sort": 603,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "faulty_only",
+    "commission_bps": 2500,
+    "min_shelf_days": 90,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 3,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "القهوة العربية",
+   "name_en": "Arabic coffee",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "7a9b5ebb-6bea-4c51-90dc-4b8b77face8a",
+   "attributes": [
+    {
+     "key": "roast",
+     "sort": 20,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "فاتح (سعودي)",
+       "en": "Light (Saudi)",
+       "value": "light"
+      },
+      {
+       "ar": "متوسط",
+       "en": "Medium",
+       "value": "medium"
+      },
+      {
+       "ar": "غامق",
+       "en": "Dark",
+       "value": "dark"
+      }
+     ],
+     "label_ar": "درجة التحميص",
+     "label_en": "Roast",
+     "required": true,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "add6d851-7591-48c0-af13-c4a29ace0c4d",
+   "kind": "category",
+   "slug": "sweets",
+   "sort": 604,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "faulty_only",
+    "commission_bps": 2500,
+    "min_shelf_days": 90,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [
+     "halal_certificate"
+    ],
+    "return_window_days": 3,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "الحلويات",
+   "name_en": "Sweets",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "7a9b5ebb-6bea-4c51-90dc-4b8b77face8a",
+   "attributes": [
+    {
+     "key": "halal_certified",
+     "sort": 20,
+     "type": "boolean",
+     "active": true,
+     "options": [],
+     "label_ar": "حاصل على شهادة حلال",
+     "label_en": "Halal certified",
+     "required": true,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "kind": "department",
+   "slug": "gifts-occasions",
+   "sort": 700,
+   "image": null,
+   "policy": null,
+   "name_ar": "الهدايا والمناسبات",
+   "name_en": "Gifts & occasions",
+   "blurb_ar": "الحج والعمرة ورمضان والعيد والمواليد.",
+   "blurb_en": "Hajj and Umrah, Ramadan, Eid and new arrivals.",
+   "listable": false,
+   "is_active": false,
+   "parent_id": null,
+   "attributes": [
+    {
+     "key": "brand",
+     "sort": 1,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "العلامة التجارية أو الصانع",
+     "label_en": "Brand or maker",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "brand_relationship",
+     "sort": 2,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "علامتي الخاصة أو أنا الصانع",
+       "en": "It is my own brand or I make it",
+       "value": "own"
+      },
+      {
+       "ar": "موزّع أو بائع معتمد",
+       "en": "Authorised distributor or reseller",
+       "value": "authorised"
+      }
+     ],
+     "label_ar": "علاقتك بالعلامة التجارية",
+     "label_en": "Your relationship to the brand",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "origin_country",
+     "sort": 3,
+     "type": "country",
+     "active": true,
+     "options": [],
+     "label_ar": "بلد المنشأ",
+     "label_en": "Country of origin",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "contents",
+     "sort": 10,
+     "type": "textarea",
+     "active": true,
+     "options": [],
+     "label_ar": "محتويات الهدية",
+     "label_en": "What is in the gift",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "occasion",
+     "sort": 11,
+     "type": "multiselect",
+     "active": true,
+     "options": [
+      {
+       "ar": "الحج",
+       "en": "Hajj",
+       "value": "hajj"
+      },
+      {
+       "ar": "العمرة",
+       "en": "Umrah",
+       "value": "umrah"
+      },
+      {
+       "ar": "رمضان",
+       "en": "Ramadan",
+       "value": "ramadan"
+      },
+      {
+       "ar": "العيد",
+       "en": "Eid",
+       "value": "eid"
+      },
+      {
+       "ar": "عقد القران",
+       "en": "Nikah",
+       "value": "nikah"
+      },
+      {
+       "ar": "مولود جديد",
+       "en": "Newborn",
+       "value": "newborn"
+      }
+     ],
+     "label_ar": "المناسبة",
+     "label_en": "Occasion",
+     "required": false,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "fbb45879-175a-48dc-aa44-29bd9f7bc057",
+   "kind": "category",
+   "slug": "hajj-umrah-gifts",
+   "sort": 701,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "هدايا الحج والعمرة",
+   "name_en": "Hajj & Umrah gifts",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "e872ca14-4071-4c07-a0ce-8db96c53469b",
+   "kind": "category",
+   "slug": "ramadan-gifts",
+   "sort": 702,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "هدايا رمضان",
+   "name_en": "Ramadan gifts",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "5c2b2a27-aeab-418c-981f-9fc03a54d80c",
+   "kind": "category",
+   "slug": "eid-gifts",
+   "sort": 703,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "هدايا العيد",
+   "name_en": "Eid gifts",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "0ce040c2-1332-4da7-9e92-bcb885a54ad3",
+   "kind": "category",
+   "slug": "newborn-gifts",
+   "sort": 704,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "هدايا المواليد",
+   "name_en": "Newborn gifts",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "8824fb94-14ff-4fe8-a4e1-5867613c74dd",
+   "kind": "department",
+   "slug": "natural-care",
+   "sort": 800,
+   "image": null,
+   "policy": null,
+   "name_ar": "العناية الطبيعية",
+   "name_en": "Natural care",
+   "blurb_ar": "زيت الحبة السوداء ومستحضرات التجميل الحلال.",
+   "blurb_en": "Black seed oil and halal cosmetics.",
+   "listable": false,
+   "is_active": false,
+   "parent_id": null,
+   "attributes": [
+    {
+     "key": "brand",
+     "sort": 1,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "العلامة التجارية أو الصانع",
+     "label_en": "Brand or maker",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "brand_relationship",
+     "sort": 2,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "علامتي الخاصة أو أنا الصانع",
+       "en": "It is my own brand or I make it",
+       "value": "own"
+      },
+      {
+       "ar": "موزّع أو بائع معتمد",
+       "en": "Authorised distributor or reseller",
+       "value": "authorised"
+      }
+     ],
+     "label_ar": "علاقتك بالعلامة التجارية",
+     "label_en": "Your relationship to the brand",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "origin_country",
+     "sort": 3,
+     "type": "country",
+     "active": true,
+     "options": [],
+     "label_ar": "بلد المنشأ",
+     "label_en": "Country of origin",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "ingredients",
+     "sort": 10,
+     "type": "textarea",
+     "active": true,
+     "options": [],
+     "label_ar": "المكونات",
+     "label_en": "Ingredients",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "size",
+     "sort": 11,
+     "type": "number",
+     "active": true,
+     "options": [],
+     "label_ar": "الحجم (مل أو غ)",
+     "label_en": "Size (ml or g)",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "how_to_use",
+     "sort": 12,
+     "type": "textarea",
+     "active": true,
+     "options": [],
+     "label_ar": "طريقة الاستخدام",
+     "label_en": "How to use",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "best_before",
+     "sort": 13,
+     "type": "date",
+     "active": true,
+     "options": [],
+     "label_ar": "تاريخ الانتهاء (للمخزون الحالي)",
+     "label_en": "Best before (current stock)",
+     "required": true,
+     "filterable": false
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": "تحتاج منتجات العناية الطبيعية إلى تسجيل هيئة الغذاء والدواء (eCosma) للبيع في السعودية مع المكونات كاملة، ولا ادعاءات علاجية أو شفائية، وادعاء «حلال» يحتاج إلى شهادة حلال.",
+   "guidance_en": "Natural care products need SFDA (eCosma) registration for Saudi Arabia and full ingredients. No medical or healing claims. A \"halal\" claim needs a halal certificate.",
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "256800b7-de43-4268-8f03-f15e92cab131",
+   "kind": "category",
+   "slug": "black-seed-oil",
+   "sort": 801,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "unopened_only",
+    "commission_bps": 2500,
+    "min_shelf_days": 180,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 7,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "زيت الحبة السوداء",
+   "name_en": "Black seed oil",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "8824fb94-14ff-4fe8-a4e1-5867613c74dd",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "63ea36d6-c6a6-43e4-86c8-f920d5758482",
+   "kind": "category",
+   "slug": "halal-cosmetics",
+   "sort": 802,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "unopened_only",
+    "commission_bps": 2500,
+    "min_shelf_days": 180,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [
+     "halal_certificate"
+    ],
+    "return_window_days": 7,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "مستحضرات التجميل الحلال",
+   "name_en": "Halal cosmetics",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "8824fb94-14ff-4fe8-a4e1-5867613c74dd",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "8c1ac080-f3aa-4ad2-8a8e-f60cd08ca8bb",
+   "kind": "department",
+   "slug": "kids-learning",
+   "sort": 900,
+   "image": null,
+   "policy": null,
+   "name_ar": "الأطفال والتعلم",
+   "name_en": "Kids & learning",
+   "blurb_ar": "العربية والقرآن والتعلم للأطفال.",
+   "blurb_en": "Arabic, Quran and learning for children.",
+   "listable": false,
+   "is_active": false,
+   "parent_id": null,
+   "attributes": [
+    {
+     "key": "brand",
+     "sort": 1,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "العلامة التجارية أو الصانع",
+     "label_en": "Brand or maker",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "brand_relationship",
+     "sort": 2,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "علامتي الخاصة أو أنا الصانع",
+       "en": "It is my own brand or I make it",
+       "value": "own"
+      },
+      {
+       "ar": "موزّع أو بائع معتمد",
+       "en": "Authorised distributor or reseller",
+       "value": "authorised"
+      }
+     ],
+     "label_ar": "علاقتك بالعلامة التجارية",
+     "label_en": "Your relationship to the brand",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "origin_country",
+     "sort": 3,
+     "type": "country",
+     "active": true,
+     "options": [],
+     "label_ar": "بلد المنشأ",
+     "label_en": "Country of origin",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "age_range",
+     "sort": 10,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "من ٠ إلى ٢",
+       "en": "0 to 2 years",
+       "value": "0-2"
+      },
+      {
+       "ar": "من ٣ إلى ٥",
+       "en": "3 to 5 years",
+       "value": "3-5"
+      },
+      {
+       "ar": "من ٦ إلى ٨",
+       "en": "6 to 8 years",
+       "value": "6-8"
+      },
+      {
+       "ar": "من ٩ إلى ١٢",
+       "en": "9 to 12 years",
+       "value": "9-12"
+      }
+     ],
+     "label_ar": "العمر",
+     "label_en": "Age",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "material",
+     "sort": 11,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "الخامة",
+     "label_en": "Material",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "safety_standard",
+     "sort": 12,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "معيار سلامة الألعاب",
+     "label_en": "Toy safety standard",
+     "required": false,
+     "filterable": false
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "526dae8a-20b7-40f3-9b95-89f88a2c1f4f",
+   "kind": "category",
+   "slug": "learning-toys",
+   "sort": 901,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "ألعاب تعليمية",
+   "name_en": "Learning toys & games",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "8c1ac080-f3aa-4ad2-8a8e-f60cd08ca8bb",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "d69cf76c-af5c-409d-acbe-1d6d0b024f2a",
+   "kind": "category",
+   "slug": "kids-books",
+   "sort": 902,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": true,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "كتب الأطفال",
+   "name_en": "Children's books",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "8c1ac080-f3aa-4ad2-8a8e-f60cd08ca8bb",
+   "attributes": [],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "73aa5b97-22f5-44ed-afea-0880d2310f35",
+   "kind": "department",
+   "slug": "accessories",
+   "sort": 1000,
+   "image": null,
+   "policy": null,
+   "name_ar": "الإكسسوارات",
+   "name_en": "Accessories",
+   "blurb_ar": "خواتم الفضة للرجال والإكسسوارات الراقية.",
+   "blurb_en": "Men's silver rings and fine accessories.",
+   "listable": false,
+   "is_active": false,
+   "parent_id": null,
+   "attributes": [
+    {
+     "key": "brand",
+     "sort": 1,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "العلامة التجارية أو الصانع",
+     "label_en": "Brand or maker",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "brand_relationship",
+     "sort": 2,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "علامتي الخاصة أو أنا الصانع",
+       "en": "It is my own brand or I make it",
+       "value": "own"
+      },
+      {
+       "ar": "موزّع أو بائع معتمد",
+       "en": "Authorised distributor or reseller",
+       "value": "authorised"
+      }
+     ],
+     "label_ar": "علاقتك بالعلامة التجارية",
+     "label_en": "Your relationship to the brand",
+     "required": true,
+     "filterable": false
+    },
+    {
+     "key": "origin_country",
+     "sort": 3,
+     "type": "country",
+     "active": true,
+     "options": [],
+     "label_ar": "بلد المنشأ",
+     "label_en": "Country of origin",
+     "required": true,
+     "filterable": true
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": null,
+   "guidance_en": null,
+   "accepted_examples": [],
+   "rejected_examples": []
+  },
+  {
+   "id": "ffb32b19-e3af-40e7-b649-92afebc2228c",
+   "kind": "category",
+   "slug": "silver-rings",
+   "sort": 1001,
+   "image": null,
+   "policy": {
+    "min_photos": 3,
+    "always_review": false,
+    "return_policy": "standard",
+    "commission_bps": 2500,
+    "min_shelf_days": null,
+    "dangerous_goods": false,
+    "min_price_minor": null,
+    "min_long_side_px": 1600,
+    "mtm_return_policy": "faulty_only",
+    "ship_to_countries": null,
+    "required_documents": [],
+    "return_window_days": 14,
+    "ship_domestic_only": false,
+    "ship_from_countries": null,
+    "allow_made_to_measure": false
+   },
+   "name_ar": "خواتم الفضة للرجال",
+   "name_en": "Men's silver rings",
+   "blurb_ar": null,
+   "blurb_en": null,
+   "listable": true,
+   "is_active": false,
+   "parent_id": "73aa5b97-22f5-44ed-afea-0880d2310f35",
+   "attributes": [
+    {
+     "key": "metal",
+     "sort": 10,
+     "type": "select",
+     "active": true,
+     "options": [
+      {
+       "ar": "فضة ٩٢٥",
+       "en": "Sterling silver 925",
+       "value": "silver_925"
+      },
+      {
+       "ar": "فضة ٩٩٩",
+       "en": "Fine silver 999",
+       "value": "silver_999"
+      },
+      {
+       "ar": "تيتانيوم",
+       "en": "Titanium",
+       "value": "titanium"
+      },
+      {
+       "ar": "معدن مباح آخر",
+       "en": "Other permissible metal",
+       "value": "other"
+      }
+     ],
+     "label_ar": "المعدن",
+     "label_en": "Metal",
+     "required": true,
+     "filterable": true
+    },
+    {
+     "key": "stone",
+     "sort": 11,
+     "type": "text",
+     "active": true,
+     "options": [],
+     "label_ar": "الحجر",
+     "label_en": "Stone",
+     "required": false,
+     "filterable": true
+    },
+    {
+     "key": "weight_g",
+     "sort": 12,
+     "type": "number",
+     "unit": "g",
+     "active": true,
+     "options": [],
+     "label_ar": "الوزن",
+     "label_en": "Weight",
+     "required": false,
+     "filterable": false
+    }
+   ],
+   "department": "gifts",
+   "guidance_ar": "خواتم الرجال من الفضة (أو معدن مباح آخر) ولا تكون من الذهب أبدًا. اذكر المعدن ونقاوته.",
+   "guidance_en": "Rings for men must be silver (or another permissible metal), never gold. State the metal and its purity.",
+   "accepted_examples": [],
+   "rejected_examples": []
+  }
+ ],
+ "generated_at": "from migrations"
+}

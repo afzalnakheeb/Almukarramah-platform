@@ -12,6 +12,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 export const ROOT = join(here, '..', '..', '..');
 const MIGRATIONS = join(ROOT, 'supabase', 'migrations');
 const STUB = join(here, '..', 'supabase_stub.sql');
+const BASELINE = join(here, '..', 'fixtures', 'live_baseline.sql');
 
 const PGHOST = process.env.PGHOST ?? '/var/run/postgresql';
 const PGPORT = process.env.PGPORT ?? '54329';
@@ -111,8 +112,14 @@ export function freshDb(name: string, upTo?: string): Db {
   run('postgres', ['-c', `create database ${dbName}`]);
   const db = new Db(dbName);
   db.exec(readFileSync(STUB, 'utf8'));
+  let baseline = false;
   for (const f of readdirSync(MIGRATIONS).filter((x) => x.endsWith('.sql')).sort()) {
     if (upTo && f > upTo) break;
+    // the live database before the marketplace: our categories, zones and a few products (applied after 0011)
+    if (!baseline && f >= '0012') {
+      db.exec(readFileSync(BASELINE, 'utf8'));
+      baseline = true;
+    }
     try {
       db.exec(readFileSync(join(MIGRATIONS, f), 'utf8'));
     } catch (e) {
