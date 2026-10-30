@@ -110,6 +110,34 @@ h1: Apps for learning and living the deen
 json-ld: SoftwareApplication, SoftwareApplication, BreadcrumbList
 visible text without JS: 2046 chars: "Our apps | Al Mukarramah Delivering to : Saudi address SAR Our apps Apps for learning and living the deen Al Mukarramah builds apps from Madinah for families an…"
 
+## /cart  (HTTP 200)
+title: Your bag | Al Mukarramah
+description: Your Al Mukarramah gift bag.
+robots: noindex, nofollow
+canonical: https://almukarramah.com/cart
+hreflang: -
+og:title: Your bag | Al Mukarramah
+og:image: https://almukarramah.com/images/hero.jpg
+twitter:card: summary_large_image
+html lang/dir: lang="en"
+h1: Your bag is empty
+json-ld: NONE
+visible text without JS: 139 chars: "Your bag | Al Mukarramah Secure checkout Your bag is empty Find something meaningful to send. Explore the marketplace Home Shop Bag Account…"
+
+## /concierge  (HTTP 200)
+title: Gift assistant | Al Mukarramah
+description: Tell the Al Mukarramah assistant who the gift is for, the occasion and your budget, and it suggests gifts from the current catalogue, writes your gift card message and helps with delivery.
+robots: index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1
+canonical: https://almukarramah.com/concierge
+hreflang: -
+og:title: Gift assistant | Al Mukarramah
+og:image: https://almukarramah.com/images/hero.jpg
+twitter:card: summary_large_image
+html lang/dir: lang="en"
+h1: Gift assistant
+json-ld: NONE
+visible text without JS: 1028 chars: "Gift assistant | Al Mukarramah Delivering to : Saudi address SAR Gift assistant Suggests from our current catalogue Al Mukarramah assistant Answers from our liv…"
+
 ## /collections/prayer-mats  (HTTP 200)
 title: Prayer Mats | Al Mukarramah
 description: Embroidered calligraphy and Haramain designs, prepared and packed in Madinah.
