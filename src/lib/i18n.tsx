@@ -493,6 +493,12 @@ const en = {
   emblemAlt: 'The Al Mukarramah emblem, filled with the corner of the Kaaba',
   faqAside: 'Something else on your mind? Our gift assistant answers from the live catalogue, in English and Arabic.',
   faqAsideCta: 'Ask the gift assistant',
+  filterSort: 'Filter and sort',
+  showResults: 'Show',
+  tryAsking: 'Try asking',
+  conciergeStep1: 'Tell it who the gift is for, the occasion and your budget.',
+  conciergeStep2: 'It suggests gifts from our live catalogue, with prices and stock.',
+  conciergeStep3: 'It can write the card message and help with delivery.',
 };
 
 const ar: typeof en = {
@@ -971,6 +977,12 @@ const ar: typeof en = {
   emblemAlt: 'شعار المكرمة وفيه ركن الكعبة المشرفة',
   faqAside: 'لديك سؤال آخر؟ يجيبك مساعد الهدايا من كتالوجنا الحالي، بالعربية والإنجليزية.',
   faqAsideCta: 'اسأل مساعد الهدايا',
+  filterSort: 'التصفية والترتيب',
+  showResults: 'عرض',
+  tryAsking: 'جرّب أن تسأل',
+  conciergeStep1: 'أخبره لمن الهدية، وما المناسبة، وكم ميزانيتك.',
+  conciergeStep2: 'يقترح هدايا من كتالوجنا الحالي بأسعارها وتوفّرها.',
+  conciergeStep3: 'ويكتب لك رسالة البطاقة ويساعدك في التوصيل.',
 };
 
 export type Key = keyof typeof en;

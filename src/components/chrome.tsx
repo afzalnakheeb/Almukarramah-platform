@@ -335,7 +335,7 @@ function SearchPanel({ open, nav, onClose }: { open: boolean; nav: NavItem[]; on
         <Icon name="search" size={20} stroke={1.3} color={colors.navy} />
         <TextInput value={q} onChangeText={setQ} onSubmitEditing={go} returnKeyType="search" autoFocus
           placeholder={t('searchPlaceholder')} placeholderTextColor={colors.muted} accessibilityLabel={t('searchPlaceholder')}
-          style={[sans(400, isRTL), { flex: 1, fontSize: 18, color: colors.ink, minHeight: 52, textAlign: isRTL ? 'right' : 'left', outlineStyle: 'none' } as never]} />
+          style={[sans(400, isRTL), { flex: 1, fontSize: 18, color: colors.ink, minHeight: 52, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr', outlineStyle: 'none' } as never]} />
       </View>
       <T w={600} size={10.5} caps color={colors.brassText} style={{ marginTop: 32, marginBottom: 8 }}>{t('searchSuggest')}</T>
       {nav.slice(0, 4).map((n) => (
@@ -363,7 +363,7 @@ function SearchBox() {
         placeholder={t('searchPlaceholder')}
         placeholderTextColor={colors.muted}
         accessibilityLabel={t('searchPlaceholder')}
-        style={[sans(400, isRTL), { flex: 1, fontSize: 13.5, color: colors.ink, minHeight: 38, textAlign: isRTL ? 'right' : 'left', outlineStyle: 'none' } as never]}
+        style={[sans(400, isRTL), { flex: 1, fontSize: 13.5, color: colors.ink, minHeight: 38, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr', outlineStyle: 'none' } as never]}
       />
     </View>
   );
@@ -417,7 +417,7 @@ export function SiteFooter() {
       <T w={600} size={10.5} caps color={colors.navy} style={{ marginBottom: 6 }}>{title}</T>
       {links.map((l) => (l.href
         ? <Link key={l.label} href={l.href} target={String(l.href).startsWith('http') ? '_blank' : undefined} {...data({ foot: 1 })}><T size={13.5} color={colors.body}>{l.label}</T></Link>
-        : <T key={l.label} size={13.5} color={colors.muted}>{l.label}</T>))}
+        : <T key={l.label} size={13.5} color={colors.body}>{l.label}</T>))}
     </View>
   );
   return (

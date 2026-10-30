@@ -31,12 +31,19 @@ export default function CartScreen() {
           <Button label={t('exploreGifts')} href="/shop" />
           <Button label={t('helpChoose')} href="/concierge" kind="quiet" />
         </EmptyState>
-        <View style={{ flexDirection: wide ? 'row' : 'column', justifyContent: 'center', gap: wide ? 48 : 0, borderTopWidth: 1, borderColor: colors.goldLine, paddingTop: wide ? 36 : 12, maxWidth: 860, width: '100%', alignSelf: 'center' }}>
-          {([['navPerfumeOud', 'perfumes'], ['navPrayer', 'prayer-mats'], ['navGifts', 'gift-sets'], ['navDates', 'dates']] as [Key, string][]).map(([k, slug]) => (
-            <Link key={k} href={{ pathname: '/collections/[slug]', params: { slug } }} style={{ paddingVertical: wide ? 4 : 14, borderBottomWidth: wide ? 0 : 1, borderColor: colors.line }}>
-              <T w={500} size={11.5} caps color={colors.navy} center={wide}>{t(k)}</T>
-            </Link>
-          ))}
+        {/* the three doors, as on the homepage: a way back into the marketplace */}
+        <View style={{ borderTopWidth: 1, borderColor: colors.goldLine, paddingTop: wide ? 48 : 28, maxWidth: 920, width: '100%', alignSelf: 'center' }}>
+          <T w={600} size={10.5} caps color={colors.brassText} center style={{ marginBottom: wide ? 28 : 18 }}>{t('searchSuggest')}</T>
+          <View style={{ flexDirection: 'row', gap: wide ? 28 : 10 }}>
+            {([['navPerfumeOud', 'perfumes', '/images/door-perfume.jpg'], ['navPrayer', 'prayer-mats', '/images/door-prayer.jpg'], ['navGifts', 'gift-sets', '/images/door-gifts.jpg']] as [Key, string, string][]).map(([k, slug, img]) => (
+              <Link key={k} href={{ pathname: '/collections/[slug]', params: { slug } }} asChild>
+                <Pressable accessibilityRole="link" {...data({ hover: 'door' })} style={{ flex: 1, gap: wide ? 14 : 8, alignItems: 'center' }}>
+                  <View style={{ alignSelf: 'stretch' }}><Photo uri={img} ratio={4 / 5} label={t(k)} /></View>
+                  <Serif size={wide ? 22 : 15} center>{t(k)}</Serif>
+                </Pressable>
+              </Link>
+            ))}
+          </View>
         </View>
       </Screen>
     );

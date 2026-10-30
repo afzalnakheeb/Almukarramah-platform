@@ -3,7 +3,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Screen } from '@/components/chrome';
-import { Breadcrumb, Button, CapsLink, Chip, EmptyState, Eyebrow, FilterOption, Grid, H1, Loading, ProductTile, T, useWide } from '@/components/ui';
+import { Icon } from '@/components/icons';
+import { Breadcrumb, Button, CapsLink, Chip, EmptyState, Eyebrow, FilterOption, Grid, H1, Loading, ProductTile, Sheet, T, useWide } from '@/components/ui';
 import { getCategories, getProducts, getTags } from '@/lib/catalogue';
 import { Faq } from '@/components/faq';
 import { data, reveal } from '@/components/motion';
@@ -48,6 +49,7 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
   const [sort, setSort] = useState<Sort>('rec');
   const [hideOos, setHideOos] = useState(false);
   const [ship, setShip] = useState<Ship>('all');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [products, setProducts] = useState<Product[] | null>(() =>
     filterSnapshot({ tag: params.tag, category: fixedCat ?? params.cat, minSar: Number(params.min ?? 0) || undefined, maxSar: Number(params.max ?? 0) || undefined }));
 
@@ -95,6 +97,7 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
     setBand([0, 0]);
     setHideOos(false);
     setShip('all');
+    setSort('rec');
     router.setParams({ tag: undefined, cat: undefined, min: undefined, max: undefined });
   };
 
@@ -127,6 +130,30 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
         </Pressable>
       ))}
     </View>
+  );
+
+  const activeCount = (tag ? 1 : 0) + (cat && !fixedCat ? 1 : 0) + (band[0] || band[1] ? 1 : 0) + (hideOos ? 1 : 0) + (ship !== 'all' ? 1 : 0) + (sort !== 'rec' ? 1 : 0);
+  /** Phones: every filter and the sort in one sheet, the same quiet lists as the desktop sidebar. */
+  const filterSheet = (
+    <Sheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title={t('filterSort')}>
+      <ScrollView style={{ maxHeight: 460 }} contentContainerStyle={{ paddingBottom: 8 }}>
+        {group(t('sortBy'), (['rec', 'low', 'high'] as Sort[]).map((k) => (
+          <FilterOption key={k} label={t(k === 'rec' ? 'sortRec' : k === 'low' ? 'sortLow' : 'sortHigh')} active={sort === k} onPress={() => setSort(k)} />
+        )), true)}
+        {frag ? (hasSprays ? group(t('fragType'), shipOptions) : null) : (
+          <>
+            {occasions.length > 0 && group(t('occasion'), tagOptions(occasions))}
+            {recipients.length > 0 && group(t('recipient'), tagOptions(recipients))}
+          </>
+        )}
+        {group(t('price'), bandOptions)}
+        {group(t('availability'), oosToggle)}
+      </ScrollView>
+      <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center', borderTopWidth: 1, borderColor: colors.line, paddingTop: 16 }}>
+        <Button label={t('clearFilters')} kind="quiet" onPress={clear} />
+        <Button label={`${t('showResults')} · ${shown.length}`} onPress={() => setFiltersOpen(false)} style={{ flex: 1 }} />
+      </View>
+    </Sheet>
   );
 
   const seoPath = fixedCat ? `/collections/${fixedCat}` : '/shop';
@@ -162,9 +189,15 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
       </View>
 
       {/* Toolbar between hairlines: the count, and the sort on the far side */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingVertical: wide ? 10 : 8, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.line, marginBottom: wide ? 36 : 20 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingVertical: wide ? 10 : 6, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.line, marginBottom: wide ? 40 : 18 }}>
         <T size={13} color={colors.muted}><T w={500} size={13} num color={colors.navy}>{shown.length}</T> {t('products')}</T>
-        {wide && sortControl}
+        {wide ? sortControl : (
+          <Pressable accessibilityRole="button" onPress={() => setFiltersOpen(true)} {...data({ caps: 1 })}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 40, paddingHorizontal: 2 }}>
+            <Icon name="filter" size={16} stroke={1.3} color={colors.navy} />
+            <T w={600} size={11} caps color={colors.navy}>{t('filterSort')}{activeCount ? ` · ${activeCount}` : ''}</T>
+          </Pressable>
+        )}
       </View>
 
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 56 : 14, alignItems: 'flex-start' }}>
@@ -188,20 +221,13 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
             {group(t('availability'), oosToggle)}
           </View>
         ) : (
-          <View style={{ gap: 10, alignSelf: 'stretch' }}>
+          <View style={{ alignSelf: 'stretch' }}>
             {categories.length > 0 && !fixedCat && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20, marginBottom: 8 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
                 {categories.map((c) => <Chip key={c.id} size="sm" label={pick(c, 'name')} active={cat === c.slug} onPress={() => setCat(cat === c.slug ? undefined : c.slug)} />)}
               </ScrollView>
             )}
-            {frag && hasSprays && shipChips}
-            {!frag && (occasions.length > 0 || recipients.length > 0) && <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
-              {[...occasions, ...recipients].map((g) => <Chip key={g.id} size="sm" label={pick(g, 'name')} active={tag === g.slug} onPress={() => setTag(tag === g.slug ? undefined : g.slug)} />)}
-            </ScrollView>}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
-              {BANDS.slice(1).map((b) => <Chip key={b.join('-')} size="sm" label={bandLabel(b)} active={band[0] === b[0] && band[1] === b[1]} onPress={() => setBand(band[0] === b[0] && band[1] === b[1] ? [0, 0] : b)} />)}
-            </ScrollView>
-            <View style={{ paddingTop: 6, paddingBottom: 10 }}>{sortControl}</View>
+            {frag && hasSprays && <View style={{ marginBottom: 8 }}>{shipChips}</View>}
           </View>
         )}
 
@@ -223,6 +249,7 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
           <Faq title={t('faqTitle')} kicker={t('faqKicker')} split={wide} items={[2, 3, 4].map((n) => ({ q: t(`hfaq${n}q` as Key), a: t(`hfaq${n}a` as Key) }))} />
         </View>
       )}
+      {!wide && filterSheet}
     </Screen>
   );
 }

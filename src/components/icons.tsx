@@ -5,7 +5,7 @@ import { colors } from '@/theme';
 
 export type IconName =
   | 'menu' | 'search' | 'bag' | 'user' | 'help' | 'bed' | 'house' | 'globe' | 'chevronDown' | 'chevronLeft' | 'chevronRight'
-  | 'arrowRight' | 'arrowLeft' | 'close' | 'send' | 'lock' | 'gift' | 'sparkle' | 'book' | 'check' | 'plus' | 'minus' | 'shield' | 'grid';
+  | 'arrowRight' | 'arrowLeft' | 'close' | 'send' | 'lock' | 'gift' | 'sparkle' | 'book' | 'check' | 'plus' | 'minus' | 'shield' | 'grid' | 'filter';
 
 export function Icon({ name, size = 22, color = colors.navy, stroke = 1.5 }: { name: IconName; size?: number; color?: string; stroke?: number }) {
   const p = { fill: 'none', stroke: color, strokeWidth: stroke, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -34,6 +34,7 @@ export function Icon({ name, size = 22, color = colors.navy, stroke = 1.5 }: { n
       {name === 'plus' && <Path {...p} d="M12 5v14M5 12h14" />}
       {name === 'minus' && <Path {...p} d="M5 12h14" />}
       {name === 'shield' && <><Path {...p} d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" /><Path {...p} d="M8.5 12l2.5 2.5 4.5-5" /></>}
+      {name === 'filter' && <><Path {...p} d="M4 7h9M19 7h1M4 17h3M13 17h7" /><Circle {...p} cx={16} cy={7} r={2.5} /><Circle {...p} cx={10} cy={17} r={2.5} /></>}
       {name === 'grid' && <><Rect {...p} x={4} y={4} width={7} height={7} rx={1.5} /><Rect {...p} x={13} y={4} width={7} height={7} rx={1.5} /><Rect {...p} x={4} y={13} width={7} height={7} rx={1.5} /><Rect {...p} x={13} y={13} width={7} height={7} rx={1.5} /></>}
     </Svg>
   );

@@ -145,14 +145,16 @@ export function Button({ label, onPress, href, kind = 'primary', disabled, busy,
   const FG: Record<ButtonKind, string> = { primary: colors.ivory, danger: colors.white, light: colors.navy, text: colors.navy, quiet: colors.navy, gold: colors.navy, outlineLight: colors.navy, secondary: colors.navy };
   const BORDER: Record<ButtonKind, string> = { primary: colors.emerald, danger: colors.danger, light: colors.line, text: 'transparent', quiet: 'transparent', gold: colors.gold, outlineLight: colors.navy, secondary: colors.navy };
   const bare = kind === 'text' || kind === 'quiet';
-  const bg = disabled ? colors.disabled : BG[kind];
-  const fg = disabled ? colors.muted : FG[kind];
-  const border = disabled ? colors.disabled : BORDER[kind];
+  // Disabled keeps the button's own colours, faded: a grey slab reads cheap.
+  const bg = BG[kind];
+  const fg = FG[kind];
+  const border = BORDER[kind];
   const { isRTL } = useI18n();
   const h = size === 'lg' ? 56 : size === 'sm' ? 40 : 48;
   const base: StyleProp<ViewStyle> = [
     styles.button,
     { minHeight: bare ? 36 : h, backgroundColor: bg, borderColor: border, paddingHorizontal: bare ? 2 : size === 'sm' ? 18 : size === 'lg' ? 34 : 26 },
+    disabled && { opacity: 0.38 },
     full && { alignSelf: 'stretch' },
     style,
   ];
@@ -203,7 +205,7 @@ export function Field(props: TextInputProps & { label: string; hint?: string; er
         {...rest}
         style={[
           styles.input, sans(400, isRTL),
-          { textAlign: dirLtr ? 'left' : isRTL ? 'right' : 'left' },
+          { textAlign: dirLtr ? 'left' : isRTL ? 'right' : 'left', writingDirection: dirLtr ? 'ltr' : isRTL ? 'rtl' : 'ltr' },
           rest.multiline && { minHeight: 104, paddingTop: 13, textAlignVertical: 'top' },
           error ? { borderColor: colors.danger } : null,
           style,
@@ -429,12 +431,13 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
 }
 
 /** Quantity stepper: a fine frame, tabular figures. */
-export function Stepper({ value, onChange, min = 0 }: { value: number; onChange: (n: number) => void; min?: number }) {
+export function Stepper({ value, onChange, min = 0, tall }: { value: number; onChange: (n: number) => void; min?: number; tall?: boolean }) {
+  const btn = [styles.stepBtn, tall && { height: 54, width: 42 }];
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.inputLine, borderRadius: 1, backgroundColor: colors.porcelain }}>
-      <Pressable accessibilityRole="button" accessibilityLabel="−" onPress={() => onChange(Math.max(min, value - 1))} style={styles.stepBtn}><Icon name="minus" size={14} stroke={1.4} /></Pressable>
-      <T w={500} size={14.5} num style={{ minWidth: 28, textAlign: 'center' }}>{value}</T>
-      <Pressable accessibilityRole="button" accessibilityLabel="+" onPress={() => onChange(value + 1)} style={styles.stepBtn}><Icon name="plus" size={14} stroke={1.4} /></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel="−" onPress={() => onChange(Math.max(min, value - 1))} {...data({ step: 1 })} style={btn}><Icon name="minus" size={14} stroke={1.3} /></Pressable>
+      <T w={500} size={tall ? 15 : 14.5} num style={{ minWidth: 28, textAlign: 'center' }}>{value}</T>
+      <Pressable accessibilityRole="button" accessibilityLabel="+" onPress={() => onChange(value + 1)} {...data({ step: 1 })} style={btn}><Icon name="plus" size={14} stroke={1.3} /></Pressable>
     </View>
   );
 }

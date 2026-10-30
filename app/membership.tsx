@@ -18,6 +18,22 @@ import type { Plan } from '@/lib/types';
 import { colors } from '@/theme';
 import { faqLd, Seo } from '@/components/seo';
 
+/** A plan's description: a list with green ticks when it names several benefits, otherwise one quiet paragraph. */
+function Benefits({ text }: { text: string }) {
+  const parts = text.replace(/[.。]\s*$/, '').split(/\s*[,،]\s*/).filter(Boolean);
+  if (parts.length < 3) return <T size={14.5} lh={1.7} color={colors.body}>{text}</T>;
+  return (
+    <View style={{ gap: 10 }}>
+      {parts.map((x) => (
+        <View key={x} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
+          <View style={{ marginTop: 3 }}><Icon name="check" size={14} stroke={1.6} color={colors.emerald} /></View>
+          <T size={14.5} lh={1.5} color={colors.body} style={{ flex: 1 }}>{x.charAt(0).toUpperCase() + x.slice(1)}</T>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export default function Membership() {
   const wide = useWide();
   const { t, pick, currency, lang } = useI18n();
@@ -75,9 +91,9 @@ export default function Membership() {
               <Eyebrow color={featured ? colors.emerald : colors.brassText}>{t(p.kind === 'membership' ? 'kind_membership' : 'kind_box')}</Eyebrow>
               <Serif size={wide ? 38 : 30}>{pick(p, 'name')}</Serif>
               <Ornament width={72} />
-              <T size={14.5} lh={1.7} color={colors.body}>{pick(p, 'description')}</T>
-              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 6, paddingTop: 16, borderTopWidth: 1, borderColor: colors.line }}>
-                <T w={500} size={26} num color={colors.navy}>{formatMoney(convertFromSar(p.price_sar, currency), currency, lang)}</T>
+              <Benefits text={pick(p, 'description')} />
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 6, paddingTop: 18, borderTopWidth: 1, borderColor: colors.line }}>
+                <T w={500} size={wide ? 30 : 26} num color={colors.navy} style={{ letterSpacing: 0.2 }}>{formatMoney(convertFromSar(p.price_sar, currency), currency, lang)}</T>
                 <T size={13.5} color={colors.muted}>/ {t(p.period === 'year' ? 'perYear' : 'perMonth')}</T>
               </View>
               <T size={12} color={colors.muted}>{t('vatIncluded')}</T>

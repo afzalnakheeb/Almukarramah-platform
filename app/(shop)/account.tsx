@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Logo, Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
-import { Button, Card, Eyebrow, Field, H1, KiswahRule, Notice, Serif, T, Tag, useWide } from '@/components/ui';
+import { Button, Card, Eyebrow, Field, H1, KiswahRule, Notice, Photo, Serif, T, Tag, useWide } from '@/components/ui';
+import { Corners } from '@/components/decor';
 import { data } from '@/components/motion';
 import { useI18n, type Key } from '@/lib/i18n';
 import { openExternal } from '@/lib/links';
@@ -98,8 +99,16 @@ export default function Account() {
     return (
       <Screen>
       <Seo title="Your account | Al Mukarramah" description="Orders, tax invoices and membership." path="/account" noindex />
-        <View style={{ alignItems: 'center', paddingVertical: wide ? 24 : 0 }}>
-          <View style={{ width: '100%', maxWidth: 480, backgroundColor: colors.porcelain, borderWidth: 1, borderColor: colors.line, borderTopColor: colors.gold, padding: wide ? 44 : 24, gap: 16 }}>
+        <View style={{ flexDirection: wide ? 'row' : 'column', justifyContent: 'center', alignItems: wide ? 'center' : 'stretch', gap: wide ? 88 : 0, paddingVertical: wide ? 24 : 0, maxWidth: 1080, width: '100%', alignSelf: 'center' }}>
+          {wide && (
+            <View style={{ flex: 1, maxWidth: 480 }}>
+              <View style={{ aspectRatio: 4 / 5 }}>
+                <Photo uri="/images/door-gifts.jpg" ratio={4 / 5} label={t('navGifts')} />
+                <Corners at={['ts', 'be']} len={18} inset={-11} />
+              </View>
+            </View>
+          )}
+          <View style={{ width: '100%', maxWidth: 460, alignSelf: 'center', backgroundColor: colors.porcelain, borderWidth: 1, borderColor: colors.line, borderTopColor: colors.gold, padding: wide ? 44 : 24, gap: 16 }}>
             <View style={{ alignItems: 'center', gap: 18, marginBottom: 4 }}>
               <Logo height={wide ? 36 : 30} />
               <KiswahRule center width={88} />

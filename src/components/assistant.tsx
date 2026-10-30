@@ -101,11 +101,13 @@ export function AssistantChat({ onClose, compact }: { onClose?: () => void; comp
         )}
         {a.error && <Notice tone="warn" text={a.error} />}
         {a.turns.length === 0 && !a.busy && (
-          <View style={{ gap: 8, marginTop: 4 }}>
+          <View style={{ marginTop: 6 }}>
+            <T w={600} size={10} caps color={colors.brassText} style={{ marginBottom: 6 }}>{t('tryAsking')}</T>
             {chips.map((k) => (
-              <Pressable key={k} accessibilityRole="button" onPress={() => submit(t(k))} {...data({ chip: 'off' })}
-                style={{ alignSelf: 'flex-start', borderWidth: 1, borderColor: colors.line, backgroundColor: colors.porcelain, borderRadius: 1, paddingVertical: 9, paddingHorizontal: 14 }}>
-                <T size={13.5} color={colors.navy}>{t(k)}</T>
+              <Pressable key={k} accessibilityRole="button" onPress={() => submit(t(k))} {...data({ hover: 'row' })}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderColor: colors.line }}>
+                <T size={14} lh={1.45} color={colors.navy} style={{ flex: 1 }}>{t(k)}</T>
+                <Icon name={isRTL ? 'arrowLeft' : 'arrowRight'} size={15} stroke={1.2} color={colors.brass} />
               </Pressable>
             ))}
           </View>
@@ -123,12 +125,12 @@ export function AssistantChat({ onClose, compact }: { onClose?: () => void; comp
             onSubmitEditing={() => submit()}
             returnKeyType="send"
             maxLength={1200}
-            style={[sans(400, isRTL), { flex: 1, fontSize: 15.5, color: colors.ink, minHeight: 42, textAlign: isRTL ? 'right' : 'left', outlineStyle: 'none' } as never]}
+            style={[sans(400, isRTL), { flex: 1, fontSize: 15.5, color: colors.ink, minHeight: 42, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr', outlineStyle: 'none' } as never]}
           />
           <Pressable accessibilityRole="button" accessibilityLabel={t('send')} onPress={() => submit()} disabled={a.busy || !input.trim()}
             {...data({ btn: input.trim() ? 'primary' : undefined })}
-            style={{ width: 40, height: 40, borderRadius: 1, borderWidth: 1, borderColor: input.trim() ? colors.emerald : colors.disabled, backgroundColor: input.trim() ? colors.emerald : colors.disabled, alignItems: 'center', justifyContent: 'center' }}>
-            <View style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}><Icon name="send" size={16} stroke={1.4} color={input.trim() ? colors.ivory : colors.muted} /></View>
+            style={{ width: 40, height: 40, borderRadius: 1, borderWidth: 1, borderColor: input.trim() ? colors.emerald : colors.line, backgroundColor: input.trim() ? colors.emerald : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}><Icon name="send" size={16} stroke={1.3} color={input.trim() ? colors.ivory : colors.brass} /></View>
           </Pressable>
         </View>
         <T size={11} color={colors.muted} center>{t('assistantPrivacy')}</T>

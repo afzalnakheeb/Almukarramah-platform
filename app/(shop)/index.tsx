@@ -304,7 +304,7 @@ export default function Home() {
       <Container style={{ paddingTop: gap }}>
         <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 96 : 36, alignItems: wide ? 'center' : 'stretch' }}>
           <View {...reveal(0)} style={{ flex: wide ? 0.92 : undefined }}>
-            <Framed uri="/images/story.jpg" ratio={wide ? 4 / 5 : 4 / 3} label={t('storyImageAlt')} corners="on" position={wide ? 'center' : 'top'} />
+            <Framed uri="/images/story.jpg" ratio={wide ? 4 / 5 : 4 / 3} label={t('storyImageAlt')} corners={wide ? 'on' : 'none'} />
           </View>
           <View {...reveal(wide ? 1 : 0)} style={{ flex: wide ? 1.08 : undefined, gap: wide ? 22 : 14, alignItems: 'flex-start' }}>
             <View style={{ marginBottom: wide ? 14 : 6 }}>
