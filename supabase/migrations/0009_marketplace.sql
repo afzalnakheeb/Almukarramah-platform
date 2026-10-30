@@ -9,9 +9,12 @@
 --      marketplace: independent brands with their own public shop page ("Sold by <brand>");
 --      partner: private-label and fulfilment partners who make and ship Al Mukarramah's own brand and authorised
 --               brands (e.g. Ahmed Al Maghribi). Not shown publicly: customers see "Sold by Al Mukarramah".
---    Both ship their own orders with tracking. Al Mukarramah's margin is 25% to 50% of the line price.
---  * Al Mukarramah stays the seller of record on the customer's invoice (ZATCA deemed-supplier rules for
---    marketplaces); commission is recorded per order line for later payouts.
+--    Al Mukarramah's margin is 25% to 50% of the line price; commission is recorded per order line for payouts.
+--  * Shipping is "model B" (0010_rulebook_model_b.sql): sellers pack their own parcels but ship ONLY through the
+--    carriers Al Mukarramah contracts, with labels printed from the seller dashboard. The platform sets the delivery
+--    price the customer pays; sellers never type shipping prices.
+--  * Who invoices each line, which VAT applies and whether a sale is allowed at all come from the country rulebook
+--    (countries, corridors, product compliance) in 0010.
 
 create type seller_status as enum ('pending', 'approved', 'rejected', 'suspended');
 create type listing_status as enum ('draft', 'pending_review', 'approved', 'rejected');
@@ -31,12 +34,7 @@ create table sellers (
   logo text,
   banner text,
   website text,
-  ships_to text[] not null default '{*}',            -- ISO country codes; '*' = worldwide
-  handling_days int not null default 3 check (handling_days between 1 and 30),
-  ship_home_minor int not null default 0 check (ship_home_minor >= 0),   -- SAR halalas, buyers in the seller's country
-  ship_intl_minor int not null default 0 check (ship_intl_minor >= 0),   -- SAR halalas, everywhere else
-  ship_overrides jsonb not null default '{}',     -- per destination country, SAR halalas: {"SA": 2500, "GB": 6000}
-  free_ship_over_minor int check (free_ship_over_minor >= 0),
+  handling_days int not null default 3 check (handling_days between 1 and 30),   -- days to pack before pickup
   returns_en text check (char_length(returns_en) <= 1500),
   returns_ar text check (char_length(returns_ar) <= 1500),
   kind text not null default 'marketplace' check (kind in ('marketplace', 'partner')),
@@ -56,8 +54,8 @@ create table seller_private (
   contact_email text not null,
   contact_phone text,
   legal_name text,
-  registration_no text,
-  vat_no text,
+  registration_no text,         -- commercial registration / trade licence / commercial licence number
+  tax_registration_no text,     -- VAT number (SA), TRN (AE), GSTIN (IN)
   product_summary text,     -- what they plan to sell (from the application)
   internal_notes text       -- staff only
 );
@@ -106,8 +104,7 @@ create policy "staff manage sellers" on sellers for all
 -- these columns. Sellers and staff get the full record through my_sellers() and admin_sellers().
 revoke select on sellers from anon, authenticated;
 grant select (id, slug, name_en, name_ar, tagline_en, tagline_ar, about_en, about_ar, country, city, logo, banner, website,
-  ships_to, handling_days, ship_home_minor, ship_intl_minor, ship_overrides, free_ship_over_minor, returns_en, returns_ar,
-  kind, status, created_at) on sellers to anon, authenticated;
+  handling_days, returns_en, returns_ar, kind, status, created_at) on sellers to anon, authenticated;
 
 create policy "members and staff read private" on seller_private for select
   using (private.is_seller_member(seller_id) or private.is_staff());
@@ -390,83 +387,14 @@ alter table measurement_profiles enable row level security;
 create policy "own measurements" on measurement_profiles for all
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
--- ---------------------------------------------------------------- orders: who sells each line, and one shipment per seller
+-- ---------------------------------------------------------------- orders: who sells each line
+-- (shipments, one per seller per order, and the seller's order list are in 0010_rulebook_model_b.sql)
 alter table order_items
   add column custom jsonb,                         -- size, chosen design options and measurements (cm)
   add column seller_id uuid references sellers,
   add column commission_bps int,
   add column commission_minor int;
-
-create table order_shipments (
-  id uuid primary key default gen_random_uuid(),
-  order_id uuid not null references orders on delete cascade,
-  seller_id uuid references sellers,              -- null: shipped by Al Mukarramah
-  status text not null default 'pending' check (status in ('pending', 'packing', 'shipped', 'delivered', 'cancelled')),
-  shipping_minor int not null default 0,
-  carrier text,
-  tracking_number text,
-  tracking_url text,
-  shipped_at timestamptz,
-  delivered_at timestamptz,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-create unique index order_shipments_one_per_seller on order_shipments (order_id, coalesce(seller_id, '00000000-0000-0000-0000-000000000000'::uuid));
-alter table order_shipments enable row level security;
-create policy "customers and staff read shipments" on order_shipments for select using (
-  private.is_staff() or private.is_seller_member(seller_id)
-  or exists (select 1 from orders o where o.id = order_shipments.order_id and o.user_id = auth.uid())
-);
-create policy "staff edit shipments" on order_shipments for all
-  using (private.is_staff(array['owner', 'manager', 'operations', 'support']::staff_role[]));
-create trigger audit_order_shipments after insert or update or delete on order_shipments for each row execute function audit_trigger();
-
--- A seller sees only their part of paid orders: the delivery details they need, their lines, their shipment.
-create or replace function seller_orders(p_seller uuid) returns jsonb
-language plpgsql stable security definer set search_path = public as $$
-begin
-  if not (private.is_seller_member(p_seller) or private.is_staff()) then raise exception 'Not allowed'; end if;
-  return coalesce((
-    select jsonb_agg(x order by x ->> 'created_at' desc) from (
-      select jsonb_build_object(
-        'shipment_id', s.id, 'status', s.status, 'carrier', s.carrier, 'tracking_number', s.tracking_number,
-        'tracking_url', s.tracking_url, 'shipped_at', s.shipped_at, 'shipping_minor', s.shipping_minor,
-        'order_number', o.number, 'created_at', o.created_at, 'paid_at', o.paid_at, 'currency', o.currency,
-        'ship_to', o.ship_to, 'gift_message', o.gift_message,
-        'items', (select jsonb_agg(jsonb_build_object('name_en', i.name_en, 'quantity', i.quantity, 'unit_price_minor', i.unit_price_minor,
-                    'line_total_minor', i.line_total_minor, 'commission_minor', i.commission_minor, 'custom', i.custom))
-                  from order_items i where i.order_id = o.id and i.seller_id = p_seller)
-      ) as x
-      from order_shipments s join orders o on o.id = s.order_id
-      where s.seller_id = p_seller and o.status not in ('pending_payment', 'cancelled')
-    ) t
-  ), '[]'::jsonb);
-end $$;
-revoke all on function seller_orders(uuid) from public, anon;
-grant execute on function seller_orders(uuid) to authenticated;
-
-create or replace function seller_update_shipment(p_shipment uuid, p_status text, p_carrier text, p_tracking text, p_url text) returns void
-language plpgsql security definer set search_path = public as $$
-declare
-  s order_shipments;
-begin
-  select * into s from order_shipments where id = p_shipment;
-  if s.id is null or not (private.is_seller_member(s.seller_id) or private.is_staff()) then raise exception 'Not allowed'; end if;
-  if p_status not in ('packing', 'shipped', 'delivered') then raise exception 'Unknown status'; end if;
-  if p_status = 'shipped' and coalesce(trim(p_tracking), '') = '' then raise exception 'Add the tracking number'; end if;
-  if p_url is not null and p_url <> '' and p_url !~ '^https://' then raise exception 'Tracking link must start with https://'; end if;
-  update order_shipments set
-    status = p_status,
-    carrier = coalesce(nullif(trim(p_carrier), ''), carrier),
-    tracking_number = coalesce(nullif(trim(p_tracking), ''), tracking_number),
-    tracking_url = coalesce(nullif(trim(p_url), ''), tracking_url),
-    shipped_at = case when p_status = 'shipped' and shipped_at is null then now() else shipped_at end,
-    delivered_at = case when p_status = 'delivered' then now() else delivered_at end,
-    updated_at = now()
-  where id = p_shipment;
-end $$;
-revoke all on function seller_update_shipment(uuid, text, text, text, text) from public, anon;
-grant execute on function seller_update_shipment(uuid, text, text, text, text) to authenticated;
+create index order_items_seller on order_items (seller_id) where seller_id is not null;
 
 -- ---------------------------------------------------------------- photos
 -- seller-uploads: PRIVATE. Sellers write only inside their own folder (<seller id>/...). Images only, 5 MB each.
