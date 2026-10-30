@@ -1,7 +1,7 @@
 // Account: sign-in on a porcelain panel with a gold top rule; signed in, quiet hairline tiles and lists.
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { Logo, Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
 import { Button, Card, Eyebrow, Field, H1, KiswahRule, Notice, Photo, Serif, T, Tag, useWide } from '@/components/ui';
@@ -15,9 +15,12 @@ import { callFunction, isConfigured, supabase } from '@/lib/supabase';
 import { colors } from '@/theme';
 import { Seo } from '@/components/seo';
 import { GoogleButton } from '@/components/google';
+import { AppleButton } from '@/components/apple';
+import { EmailSignIn } from '@/components/sign-in';
+import { DeleteAccount } from '@/components/account-delete';
+import { AppSettings } from '@/components/app-settings';
 import { AppCard } from '@/components/apps';
 import { APPS } from '@/lib/apps';
-import { rememberNext } from '@/lib/auth';
 
 type SubRow = { id: string; source: string; status: string; cancel_at_period_end: boolean; current_period_end: string | null; plans: { name_en: string; name_ar: string; price_sar: number; kind: string } | null };
 type OrderRow = { id: string; number: number; status: string; currency: string; total_minor: number; created_at: string; invoices: { id: string; number: string }[] };
@@ -30,9 +33,6 @@ export default function Account() {
   const wide = useWide();
   const { t, lang, isRTL } = useI18n();
   const { session, staffRole } = useSession();
-  const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const { status: payStatus, next } = useLocalSearchParams<{ status?: string; next?: string }>();
@@ -116,27 +116,10 @@ export default function Account() {
             <Serif role="h1" size={wide ? 38 : 32} center>{t('signInTitle')}</Serif>
             <T size={14} lh={1.65} color={colors.body} center style={{ marginBottom: 6 }}>{t('signInBody')}</T>
             {!isConfigured && <Notice text="Preview mode: sign-in works once the Supabase project is connected." />}
+            <AppleButton onError={() => setError(t('appleError'))} />
             <GoogleButton onError={() => setError(t('googleError'))} dividerLabel={t('orEmail')} next={nextPath} />
-            <Field label={t('email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" dirLtr />
-            <Button
-              label={t('sendCode')}
-              busy={busy}
-              disabled={!email.includes('@')}
-              onPress={async () => {
-                setBusy(true);
-                setError(null);
-                await rememberNext(nextPath);
-                const { error: e } = await supabase.auth.signInWithOtp({
-                  email: email.trim(),
-                  options: typeof window !== 'undefined' ? { emailRedirectTo: `${window.location.origin}/account${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ''}` } : undefined,
-                });
-                setBusy(false);
-                if (e) setError(e.message);
-                else setSent(true);
-              }}
-            />
-            {sent && <Notice tone="ok" text={t('checkEmail')} />}
             {error && <Notice tone="warn" text={error} />}
+            <EmailSignIn next={nextPath} />
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginVertical: 2 }}>
               <View style={{ flex: 1, height: 1, backgroundColor: colors.line }} />
               <T size={12} color={colors.muted}>{t('or')}</T>
@@ -146,6 +129,7 @@ export default function Account() {
             <T size={12} lh={1.6} color={colors.muted} center style={{ marginTop: 4 }}>{t('noMarketing')}</T>
           </View>
         </View>
+        {Platform.OS !== 'web' && <View style={{ maxWidth: 460, width: '100%', alignSelf: 'center' }}><AppSettings /></View>}
       </Screen>
     );
   }
@@ -197,7 +181,7 @@ export default function Account() {
                     {s.plans ? `${formatMoney(s.plans.price_sar, 'SAR', lang)} / ${t('perMonth')} · ` : ''}
                     {s.status === 'past_due' ? t('subPastDue') : s.cancel_at_period_end ? `${t('subEnds')} ${date}` : `${t('subRenews')} ${date}`}
                   </T>
-                  {store && <T size={12.5} color={colors.muted}>{t('subStoreManaged')}</T>}
+                  {store && <T size={12.5} color={colors.muted}>{t(Platform.OS === 'ios' ? 'subStoreManagedIos' : Platform.OS === 'android' ? 'subStoreManagedAndroid' : 'subStoreManaged')}</T>}
                 </View>
                 <Tag label={s.status === 'past_due' ? t('subPastDueTag') : s.cancel_at_period_end ? t('subCancelledTag') : t('subActiveTag')} tone={s.status === 'past_due' ? 'warn' : s.cancel_at_period_end ? 'mute' : 'ok'} />
                 {!store && (
@@ -263,6 +247,9 @@ export default function Account() {
           </View>
         </Card>
       )}
+
+      <AppSettings />
+      <DeleteAccount />
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 24 }}>
         <T size={13} color={colors.muted} style={{ flexShrink: 1 }}>{t('accountOptional')}</T>

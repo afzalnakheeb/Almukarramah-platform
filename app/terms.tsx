@@ -6,7 +6,7 @@ const CONTACT = 'hello@almukarramah.com';
 
 const en: LegalDoc = {
   title: 'Terms of service',
-  updated: 'Last updated 29 October 2026',
+  updated: 'Last updated 30 October 2026',
   intro: 'These terms apply when you shop at almukarramah.com or use the Al Mukarramah apps. Al Mukarramah is based in Madinah, Saudi Arabia. By placing an order or creating an account you agree to them.',
   sections: [
     { h: 'Your account', p: [
@@ -27,6 +27,7 @@ const en: LegalDoc = {
     ] },
     { h: 'Subscriptions', p: [
       'Memberships and boxes renew every month until you cancel. You can cancel at any time in your account; you will not be charged again and the subscription continues until the end of the period already paid. Subscriptions bought inside the iPhone or Android app are managed in the App Store or Google Play.',
+      'A membership bought inside the iPhone or Android app is charged to your Apple ID or Google Play account when you confirm the purchase. It renews automatically for the same period at the same price unless you cancel at least 24 hours before the end of the current period, in your App Store or Google Play account settings. Deleting your Al Mukarramah account does not cancel it. Purchases in our iPhone app are also covered by Apple\u2019s standard licence agreement for apps.',
     ] },
     { h: 'Content and religious material', p: [
       'Quran text in our apps is shown exactly as published by its source. Our assistant and content do not give religious rulings; please ask a qualified scholar.',
@@ -40,7 +41,7 @@ const en: LegalDoc = {
 
 const ar: LegalDoc = {
   title: 'الشروط والأحكام',
-  updated: 'آخر تحديث: ٢٩ أكتوبر ٢٠٢٦',
+  updated: 'آخر تحديث: ٣٠ أكتوبر ٢٠٢٦',
   intro: 'تنطبق هذه الشروط عند التسوق في almukarramah.com أو استخدام تطبيقات المكرمة. مقر المكرمة في المدينة المنورة بالمملكة العربية السعودية. بإتمام طلب أو إنشاء حساب فإنك توافق عليها.',
   sections: [
     { h: 'حسابك', p: [
@@ -61,6 +62,7 @@ const ar: LegalDoc = {
     ] },
     { h: 'الاشتراكات', p: [
       'تتجدد العضويات والصناديق شهريًا حتى تلغيها. يمكنك الإلغاء في أي وقت من حسابك، ولن يُخصم منك مبلغ آخر، ويستمر الاشتراك حتى نهاية الفترة المدفوعة. أما الاشتراكات المشتراة من تطبيق iPhone أو Android فتُدار من App Store أو Google Play.',
+      'تُخصم العضوية المشتراة من داخل تطبيق iPhone أو Android من حساب Apple ID أو Google Play عند تأكيد الشراء، وتتجدد تلقائيًا للمدة نفسها وبالسعر نفسه ما لم تلغها قبل نهاية الفترة الحالية بـ٢٤ ساعة على الأقل من إعدادات حسابك في App Store أو Google Play. ولا يؤدي حذف حسابك في المكرمة إلى إلغائها. كما تخضع المشتريات في تطبيقنا على iPhone لاتفاقية الترخيص القياسية من Apple للتطبيقات.',
     ] },
     { h: 'المحتوى والمواد الدينية', p: [
       'يُعرض نص القرآن الكريم في تطبيقاتنا كما نشره مصدره تمامًا. ولا يقدّم المساعد ولا محتوانا فتاوى شرعية؛ يرجى سؤال أهل العلم.',

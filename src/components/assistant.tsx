@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icons';
 import { data } from '@/components/motion';
 import { Notice, Photo, Serif, T, useWide } from '@/components/ui';
+import { useAiConsent } from '@/lib/ai-consent';
 import { useAssistant, type PageKind, type Turn } from '@/lib/assistant';
 import { useI18n, type Key } from '@/lib/i18n';
 import { convertFromSar, formatMoney } from '@/lib/money';
@@ -33,10 +34,23 @@ export function AssistantChat({ onClose, compact }: { onClose?: () => void; comp
   const scroll = useRef<ScrollView>(null);
   const money = (sar: number) => formatMoney(convertFromSar(sar, currency), currency, lang);
   const chips: Key[] = CHIPS[a.page.kind] ?? ['sug_home_1', 'sug_home_2', 'sug_home_3'];
+  // Apps: the shopper agrees once before anything is sent to the AI (see src/lib/ai-consent.ts).
+  const consent = useAiConsent();
+  const [pending, setPending] = useState<string | null>(null);
 
   const submit = (text = input) => {
     if (!text.trim() || a.busy) return;
+    if (!consent.ok) {
+      setPending(text);
+      return;
+    }
     a.send(text);
+    setInput('');
+  };
+  const agree = () => {
+    consent.agree();
+    if (pending) a.send(pending);
+    setPending(null);
     setInput('');
   };
 
@@ -114,6 +128,21 @@ export function AssistantChat({ onClose, compact }: { onClose?: () => void; comp
         )}
       </ScrollView>
 
+      {!consent.ok ? (
+        <View style={{ padding: 16, gap: 10, backgroundColor: colors.porcelain, borderTopWidth: 1, borderColor: colors.gold }}>
+          <T w={600} size={10.5} caps color={colors.brassText}>{t('aiConsentTitle')}</T>
+          <T size={13} lh={1.55} color={colors.body}>{t('aiConsentBody')}</T>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, flexWrap: 'wrap', marginTop: 2 }}>
+            <Pressable accessibilityRole="button" onPress={agree}
+              style={{ backgroundColor: colors.emerald, borderWidth: 1, borderColor: colors.emerald, borderRadius: 1, paddingVertical: 11, paddingHorizontal: 18 }}>
+              <T size={11} w={600} caps color={colors.ivory}>{t('aiConsentAgree')}</T>
+            </Pressable>
+            <Pressable accessibilityRole="link" onPress={() => go('/privacy')}>
+              <T size={12.5} color={colors.navy} style={{ textDecorationLine: 'underline' }}>{t('privacyPolicy')}</T>
+            </Pressable>
+          </View>
+        </View>
+      ) : (
       <View style={{ padding: 14, gap: 8, backgroundColor: colors.porcelain, borderTopWidth: 1, borderColor: colors.line }}>
         <View {...data({ search: 1 })} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: colors.inputLine, borderRadius: 1, backgroundColor: colors.ivory, paddingStart: 16, paddingEnd: 5, minHeight: 50 }}>
           <TextInput
@@ -135,6 +164,7 @@ export function AssistantChat({ onClose, compact }: { onClose?: () => void; comp
         </View>
         <T size={11} color={colors.muted} center>{t('assistantPrivacy')}</T>
       </View>
+      )}
     </View>
   );
 }

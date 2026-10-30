@@ -1,5 +1,7 @@
 // Membership: a centred head, plans on porcelain (the membership double-ruled in gold), answers between hairlines.
-// Prices come from the plans table.
+// Website prices come from the plans table. In the iPhone and Android apps the membership is sold by the App Store or
+// Google Play (RevenueCat): its price, renewal terms, the terms and privacy links and "Restore purchases" come from and
+// follow the store's rules, and it is shown only when the store offers it. Box clubs (physical) are paid with Moyasar.
 import * as WebBrowser from 'expo-web-browser';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -10,13 +12,17 @@ import { DoubleFrame, Ornament } from '@/components/decor';
 import { Button, Eyebrow, Notice, Serif, T, useWide } from '@/components/ui';
 import { getPlans } from '@/lib/catalogue';
 import { strings, useI18n, type Key } from '@/lib/i18n';
+import { openExternal } from '@/lib/links';
 import { convertFromSar, formatMoney } from '@/lib/money';
-import { buyMembership, purchasesAvailable } from '@/lib/purchases';
+import { buyMembership, getMembershipOffer, restoreMembership, storeMembershipActive, type MembershipOffer } from '@/lib/purchases';
 import { useSession } from '@/lib/session';
-import { callFunction } from '@/lib/supabase';
+import { callFunction, supabase } from '@/lib/supabase';
 import type { Plan } from '@/lib/types';
 import { colors } from '@/theme';
 import { faqLd, Seo } from '@/components/seo';
+
+/** Apple's standard licence agreement, which applies to App Store purchases (no custom EULA is set in App Store Connect). */
+const APPLE_EULA = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
 
 /** A plan's description: a list with green ticks when it names several benefits, otherwise one quiet paragraph. */
 function Benefits({ text }: { text: string }) {
@@ -42,20 +48,44 @@ export default function Membership() {
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [faq, setFaq] = useState<number | null>(0);
+  const native = Platform.OS !== 'web';
+  const [offer, setOffer] = useState<MembershipOffer | null>(null);
+  const [member, setMember] = useState(false);
+  const [restoring, setRestoring] = useState(false);
 
   useEffect(() => {
     getPlans().then(setPlans).catch(() => undefined);
   }, []);
+  // Apps: the store's own offer (price in the shopper's App Store / Google Play currency).
+  useEffect(() => {
+    if (native) getMembershipOffer().then(setOffer);
+  }, [native]);
+  // Apps: members get the way into the Quran Trail, the lessons the membership opens.
+  useEffect(() => {
+    if (!native || !session) {
+      setMember(false);
+      return;
+    }
+    let live = true;
+    const inDb = supabase.from('subscriptions').select('id, plans!inner(kind)').eq('plans.kind', 'membership').eq('status', 'active').limit(1)
+      .then(({ data }) => (data ?? []).length > 0, () => false);
+    Promise.all([inDb, storeMembershipActive()]).then(([db, store]) => { if (live) setMember(db || store); });
+    return () => { live = false; };
+  }, [native, session]);
 
   async function join(plan: Plan) {
     if (!session) return setMsg(t('signInToJoin'));
     setBusy(plan.id);
+    setMsg(null);
     try {
       // Digital membership inside the iPhone/Android app must use app-store billing.
-      if (plan.kind === 'membership' && Platform.OS !== 'web') {
-        if (!purchasesAvailable()) return setMsg('App-store billing is available in the store build of the app.');
-        await buyMembership();
-        return setMsg('✓');
+      if (plan.kind === 'membership' && native) {
+        const result = await buyMembership();
+        if (result === 'purchased') {
+          setMsg(t('iapThanks'));
+          setMember(true);
+        } else if (result === 'unavailable') setMsg(t('iapUnavailable'));
+        return;
       }
       // Box clubs need a delivery address first.
       if (plan.kind === 'box') return router.push({ pathname: '/subscribe', params: { plan: plan.slug } });
@@ -64,13 +94,31 @@ export default function Membership() {
       if (Platform.OS === 'web') window.location.href = res.paymentUrl;
       else await WebBrowser.openBrowserAsync(res.paymentUrl);
     } catch (e) {
-      setMsg(String(e));
+      setMsg(plan.kind === 'membership' && native ? t('iapError') : String(e));
     } finally {
       setBusy(null);
     }
   }
 
-  const faqs = [[t('faq1q'), t('faq1a')], [t('faq2q'), t('faq2a')]];
+  async function restore() {
+    if (!session) return setMsg(t('signInToJoin'));
+    setRestoring(true);
+    setMsg(null);
+    try {
+      const ok = await restoreMembership();
+      setMsg(t(ok ? 'restoreDone' : 'restoreNone'));
+      if (ok) setMember(true);
+    } catch {
+      setMsg(t('iapError'));
+    } finally {
+      setRestoring(false);
+    }
+  }
+
+  // In the apps the membership appears only when the store sells it; never with our own price or a link elsewhere.
+  const shown = plans.filter((p) => !(native && p.kind === 'membership' && !offer));
+  // The second answer names both stores: on the website only (an app names only its own store).
+  const faqs = native ? [[t('faq1q'), t('faq1a')]] : [[t('faq1q'), t('faq1a')], [t('faq2q'), t('faq2a')]];
 
   return (
     <Screen>
@@ -82,10 +130,21 @@ export default function Membership() {
         <T size={wide ? 16.5 : 15} lh={1.65} color={colors.body} center style={{ marginTop: 4 }}>{t('memberBody')}</T>
       </View>
       {msg && <Notice text={msg} />}
+      {msg === t('signInToJoin') && (
+        <Button label={t('signIn')} size="sm" href={{ pathname: '/account', params: { next: '/membership' } }} style={{ alignSelf: 'center', marginBottom: 16 }} />
+      )}
+      {native && member && (
+        <View style={{ maxWidth: 1000, width: '100%', alignSelf: 'center', marginBottom: 18, backgroundColor: colors.porcelain, borderWidth: 1, borderColor: colors.line, borderTopColor: colors.emerald, padding: 20, gap: 10 }}>
+          <Eyebrow color={colors.emerald}>{t('youAreMember')}</Eyebrow>
+          <Button label={t('openQuranTrail')} href={{ pathname: '/trail/[slug]', params: { slug: 'quran-trail' } }} style={{ alignSelf: 'flex-start' }} />
+        </View>
+      )}
 
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 28 : 18, maxWidth: 1000, width: '100%', alignSelf: 'center', alignItems: 'stretch' }}>
-        {plans.map((p) => {
+        {shown.map((p) => {
           const featured = p.kind === 'membership';
+          // App-store membership: the store's price and period; everything else: our VAT-inclusive price.
+          const store = native && featured && offer ? offer : null;
           const body = (
             <View style={{ flex: 1, gap: 14 }}>
               <Eyebrow color={featured ? colors.emerald : colors.brassText}>{t(p.kind === 'membership' ? 'kind_membership' : 'kind_box')}</Eyebrow>
@@ -93,11 +152,22 @@ export default function Membership() {
               <Ornament width={72} />
               <Benefits text={pick(p, 'description')} />
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 6, paddingTop: 18, borderTopWidth: 1, borderColor: colors.line }}>
-                <T w={500} size={wide ? 30 : 26} num color={colors.navy} style={{ letterSpacing: 0.2 }}>{formatMoney(convertFromSar(p.price_sar, currency), currency, lang)}</T>
-                <T size={13.5} color={colors.muted}>/ {t(p.period === 'year' ? 'perYear' : 'perMonth')}</T>
+                <T w={500} size={wide ? 30 : 26} num color={colors.navy} style={{ letterSpacing: 0.2 }}>{store ? store.priceString : formatMoney(convertFromSar(p.price_sar, currency), currency, lang)}</T>
+                <T size={13.5} color={colors.muted}>/ {t((store ? store.period : p.period) === 'year' ? 'perYear' : 'perMonth')}</T>
               </View>
-              <T size={12} color={colors.muted}>{t('vatIncluded')}</T>
+              {!store && <T size={12} color={colors.muted}>{t('vatIncluded')}</T>}
               <Button label={t('join')} kind={featured ? 'primary' : 'secondary'} busy={busy === p.id} onPress={() => join(p)} style={{ marginTop: 'auto', alignSelf: 'stretch' }} />
+              {store && (
+                <View style={{ gap: 6 }}>
+                  <T size={11.5} lh={1.55} color={colors.muted}>{t(Platform.OS === 'ios' ? 'iapAutoRenewIos' : 'iapAutoRenewAndroid')}</T>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 18 }}>
+                    <Button kind="text" size="sm" label={t('termsOfService')} href="/terms" />
+                    <Button kind="text" size="sm" label={t('privacyPolicy')} href="/privacy" />
+                    {Platform.OS === 'ios' && <Button kind="text" size="sm" label={t('appleEula')} onPress={() => openExternal(APPLE_EULA)} />}
+                  </View>
+                  <Button kind="quiet" size="sm" label={t('restorePurchases')} busy={restoring} onPress={restore} style={{ alignSelf: 'flex-start' }} />
+                </View>
+              )}
             </View>
           );
           return featured

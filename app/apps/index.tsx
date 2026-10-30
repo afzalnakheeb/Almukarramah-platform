@@ -1,6 +1,6 @@
 // Our apps: the Al Mukarramah family (Recite With Me, Seerah Trails, and more to come).
 import React from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { AppCard } from '@/components/apps';
 import { Screen } from '@/components/chrome';
 import { breadcrumbLd, Seo } from '@/components/seo';
@@ -32,7 +32,7 @@ export default function Apps() {
       </View>
       <View style={{ marginTop: wide ? 48 : 28, paddingTop: wide ? 32 : 24, borderTopWidth: 1, borderColor: colors.goldLine, flexDirection: wide ? 'row' : 'column', gap: wide ? 64 : 10 }}>
         <Serif size={wide ? 30 : 24} style={{ flex: wide ? 0.8 : undefined }}>{t('oneAccountTitle')}</Serif>
-        <T size={14.5} lh={1.7} color={colors.body} style={{ flex: wide ? 1.2 : undefined }}>{t('oneAccountBody')}</T>
+        <T size={14.5} lh={1.7} color={colors.body} style={{ flex: wide ? 1.2 : undefined }}>{t(Platform.OS === 'web' ? 'oneAccountBody' : 'oneAccountBodyNative')}</T>
       </View>
     </Screen>
   );

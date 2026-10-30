@@ -1,7 +1,7 @@
 // One page per app (Recite With Me, Seerah Trails, …): what it is, what it does, and a clear way to open it.
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { Image, View } from 'react-native';
+import { Image, Platform, View } from 'react-native';
 import { AppCard } from '@/components/apps';
 import { Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
@@ -79,12 +79,15 @@ export default function AppPage() {
           </Card>
         </View>
 
-        <Card pad={wide ? 24 : 18} style={{ gap: 10, borderTopColor: colors.gold }}>
-          <Serif size={24}>{t('installTitle')}</Serif>
-          <T size={14.5} lh={1.6} color={colors.body}>{t('installIphone')}</T>
-          <T size={14.5} lh={1.6} color={colors.body}>{t('installAndroid')}</T>
-          <T size={13} color={colors.muted}>{t('appStoresSoon')}</T>
-        </Card>
+        {/* Adding a web app to the home screen is a website matter: inside our own apps this card is not shown. */}
+        {Platform.OS === 'web' && (
+          <Card pad={wide ? 24 : 18} style={{ gap: 10, borderTopColor: colors.gold }}>
+            <Serif size={24}>{t('installTitle')}</Serif>
+            <T size={14.5} lh={1.6} color={colors.body}>{t('installIphone')}</T>
+            <T size={14.5} lh={1.6} color={colors.body}>{t('installAndroid')}</T>
+            <T size={13} color={colors.muted}>{t('appStoresSoon')}</T>
+          </Card>
+        )}
 
         {others.length > 0 && (
           <View style={{ gap: 14, marginTop: 8 }}>
