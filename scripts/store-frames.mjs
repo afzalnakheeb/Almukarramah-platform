@@ -13,11 +13,12 @@ const out = resolve(process.argv[3] || 'store/screens');
 
 const C = { ink: '#1C1A17', ivory: '#F7F3EC', porcelain: '#FBF9F5', line: '#E3DACB', muted: '#6E675E', brass: '#9C7B45', brassText: '#7D6237', gold: '#B08D52', white: '#FFFFFF' };
 
-// The same numbers as store-shots.mjs: window, status bar, tab bar (with the home indicator) and header.
+// The same numbers as store-shots.mjs: window, status bar, tab bar (with the home indicator), header, and where a
+// sheet starts below the status bar.
 const DEVICES = {
-  iphone: { width: 440, height: 956, status: 62, tabbar: 83, header: 44, radius: 62, kind: 'ios' },
-  ipad: { width: 1032, height: 1376, status: 24, tabbar: 69, header: 50, radius: 36, kind: 'ipad' },
-  android: { width: 412, height: 915, status: 28, tabbar: 80, header: 64, radius: 44, kind: 'android' },
+  iphone: { width: 440, height: 956, status: 62, tabbar: 83, header: 44, sheet: 10, radius: 62, kind: 'ios' },
+  ipad: { width: 1032, height: 1376, status: 24, tabbar: 69, header: 50, sheet: 0, radius: 36, kind: 'ipad' },
+  android: { width: 412, height: 915, status: 28, tabbar: 80, header: 64, sheet: 0, radius: 44, kind: 'android' },
 };
 // Store canvases: which device fills them, and how much room the caption takes.
 const SIZES = [
@@ -27,13 +28,14 @@ const SIZES = [
   { id: 'android-phone', w: 1080, h: 1920, device: 'android', top: 0.205, bottom: 0.045 },
 ];
 
+// Captions: no city anywhere (Afzal's rule for everything public). modal and wide as in store-shots.mjs.
 const SCENES = [
-  { id: '1-home', tab: 'home', en: 'A curated marketplace from Madinah', ar: 'سوق مختار من المدينة المنورة' },
+  { id: '1-home', tab: 'home', en: 'A curated marketplace for every Muslim home', ar: 'سوق مختار لكل بيت مسلم' },
   { id: '2-doors', tab: 'home', en: 'Perfume, prayer and gifts, chosen with care', ar: 'عطور وصلاة وهدايا، مختارة بعناية' },
   { id: '3-perfumes', en: 'Celebrated Arabian fragrance houses', ar: 'عطور من دور عربية عريقة' },
   { id: '4-product', en: 'Every product approved by our team', ar: 'كل منتج يعتمده فريقنا' },
-  { id: '5-bag', tab: 'cart', en: 'Hotel delivery in Madinah and Makkah', ar: 'توصيل إلى فنادق المدينة ومكة' },
-  { id: '6-assistant', en: 'A gift assistant that knows our catalogue', ar: 'مساعد هدايا يعرف كتالوجنا' },
+  { id: '5-bag', tab: 'cart', badge: 1, wide: { badge: 3 }, en: 'Delivered to your hotel or your door', ar: 'توصيل إلى فندقك أو إلى بابك' },
+  { id: '6-assistant', modal: true, wide: { tab: 'cart', modal: false, badge: 1 }, en: 'A gift assistant that writes your card', ar: 'مساعد هدايا يكتب بطاقتك' },
 ];
 const BRAND = { en: 'Al Mukarramah', ar: 'المكرمة' };
 const TABS = [
@@ -55,8 +57,9 @@ const FONTS = [
 const sans = (ar) => (ar ? "'Readex','Manrope',system-ui,sans-serif" : "'Manrope','Inter',system-ui,sans-serif");
 
 // ---------------------------------------------------------------- the app's own frame, in the device's points
-function statusBar(d, ar) {
-  const dark = C.ink;
+function statusBar(d, ar, light = false) {
+  // light: white figures on black, as iOS draws them while a sheet is open
+  const dark = light ? C.white : C.ink;
   const time = `<span style="font:600 ${d.kind === 'ipad' ? 15 : 17}px ${sans(false)};letter-spacing:-.2px;color:${dark}">9:41</span>`;
   const icons = `<span style="display:flex;gap:6px;align-items:center">
     <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="${dark}"/><rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="${dark}"/><rect x="10" y="3" width="3" height="9" rx="1" fill="${dark}"/><rect x="15" y="0" width="3" height="12" rx="1" fill="${dark}"/></svg>
@@ -66,16 +69,17 @@ function statusBar(d, ar) {
     : d.kind === 'android' ? `<div style="position:absolute;left:50%;top:8px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#0b0b0b"></div>` : '';
   const pad = d.kind === 'ios' ? '0 34px 0 44px' : '0 24px';
   const align = d.kind === 'ios' ? 'center' : 'center';
-  return `<div style="position:relative;height:${d.status}px;background:${C.ivory};display:flex;flex-direction:${ar ? 'row-reverse' : 'row'};justify-content:space-between;align-items:${align};padding:${pad};padding-top:${d.kind === 'ios' ? 6 : 0}px">${time}${island}${icons}</div>`;
+  return `<div style="position:relative;height:${d.status}px;background:${light ? 'transparent' : C.ivory};display:flex;flex-direction:${ar ? 'row-reverse' : 'row'};justify-content:space-between;align-items:${align};padding:${pad};padding-top:${d.kind === 'ios' ? 6 : 0}px">${time}${island}${icons}</div>`;
 }
 
-function tabBar(d, active, lang) {
+function tabBar(d, active, lang, count) {
   const ar = lang === 'ar';
   const beside = d.kind === 'ipad';
   const items = TABS.map((t) => {
     const on = t.id === active;
     const color = on ? C.ink : C.muted;
-    const badge = t.id === 'cart' && active === 'cart' ? `<span style="position:absolute;top:-5px;${ar ? 'left' : 'right'}:-9px;min-width:17px;height:17px;border-radius:9px;background:${C.brass};color:#fff;font:600 10px ${sans(false)};display:flex;align-items:center;justify-content:center">1</span>` : '';
+    // the number of items in the bag, on the Bag tab
+    const badge = t.id === 'cart' && count ? `<span style="position:absolute;top:-5px;${ar ? 'left' : 'right'}:-9px;min-width:17px;height:17px;border-radius:9px;background:${C.brass};color:#fff;font:600 10px ${sans(false)};display:flex;align-items:center;justify-content:center">${count}</span>` : '';
     return `<div style="flex:1;display:flex;flex-direction:${beside ? (ar ? 'row-reverse' : 'row') : 'column'};align-items:center;justify-content:center;gap:${beside ? 10 : 3}px">
       <span style="position:relative;display:inline-flex"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg>${badge}</span>
       <span style="font:${ar ? 600 : 700} 11px ${sans(ar)};color:${color}">${t[lang]}</span></div>`;
@@ -100,12 +104,23 @@ function homeIndicator(d) {
 
 function deviceScreen(d, scene, lang, img) {
   const ar = lang === 'ar';
-  const content = d.height - d.status - (scene.tab ? d.tabbar : d.header);
+  const content = d.height - d.status - (scene.modal ? d.sheet : scene.tab ? d.tabbar : d.header);
+  if (scene.modal && d.kind === 'ios') {
+    // The iPhone's page sheet: the screen behind steps back (its top edge just shows), the sheet rises over it.
+    return `<div style="position:relative;width:${d.width}px;height:${d.height}px;background:#000;overflow:hidden;border-radius:${d.radius}px">
+      ${statusBar(d, ar, true)}
+      <div style="position:absolute;left:16px;right:16px;top:${d.status}px;height:60px;border-radius:12px;background:#CFC8BC"></div>
+      <div style="position:absolute;left:0;right:0;top:${d.status + d.sheet}px;bottom:0;border-radius:12px 12px 0 0;overflow:hidden;background:${C.ivory}">
+        <img src="${img}" style="display:block;width:${d.width}px;height:${content}px;object-fit:cover;object-position:top">
+      </div>
+      ${homeIndicator(d)}
+    </div>`;
+  }
   return `<div style="position:relative;width:${d.width}px;height:${d.height}px;background:${C.ivory};overflow:hidden;border-radius:${d.radius}px">
     ${statusBar(d, ar)}
-    ${scene.tab ? '' : header(d, ar)}
+    ${scene.tab || scene.modal ? '' : header(d, ar)}
     <img src="${img}" style="display:block;width:${d.width}px;height:${content}px;object-fit:cover;object-position:top">
-    ${scene.tab ? tabBar(d, scene.tab, lang) : ''}
+    ${scene.tab ? tabBar(d, scene.tab, lang, scene.badge) : ''}
     ${homeIndicator(d)}
   </div>`;
 }
@@ -154,7 +169,8 @@ for (const size of SIZES) {
   for (const lang of ['en', 'ar']) {
     const dir = join(out, size.id, lang);
     mkdirSync(dir, { recursive: true });
-    for (const scene of SCENES) {
+    for (const base of SCENES) {
+      const scene = size.device === 'ipad' && base.wide ? { ...base, ...base.wide } : base;
       const file = join(raw, `${size.device}-${lang}-${scene.id}.jpg`);
       if (!existsSync(file)) { console.log(`missing ${file}`); continue; }
       const img = `data:image/jpeg;base64,${readFileSync(file).toString('base64')}`;
