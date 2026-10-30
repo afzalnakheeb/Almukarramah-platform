@@ -1,0 +1,44 @@
+name: upscale
+on:
+  push:
+    branches: ['studio/inputs']
+    paths: ['ai/upscale.txt']
+permissions:
+  contents: write
+jobs:
+  up:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Install Real-ESRGAN (CPU)
+        run: |
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install basicsr==1.4.2 realesrgan==0.3.0 opencv-python-headless numpy==1.26.4
+          # basicsr imports a removed torchvision module
+          f=$(python -c "import basicsr,os;print(os.path.join(os.path.dirname(basicsr.__file__),'data','degradations.py'))")
+          sed -i 's/from torchvision.transforms.functional_tensor import rgb_to_grayscale/from torchvision.transforms.functional import rgb_to_grayscale/' "$f"
+          git clone --depth 1 https://github.com/xinntao/Real-ESRGAN.git /tmp/resr
+          mkdir -p weights
+          curl -fsSL -o weights/realesr-general-x4v3.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesr-general-x4v3.pth
+          curl -fsSL -o weights/realesr-general-wdn-x4v3.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesr-general-wdn-x4v3.pth
+          curl -fsSL -o weights/RealESRGAN_x4plus.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth
+      - name: Upscale each line "input model denoise"
+        run: |
+          mkdir -p ai/up
+          while read -r inp model dn; do
+            [ -z "$inp" ] && continue
+            out="ai/up/$(basename ${inp%.*})-${model}-${dn}.png"
+            [ -f "$out" ] && continue
+            if [ "$model" = general ]; then
+              python /tmp/resr/inference_realesrgan.py -n realesr-general-x4v3 --model_path weights/realesr-general-x4v3.pth -dn "$dn" -i "$inp" -o /tmp/o --outscale 4 --fp32
+            else
+              python /tmp/resr/inference_realesrgan.py -n RealESRGAN_x4plus --model_path weights/RealESRGAN_x4plus.pth -i "$inp" -o /tmp/o --outscale 4 --fp32
+            fi
+            mv /tmp/o/*.png "$out"; rm -rf /tmp/o
+          done < ai/upscale.txt
+      - name: Commit
+        run: |
+          git config user.name "studio-bot"; git config user.email "studio-bot@users.noreply.github.com"
+          git add -A ai/up; git diff --cached --quiet || git commit -m "Upscaled [fetch-result]"; git push

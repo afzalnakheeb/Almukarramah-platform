@@ -1,0 +1,3 @@
+ai/emb-src.png general 0.5
+ai/emb-src.png general 1
+ai/emb-src.png x4plus 0
