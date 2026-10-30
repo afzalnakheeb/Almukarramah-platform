@@ -214,12 +214,12 @@ export default function Decks() {
           placeholder="• • • • •"
           placeholderTextColor={colors.muted}
           style={{
-            flex: 1, minHeight: 52, paddingHorizontal: 18, borderWidth: 1, borderRadius: 2,
+            flex: 1, minWidth: 0, minHeight: 52, paddingHorizontal: 18, borderWidth: 1, borderRadius: 2,
             borderColor: error ? colors.danger : colors.inputLine, backgroundColor: colors.white,
             color: colors.ink, fontSize: 22, letterSpacing: 8, textAlign: 'center', writingDirection: 'ltr',
           }}
         />
-        <Button label={busy ? t('decksChecking') : t('decksUnlock')} onPress={unlock} busy={busy} disabled={!typed.trim()} size="lg" />
+        <Button label={busy ? t('decksChecking') : t('decksUnlock')} onPress={unlock} busy={busy} disabled={!typed.trim()} size="lg" style={{ flexShrink: 0 }} />
       </View>
       {error ? <T size={13} w={500} color={colors.danger}>{error}</T> : <T size={13} color={colors.muted}>{t('decksPasscodeHint')}</T>}
     </View>
