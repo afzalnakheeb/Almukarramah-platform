@@ -10,6 +10,14 @@ const base = (process.argv[2] || 'http://localhost:3000').replace(/\/$/, '');
 const out = process.argv[3] || 'shots';
 mkdirSync(out, { recursive: true });
 
+// shots/film-scroll: storefront footage for the pitch film (scripts/film-scroll.mjs) instead of the design screenshots.
+// The SEO report below still runs, so the workflow's later steps are unchanged.
+if (!process.env.SEO_ONLY) {
+  const { filmScroll } = await import('./film-scroll.mjs');
+  await filmScroll(base, join(out, 'film'));
+  process.env.SEO_ONLY = '1';
+}
+
 const pages = (process.env.SHOT_PAGES || '/,/collections/perfumes,/collections/oud-oils,/product/aam-zumar-60-ml,/product/kaaba-door-prayer-mat,/shop,/membership,/apps,/cart,/account,/concierge').split(',');
 const views = [
   { name: 'd', width: 1440, height: 900, dsf: 1, chunk: 1100, locale: 'en-GB' },
