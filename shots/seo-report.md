@@ -10,35 +10,35 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Where your deen and dunya meet
 json-ld: Organization, WebSite, ItemList, FAQPage
-visible text without JS: 4354 chars: "Al Mukarramah | The Premium Marketplace for Every Muslim Home Delivering to Saudi address SAR The curated marketplace for the Muslim home Where your deen and du…"
+visible text without JS: 5005 chars: "Al Mukarramah | The Premium Marketplace for Every Muslim Home Delivering to Saudi address SAR The curated marketplace for the Muslim home Where your deen and du…"
 
-## /collections/perfumes  (HTTP 404)
-title: undefined
-description: undefined
-robots: -
-canonical: undefined
+## /collections/perfumes  (HTTP 200)
+title: Perfumes | Al Mukarramah
+description: Ahmed Al Maghribi eau de parfum, hair mists and fragrance gift sets.
+robots: index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1
+canonical: https://almukarramah.com/collections/perfumes
 hreflang: -
-og:title: undefined
-og:image: undefined
-twitter:card: undefined
-html lang/dir: undefined
-h1: NONE
-json-ld: NONE
-visible text without JS: 41 chars: "404 The requested path could not be found…"
+og:title: Perfumes | Al Mukarramah
+og:image: https://almukarramah.com/products/aam/marj-60-ml-1.jpg
+twitter:card: summary_large_image
+html lang/dir: lang="en"
+h1: Perfumes
+json-ld: CollectionPage, ItemList, BreadcrumbList, FAQPage
+visible text without JS: 6041 chars: "Perfumes | Al Mukarramah Delivering to Saudi address SAR Home Shop Perfumes Ahmed Al Maghribi · Official Saudi prices Perfumes Ahmed Al Maghribi eau de parfum, …"
 
-## /product/aam-zumar-60-ml  (HTTP 404)
-title: undefined
-description: undefined
-robots: -
-canonical: undefined
+## /product/aam-zumar-60-ml  (HTTP 200)
+title: Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml | Al Mukarramah
+description: Zumar by Ahmed Al Maghribi, an eau de parfum spray in a 60 ml bottle, from the house’s Oriental collection. From Al Mukarramah, Madinah.
+robots: index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1
+canonical: https://almukarramah.com/product/aam-zumar-60-ml
 hreflang: -
-og:title: undefined
-og:image: undefined
-twitter:card: undefined
-html lang/dir: undefined
-h1: NONE
-json-ld: NONE
-visible text without JS: 41 chars: "404 The requested path could not be found…"
+og:title: Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml | Al Mukarramah
+og:image: https://almukarramah.com/products/aam/zumar-60-ml-1.jpg
+twitter:card: summary_large_image
+html lang/dir: lang="en"
+h1: Zumar Eau de Parfum, 60 ml
+json-ld: Product, BreadcrumbList, FAQPage
+visible text without JS: 2835 chars: "Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml | Al Mukarramah Delivering to Saudi address SAR Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml Genuine product, sold …"
 
 ## /product/kaaba-door-prayer-mat  (HTTP 200)
 title: Kaaba Door Prayer Mat, Black and Gold | Al Mukarramah
@@ -52,7 +52,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Kaaba Door Prayer Mat, Black and Gold
 json-ld: Product, BreadcrumbList, FAQPage
-visible text without JS: 2462 chars: "Kaaba Door Prayer Mat, Black and Gold | Al Mukarramah Delivering to Saudi address SAR Hajj Kaaba Door Prayer Mat, Black and Gold Prepared and packed in Madinah …"
+visible text without JS: 2485 chars: "Kaaba Door Prayer Mat, Black and Gold | Al Mukarramah Delivering to Saudi address SAR Hajj Kaaba Door Prayer Mat, Black and Gold Prepared and packed in Madinah …"
 
 ## /cart  (HTTP 200)
 title: Your bag | Al Mukarramah
@@ -94,7 +94,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Sell to families and pilgrims around the world
 json-ld: NONE
-visible text without JS: 1782 chars: "Sell on Al Mukarramah | Islamic and modest brands Delivering to Saudi address SAR For Islamic and modest brands Sell to families and pilgrims around the world A…"
+visible text without JS: 2925 chars: "Sell on Al Mukarramah | Islamic and modest brands Delivering to Saudi address SAR For Islamic and modest brands Sell to families and pilgrims around the world A…"
 
 ## /sell/guidelines  (HTTP 200)
 title: Seller handbook | Sell on Al Mukarramah
@@ -180,6 +180,34 @@ h1: Prohibited and restricted items
 json-ld: BreadcrumbList
 visible text without JS: 6281 chars: "Prohibited and restricted items | Al Mukarramah seller handbook Delivering to Saudi address SAR Home Sell on Al Mukarramah Seller handbook Prohibited and restri…"
 
+## /seller/application  (HTTP 200)
+title: 
+description: undefined
+robots: -
+canonical: undefined
+hreflang: -
+og:title: undefined
+og:image: undefined
+twitter:card: undefined
+html lang/dir: lang="en"
+h1: NONE
+json-ld: NONE
+visible text without JS: 0 chars: "…"
+
+## /seller/shop  (HTTP 200)
+title: 
+description: undefined
+robots: -
+canonical: undefined
+hreflang: -
+og:title: undefined
+og:image: undefined
+twitter:card: undefined
+html lang/dir: lang="en"
+h1: NONE
+json-ld: NONE
+visible text without JS: 0 chars: "…"
+
 ## /seller/product?id=demo-blocked  (HTTP 200)
 title: 
 description: undefined
@@ -209,6 +237,20 @@ json-ld: NONE
 visible text without JS: 0 chars: "…"
 
 ## /admin/listings  (HTTP 200)
+title: 
+description: undefined
+robots: -
+canonical: undefined
+hreflang: -
+og:title: undefined
+og:image: undefined
+twitter:card: undefined
+html lang/dir: lang="en"
+h1: NONE
+json-ld: NONE
+visible text without JS: 0 chars: "…"
+
+## /admin/sellers  (HTTP 200)
 title: 
 description: undefined
 robots: -
@@ -307,7 +349,7 @@ json-ld: NONE
 visible text without JS: 3864 chars: "Terms of service | Al Mukarramah Delivering to Saudi address SAR Terms of service Last updated 29 October 2026 These terms apply when you shop at almukarramah.c…"
 
 /robots.txt: HTTP 200, 836 bytes
-/sitemap.xml: HTTP 200, 25128 bytes, 62 URLs
-/llms.txt: HTTP 200, 3740 bytes
-/llms-full.txt: HTTP 200, 18764 bytes
-/feeds/google-merchant.xml: HTTP 200, 28494 bytes
+/sitemap.xml: HTTP 200, 75893 bytes, 158 URLs
+/llms.txt: HTTP 200, 4089 bytes
+/llms-full.txt: HTTP 200, 82253 bytes
+/feeds/google-merchant.xml: HTTP 200, 107121 bytes
