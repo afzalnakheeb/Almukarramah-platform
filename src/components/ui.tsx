@@ -31,6 +31,10 @@ export function useWide() {
 export const capsStyle = (size: number, isRTL: boolean, track = 0.18): TextStyle =>
   isRTL ? { fontSize: size + 2, letterSpacing: 0 } : { fontSize: size, letterSpacing: Math.round(size * track * 10) / 10, textTransform: 'uppercase' };
 
+/** In Arabic, text starts on the right even when a line is Latin (a maker's name, a reference); without this the
+ *  browser aligns such a line by its own script, to the left. */
+const START_RTL: TextStyle = { textAlign: 'right' };
+
 /** Text in Manrope (English) or Readex Pro (Arabic). `num` sets tabular figures; `caps` spaced capitals (English). */
 export function T({ children, w = 400, size = 15, color = colors.ink, lh, style, numberOfLines, center, num, caps }: {
   children: React.ReactNode; w?: Weight; size?: number; color?: string; lh?: number; style?: StyleProp<TextStyle>; numberOfLines?: number; center?: boolean; num?: boolean; caps?: boolean;
@@ -38,7 +42,7 @@ export function T({ children, w = 400, size = 15, color = colors.ink, lh, style,
   const { isRTL } = useI18n();
   const fs = caps ? capsStyle(size, isRTL) : { fontSize: size };
   return (
-    <Text numberOfLines={numberOfLines} style={[sans(w, isRTL), { color }, fs, lh ? { lineHeight: Math.round((fs.fontSize ?? size) * lh) } : null, num && figures, center && { textAlign: 'center' }, style]}>
+    <Text numberOfLines={numberOfLines} style={[sans(w, isRTL), { color }, fs, lh ? { lineHeight: Math.round((fs.fontSize ?? size) * lh) } : null, num && figures, center ? { textAlign: 'center' } : isRTL && START_RTL, style]}>
       {children}
     </Text>
   );
@@ -50,7 +54,7 @@ export function Serif({ children, size = 44, color = colors.navy, style, center,
 }) {
   const { isRTL } = useI18n();
   const aria = role ? { role: 'heading' as const, 'aria-level': Number(role[1]) } : {};
-  return <Text {...aria} numberOfLines={numberOfLines} style={[serif(size, isRTL), { color }, center && { textAlign: 'center' }, style]}>{children}</Text>;
+  return <Text {...aria} numberOfLines={numberOfLines} style={[serif(size, isRTL), { color }, center ? { textAlign: 'center' } : isRTL && START_RTL, style]}>{children}</Text>;
 }
 
 /** Small gold capitals above a title. With `rule`, a short gold hairline leads in (it sits on the reading side). */
@@ -295,12 +299,17 @@ const BRAND_AR: Record<string, string> = { 'Ahmed Al Maghribi': 'أحمد الم
 export const brandName = (brand: string, ar: boolean) => (ar ? BRAND_AR[brand] ?? brand : brand);
 
 export function shortName(name: string, brand?: string | null) {
-  if (!brand) return name;
   let n = name;
-  if (n.startsWith(brand)) n = n.slice(brand.length).replace(/^[\s·,:-]+/, '');
-  n = n.replace(/\s+من أحمد المغربي/, '').replace(/^أحمد المغربي\s+/, '');
-  return n || name;
+  if (brand) {
+    if (n.startsWith(brand)) n = n.slice(brand.length).replace(/^[\s·,:-]+/, '');
+    n = n.replace(/\s+من أحمد المغربي/, '').replace(/^أحمد المغربي\s+/, '');
+  }
+  // a size stays with its number ("60 ml", "500 g"): never a lone "ml" on the next line
+  return (n || name).replace(/([\d٠-٩])\s+(ml|g|kg|cm|مل|غ|جم|كغ)(?=$|[\s,)،])/g, '$1\u00A0$2');
 }
+
+/** Products whose cover is still a close-up taken on the floor; kept out of curated rows until re-shot. */
+export const NOT_STUDIO = ['kaaba-clock-tower-woven-rug-gold', 'kids-rawdah-woven-rug-red', 'kids-rawdah-woven-rug-green', 'black-stone-prayer-mat'];
 
 /** Product card, no box: the photograph on a pale panel, then the maker in gold capitals, the name and the price, centred. */
 export function ProductTile({ product, compact }: { product: Product; compact?: boolean }) {

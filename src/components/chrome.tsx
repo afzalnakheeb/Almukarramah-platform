@@ -459,7 +459,7 @@ export function SiteFooter() {
           <T size={12} color={colors.muted}>© {new Date().getFullYear()} {t('copyright')}</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Icon name="lock" size={13} stroke={1.4} color={colors.emerald} />
-            <T size={12} color={colors.muted}>{t('securePayment')} · {t('payNote')}</T>
+            <T size={12} color={colors.muted}>{t('re2t')} · {t('payNote')}</T>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
             <Pressable accessibilityRole="button" onPress={() => setLang(lang === 'ar' ? 'en' : 'ar')} {...data({ foot: 1 })}>

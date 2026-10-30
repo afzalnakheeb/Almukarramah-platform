@@ -22,7 +22,7 @@ export default function Concierge() {
     </View>
   );
   const chat = (
-    <View style={{ height: wide ? 640 : 560, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, borderTopColor: colors.gold, backgroundColor: colors.ivory }}>
+    <View style={{ height: wide ? 600 : 560, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, borderTopColor: colors.gold, backgroundColor: colors.ivory }}>
       <AssistantChat />
     </View>
   );

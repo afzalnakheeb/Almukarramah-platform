@@ -52,6 +52,39 @@ for (const v of process.env.SEO_ONLY ? [] : views) {
     await ctx.close();
   }
 }
+// States a plain page load never shows: the phone menu and filter sheet, the compact header, a bag with a gift in it.
+const states = [
+  { v: 'm', name: 'state-menu', path: '/', act: async (p) => { await p.locator('[data-banner] [data-icon]').first().click(); } },
+  { v: 'arm', name: 'state-menu', path: '/', act: async (p) => { await p.locator('[data-banner] [data-icon]').first().click(); } },
+  { v: 'm', name: 'state-filters', path: '/collections/perfumes', act: async (p) => { await p.getByText(/Filter and sort/i).first().click(); } },
+  { v: 'd', name: 'state-compact', path: '/collections/perfumes', act: async (p) => { await p.evaluate(() => { const s = document.querySelector('[data-scroller]'); if (s) s.scrollTop = 900; }); } },
+  { v: 'd', name: 'state-bag', path: '/product/aam-zumar-60-ml', act: async (p) => { await p.getByText(/Add to bag/i).first().click(); await p.waitForURL(/\/cart/, { timeout: 15000 }); } },
+  { v: 'm', name: 'state-bag', path: '/product/kaaba-door-prayer-mat', act: async (p) => { await p.getByText(/^Add to bag$/i).first().click(); await p.waitForURL(/\/cart/, { timeout: 15000 }); } },
+  { v: 'ar', name: 'state-bag', path: '/product/aam-zumar-60-ml', act: async (p) => { await p.locator('[data-btn="primary"]').first().click(); await p.waitForURL(/\/cart/, { timeout: 15000 }); } },
+];
+for (const st of process.env.SEO_ONLY ? [] : states) {
+  const v = views.find((x) => x.name === st.v);
+  const ctx = await browser.newContext({ viewport: { width: v.width, height: v.height }, deviceScaleFactor: v.dsf, locale: v.locale });
+  await ctx.addInitScript(() => { try { sessionStorage.setItem('amIntro', '1'); } catch { /* ignore */ } });
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => errors.push(`${v.name} ${st.name} pageerror: ${e.message}`));
+  try {
+    await page.goto(base + st.path, { waitUntil: 'networkidle', timeout: 60000 });
+    await page.waitForTimeout(1500);
+    await st.act(page);
+    await page.waitForTimeout(1800);
+    if (st.name === 'state-bag') {
+      const h = await page.evaluate(() => { let m = document.documentElement.scrollHeight; document.querySelectorAll('div').forEach((d) => { if (d.scrollHeight > m && d.scrollHeight < 40000) m = d.scrollHeight; }); return m; });
+      await page.setViewportSize({ width: v.width, height: Math.min(h, 2600) });
+      await page.waitForTimeout(800);
+    }
+    await page.screenshot({ path: join(out, `${v.name}-${st.name}.jpg`), type: 'jpeg', quality: 72, fullPage: false });
+  } catch (e) {
+    console.log(`${v.name} ${st.name}: FAILED ${e.message}`);
+  }
+  await ctx.close();
+}
+
 // The brand intro, frozen at moments of its timeline (?intro=<seconds>, see src/components/brand-intro.tsx).
 const introTimes = { d: [0.6, 1.8, 2.8, 3.8, 4.9, 5.6, 6.6, 7.25], m: [1.8, 3.6, 5.0, 6.6, 7.25], ar: [3.6, 6.6, 7.25], arm: [6.6] };
 for (const v of process.env.SEO_ONLY || process.env.NO_INTRO ? [] : views) {

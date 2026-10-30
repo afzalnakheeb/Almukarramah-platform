@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
-import { Breadcrumb, Button, CapsLink, Chip, EmptyState, Eyebrow, FilterOption, Grid, H1, Loading, ProductTile, Sheet, T, useWide } from '@/components/ui';
+import { Corners } from '@/components/decor';
+import { Breadcrumb, Button, CapsLink, Chip, EmptyState, Eyebrow, FilterOption, Grid, H1, Loading, Photo, ProductTile, Sheet, T, useWide } from '@/components/ui';
 import { getCategories, getProducts, getTags } from '@/lib/catalogue';
 import { Faq } from '@/components/faq';
 import { data, reveal } from '@/components/motion';
@@ -21,6 +22,12 @@ type Ship = 'all' | 'perfume_spray' | 'perfume_oil';
 /** Fragrance collections get their own header and a spray/oil filter instead of occasion and recipient. */
 const FRAGRANCE = ['perfumes', 'oud-oils', 'bakhoor'];
 const BANDS: [number, number][] = [[0, 0], [0, 20000], [20000, 50000], [50000, 100000], [100000, 0]];
+/** The scene photographed for each door, shown beside a collection's title (desktop). */
+const SCENE: Record<string, string> = {
+  perfumes: '/images/door-perfume.jpg', 'oud-oils': '/images/door-perfume.jpg', bakhoor: '/images/door-perfume.jpg',
+  'prayer-mats': '/images/door-prayer.jpg', 'woven-rugs': '/images/door-prayer.jpg',
+  'gift-sets': '/images/door-gifts.jpg', keepsakes: '/images/story.jpg', dates: '/images/ramadan.jpg',
+};
 
 export default function Shop() {
   return <ShopView />;
@@ -175,8 +182,9 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
         ]}
       />
       <Breadcrumb items={[{ label: t('home'), href: '/' }, { label: t('shop'), href: activeTag || activeCat ? '/shop' : undefined }, ...(activeTag || activeCat ? [{ label: title }] : [])]} />
-      {/* Listing head: a gold-led kicker, the serif title and its line */}
-      <View style={{ gap: wide ? 14 : 10, paddingTop: wide ? 8 : 0, paddingBottom: wide ? 40 : 24, maxWidth: 780 }}>
+      {/* Listing head: a gold-led kicker, the serif title and its line; on desktop the door's scene beside it */}
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 56, paddingBottom: wide ? 40 : 24 }}>
+      <View style={{ flex: 1, gap: wide ? 14 : 10, paddingTop: wide ? 8 : 0, maxWidth: 780 }}>
         <Eyebrow rule>{frag ? t('fragKicker') : activeTag ? t('occasion') : t('shopKicker')}</Eyebrow>
         <H1 size={wide ? 56 : 36}>{title}</H1>
         <T size={wide ? 16 : 14.5} lh={1.65} color={colors.body}>{blurb || t('listingBody')}</T>
@@ -186,6 +194,13 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
             {fragSiblings.map((c) => <CapsLink key={c.id} label={pick(c, 'name')} href={{ pathname: '/collections/[slug]', params: { slug: c.slug } }} />)}
           </View>
         )}
+      </View>
+      {wide && (
+        <View style={{ width: 400 }}>
+          <Photo uri={SCENE[cat ?? ''] ?? '/images/door-gifts.jpg'} ratio={3 / 2} label={title} />
+          <Corners at={['te', 'bs']} len={16} inset={-10} />
+        </View>
+      )}
       </View>
 
       {/* Toolbar between hairlines: the count, and the sort on the far side */}

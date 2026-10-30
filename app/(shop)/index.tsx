@@ -11,7 +11,7 @@ import { Corners, DoubleFrame, HeroFilm } from '@/components/decor';
 import { data, prefersReducedMotion, reveal } from '@/components/motion';
 import { Icon, type IconName } from '@/components/icons';
 import { EMBLEM_PHOTO, EmblemPhoto } from '@/components/logo-motion';
-import { Button, CapsLink, Container, Eyebrow, Grid, Loading, ProductTile, SectionHead, Serif, T, useWide } from '@/components/ui';
+import { Button, CapsLink, Container, Eyebrow, Grid, Loading, NOT_STUDIO, ProductTile, SectionHead, Serif, T, useWide } from '@/components/ui';
 import { Faq } from '@/components/faq';
 import { faqLd, itemListLd, organizationLd, Seo, websiteLd } from '@/components/seo';
 import { getFeatured, getProducts } from '@/lib/catalogue';
@@ -85,8 +85,6 @@ function FragranceHouse() {
   );
 }
 
-/** Products whose cover is still a close-up taken on the floor; kept out of the homepage selection until re-shot. */
-const NOT_STUDIO = ['kaaba-clock-tower-woven-rug-gold', 'kids-rawdah-woven-rug-red', 'kids-rawdah-woven-rug-green', 'black-stone-prayer-mat'];
 
 const DOORS: { title: Key; line: Key; img: string; href: Href }[] = [
   { title: 'doorPerfume', line: 'doorPerfumeLine', img: '/images/door-perfume.jpg', href: { pathname: '/collections/[slug]', params: { slug: 'perfumes' } } },
@@ -243,13 +241,15 @@ export default function Home() {
 
       {/* 4 · A considered selection (whole rows only) */}
       <Container style={{ paddingTop: gap }}>
-        <SectionHead center kicker={t('featuredKicker')} title={t('featured')} reveal />
+        {wide
+          ? <SectionHead kicker={t('featuredKicker')} title={t('featured')} link={t('viewAll')} href="/shop" reveal />
+          : <SectionHead center kicker={t('featuredKicker')} title={t('featured')} reveal />}
         {shownSelection === null ? <Loading /> : (
           <Grid cols={perRow} gap={wide ? 32 : 14} rowGap={wide ? 64 : 34} reveal>
             {shownSelection.map((p) => <ProductTile key={p.id} product={p} compact={!wide} />)}
           </Grid>
         )}
-        <View {...reveal(0)} style={{ marginTop: wide ? 8 : 4 }}><CapsLink label={t('viewAll')} href="/shop" center /></View>
+        {!wide && <View {...reveal(0)} style={{ marginTop: 4 }}><CapsLink label={t('viewAll')} href="/shop" center /></View>}
       </Container>
 
       {/* 5 · Seasons of giving */}

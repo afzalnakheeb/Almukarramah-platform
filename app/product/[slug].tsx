@@ -6,7 +6,7 @@ import { Pressable, View } from 'react-native';
 import { DestinationSheet, destIcon, Screen } from '@/components/chrome';
 import { Corners } from '@/components/decor';
 import { Icon } from '@/components/icons';
-import { brandName, Breadcrumb, Button, CapsLink, Divider, EmptyState, Eyebrow, Grid, KiswahRule, Loading, Notice, Photo, Price, SectionHead, Serif, shortName, Stepper, T, useWide } from '@/components/ui';
+import { brandName, NOT_STUDIO, Breadcrumb, Button, CapsLink, Divider, EmptyState, Eyebrow, Grid, KiswahRule, Loading, Notice, Photo, Price, SectionHead, Serif, shortName, Stepper, T, useWide } from '@/components/ui';
 import { useCart } from '@/lib/cart';
 import { Facts, Faq } from '@/components/faq';
 import { data, reveal } from '@/components/motion';
@@ -43,7 +43,7 @@ export default function ProductScreen() {
   const { destination } = usePrefs();
   const { add } = useCart();
   const [product, setProduct] = useState<Product | null | undefined>(() => snapshotProduct(slug) ?? undefined);
-  const [others, setOthers] = useState<Product[]>(() => snapshotFeatured().filter((r) => r.slug !== slug).slice(0, 3));
+  const [others, setOthers] = useState<Product[]>(() => snapshotFeatured().filter((r) => r.slug !== slug && !NOT_STUDIO.includes(r.slug)).slice(0, 3));
   const [image, setImage] = useState(0);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState<string | null>(null);
@@ -54,7 +54,7 @@ export default function ProductScreen() {
     setImage(0);
     setQty(1);
     getProduct(slug).then((p) => setProduct(p ?? null)).catch(() => setProduct((cur) => cur ?? null));
-    getFeatured().then((rows) => setOthers(rows.filter((r) => r.slug !== slug).slice(0, 3))).catch(() => undefined);
+    getFeatured().then((rows) => setOthers(rows.filter((r) => r.slug !== slug && !NOT_STUDIO.includes(r.slug)).slice(0, 3))).catch(() => undefined);
   }, [slug]);
 
   if (product === undefined) return <Screen><Loading /></Screen>;
@@ -136,7 +136,7 @@ export default function ProductScreen() {
     <View style={{ gap: 0 }}>
       <View style={{ gap: wide ? 14 : 10 }}>
         <Eyebrow>{product.brand ? brandName(product.brand, lang === 'ar') : tag ? pick(tag, 'name') : t('appName')}</Eyebrow>
-        <Serif role="h1" size={wide ? 46 : 32}>{shortName(pick(product, 'name'), product.brand)}</Serif>
+        <Serif role="h1" size={wide ? 46 : 30}>{shortName(pick(product, 'name'), product.brand)}</Serif>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
           <Icon name="shield" size={14} stroke={1.3} color={colors.emerald} />
           <T size={13} color={colors.body} style={{ flexShrink: 1 }}>{product.brand ? t('soldByReseller') : t('preparedLine')}</T>

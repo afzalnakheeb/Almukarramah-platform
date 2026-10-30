@@ -1,6 +1,7 @@
 // Visible questions and answers. Kept fully open in the HTML so people, search engines and AI assistants can read them.
 import React from 'react';
 import { View } from 'react-native';
+import { useI18n } from '@/lib/i18n';
 import { colors } from '@/theme';
 import { Eyebrow, Serif, T, useWide } from './ui';
 
@@ -35,13 +36,16 @@ export function Faq({ title, items, kicker, split, aside }: { title: string; ite
 
 /** Key facts as a quiet two-column list between hairlines. */
 export function Facts({ title, rows }: { title: string; rows: [string, string][] }) {
+  // Values can be Latin inside an Arabic page (a maker's name): align them to the page, not to their own script.
+  const { isRTL } = useI18n();
+  const align = { textAlign: isRTL ? 'right' as const : 'left' as const };
   return (
     <View>
       <T w={600} size={10.5} caps color={colors.navy} style={{ paddingBottom: 12 }}>{title}</T>
       {rows.map(([k, v]) => (
         <View key={k} style={{ flexDirection: 'row', gap: 16, paddingVertical: 10, borderTopWidth: 1, borderColor: colors.line }}>
-          <T size={13} color={colors.muted} style={{ width: 128 }}>{k}</T>
-          <T size={13.5} w={500} color={colors.navy} style={{ flex: 1 }}>{v}</T>
+          <T size={13} color={colors.muted} style={[{ width: 128 }, align]}>{k}</T>
+          <T size={13.5} w={500} color={colors.navy} style={[{ flex: 1 }, align]}>{v}</T>
         </View>
       ))}
       <View style={{ height: 1, backgroundColor: colors.line }} />
