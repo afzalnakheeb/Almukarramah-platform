@@ -238,3 +238,9 @@ emad/t226.jpg https://images.squarespace-cdn.com/content/v1/538279a0e4b037295d98
 emad/full-073.jpg https://images.squarespace-cdn.com/content/v1/538279a0e4b037295d984647/1624489020538-HM9P1GX20993E46DAEB3/850_9619.jpeg?format=2500w
 emad/full-170.jpg https://images.squarespace-cdn.com/content/v1/538279a0e4b037295d984647/1624489562703-UKUCA4WAFD8HEP5MDI1Z/DSC_5866.jpeg?format=2500w
 emad/full-168.jpg https://images.squarespace-cdn.com/content/v1/538279a0e4b037295d984647/1624489560770-T12FUL7EET81ZO8O5DYK/DSC_5862.jpeg?format=2500w
+style-gilded-home.png https://media.weavy.ai/image/upload/v1793397397/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/zypmjoy8ij886x6vfxgq.png
+style-gilded-caravan.png https://media.weavy.ai/image/upload/v1793397402/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/tlfohnq0mxh4a5gabhky.png
+style-miniature-home.png https://media.weavy.ai/image/upload/v1793397402/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/d270vobgdui5ijvu280y.png
+style-miniature-caravan.png https://media.weavy.ai/image/upload/v1793397402/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/zvakilqr2cohnone1cym.png
+style-soft3d-home.png https://media.weavy.ai/image/upload/v1793397410/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/rsmty4iaagf5l6nf9iei.png
+style-soft3d-caravan.png https://media.weavy.ai/image/upload/v1793397415/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/bwfpp1lell1b1icsfb8r.png
