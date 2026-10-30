@@ -353,7 +353,7 @@ const en = {
   dpSubsTitle: 'Subscriptions',
   dpSignIn: 'Sign in to delete your account',
   supportTitle: 'Help and contact',
-  supportIntro: 'We are a small team in Madinah and we read every message. Write to us in Arabic or English.',
+  supportIntro: 'We are a small team and we read every message. Write to us in Arabic or English.',
   supportOrders: 'About an order: please include your order number (AM-…), which is on your receipt and in your account.',
   supportAssistant: 'For gift ideas, the gift assistant answers at any time from our live catalogue.',
   supportMore: 'More',
@@ -375,6 +375,9 @@ const en = {
   aiConsentTitle: 'Before you ask',
   aiConsentBody: 'The assistant is powered by Claude, an AI model made by Anthropic. To answer you, what you type, the page you are on, your bag and your delivery choice (and, when you are signed in, the status of your recent orders) are sent to Anthropic. Nothing is used for advertising. Please never type card numbers or passwords.',
   aiConsentAgree: 'Agree and continue',
+  aiReport: 'Report this reply',
+  aiReported: 'Thank you. We will review it.',
+  aiReportFailed: 'The report did not go through. Please write to hello@almukarramah.com.',
 
   // Membership
   memberTitle: 'Learn, give and save through the year',
@@ -912,7 +915,7 @@ const ar: typeof en = {
   dpSubsTitle: 'الاشتراكات',
   dpSignIn: 'سجّل الدخول لحذف حسابك',
   supportTitle: 'المساعدة والتواصل',
-  supportIntro: 'نحن فريق صغير في المدينة المنورة ونقرأ كل رسالة. راسلنا بالعربية أو الإنجليزية.',
+  supportIntro: 'نحن فريق صغير ونقرأ كل رسالة. راسلنا بالعربية أو الإنجليزية.',
   supportOrders: 'إن كان سؤالك عن طلب، فاذكر رقمه (AM-…) الموجود في إيصالك وفي حسابك.',
   supportAssistant: 'ولأفكار الهدايا، يجيبك مساعد الهدايا في أي وقت من كتالوجنا الحالي.',
   supportMore: 'المزيد',
@@ -934,6 +937,9 @@ const ar: typeof en = {
   aiConsentTitle: 'قبل أن تسأل',
   aiConsentBody: 'يعمل المساعد بنموذج الذكاء الاصطناعي Claude من شركة Anthropic. وللرد عليك تُرسَل إلى Anthropic رسائلك، والصفحة التي تتصفحها، ومحتوى حقيبتك، واختيار التوصيل (وحالة طلباتك الأخيرة إن كنت مسجّلًا الدخول). لا يُستخدم شيء من ذلك للإعلانات. يرجى ألا تكتب أبدًا أرقام البطاقات أو كلمات المرور.',
   aiConsentAgree: 'أوافق وأتابع',
+  aiReport: 'الإبلاغ عن هذا الرد',
+  aiReported: 'شكرًا لك، سنراجعه.',
+  aiReportFailed: 'تعذّر إرسال البلاغ. راسلنا على hello@almukarramah.com.',
 
   memberTitle: 'تعلّم وأهدِ ووفّر طوال العام',
   memberBody: 'اشترك لتحصل على رحلة القرآن ورحلة السيرة ومزايا الأعضاء على الهدايا، أو صندوق من تمور المدينة كل شهر.',

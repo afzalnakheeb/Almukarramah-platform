@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icons';
 import { data } from '@/components/motion';
 import { Notice, Photo, Serif, T, useWide } from '@/components/ui';
+import { ReportReply } from '@/components/ai-report';
 import { useAiConsent } from '@/lib/ai-consent';
 import { useAssistant, type PageKind, type Turn } from '@/lib/assistant';
 import { useI18n, type Key } from '@/lib/i18n';
@@ -78,6 +79,7 @@ export function AssistantChat({ onClose, compact }: { onClose?: () => void; comp
           </Pressable>
         ))}
         {m.action && <ActionCard turn={m} index={i} go={go} />}
+        {!mine && i >= 0 && !!m.content?.trim() && Platform.OS !== 'web' && <ReportReply reply={m.content} question={a.turns[i - 1]?.content} page={a.page.kind} />}
       </View>
     );
   };

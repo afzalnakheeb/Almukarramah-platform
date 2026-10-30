@@ -170,9 +170,11 @@ export default function Membership() {
               )}
             </View>
           );
+          // Side by side on wide screens (equal heights); stacked on phones, each as tall as its content (flex: 1 there
+          // squeezed the membership card under the next one and hid its Join button).
           return featured
-            ? <DoubleFrame key={p.id} pad={wide ? 34 : 22} gap={5} style={{ flex: 1, backgroundColor: colors.porcelain }}>{body}</DoubleFrame>
-            : <View key={p.id} style={{ flex: 1, backgroundColor: colors.porcelain, borderWidth: 1, borderColor: colors.line, padding: wide ? 40 : 28 }}>{body}</View>;
+            ? <DoubleFrame key={p.id} pad={wide ? 34 : 22} gap={5} style={{ flex: wide ? 1 : undefined, backgroundColor: colors.porcelain }}>{body}</DoubleFrame>
+            : <View key={p.id} style={{ flex: wide ? 1 : undefined, backgroundColor: colors.porcelain, borderWidth: 1, borderColor: colors.line, padding: wide ? 40 : 28 }}>{body}</View>;
         })}
       </View>
 

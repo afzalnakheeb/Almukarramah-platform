@@ -32,7 +32,8 @@ export default function Support() {
         <T size={15.5} lh={1.7} color={colors.body}>{t('supportIntro')}</T>
         <Card pad={wide ? 28 : 18} style={{ gap: 10, marginTop: 6, borderTopColor: colors.gold }}>
           <T w={600} size={10.5} caps color={colors.brassText}>{t('email')}</T>
-          <Link href={`mailto:${CONTACT}` as Href} accessibilityLabel={CONTACT}>
+          {/* the address reads left to right, and sits on the start side (the right in Arabic) */}
+          <Link href={`mailto:${CONTACT}` as Href} accessibilityLabel={CONTACT} style={{ alignSelf: 'flex-start' }}>
             <Serif size={wide ? 32 : 26} style={{ writingDirection: 'ltr' }}>{CONTACT}</Serif>
           </Link>
           <T size={14} lh={1.6} color={colors.body}>{t('supportOrders')}</T>

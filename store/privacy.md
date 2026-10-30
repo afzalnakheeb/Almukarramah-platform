@@ -17,6 +17,7 @@ new SDK, analytics tool or data field is added; the marketplace branch adds save
 | App-store purchase records | App Store / Google Play via RevenueCat | RevenueCat, Supabase (membership status) | RevenueCat record deleted at account deletion |
 | Assistant messages, page, bag, delivery choice, recent order status | "Ask Al Mukarramah" | Supabase function → Anthropic (Claude API) | Not stored by us; Anthropic may keep API data for a limited time for safety |
 | Lesson progress | Quran Trail | Supabase | Until deletion |
+| A reported assistant reply | "Report this reply" in the apps (the reply, the question before it, the page) | Supabase `assistant_reports`, read by staff only | Until reviewed and cleared; unlinked from the account at deletion |
 | Card details | Typed only on Moyasar's page | Moyasar | Never reach our code or database |
 
 Not in the app: analytics or tracking SDKs, advertising SDKs, crash reporting, device location, contacts, photos,
