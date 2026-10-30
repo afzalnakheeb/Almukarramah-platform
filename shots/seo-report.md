@@ -10,7 +10,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Your deen and your dunya, in one home
 json-ld: Organization, WebSite, ItemList, FAQPage
-visible text without JS: 4856 chars: "Al Mukarramah | The Premium Marketplace for Every Muslim Home Delivering to Saudi address SAR The curated marketplace for the Muslim home Your deen and your dun…"
+visible text without JS: 4983 chars: "Al Mukarramah | The Premium Marketplace for Every Muslim Home Delivering to Saudi address SAR The curated marketplace for the Muslim home Your deen and your dun…"
 
 ## /collections/perfumes  (HTTP 200)
 title: Perfumes | Al Mukarramah
