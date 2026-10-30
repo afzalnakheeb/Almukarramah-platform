@@ -6,7 +6,8 @@
   "framework": null,
   "git": {
     "deploymentEnabled": {
-      "shots/**": false
+      "shots/**": false,
+      "rec/**": false
     }
   },
   "redirects": [

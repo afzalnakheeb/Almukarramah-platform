@@ -1,0 +1,34 @@
+# Records the brand intro on a rec/* branch build and commits the videos back. Never deploys anything.
+name: Record intro
+on:
+  push:
+    branches: ['rec/**']
+permissions:
+  contents: write
+jobs:
+  rec:
+    if: "!contains(github.event.head_commit.message, '[rec-result]')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPO_PUBLIC_SUPABASE_URL: https://axpwiixtqkjwjbsqzwqv.supabase.co
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_9jo51p9M2YQDQkkMWbyZ8Q_bpPh7S6c
+      EXPO_PUBLIC_SITE_URL: https://almukarramah.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm run vercel-install
+      - run: npm run build:web
+      - run: npm install --no-save --legacy-peer-deps playwright serve && npx playwright install --with-deps chromium && sudo apt-get install -y ffmpeg
+      - name: Record
+        run: |
+          npx serve dist -l 3000 >/dev/null 2>&1 &
+          sleep 3
+          node scripts/rec.mjs http://localhost:3000 rec
+          for f in rec/*.webm; do ffmpeg -y -i "$f" -c:v libx264 -crf 20 -pix_fmt yuv420p -movflags +faststart "${f%.webm}.mp4"; done
+          rm -rf rec/tmp-* rec/*.webm; ls -la rec
+      - name: Commit
+        run: |
+          git config user.name "shots-bot"; git config user.email "shots-bot@users.noreply.github.com"
+          git add -f rec; git commit -m "Intro recordings for ${GITHUB_SHA::7} [rec-result]" || exit 0; git push
