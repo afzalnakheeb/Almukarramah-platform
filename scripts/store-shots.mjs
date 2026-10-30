@@ -22,13 +22,16 @@ const DEVICES = {
 };
 
 // tab: the screen is one of the four tabs (Home, Shop, Bag, Account); otherwise it is pushed over them with a header.
+// bag: products added before the capture (the iPad's wider bag gets three). wide: what the iPad shows instead.
 const SCENES = [
   { id: '1-home', path: '/', tab: 'home' },
   { id: '2-doors', path: '/', tab: 'home', anchor: { en: 'Begin with what matters', ar: 'ابدأ بما يهمّك' } },
   { id: '3-perfumes', path: '/collections/perfumes' },
   { id: '4-product', path: '/product/kaaba-door-prayer-mat' },
-  { id: '5-bag', path: '/product/aam-zumar-60-ml', tab: 'cart', addToBag: true, gift: { en: 'Eid Mubarak. With love, from Madinah.', ar: 'عيد مبارك، مع خالص المحبة من المدينة المنورة.' } },
-  { id: '6-assistant', path: '/concierge' },
+  { id: '5-bag', path: '/cart', tab: 'cart', bag: ['aam-zumar-60-ml'], hideFab: true,
+    gift: { en: 'Eid Mubarak. With love, from Madinah.', ar: 'عيد مبارك، مع خالص المحبة من المدينة المنورة.' },
+    wide: { bag: ['aam-zumar-60-ml', 'kaaba-door-prayer-mat', 'ajwati-ajwa-dates-500g'] } },
+  { id: '6-assistant', path: '/concierge', wide: { path: '/collections/oud-oils', openAssistant: true } },
 ];
 const LANGS = { en: 'en-GB', ar: 'ar-SA' };
 
@@ -66,16 +69,23 @@ async function settle(page, ms = 1800) {
 
 for (const [device, d] of Object.entries(DEVICES)) {
   for (const lang of Object.keys(LANGS)) {
-    for (const s of SCENES) {
+    for (const scene of SCENES) {
+      const s = device === 'ipad' && scene.wide ? { ...scene, ...scene.wide } : scene;
       const contentHeight = d.height - d.status - (s.tab ? d.tabbar : d.header);
       const { ctx, page } = await open(device, lang, { width: d.width, height: contentHeight, dsf: d.dsf });
       try {
-        await page.goto(`${base}${s.path}?intro=0`, { waitUntil: 'networkidle', timeout: 60000 });
-        await settle(page);
-        if (s.addToBag) {
-          await page.locator('[data-btn="primary"]').first().click();
-          await page.waitForURL(/\/cart/, { timeout: 15000 });
+        // Fill the bag first: each product page's "Add to bag" goes on to the bag.
+        for (const slug of s.bag ?? []) {
+          await page.goto(`${base}/product/${slug}?intro=0`, { waitUntil: 'networkidle', timeout: 60000 });
           await settle(page, 1200);
+          const add = page.locator('[data-btn="primary"]').first();
+          if (!(await add.count())) { errors.push(`${device} ${lang} ${s.id}: no Add to bag on ${slug}`); continue; }
+          await add.click();
+          await page.waitForURL(/\/cart/, { timeout: 15000 }).catch(() => errors.push(`${device} ${lang} ${s.id}: ${slug} did not open the bag`));
+        }
+        if (!s.bag) await page.goto(`${base}${s.path}?intro=0`, { waitUntil: 'networkidle', timeout: 60000 });
+        await settle(page);
+        if (s.gift) {
           const field = page.locator('textarea').first();
           if (await field.count()) {
             await field.fill(s.gift[lang]);
@@ -83,6 +93,11 @@ for (const [device, d] of Object.entries(DEVICES)) {
           }
         }
         await appLook(page);
+        if (s.hideFab) await page.addStyleTag({ content: '[data-btn="fab"]{display:none!important}' });
+        if (s.openAssistant) {
+          await page.locator('[data-btn="fab"]').first().click();
+          await page.waitForTimeout(900);
+        }
         if (s.anchor) {
           await page.evaluate((text) => {
             const el = [...document.querySelectorAll('h2,[role="heading"]')].find((h) => h.textContent?.trim() === text);
