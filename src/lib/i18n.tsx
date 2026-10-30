@@ -151,7 +151,7 @@ const en = {
 
   // Home
   heroKicker: 'The curated marketplace for the Muslim home',
-  heroTitle: 'Your deen and your dunya, in one home',
+  heroTitle: 'Where your deen and dunya meet',
   heroBody: 'Perfumes, oud, prayer mats and gifts from trusted makers across the Muslim world. Each one approved by our team.',
   exploreGifts: 'Explore the marketplace',
   heroTrust1: 'Every product approved by our team',
@@ -646,7 +646,7 @@ const ar: typeof en = {
   stepDetails: 'البيانات والدفع',
 
   heroKicker: 'السوق المختار للبيت المسلم',
-  heroTitle: 'دينك ودنياك…\nفي بيت واحد',
+  heroTitle: 'حيث يلتقي\nدينك ودنياك',
   heroBody: 'عطور وعود وسجادات صلاة وهدايا من صنّاع موثوقين في أنحاء العالم الإسلامي، يعتمد فريقنا كل منتج منها.',
   exploreGifts: 'تصفّح السوق',
   heroTrust1: 'كل منتج يعتمده فريقنا',
