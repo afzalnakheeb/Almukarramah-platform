@@ -13,12 +13,12 @@ const out = resolve(process.argv[3] || 'store/screens');
 
 const C = { ink: '#1C1A17', ivory: '#F7F3EC', porcelain: '#FBF9F5', line: '#E3DACB', muted: '#6E675E', brass: '#9C7B45', brassText: '#7D6237', gold: '#B08D52', white: '#FFFFFF' };
 
-// The same numbers as store-shots.mjs: window, status bar, tab bar (with the home indicator), header, and where a
-// sheet starts below the status bar.
+// The same numbers as store-shots.mjs: window, status bar, tab bar (with the home indicator), header, where a sheet
+// starts below the status bar, and the room a sheet keeps at the bottom for the home indicator.
 const DEVICES = {
-  iphone: { width: 440, height: 956, status: 62, tabbar: 83, header: 44, sheet: 10, radius: 62, kind: 'ios' },
-  ipad: { width: 1032, height: 1376, status: 24, tabbar: 69, header: 50, sheet: 0, radius: 36, kind: 'ipad' },
-  android: { width: 412, height: 915, status: 28, tabbar: 80, header: 64, sheet: 0, radius: 44, kind: 'android' },
+  iphone: { width: 440, height: 956, status: 62, tabbar: 83, header: 44, sheet: 10, inset: 34, radius: 62, kind: 'ios' },
+  ipad: { width: 1032, height: 1376, status: 24, tabbar: 69, header: 50, sheet: 0, inset: 20, radius: 36, kind: 'ipad' },
+  android: { width: 412, height: 915, status: 28, tabbar: 80, header: 64, sheet: 0, inset: 24, radius: 44, kind: 'android' },
 };
 // Store canvases: which device fills them, and how much room the caption takes.
 const SIZES = [
@@ -104,7 +104,7 @@ function homeIndicator(d) {
 
 function deviceScreen(d, scene, lang, img) {
   const ar = lang === 'ar';
-  const content = d.height - d.status - (scene.modal ? d.sheet : scene.tab ? d.tabbar : d.header);
+  const content = d.height - d.status - (scene.modal ? d.sheet + d.inset : scene.tab ? d.tabbar : d.header);
   if (scene.modal && d.kind === 'ios') {
     // The iPhone's page sheet: the screen behind steps back (its top edge just shows), the sheet rises over it.
     return `<div style="position:relative;width:${d.width}px;height:${d.height}px;background:#000;overflow:hidden;border-radius:${d.radius}px">

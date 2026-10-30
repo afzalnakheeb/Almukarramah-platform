@@ -14,26 +14,27 @@ const out = process.argv[3] || 'shots/store';
 mkdirSync(out, { recursive: true });
 
 // The window in points / dp, the status bar, and the bars around the content (tab screens and pushed screens).
-// sheet: how far below the status bar a sheet (the assistant on phones) starts. store-frames.mjs uses the same numbers.
+// sheet: how far below the status bar a sheet (the assistant on phones) starts; inset: the room a sheet keeps at the
+// bottom for the home indicator (the app pads it with the safe-area inset). store-frames.mjs uses the same numbers.
 const DEVICES = {
-  iphone: { width: 440, height: 956, dsf: 2.5, status: 62, tabbar: 83, header: 44, sheet: 10 }, // iPhone 6.9″ (Pro Max)
-  ipad: { width: 1032, height: 1376, dsf: 2, status: 24, tabbar: 69, header: 50, sheet: 0 }, // iPad 13″
-  android: { width: 412, height: 915, dsf: 2.5, status: 28, tabbar: 80, header: 64, sheet: 0 }, // Android phone
+  iphone: { width: 440, height: 956, dsf: 2.5, status: 62, tabbar: 83, header: 44, sheet: 10, inset: 34 }, // iPhone 6.9″ (Pro Max)
+  ipad: { width: 1032, height: 1376, dsf: 2, status: 24, tabbar: 69, header: 50, sheet: 0, inset: 20 }, // iPad 13″
+  android: { width: 412, height: 915, dsf: 2.5, status: 28, tabbar: 80, header: 64, sheet: 0, inset: 24 }, // Android phone
 };
 
 // Store text rule: no city in the screenshots. CITY finds one; scenes with `scrub` hide the line that holds it (the
-// app's own lines, such as a product's place of preparation on the iPad layout), and every capture reports any city
-// still in view in errors.txt.
+// app's own lines, such as a product's place of preparation): 'hide' closes the gap, 'blank' keeps the line's room
+// (so nothing below moves up into view). Every capture reports any city still in view in errors.txt.
 const CITY = 'Madinah|Makkah|Medina|Mecca|Dubai|Riyadh|Jeddah|المدينة|مكة|دبي|الرياض|جدة';
 
 // tab: the screen is one of the four tabs (Home, Shop, Bag, Account); otherwise it is pushed over them with a header.
 // modal: the screen is a sheet over the others (the assistant on phones). bag: products added before the capture
 // (the iPad's wider bag gets three). wide: what the iPad shows instead.
 const SCENES = [
-  { id: '1-home', path: '/', tab: 'home', scrub: true },
+  { id: '1-home', path: '/', tab: 'home', scrub: 'hide' },
   { id: '2-doors', path: '/', tab: 'home', anchor: { en: 'Begin with what matters', ar: 'ابدأ بما يهمّك' } },
   { id: '3-perfumes', path: '/collections/perfumes' },
-  { id: '4-product', path: '/product/kaaba-door-prayer-mat', scrub: true },
+  { id: '4-product', path: '/product/kaaba-door-prayer-mat', scrub: 'blank', wide: { scrub: 'hide' } },
   { id: '5-bag', path: '/cart', tab: 'cart', bag: ['aam-zumar-60-ml'], hideFab: true,
     gift: { en: 'Eid Mubarak. With love and duas.', ar: 'عيد مبارك، مع خالص المحبة والدعاء.' },
     wide: { bag: ['aam-zumar-60-ml', 'kaaba-door-prayer-mat', 'ajwati-sukkari-dates'] } },
@@ -75,11 +76,13 @@ async function settle(page, ms = 1800) {
   await page.waitForTimeout(ms);
 }
 
-/** City names in view. With scrub, the line holding each one is hidden (and a separator dot just before it). */
+/** City names in view. With scrub ('hide' or 'blank'), the line holding each one is hidden (with 'hide', also a
+ *  separator dot just before it). */
 async function cities(page, scrub) {
   return page.evaluate(([src, scrub]) => {
     const re = new RegExp(src);
     const inView = (el) => {
+      if (getComputedStyle(el).visibility === 'hidden') return false;
       const r = el.getBoundingClientRect();
       return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth;
     };
@@ -93,7 +96,10 @@ async function cities(page, scrub) {
     for (const el of hits) {
       const text = (el.textContent || '').trim().slice(0, 90);
       const line = el.parentElement;
-      if (scrub && line) {
+      if (scrub === 'blank' && line) {
+        line.style.visibility = 'hidden';
+        notes.push(`blanked: ${text}`);
+      } else if (scrub && line) {
         const before = line.previousElementSibling;
         line.style.display = 'none';
         if (before && !(before.textContent || '').trim()) before.style.display = 'none';
@@ -111,7 +117,7 @@ for (const [device, d] of Object.entries(DEVICES)) {
   for (const lang of Object.keys(LANGS)) {
     for (const scene of SCENES) {
       const s = device === 'ipad' && scene.wide ? { ...scene, ...scene.wide } : scene;
-      const contentHeight = d.height - d.status - (s.modal ? d.sheet : s.tab ? d.tabbar : d.header);
+      const contentHeight = d.height - d.status - (s.modal ? d.sheet + d.inset : s.tab ? d.tabbar : d.header);
       const { ctx, page } = await open(device, lang, { width: d.width, height: contentHeight, dsf: d.dsf });
       try {
         // Fill the bag first: each product page's "Add to bag" goes on to the bag.
@@ -148,7 +154,7 @@ for (const [device, d] of Object.entries(DEVICES)) {
           await page.evaluate(() => { const sc = document.querySelector('[data-scroller]'); if (sc) sc.scrollTop = 0; });
         }
         await page.waitForTimeout(900);
-        if (s.scrub) for (const note of await cities(page, true)) errors.push(`${device} ${lang} ${s.id}: ${note}`);
+        if (s.scrub) for (const note of await cities(page, s.scrub)) errors.push(`${device} ${lang} ${s.id}: ${note}`);
         for (const note of await cities(page, false)) errors.push(`${device} ${lang} ${s.id}: ${note}`);
         await page.waitForTimeout(300);
         await page.screenshot({ path: join(out, `${device}-${lang}-${s.id}.jpg`), type: 'jpeg', quality: 86 });
