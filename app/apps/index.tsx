@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { AppCard } from '@/components/apps';
 import { Screen } from '@/components/chrome';
 import { breadcrumbLd, Seo } from '@/components/seo';
-import { Card, Eyebrow, Serif, T, useWide } from '@/components/ui';
+import { Eyebrow, KiswahRule, Serif, T, useWide } from '@/components/ui';
 import { appLd, APPS } from '@/lib/apps';
 import { useI18n } from '@/lib/i18n';
 import { SITE_URL } from '@/lib/images';
@@ -21,18 +21,19 @@ export default function Apps() {
         path="/apps"
         jsonLd={[...APPS.map((a) => appLd(a, SITE_URL)), breadcrumbLd([{ name: 'Home', path: '/' }, { name: 'Our apps', path: '/apps' }])]}
       />
-      <View style={{ alignItems: 'center', maxWidth: 760, alignSelf: 'center', gap: 10, marginBottom: 28, marginTop: wide ? 16 : 0 }}>
-        <Eyebrow size={12}>{t('ourApps')}</Eyebrow>
-        <Serif role="h1" size={wide ? 52 : 34} center>{t('appsTitle')}</Serif>
-        <T size={wide ? 17 : 15} lh={1.6} color={colors.body} center>{t('appsBody')}</T>
+      <View style={{ alignItems: 'center', maxWidth: 760, alignSelf: 'center', gap: wide ? 14 : 10, marginBottom: wide ? 48 : 28, marginTop: wide ? 8 : 0 }}>
+        <Eyebrow center>{t('ourApps')}</Eyebrow>
+        <Serif role="h1" size={wide ? 56 : 36} center>{t('appsTitle')}</Serif>
+        <KiswahRule center width={wide ? 112 : 88} />
+        <T size={wide ? 16.5 : 15} lh={1.65} color={colors.body} center style={{ marginTop: 4 }}>{t('appsBody')}</T>
       </View>
-      <View style={{ flexDirection: wide ? 'row' : 'column', gap: 18, alignItems: 'stretch' }}>
+      <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 28 : 18, alignItems: 'stretch' }}>
         {APPS.map((a) => <AppCard key={a.slug} a={a} />)}
       </View>
-      <Card pad={wide ? 22 : 16} style={{ marginTop: 22, borderRadius: 6, backgroundColor: colors.lavender, gap: 6 }}>
-        <T w={700} size={16} color={colors.navy}>{t('oneAccountTitle')}</T>
-        <T size={14} lh={1.6} color={colors.body}>{t('oneAccountBody')}</T>
-      </Card>
+      <View style={{ marginTop: wide ? 48 : 28, paddingTop: wide ? 32 : 24, borderTopWidth: 1, borderColor: colors.goldLine, flexDirection: wide ? 'row' : 'column', gap: wide ? 64 : 10 }}>
+        <Serif size={wide ? 30 : 24} style={{ flex: wide ? 0.8 : undefined }}>{t('oneAccountTitle')}</Serif>
+        <T size={14.5} lh={1.7} color={colors.body} style={{ flex: wide ? 1.2 : undefined }}>{t('oneAccountBody')}</T>
+      </View>
     </Screen>
   );
 }

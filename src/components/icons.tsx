@@ -1,4 +1,4 @@
-// Line icons from the AlMukarramah Platform Design (1.7–1.8 stroke, rounded caps).
+// Line icons: fine strokes (1.4–1.5), rounded caps, drawn on a 24 px grid.
 import React from 'react';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { colors } from '@/theme';
@@ -7,7 +7,7 @@ export type IconName =
   | 'menu' | 'search' | 'bag' | 'user' | 'help' | 'bed' | 'house' | 'globe' | 'chevronDown' | 'chevronLeft' | 'chevronRight'
   | 'arrowRight' | 'arrowLeft' | 'close' | 'send' | 'lock' | 'gift' | 'sparkle' | 'book' | 'check' | 'plus' | 'minus' | 'shield' | 'grid';
 
-export function Icon({ name, size = 22, color = colors.navy, stroke = 1.8 }: { name: IconName; size?: number; color?: string; stroke?: number }) {
+export function Icon({ name, size = 22, color = colors.navy, stroke = 1.5 }: { name: IconName; size?: number; color?: string; stroke?: number }) {
   const p = { fill: 'none', stroke: color, strokeWidth: stroke, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
@@ -39,14 +39,13 @@ export function Icon({ name, size = 22, color = colors.navy, stroke = 1.8 }: { n
   );
 }
 
-/** Decorative arch with brass lines, used where a photograph will go. */
-export function ArchMotif({ width = 150, color = colors.brass }: { width?: number; color?: string }) {
+/** Decorative arch in fine gold lines, used where a photograph will go (no dark block behind it). */
+export function ArchMotif({ width = 150, color = colors.gold }: { width?: number; color?: string }) {
   return (
     <Svg width={width} height={width * 1.4} viewBox="0 0 300 420" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <Rect x={10} y={10} width={280} height={400} rx={10} fill={colors.navy} />
-      <Rect x={26} y={26} width={248} height={368} rx={6} fill="none" stroke={color} strokeWidth={2} />
-      <Path d="M60 394V170a90 90 0 0 1 180 0v224" fill="none" stroke={color} strokeWidth={3} />
-      <Path d="M90 394V185a60 60 0 0 1 120 0v209" fill="none" stroke={color} strokeWidth={1.5} opacity={0.6} />
+      <Path d="M60 394V170a90 90 0 0 1 180 0v224" fill="none" stroke={color} strokeWidth={2} opacity={0.7} />
+      <Path d="M90 394V185a60 60 0 0 1 120 0v209" fill="none" stroke={color} strokeWidth={1.2} opacity={0.45} />
+      <Path d="M40 394h220" fill="none" stroke={color} strokeWidth={1.2} opacity={0.5} />
     </Svg>
   );
 }

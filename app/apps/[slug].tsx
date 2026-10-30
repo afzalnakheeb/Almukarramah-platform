@@ -67,7 +67,7 @@ export default function AppPage() {
             <T size={wide ? 18 : 16} lh={1.7} color={colors.body}>{ar ? a.description_ar : a.description_en}</T>
             <T size={14} color={colors.muted}>{t('appFor')}: {ar ? a.audience_ar : a.audience_en}</T>
           </View>
-          <Card pad={wide ? 24 : 18} style={{ flex: 1, borderRadius: 6, gap: 12, alignSelf: 'stretch' }}>
+          <Card pad={wide ? 24 : 18} style={{ flex: 1, gap: 12, alignSelf: 'stretch' }}>
             <T w={700} size={16} color={colors.navy}>{t('appFeatures')}</T>
             {(ar ? a.features_ar : a.features_en).map((f) => (
               <View key={f} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
@@ -80,7 +80,7 @@ export default function AppPage() {
           </Card>
         </View>
 
-        <Card pad={wide ? 24 : 18} style={{ borderRadius: 6, gap: 10, backgroundColor: colors.lavender }}>
+        <Card pad={wide ? 24 : 18} style={{ gap: 10, borderTopColor: colors.gold }}>
           <T w={700} size={16} color={colors.navy}>{t('installTitle')}</T>
           <T size={14.5} lh={1.6} color={colors.body}>{t('installIphone')}</T>
           <T size={14.5} lh={1.6} color={colors.body}>{t('installAndroid')}</T>

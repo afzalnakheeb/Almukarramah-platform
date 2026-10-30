@@ -6,6 +6,7 @@ import { Animated, Easing, Platform, StyleSheet, View, type StyleProp, type View
 import Svg, { Defs, LinearGradient, Path, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { imageUrl } from '@/lib/images';
 import { colors } from '@/theme';
+import { data } from './motion';
 
 const hidden = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' as const, pointerEvents: 'none' as const };
 
@@ -49,21 +50,70 @@ export function Glow({ color = colors.gold, opacity = 0.22, cx = '75%', cy = '40
   );
 }
 
-/** Small gold ornament: line, diamond, line. `align` centres it or keeps it at the start. */
-export function Ornament({ color = colors.gold, width = 88, align = 'start', style }: { color?: string; width?: number; align?: 'start' | 'center'; style?: StyleProp<ViewStyle> }) {
-  const line = { height: 1, flex: 1, backgroundColor: color, opacity: 0.8 };
+/**
+ * The Kiswah mark: a small square in Kaaba black crossed by a gold band (the hizam), between two short gold hairlines.
+ * The house's quiet signature under centred titles, in the footer and in empty states. `color` tints the hairlines.
+ */
+export function Ornament({ color = colors.gold, width = 96, align = 'start', size = 9, style }: { color?: string; width?: number; align?: 'start' | 'center'; size?: number; style?: StyleProp<ViewStyle> }) {
+  const line = { height: 1, flex: 1, backgroundColor: color, opacity: 0.75 };
   return (
-    <View {...hidden} style={[{ width, flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: align === 'center' ? 'center' : 'flex-start' }, style]}>
+    <View {...hidden} style={[{ width, flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: align === 'center' ? 'center' : 'flex-start' }, style]}>
       <View style={line} />
-      <View style={{ width: 7, height: 7, backgroundColor: color, transform: [{ rotate: '45deg' }] }} />
+      <KiswahMark size={size} />
       <View style={line} />
     </View>
   );
 }
 
-/** Thin gold rule across the full width (used between the header and dark sections, and atop the footer). */
+/** The square alone: Kaaba black with a satin gold band a third of the way down. */
+export function KiswahMark({ size = 9 }: { size?: number }) {
+  const band = Math.max(1, Math.round(size / 8));
+  return (
+    <View {...hidden} style={{ width: size, height: size, backgroundColor: colors.kiswah }}>
+      <View style={{ position: 'absolute', left: 0, right: 0, top: Math.round(size * 0.28), height: band, backgroundColor: colors.gold }} />
+    </View>
+  );
+}
+
+/**
+ * Kaaba corner: two fine gold strokes meeting at a corner, set just outside a framed object (the parent must not clip).
+ * `at` picks the corners (start/end follow the reading direction). With `draw`, the strokes are drawn in on hover of
+ * the nearest [data-hover] ancestor (web, +html.tsx); otherwise they are always shown.
+ */
+export function Corners({ at = ['ts', 'be'], len = 16, inset = -9, color = colors.gold, draw }: { at?: ('ts' | 'te' | 'bs' | 'be')[]; len?: number; inset?: number; color?: string; draw?: boolean }) {
+  return (
+    <>
+      {at.map((c) => {
+        const top = c[0] === 't';
+        const start = c[1] === 's';
+        return (
+          <View key={c} {...hidden} {...data({ corner: draw ? 'draw' : 'on', cv: top ? 't' : 'b', ch: start ? 's' : 'e' })}
+            style={{
+              position: 'absolute', width: len, height: len,
+              ...(top ? { top: inset } : { bottom: inset }),
+              ...(start ? { start: inset } : { end: inset }),
+              borderColor: color,
+              ...(top ? { borderTopWidth: 1 } : { borderBottomWidth: 1 }),
+              ...(start ? { borderStartWidth: 1 } : { borderEndWidth: 1 }),
+            }} />
+        );
+      })}
+    </>
+  );
+}
+
+/** Thin gold rule across the full width. */
 export function GoldRule({ style }: { style?: StyleProp<ViewStyle> }) {
-  return <View {...hidden} style={[{ height: 2, backgroundColor: colors.gold }, style]} />;
+  return <View {...hidden} style={[{ height: 1, backgroundColor: colors.goldLine }, style]} />;
+}
+
+/** Double gold rule frame (letterpress stationery): wrap content; the inner rule sits `gap` inside the outer one. */
+export function DoubleFrame({ children, gap = 5, pad = 40, style }: { children: React.ReactNode; gap?: number; pad?: number; style?: StyleProp<ViewStyle> }) {
+  return (
+    <View style={[{ borderWidth: 1, borderColor: colors.goldLine, padding: gap }, style]}>
+      <View style={{ borderWidth: 1, borderColor: colors.hair, padding: pad }}>{children}</View>
+    </View>
+  );
 }
 
 /** True when the visitor asked their device for less motion (web only; apps follow the system setting elsewhere). */
@@ -95,8 +145,9 @@ export function CinematicPhoto({ uri, position = 'center', label, sweep: withSwe
     a.start(); b.start();
     return () => { a.stop(); b.stop(); };
   }, [drift, sweep]);
-  const scale = drift.interpolate({ inputRange: [0, 1], outputRange: [1.02, 1.09] });
-  const shift = drift.interpolate({ inputRange: [0, 1], outputRange: [0, -22] });
+  // A barely-there push-in: the Art Director's compositions are exact, so the camera only breathes.
+  const scale = drift.interpolate({ inputRange: [0, 1], outputRange: [1.0, 1.035] });
+  const shift = drift.interpolate({ inputRange: [0, 1], outputRange: [0, -8] });
   const sweepX = sweep.interpolate({ inputRange: [0, 1], outputRange: ['-60%', '160%'] });
   const sweepO = sweep.interpolate({ inputRange: [0, 0.15, 0.85, 1], outputRange: [0, 1, 1, 0] });
   const id = React.useMemo(() => `sweep${uid++}`, []);

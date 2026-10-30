@@ -27,7 +27,7 @@ export function LegalPage({ path, seoTitle, seoDescription, en, ar }: {
         <H1 size={wide ? 46 : 32}>{d.title}</H1>
         <T size={13} color={colors.muted} style={{ marginBottom: 14 }}>{d.updated}</T>
         <T size={15.5} lh={1.7} color={colors.body} style={{ marginBottom: 18 }}>{d.intro}</T>
-        <Card pad={wide ? 28 : 18} style={{ borderRadius: 6, gap: 20 }}>
+        <Card pad={wide ? 28 : 18} style={{ gap: 20 }}>
           {d.sections.map((s) => (
             <View key={s.h} style={{ gap: 8 }}>
               <Serif role="h2" size={wide ? 26 : 22}>{s.h}</Serif>

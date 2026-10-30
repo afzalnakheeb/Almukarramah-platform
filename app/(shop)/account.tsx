@@ -1,16 +1,17 @@
-// Account — sign-in follows Identity.dc.html; signed-in view follows Account.dc.html.
+// Account: sign-in on a porcelain panel with a gold top rule; signed in, quiet hairline tiles and lists.
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Logo, Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
-import { Button, Card, Eyebrow, Field, H1, Notice, Photo, Serif, T, Tag, useWide } from '@/components/ui';
+import { Button, Card, Eyebrow, Field, H1, KiswahRule, Notice, Serif, T, Tag, useWide } from '@/components/ui';
+import { data } from '@/components/motion';
 import { useI18n, type Key } from '@/lib/i18n';
 import { openExternal } from '@/lib/links';
 import { formatMoney } from '@/lib/money';
 import { useSession } from '@/lib/session';
 import { callFunction, isConfigured, supabase } from '@/lib/supabase';
-import { colors, toneFor } from '@/theme';
+import { colors } from '@/theme';
 import { Seo } from '@/components/seo';
 import { GoogleButton } from '@/components/google';
 import { AppCard } from '@/components/apps';
@@ -97,11 +98,14 @@ export default function Account() {
     return (
       <Screen>
       <Seo title="Your account | Al Mukarramah" description="Orders, tax invoices and membership." path="/account" noindex />
-        <View style={{ alignItems: 'center', paddingVertical: wide ? 32 : 8 }}>
-          <Card pad={28} style={{ width: '100%', maxWidth: 460, borderRadius: 6, gap: 14 }}>
-            <Logo height={36} />
-            <Serif role="h1" size={30} style={{ marginTop: 6 }}>{t('signInTitle')}</Serif>
-            <T size={14} lh={1.6} color={colors.muted}>{t('signInBody')}</T>
+        <View style={{ alignItems: 'center', paddingVertical: wide ? 24 : 0 }}>
+          <View style={{ width: '100%', maxWidth: 480, backgroundColor: colors.porcelain, borderWidth: 1, borderColor: colors.line, borderTopColor: colors.gold, padding: wide ? 44 : 24, gap: 16 }}>
+            <View style={{ alignItems: 'center', gap: 18, marginBottom: 4 }}>
+              <Logo height={wide ? 36 : 30} />
+              <KiswahRule center width={88} />
+            </View>
+            <Serif role="h1" size={wide ? 38 : 32} center>{t('signInTitle')}</Serif>
+            <T size={14} lh={1.65} color={colors.body} center style={{ marginBottom: 6 }}>{t('signInBody')}</T>
             {!isConfigured && <Notice text="Preview mode: sign-in works once the Supabase project is connected." />}
             <GoogleButton onError={() => setError(t('googleError'))} dividerLabel={t('orEmail')} next={nextPath} />
             <Field label={t('email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" dirLtr />
@@ -124,10 +128,14 @@ export default function Account() {
             />
             {sent && <Notice tone="ok" text={t('checkEmail')} />}
             {error && <Notice tone="warn" text={error} />}
-            <T size={12.5} color={colors.muted} center>{t('or')}</T>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginVertical: 2 }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.line }} />
+              <T size={12} color={colors.muted}>{t('or')}</T>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.line }} />
+            </View>
             <Button label={t('continueGuest')} kind="secondary" href="/shop" />
-            <T size={12} lh={1.6} color={colors.muted}>{t('noMarketing')}</T>
-          </Card>
+            <T size={12} lh={1.6} color={colors.muted} center style={{ marginTop: 4 }}>{t('noMarketing')}</T>
+          </View>
         </View>
       </Screen>
     );
@@ -144,37 +152,38 @@ export default function Account() {
   return (
     <Screen>
       <Seo title="Your account | Al Mukarramah" description="Orders, tax invoices and membership." path="/account" noindex />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-        <H1 size={wide ? 44 : 32}>{profile?.full_name ? `${t('greetingName')} ${profile.full_name.split(' ')[0]}` : t('greeting')}</H1>
+      <View style={{ gap: 10, marginBottom: 4 }}>
+        <Eyebrow rule>{t('account')}</Eyebrow>
+        <H1 size={wide ? 52 : 34}>{profile?.full_name ? `${t('greetingName')} ${profile.full_name.split(' ')[0]}` : t('greeting')}</H1>
       </View>
-      <T size={14} color={colors.muted} style={{ marginBottom: 22 }}>{session.user.email}</T>
+      <T size={13.5} color={colors.muted} style={{ marginBottom: wide ? 36 : 24 }}>{session.user.email}</T>
       {payStatus === 'paid' && <Notice tone="ok" text={t('paymentReceived')} />}
       {payStatus === 'failed' && <Notice tone="warn" text={t('paymentFailed')} />}
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
         {tiles.map((c) => (
-          <Pressable key={c.title} accessibilityRole="link" onPress={() => (c.external ? openExternal(String(c.href)) : router.push(c.href))}
-            style={{ flexGrow: 1, flexBasis: wide ? 220 : '100%', backgroundColor: c.icon === 'shield' ? colors.navy : colors.white, borderWidth: 1, borderColor: c.icon === 'shield' ? colors.navy : colors.line, borderRadius: 6, padding: 20, gap: 6 }}>
+          <Pressable key={c.title} accessibilityRole="link" onPress={() => (c.external ? openExternal(String(c.href)) : router.push(c.href))} {...data({ opt: 'off' })}
+            style={{ flexGrow: 1, flexBasis: wide ? 220 : '100%', backgroundColor: colors.porcelain, borderWidth: 1, borderColor: colors.line, borderTopColor: c.icon === 'shield' ? colors.emerald : colors.line, padding: 22, gap: 8 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Eyebrow size={11} color={c.icon === 'shield' ? colors.champagne : colors.brassText}>{c.kicker}</Eyebrow>
-              <Icon name={c.icon} size={20} color={c.icon === 'shield' ? colors.champagne : colors.navy} />
+              <Eyebrow size={10} color={c.icon === 'shield' ? colors.emerald : colors.brassText}>{c.kicker}</Eyebrow>
+              <Icon name={c.icon} size={18} stroke={1.3} color={c.icon === 'shield' ? colors.emerald : colors.brass} />
             </View>
-            <T w={700} size={18} color={c.icon === 'shield' ? colors.white : colors.navy}>{c.title}</T>
-            <T size={13} lh={1.5} color={c.icon === 'shield' ? colors.onNight : colors.muted}>{c.body}</T>
+            <Serif size={22}>{c.title}</Serif>
+            <T size={13} lh={1.55} color={colors.body}>{c.body}</T>
           </Pressable>
         ))}
       </View>
 
       {subs.length > 0 && (
-        <Card pad={wide ? 22 : 16} style={{ marginTop: 20, borderRadius: 6, gap: 4 }}>
-          <T w={700} size={17} color={colors.navy} style={{ marginBottom: 8 }}>{t('mySubscriptions')}</T>
+        <Card pad={wide ? 22 : 16} style={{ marginTop: 20, gap: 4 }}>
+          <Serif size={26} style={{ marginBottom: 8 }}>{t('mySubscriptions')}</Serif>
           {subs.map((s, i) => {
             const date = s.current_period_end ? new Date(s.current_period_end).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
             const store = s.source !== 'moyasar';
             return (
               <View key={s.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, borderTopWidth: i ? 1 : 0, borderColor: colors.lineSoft, flexWrap: 'wrap' }}>
                 <View style={{ flex: 1, minWidth: 200, gap: 2 }}>
-                  <T w={700} size={15}>{s.plans ? (lang === 'ar' ? s.plans.name_ar : s.plans.name_en) : ''}</T>
+                  <T w={500} size={15} color={colors.navy}>{s.plans ? (lang === 'ar' ? s.plans.name_ar : s.plans.name_en) : ''}</T>
                   <T size={13} color={colors.muted}>
                     {s.plans ? `${formatMoney(s.plans.price_sar, 'SAR', lang)} / ${t('perMonth')} · ` : ''}
                     {s.status === 'past_due' ? t('subPastDue') : s.cancel_at_period_end ? `${t('subEnds')} ${date}` : `${t('subRenews')} ${date}`}
@@ -195,14 +204,14 @@ export default function Account() {
         </Card>
       )}
 
-      <Card pad={wide ? 22 : 16} style={{ marginTop: 20, borderRadius: 6, gap: 4 }}>
-        <T w={700} size={17} color={colors.navy} style={{ marginBottom: 8 }}>{t('myOrders')}</T>
+      <Card pad={wide ? 22 : 16} style={{ marginTop: 20, gap: 4 }}>
+        <Serif size={26} style={{ marginBottom: 8 }}>{t('myOrders')}</Serif>
         {orders.length === 0 ? <T color={colors.muted}>{t('noOrders')}</T> : orders.map((o, i) => (
           <Pressable key={o.id} accessibilityRole="link" onPress={() => router.push({ pathname: '/order', params: { id: o.id } })}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, borderTopWidth: i ? 1 : 0, borderColor: colors.lineSoft, flexWrap: 'wrap' }}>
-            <View style={{ width: 52 }}><Photo ratio={1} tone={toneFor(String(o.number))} style={{ borderRadius: 4 }} /></View>
+            <View style={{ width: 44, height: 44, borderWidth: 1, borderColor: colors.goldLine, alignItems: 'center', justifyContent: 'center' }}><Icon name="bag" size={18} stroke={1.3} color={colors.brass} /></View>
             <View style={{ flex: 1, minWidth: 180, gap: 2 }}>
-              <T w={700} size={15}>AM-{o.number}</T>
+              <T w={500} size={15} num color={colors.navy}>AM-{o.number}</T>
               <T size={13} color={colors.muted}>
                 {new Date(o.created_at).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · {formatMoney(o.total_minor, o.currency, lang)}
               </T>
@@ -217,7 +226,7 @@ export default function Account() {
 
       <View style={{ marginTop: 28, gap: 12 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-          <T w={700} size={17} color={colors.navy}>{t('ourApps')}</T>
+          <Serif size={26}>{t('ourApps')}</Serif>
           <Button kind="text" size="sm" label={t('seeAllApps')} href="/apps" />
         </View>
         <View style={{ flexDirection: wide ? 'row' : 'column', gap: 14 }}>
@@ -226,22 +235,22 @@ export default function Account() {
       </View>
 
       {profile && (
-        <Card pad={wide ? 22 : 16} style={{ marginTop: 28, borderRadius: 6, gap: 4 }}>
-          <T w={700} size={17} color={colors.navy} style={{ marginBottom: 4 }}>{t('yourDetails')}</T>
+        <Card pad={wide ? 22 : 16} style={{ marginTop: 28, gap: 4 }}>
+          <Serif size={26} style={{ marginBottom: 8 }}>{t('yourDetails')}</Serif>
           <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 14 : 0 }}>
             <View style={{ flex: 1 }}><Field label={t('fullName')} value={profile.full_name ?? ''} onChangeText={(v) => { setProfileSaved(false); setProfile({ ...profile, full_name: v }); }} autoComplete="name" /></View>
             <View style={{ flex: 1 }}><Field label={t('phone')} value={profile.phone ?? ''} onChangeText={(v) => { setProfileSaved(false); setProfile({ ...profile, phone: v }); }} keyboardType="phone-pad" autoComplete="tel" dirLtr /></View>
           </View>
           <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: profile.marketing_opt_in }} onPress={() => { setProfileSaved(false); setProfile({ ...profile, marketing_opt_in: !profile.marketing_opt_in }); }}
             style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingVertical: 8 }}>
-            <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: profile.marketing_opt_in ? colors.navy : colors.inputLine, backgroundColor: profile.marketing_opt_in ? colors.navy : colors.white, alignItems: 'center', justifyContent: 'center' }}>
-              {profile.marketing_opt_in && <Icon name="check" size={14} color={colors.white} />}
+            <View style={{ width: 18, height: 18, marginTop: 1, borderWidth: 1, borderColor: profile.marketing_opt_in ? colors.emerald : colors.inputLine, backgroundColor: profile.marketing_opt_in ? colors.emerald : colors.porcelain, alignItems: 'center', justifyContent: 'center' }}>
+              {profile.marketing_opt_in && <Icon name="check" size={12} stroke={2.2} color={colors.ivory} />}
             </View>
             <T size={14} lh={1.5} style={{ flex: 1 }}>{t('marketingOptIn')}</T>
           </Pressable>
           <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center', marginTop: 4 }}>
             <Button label={t('save')} size="sm" onPress={saveProfile} />
-            {profileSaved && <T size={13} color={colors.success} w={600}>{t('saved')}</T>}
+            {profileSaved && <T size={13} color={colors.success} w={500}>{t('saved')}</T>}
           </View>
         </Card>
       )}

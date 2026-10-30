@@ -82,7 +82,7 @@ export default function Trail() {
           <Eyebrow size={12}>{t('day')} {open.day}</Eyebrow>
           <H1 size={wide ? 48 : 32}>{pick(open, 'title')}</H1>
           {open.quran_ref && (verses === null ? <Loading /> : (
-            <Card pad={wide ? 32 : 20} style={{ borderRadius: 6, marginTop: 10 }}>
+            <Card pad={wide ? 32 : 20} style={{ marginTop: 10 }}>
               {verses.map((v) => (
                 <Text key={v.verse_key} style={{ fontFamily: fonts.quran, fontSize: wide ? 30 : 25, lineHeight: wide ? 64 : 54, textAlign: 'right', writingDirection: 'rtl', color: colors.ink }}>
                   {v.text_uthmani} ﴿{v.verse_key.split(':')[1]}﴾
@@ -114,7 +114,7 @@ export default function Trail() {
             <Button label={t('circleCta')} kind="light" href="/membership" style={{ alignSelf: 'flex-start', marginTop: 6 }} />
           </View>
         ) : (
-          <Card pad={0} style={{ borderRadius: 6, overflow: 'hidden', marginTop: 10 }}>
+          <Card pad={0} style={{ overflow: 'hidden', marginTop: 10 }}>
             {lessons.map((l, i) => (
               <Pressable key={l.id} accessibilityRole="button" onPress={() => setOpen(l)}
                 style={({ hovered }: { hovered?: boolean }) => [{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 18, borderTopWidth: i ? 1 : 0, borderColor: colors.lineSoft }, hovered && { backgroundColor: colors.lavender }]}>

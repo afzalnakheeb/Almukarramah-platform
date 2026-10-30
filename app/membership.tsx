@@ -1,12 +1,13 @@
-// Membership — follows MembershipPublic.dc.html. Prices come from the plans table.
+// Membership: a centred head, plans on porcelain (the membership double-ruled in gold), answers between hairlines.
+// Prices come from the plans table.
 import * as WebBrowser from 'expo-web-browser';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
-import { Ornament, StarLattice } from '@/components/decor';
-import { Button, Card, Eyebrow, Notice, Serif, T, useWide } from '@/components/ui';
+import { DoubleFrame, Ornament } from '@/components/decor';
+import { Button, Eyebrow, Notice, Serif, T, useWide } from '@/components/ui';
 import { getPlans } from '@/lib/catalogue';
 import { strings, useI18n, type Key } from '@/lib/i18n';
 import { convertFromSar, formatMoney } from '@/lib/money';
@@ -58,47 +59,49 @@ export default function Membership() {
   return (
     <Screen>
       <Seo title="Membership | Al Mukarramah" description="Join for the Quran Trail and Seerah Trail and member benefits on gifts, or receive a box of Madinah dates every month." path="/membership" jsonLd={faqLd([1, 2].map((n) => ({ q: strings.en[`faq${n}q` as Key], a: strings.en[`faq${n}a` as Key] })))} />
-      <View style={{ alignItems: 'center', maxWidth: 760, alignSelf: 'center', gap: 10, marginBottom: 28, marginTop: wide ? 16 : 0 }}>
-        <Eyebrow size={12}>{t('membership')}</Eyebrow>
+      <View style={{ alignItems: 'center', maxWidth: 760, alignSelf: 'center', gap: wide ? 14 : 10, marginBottom: wide ? 48 : 28, marginTop: wide ? 8 : 0 }}>
+        <Eyebrow center>{t('membership')}</Eyebrow>
         <Serif role="h1" size={wide ? 56 : 36} center>{t('memberTitle')}</Serif>
-        <Ornament color={colors.brass} align="center" width={110} />
-        <T size={wide ? 17 : 15} lh={1.6} color={colors.body} center>{t('memberBody')}</T>
+        <Ornament align="center" width={wide ? 112 : 88} />
+        <T size={wide ? 16.5 : 15} lh={1.65} color={colors.body} center style={{ marginTop: 4 }}>{t('memberBody')}</T>
       </View>
       {msg && <Notice text={msg} />}
 
-      <View style={{ flexDirection: wide ? 'row' : 'column', gap: 18, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
+      <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 28 : 18, maxWidth: 1000, width: '100%', alignSelf: 'center', alignItems: 'stretch' }}>
         {plans.map((p) => {
           const featured = p.kind === 'membership';
-          return (
-            <View key={p.id} style={{ flex: 1, backgroundColor: featured ? colors.night : colors.white, borderWidth: 1, borderColor: featured ? colors.gold : colors.champagne, borderRadius: 6, padding: wide ? 28 : 20, gap: 12, overflow: 'hidden' }}>
-              {featured && <StarLattice opacity={0.09} size={56} />}
-              <Eyebrow size={11} color={featured ? colors.gold : colors.brassText}>{t(p.kind === 'membership' ? 'kind_membership' : 'kind_box')}</Eyebrow>
-              <Serif size={wide ? 38 : 30} color={featured ? colors.white : colors.navy}>{pick(p, 'name')}</Serif>
-              <Ornament width={72} color={featured ? colors.gold : colors.brass} />
-              <T size={15} lh={1.6} color={featured ? colors.onNight : colors.body}>{pick(p, 'description')}</T>
-              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-                <T w={700} size={28} color={featured ? colors.white : colors.navy}>{formatMoney(convertFromSar(p.price_sar, currency), currency, lang)}</T>
-                <T size={14} color={featured ? colors.onNight : colors.muted}>{t(p.period === 'year' ? 'perYear' : 'perMonth')}</T>
+          const body = (
+            <View style={{ flex: 1, gap: 14 }}>
+              <Eyebrow color={featured ? colors.emerald : colors.brassText}>{t(p.kind === 'membership' ? 'kind_membership' : 'kind_box')}</Eyebrow>
+              <Serif size={wide ? 38 : 30}>{pick(p, 'name')}</Serif>
+              <Ornament width={72} />
+              <T size={14.5} lh={1.7} color={colors.body}>{pick(p, 'description')}</T>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 6, paddingTop: 16, borderTopWidth: 1, borderColor: colors.line }}>
+                <T w={500} size={26} num color={colors.navy}>{formatMoney(convertFromSar(p.price_sar, currency), currency, lang)}</T>
+                <T size={13.5} color={colors.muted}>/ {t(p.period === 'year' ? 'perYear' : 'perMonth')}</T>
               </View>
-              <T size={12} color={featured ? colors.onNightSoft : colors.muted}>{t('vatIncluded')}</T>
-              <Button label={t('join')} kind={featured ? 'gold' : 'primary'} busy={busy === p.id} onPress={() => join(p)} style={{ marginTop: 'auto', alignSelf: 'flex-start' }} />
+              <T size={12} color={colors.muted}>{t('vatIncluded')}</T>
+              <Button label={t('join')} kind={featured ? 'primary' : 'secondary'} busy={busy === p.id} onPress={() => join(p)} style={{ marginTop: 'auto', alignSelf: 'stretch' }} />
             </View>
           );
+          return featured
+            ? <DoubleFrame key={p.id} pad={wide ? 34 : 22} gap={5} style={{ flex: 1, backgroundColor: colors.porcelain }}>{body}</DoubleFrame>
+            : <View key={p.id} style={{ flex: 1, backgroundColor: colors.porcelain, borderWidth: 1, borderColor: colors.line, padding: wide ? 40 : 28 }}>{body}</View>;
         })}
       </View>
 
-      <Card pad={wide ? 24 : 16} style={{ marginTop: 32, maxWidth: 980, width: '100%', alignSelf: 'center', borderRadius: 6 }}>
+      <View style={{ marginTop: wide ? 72 : 40, maxWidth: 1000, width: '100%', alignSelf: 'center', borderTopWidth: 1, borderColor: colors.goldLine }}>
         {faqs.map(([q, a], i) => (
-          <View key={q} style={{ borderTopWidth: i ? 1 : 0, borderColor: colors.line }}>
+          <View key={q} style={{ borderBottomWidth: 1, borderColor: colors.line }}>
             <Pressable accessibilityRole="button" accessibilityState={{ expanded: faq === i }} onPress={() => setFaq(faq === i ? null : i)}
-              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 52, gap: 12 }}>
-              <T w={700} style={{ flex: 1 }}>{q}</T>
-              <Icon name={faq === i ? 'minus' : 'plus'} size={18} />
+              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 64, gap: 12 }}>
+              <T w={500} size={15.5} color={colors.navy} style={{ flex: 1 }}>{q}</T>
+              <Icon name={faq === i ? 'minus' : 'plus'} size={16} stroke={1.3} color={colors.brass} />
             </Pressable>
-            {faq === i && <T size={14} lh={1.7} color={colors.body} style={{ paddingBottom: 14 }}>{a}</T>}
+            {faq === i && <T size={14.5} lh={1.7} color={colors.body} style={{ paddingBottom: 20, maxWidth: 760 }}>{a}</T>}
           </View>
         ))}
-      </Card>
+      </View>
     </Screen>
   );
 }

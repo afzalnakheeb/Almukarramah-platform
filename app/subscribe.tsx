@@ -61,7 +61,7 @@ export default function Subscribe() {
       {!session && <Button label={t('signIn')} href="/account" style={{ alignSelf: 'flex-start', marginTop: 10 }} />}
       {session && (
         <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 32 : 16, alignItems: 'flex-start', marginTop: 8 }}>
-          <Card pad={wide ? 24 : 16} style={{ flex: 1, alignSelf: 'stretch', borderRadius: 6, gap: 4 }}>
+          <Card pad={wide ? 24 : 16} style={{ flex: 1, alignSelf: 'stretch', gap: 4 }}>
             <T w={700} size={17} color={colors.navy}>{t('boxDeliverTo')}</T>
             <T size={13} color={colors.muted} style={{ marginBottom: 8 }}>{t('boxSaudiOnly')}</T>
             <Field label={t('recipientName')} value={name} onChangeText={setName} autoComplete="name" />
@@ -70,7 +70,7 @@ export default function Subscribe() {
             <Field label={t('address')} value={line1} onChangeText={setLine1} autoComplete="street-address" />
           </Card>
           <View style={{ width: wide ? 360 : '100%' }}>
-            <Card pad={20} style={{ gap: 10, borderRadius: 6 }}>
+            <Card pad={20} style={{ gap: 10 }}>
               {plan && <Row label={pick(plan, 'name')} value={`${formatMoney(plan.price_sar, 'SAR', lang)} / ${t('perMonth')}`} bold />}
               <T size={12} color={colors.muted}>{t('vatIncluded')}</T>
               <T size={13} lh={1.5} color={colors.body}>{t('monthlyCharge')}</T>

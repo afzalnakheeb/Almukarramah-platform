@@ -66,7 +66,7 @@ export default function OrderPage() {
           <T size={14} color={colors.muted} style={{ marginBottom: 18 }}>{t('orderedOn')} {date(order.created_at)}</T>
 
           {reached >= 0 && (
-            <Card pad={wide ? 22 : 16} style={{ borderRadius: 6, marginBottom: 16 }}>
+            <Card pad={wide ? 22 : 16} style={{ marginBottom: 16 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 6 }}>
                 {STEPS.map((s, i) => (
                   <View key={s} style={{ flex: 1, alignItems: 'center', gap: 6 }}>
@@ -84,7 +84,7 @@ export default function OrderPage() {
           )}
 
           <View style={{ flexDirection: wide ? 'row' : 'column', gap: 16, alignItems: 'flex-start' }}>
-            <Card pad={wide ? 22 : 16} style={{ flex: 1, alignSelf: 'stretch', borderRadius: 6, gap: 10 }}>
+            <Card pad={wide ? 22 : 16} style={{ flex: 1, alignSelf: 'stretch', gap: 10 }}>
               <T w={700} size={17} color={colors.navy}>{t('items')}</T>
               {order.order_items.map((it) => (
                 <Row key={it.id} label={`${pick(it, 'name')}${it.quantity > 1 ? ` × ${it.quantity}` : ''}`} value={money(it.line_total_minor)} />
@@ -104,7 +104,7 @@ export default function OrderPage() {
             </Card>
             <View style={{ width: wide ? 360 : '100%', gap: 16 }}>
               {order.ship_to && order.ship_to.city !== '-' && (
-                <Card pad={20} style={{ borderRadius: 6, gap: 4 }}>
+                <Card pad={20} style={{ gap: 4 }}>
                   <T w={700} size={16} color={colors.navy} style={{ marginBottom: 4 }}>{t('deliveryTo')}</T>
                   <T size={14}>{order.ship_to.recipient_name}</T>
                   {order.ship_to.hotel_name && <T size={14}>{order.ship_to.hotel_name}</T>}
@@ -115,7 +115,7 @@ export default function OrderPage() {
                 </Card>
               )}
               {order.gift_message && (
-                <Card pad={20} style={{ borderRadius: 6, gap: 6 }}>
+                <Card pad={20} style={{ gap: 6 }}>
                   <T w={700} size={16} color={colors.navy}>{t('giftMessage')}</T>
                   <T size={14} lh={1.6} style={{ fontStyle: 'italic' }}>“{order.gift_message}”</T>
                 </Card>

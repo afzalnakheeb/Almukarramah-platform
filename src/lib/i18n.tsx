@@ -469,6 +469,24 @@ const en = {
   searchResults: 'Results for',
   seerahExternal: 'Seerah Trail is open on its own site, seerahtrails.com, until it joins the membership.',
   openSeerah: 'Open Seerah Trail',
+
+  // Design (shots/ui): kickers, empty states, reviews, footer and phone search
+  featuredKicker: 'Chosen by our team',
+  faqKicker: 'Answers',
+  shopKicker: 'The marketplace',
+  conciergeKicker: 'At your service',
+  completeGiftKicker: 'To go with it',
+  availability: 'Availability',
+  searchSuggest: 'Begin with',
+  footerHelp: 'Help',
+  reviewsKicker: 'From verified orders',
+  reviewsTitle: 'Reviews',
+  reviewsEmptyTitle: 'No reviews yet',
+  reviewsEmptyBody: 'Reviews will appear here only from customers with a verified order of this product.',
+  notFoundBody: 'It may have sold out or been retired by its maker. The marketplace has many more to choose from.',
+  pageNotFoundTitle: 'This page could not be found',
+  pageNotFoundBody: 'The address may have changed. Everything in the marketplace is a step away.',
+  goHome: 'Return home',
 };
 
 const ar: typeof en = {
@@ -925,6 +943,23 @@ const ar: typeof en = {
   searchResults: 'نتائج البحث عن',
   seerahExternal: 'رحلة السيرة متاحة على موقعها الخاص seerahtrails.com إلى أن تنضم إلى العضوية.',
   openSeerah: 'افتح رحلة السيرة',
+
+  featuredKicker: 'اختيار فريقنا',
+  faqKicker: 'إجابات',
+  shopKicker: 'السوق',
+  conciergeKicker: 'في خدمتك',
+  completeGiftKicker: 'ليكتمل الإهداء',
+  availability: 'التوفّر',
+  searchSuggest: 'ابدأ من هنا',
+  footerHelp: 'المساعدة',
+  reviewsKicker: 'من طلبات موثّقة',
+  reviewsTitle: 'التقييمات',
+  reviewsEmptyTitle: 'لا توجد تقييمات بعد',
+  reviewsEmptyBody: 'ستظهر التقييمات هنا من العملاء الذين اشتروا هذا المنتج بطلب موثّق فقط.',
+  notFoundBody: 'ربما نفدت أو أوقفها صانعها، وفي السوق الكثير غيرها لتختار منه.',
+  pageNotFoundTitle: 'لم نجد هذه الصفحة',
+  pageNotFoundBody: 'ربما تغيّر العنوان، وكل ما في السوق على بُعد خطوة.',
+  goHome: 'العودة إلى الرئيسية',
 };
 
 export type Key = keyof typeof en;
