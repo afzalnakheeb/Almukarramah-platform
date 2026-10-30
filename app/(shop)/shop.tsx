@@ -7,6 +7,7 @@ import { Icon } from '@/components/icons';
 import { Breadcrumb, Button, Card, Chip, Eyebrow, Grid, H1, Loading, ProductTile, Serif, T, useWide } from '@/components/ui';
 import { getCategories, getProducts, getTags } from '@/lib/catalogue';
 import { Faq } from '@/components/faq';
+import { reveal } from '@/components/motion';
 import { breadcrumbLd, faqLd, itemListLd, Seo } from '@/components/seo';
 import { strings, useI18n, type Key } from '@/lib/i18n';
 import { SITE_URL } from '@/lib/images';
@@ -222,7 +223,7 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
                   <Button label={t('clearFilters')} onPress={clear} />
                 </View>
               ) : (
-                <Grid gap={wide ? 22 : 12} cols={wide ? 3 : 2}>
+                <Grid gap={wide ? 22 : 12} cols={wide ? 3 : 2} reveal>
                   {shown.map((p) => <ProductTile key={p.id} product={p} compact={!wide} />)}
                 </Grid>
               )}
@@ -231,7 +232,7 @@ export function ShopView({ fixedCat }: { fixedCat?: string }) {
         </View>
       </View>
       {fixedCat && (
-        <View style={{ marginTop: 48, maxWidth: 860 }}>
+        <View {...reveal(0)} style={{ marginTop: 48, maxWidth: 860 }}>
           <Faq title={t('faqTitle')} items={[2, 3, 4].map((n) => ({ q: t(`hfaq${n}q` as Key), a: t(`hfaq${n}a` as Key) }))} />
         </View>
       )}

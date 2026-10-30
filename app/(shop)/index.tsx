@@ -6,6 +6,7 @@ import { Image } from 'expo-image';
 import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { DestinationSheet, destIcon, Logo, Screen, SELL_HREF } from '@/components/chrome';
 import { CinematicPhoto } from '@/components/decor';
+import { data, prefersReducedMotion, reveal } from '@/components/motion';
 import { Icon } from '@/components/icons';
 import { Button, Container, Eyebrow, Grid, Loading, ProductTile, SectionHead, Serif, T, useWide } from '@/components/ui';
 import { Faq } from '@/components/faq';
@@ -37,7 +38,7 @@ function FragranceHouse() {
   if (!rows.perfumes.length && !rows['oud-oils'].length) return null;
   const shown = rows[tab].slice(0, 4);
   const tabBtn = (k: FragTab, label: string) => (
-    <Pressable key={k} accessibilityRole="tab" accessibilityState={{ selected: tab === k }} onPress={() => setTab(k)}
+    <Pressable key={k} accessibilityRole="tab" accessibilityState={{ selected: tab === k }} onPress={() => setTab(k)} {...data({ tab: 1 })}
       style={{ minHeight: 40, paddingHorizontal: 4, justifyContent: 'center', borderBottomWidth: 1, borderColor: tab === k ? colors.gold : 'transparent' }}>
       <T w={500} size={13} color={tab === k ? colors.white : colors.onNightFaint} style={{ letterSpacing: 1.4, textTransform: 'uppercase' }}>{label} · {rows[k].length}</T>
     </Pressable>
@@ -45,7 +46,7 @@ function FragranceHouse() {
   return (
     <View nativeID="perfumes" style={{ marginTop: wide ? 72 : 32, backgroundColor: colors.kiswah, overflow: 'hidden' }}>
       <Container style={{ paddingVertical: wide ? 104 : 44, gap: wide ? 36 : 18 }}>
-        <View style={{ flexDirection: wide ? 'row' : 'column', justifyContent: 'space-between', alignItems: wide ? 'flex-end' : 'flex-start', gap: 16 }}>
+        <View {...reveal(0)} style={{ flexDirection: wide ? 'row' : 'column', justifyContent: 'space-between', alignItems: wide ? 'flex-end' : 'flex-start', gap: 16 }}>
           <View style={{ gap: 10, maxWidth: 680 }}>
             <Eyebrow size={wide ? 12 : 11} color={colors.gold}>{t('fragKicker')}</Eyebrow>
             <Serif role="h2" size={wide ? 52 : 32} color={colors.white}>{t('fragTitle')}</Serif>
@@ -57,15 +58,15 @@ function FragranceHouse() {
           </View>
         </View>
         {wide ? (
-          <Grid cols={4} gap={24}>
+          <Grid cols={4} gap={24} reveal>
             {shown.map((p) => <ProductTile key={p.id} product={p} />)}
           </Grid>
         ) : (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingEnd: 16 }}>
+          <ScrollView horizontal {...reveal(1)} showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingEnd: 16 }}>
             {shown.map((p) => <View key={p.id} style={{ width: 168 }}><ProductTile product={p} compact /></View>)}
           </ScrollView>
         )}
-        <View style={{ flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'stretch', gap: 12, flexWrap: 'wrap' }}>
+        <View {...reveal(1)} style={{ flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'stretch', gap: 12, flexWrap: 'wrap' }}>
           <Button label={`${t('fragAll')} · ${rows.perfumes.length}`} kind="outlineLight" size="lg" href={{ pathname: '/collections/[slug]', params: { slug: 'perfumes' } }} />
           <Button label={`${t('fragAllOils')} · ${rows['oud-oils'].length}`} kind="outlineLight" size="lg" href={{ pathname: '/collections/[slug]', params: { slug: 'oud-oils' } }} />
           <T size={13} color={colors.champagne} style={{ flexShrink: 1, marginStart: wide ? 8 : 0 }}>{t('fragShipNote')}</T>
@@ -88,7 +89,7 @@ const DOORS: { title: Key; line: Key; img: string; href: Href }[] = [
 function CapsLink({ label, href, light }: { label: string; href: Href; light?: boolean }) {
   const { isRTL } = useI18n();
   return (
-    <Link href={href} style={{ alignSelf: 'flex-start', borderBottomWidth: 1, borderColor: colors.goldLine, paddingBottom: 4 }}>
+    <Link href={href} {...data({ caps: 1 })} style={{ alignSelf: 'flex-start', borderBottomWidth: 1, borderColor: colors.goldLine, paddingBottom: 4 }}>
       <T w={600} size={isRTL ? 14 : 12} color={light ? colors.white : colors.navy} style={!isRTL && { letterSpacing: 1.8, textTransform: 'uppercase' }}>{label}</T>
     </Link>
   );
@@ -107,7 +108,7 @@ export default function Home() {
   }, []);
   useEffect(() => {
     if (Platform.OS === 'web' && params.s && typeof document !== 'undefined') {
-      setTimeout(() => document.getElementById(params.s!)?.scrollIntoView({ behavior: 'smooth' }), 150);
+      setTimeout(() => document.getElementById(params.s!)?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' }), 150);
     }
   }, [params.s]);
 
@@ -170,7 +171,7 @@ export default function Home() {
       <Container style={{ paddingTop: wide ? 0 : 28 }}>
         <View style={{ flexDirection: wide ? 'row' : 'column', borderBottomWidth: 1, borderColor: colors.goldLine }}>
           {(['heroTrust1', 'heroTrust2', 'heroTrust3'] as const).map((k, i) => (
-            <View key={k} style={{ flex: 1, paddingVertical: wide ? 22 : 12, alignItems: wide ? 'center' : 'flex-start', borderStartWidth: wide && i ? 1 : 0, borderColor: colors.goldLine }}>
+            <View key={k} {...reveal(i)} style={{ flex: 1, paddingVertical: wide ? 22 : 12, alignItems: wide ? 'center' : 'flex-start', borderStartWidth: wide && i ? 1 : 0, borderColor: colors.goldLine }}>
               <T size={13} w={500} color={colors.body} style={!isRTL && { letterSpacing: 0.4 }}>{t(k)}</T>
             </View>
           ))}
@@ -179,24 +180,29 @@ export default function Home() {
 
       {/* 2 · Three doors into the marketplace */}
       <Container style={{ paddingTop: gap }}>
-        <SectionHead kicker={t('doorsKicker')} title={t('doorsTitle')} />
+        <SectionHead kicker={t('doorsKicker')} title={t('doorsTitle')} reveal />
         {wide ? (
           <View style={{ flexDirection: 'row', gap: 28 }}>
-            {DOORS.map((d) => (
+            {DOORS.map((d, i) => (
               <Link key={d.title} href={d.href} asChild>
-                <Pressable accessibilityRole="link" style={{ flex: 1, gap: 16 }}>
+                <Pressable accessibilityRole="link" {...reveal(i + 1, { hover: 'door' })} style={{ flex: 1, gap: 16 }}>
                   <View style={{ aspectRatio: 4 / 5, overflow: 'hidden', borderWidth: 1, borderColor: colors.hair, backgroundColor: colors.sand }}>
-                    <Image source={{ uri: imageUrl(d.img) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} accessibilityLabel={t(d.title)} />
+                    <View {...data({ zoom: 1 })} style={StyleSheet.absoluteFill}>
+                      <Image source={{ uri: imageUrl(d.img) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} accessibilityLabel={t(d.title)} />
+                    </View>
                   </View>
                   <Serif size={30}>{t(d.title)}</Serif>
                   <T size={14.5} lh={1.55} color={colors.body}>{t(d.line)}</T>
-                  <T w={600} size={isRTL ? 14 : 12} color={colors.emerald} style={!isRTL && { letterSpacing: 1.8, textTransform: 'uppercase' }}>{t('discover')}</T>
+                  {/* the gold underline draws in from the start edge when the door is hovered (web) */}
+                  <View {...data({ ul: 'start' })} style={{ alignSelf: 'flex-start' }}>
+                    <T w={600} size={isRTL ? 14 : 12} color={colors.emerald} style={!isRTL && { letterSpacing: 1.8, textTransform: 'uppercase' }}>{t('discover')}</T>
+                  </View>
                 </Pressable>
               </Link>
             ))}
           </View>
         ) : (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingEnd: 16 }}>
+          <ScrollView horizontal {...reveal(1)} showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingEnd: 16 }}>
             {DOORS.map((d) => (
               <Link key={d.title} href={d.href} asChild>
                 <Pressable accessibilityRole="link" style={{ width: 260, gap: 10 }}>
@@ -217,9 +223,9 @@ export default function Home() {
 
       {/* 4 · A considered selection */}
       <Container style={{ paddingTop: gap }}>
-        <SectionHead kicker={t('doorsKicker')} title={t('featured')} link={wide ? t('viewAll') : t('all')} href="/shop" />
+        <SectionHead kicker={t('doorsKicker')} title={t('featured')} link={wide ? t('viewAll') : t('all')} href="/shop" reveal />
         {featured === null ? <Loading /> : (
-          <Grid cols={wide ? 3 : 2} gap={wide ? 28 : 12}>
+          <Grid cols={wide ? 3 : 2} gap={wide ? 28 : 12} reveal>
             {featured.filter((p) => !NOT_STUDIO.includes(p.slug)).slice(0, 6).map((p) => <ProductTile key={p.id} product={p} compact={!wide} />)}
           </Grid>
         )}
@@ -228,16 +234,18 @@ export default function Home() {
       {/* 5 · Seasons of giving */}
       <Container style={{ paddingTop: gap }}>
         <View nativeID="occasions" />
-        <SectionHead kicker={t('occasionsKicker')} title={t('occasionTitle')} link={wide ? t('allOccasions') : t('all')} href="/shop" />
+        <SectionHead kicker={t('occasionsKicker')} title={t('occasionTitle')} link={wide ? t('allOccasions') : t('all')} href="/shop" reveal />
         <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 28 : 24 }}>
           {[
             { k: t('hajjKicker'), title: t('hajjTitle'), body: t('hajjBody'), tag: 'hajj', img: '/images/hajj.jpg' },
             { k: t('ramadanKicker'), title: t('ramadanTitle'), body: t('ramadanBody'), tag: 'ramadan', img: '/images/ramadan.jpg' },
-          ].map((c) => (
+          ].map((c, i) => (
             <Link key={c.tag} href={{ pathname: '/shop', params: { tag: c.tag } }} asChild>
-              <Pressable accessibilityRole="link" style={{ flex: 1, gap: 14 }}>
+              <Pressable accessibilityRole="link" {...reveal(wide ? i + 1 : 1, { hover: 'card' })} style={{ flex: 1, gap: 14 }}>
                 <View style={{ aspectRatio: 16 / 10, overflow: 'hidden', borderWidth: 1, borderColor: colors.hair, backgroundColor: colors.sand }}>
-                  <Image source={{ uri: imageUrl(c.img) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} accessibilityLabel={c.title} />
+                  <View {...data({ zoom: 1 })} style={StyleSheet.absoluteFill}>
+                    <Image source={{ uri: imageUrl(c.img) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} accessibilityLabel={c.title} />
+                  </View>
                 </View>
                 <Eyebrow size={11}>{c.k}</Eyebrow>
                 <Serif size={wide ? 36 : 26}>{c.title}</Serif>
@@ -251,12 +259,12 @@ export default function Home() {
       {/* 6 · For makers: invitation to sell, between fine gold and green rules */}
       <Container style={{ paddingTop: gap }}>
         <View style={{ borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.goldLine, paddingVertical: wide ? 72 : 36, flexDirection: wide ? 'row' : 'column', gap: wide ? 72 : 18, alignItems: wide ? 'center' : 'stretch' }}>
-          <View style={{ flex: 1.2, gap: wide ? 16 : 10 }}>
+          <View {...reveal(0)} style={{ flex: 1.2, gap: wide ? 16 : 10 }}>
             <Eyebrow size={wide ? 12 : 11} color={colors.emerald}>{t('sellKicker')}</Eyebrow>
             <Serif role="h2" size={wide ? 50 : 32}>{t('sellTitle')}</Serif>
             <T size={wide ? 17 : 15} lh={1.7} color={colors.body} style={{ maxWidth: 620 }}>{t('sellBody')}</T>
           </View>
-          <View style={{ flex: 1, gap: 14 }}>
+          <View {...reveal(wide ? 1 : 0)} style={{ flex: 1, gap: 14 }}>
             {(['sellPoint1', 'sellPoint2', 'sellPoint3'] as const).map((k) => (
               <View key={k} style={{ paddingBottom: 12, borderBottomWidth: 1, borderColor: colors.hair }}>
                 <T size={15} color={colors.navy}>{t(k)}</T>
@@ -270,10 +278,12 @@ export default function Home() {
       {/* 7 · Our story */}
       <Container style={{ paddingTop: gap }}>
         <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 72 : 22, alignItems: wide ? 'center' : 'stretch' }}>
-          <View style={{ flex: 1, aspectRatio: wide ? 4 / 5 : 4 / 3, overflow: 'hidden', borderWidth: 1, borderColor: colors.hair, backgroundColor: colors.sand }}>
-            <Image source={{ uri: imageUrl('/images/madinah-minarets.jpg') }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} accessibilityLabel={t('heritageTitle')} />
+          <View {...reveal(0)} style={{ flex: 1, aspectRatio: wide ? 4 / 5 : 4 / 3, overflow: 'hidden', borderWidth: 1, borderColor: colors.hair, backgroundColor: colors.sand }}>
+            <View {...data({ zoom: 1 })} style={StyleSheet.absoluteFill}>
+              <Image source={{ uri: imageUrl('/images/madinah-minarets.jpg') }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} accessibilityLabel={t('heritageTitle')} />
+            </View>
           </View>
-          <View style={{ flex: wide ? 1.1 : undefined, gap: wide ? 20 : 12 }}>
+          <View {...reveal(wide ? 1 : 0)} style={{ flex: wide ? 1.1 : undefined, gap: wide ? 20 : 12 }}>
             <Eyebrow size={wide ? 12 : 11}>{t('heritageKicker')}</Eyebrow>
             <Serif role="h2" size={wide ? 50 : 32}>{t('heritageTitle')}</Serif>
             <T size={wide ? 17 : 15} lh={1.7} color={colors.body}>{t('heritageBody')}</T>
@@ -291,7 +301,7 @@ export default function Home() {
 
       {/* Answers (also read by search engines and AI assistants) */}
       <Container style={{ paddingTop: gap }}>
-        <View style={{ maxWidth: 860 }}>
+        <View {...reveal(0)} style={{ maxWidth: 860 }}>
           <Faq title={t('faqTitle')} items={homeFaqs} />
         </View>
       </Container>
@@ -301,8 +311,8 @@ export default function Home() {
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', borderTopWidth: 1, borderColor: colors.goldLine }}>
           {([
             ['bag', t('re1t'), t('re1b')], ['lock', t('re2t'), t('payNote')], ['shield', t('re3t'), t('re3b')], ['check', t('re4t'), t('re4b')],
-          ] as const).map(([ic, a, b]) => (
-            <View key={a} style={{ flexGrow: 1, flexBasis: wide ? 230 : '100%', flexDirection: 'row', gap: 12, alignItems: 'flex-start', paddingVertical: wide ? 24 : 14, paddingEnd: 20 }}>
+          ] as const).map(([ic, a, b], i) => (
+            <View key={a} {...reveal(wide ? i : 0)} style={{ flexGrow: 1, flexBasis: wide ? 230 : '100%', flexDirection: 'row', gap: 12, alignItems: 'flex-start', paddingVertical: wide ? 24 : 14, paddingEnd: 20 }}>
               <Icon name={ic} size={20} color={colors.brass} stroke={1.4} />
               <View style={{ flex: 1, gap: 3 }}>
                 <T w={600} size={14} color={colors.navy}>{a}</T>

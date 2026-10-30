@@ -1,8 +1,8 @@
 // Page chrome from the design: top bar, header, navigation, footer and the checkout header.
 import { Image } from 'expo-image';
-import { Link, router, type Href } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Link, router, usePathname, type Href } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View, type NativeScrollEvent, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCart } from '@/lib/cart';
 import { getSettings } from '@/lib/catalogue';
@@ -12,6 +12,7 @@ import { openExternal } from '@/lib/links';
 import { DESTINATIONS, usePrefs, type Destination } from '@/lib/prefs';
 import { colors, sans, space } from '@/theme';
 import { Icon, type IconName } from './icons';
+import { bootMotion, data, motionBooted } from './motion';
 import { Container, Notice, OptionCard, Sheet, styles as ui, T, useWide } from './ui';
 
 const LOGO = require('../../assets/logo-ink.png'); // ink, for light backgrounds
@@ -24,13 +25,15 @@ export const destIcon = (d: Destination): IconName => (d === 'saudi' ? 'house' :
 
 /** The logo: ink on light backgrounds, satin gold on dark ones (white). With line, the descriptor
  *  "For every Muslim home" (لكل بيت مسلم) sits under it in spaced capitals, which tells this house apart from the group's other work. */
-export function Logo({ height = 44, white, line }: { height?: number; white?: boolean; line?: boolean }) {
+export function Logo({ height = 44, white, line, compact }: { height?: number; white?: boolean; line?: boolean; compact?: boolean }) {
   const { t, isRTL } = useI18n();
-  const img = <Image source={white ? LOGO_GOLD : LOGO} style={{ height, width: height * LOGO_RATIO }} contentFit="contain" accessibilityLabel={t('appName')} />;
+  // compact (the header once scrolled past the hero): about 80% of the height (48 -> 38) and the line fades out (motion: +html.tsx)
+  const h = compact ? Math.round(height * 0.8) : height;
+  const img = <Image source={white ? LOGO_GOLD : LOGO} style={{ height: h, width: h * LOGO_RATIO }} contentFit="contain" accessibilityLabel={t('appName')} />;
   if (!line) return img;
   const size = Math.max(8.5, Math.round(height * 0.2 * 10) / 10);
   return (
-    <View style={{ alignItems: 'center', gap: Math.round(height * 0.09) }}>
+    <View {...data({ logo: compact === undefined ? undefined : compact ? 'compact' : 'full' })} style={{ alignItems: 'center', gap: Math.round(height * 0.09) }}>
       {img}
       <View style={{ alignSelf: 'stretch', height: StyleSheet.hairlineWidth, backgroundColor: colors.goldLine }} />
       <T w={600} size={isRTL ? size * 1.2 : size} color={white ? colors.gold : colors.brassText} lh={1.25}
@@ -49,18 +52,39 @@ export function Screen({ children, scroll = true, chrome = 'site', step, padded 
   children: React.ReactNode; scroll?: boolean; chrome?: 'site' | 'checkout' | 'none'; step?: 1 | 2 | 3; padded?: boolean; footer?: boolean; style?: StyleProp<ViewStyle>;
 }) {
   const web = Platform.OS === 'web';
+  const wide = useWide();
+  // Website header: compact once the page has scrolled past the hero, full size again near the top.
+  const [compact, setCompact] = useState(false);
+  const onScroll = web && scroll && chrome === 'site'
+    ? (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const y = e.nativeEvent.contentOffset.y;
+      setCompact((c) => (c ? y > 120 : y > (wide ? 640 : 320)));
+    }
+    : undefined;
+  // Page change (website): the main content fades in over 250 ms. Never on the first, pre-rendered paint.
+  const path = usePathname();
+  const [fade, setFade] = useState<'a' | 'b' | undefined>(() => (web && motionBooted() ? 'a' : undefined));
+  const lastPath = useRef(path);
+  useEffect(() => { if (web) bootMotion(); }, [web]);
+  useEffect(() => {
+    if (lastPath.current === path) return;
+    lastPath.current = path;
+    setFade((f) => (f === 'a' ? 'b' : 'a'));
+  }, [path]);
   const body = (
     <>
-      {web && chrome === 'site' && <SiteHeader />}
+      {web && chrome === 'site' && <SiteHeader compact={compact} />}
       {web && chrome === 'checkout' && <CheckoutHeader step={step ?? 1} />}
       <StoreBanner />
-      {padded ? <Container style={[{ paddingTop: space(3), paddingBottom: space(8) }, style]}>{children}</Container> : children}
+      <View {...data({ page: fade })} style={scroll ? { flexGrow: 1 } : { flex: 1 }}>
+        {padded ? <Container style={[{ paddingTop: space(3), paddingBottom: space(8) }, style]}>{children}</Container> : children}
+      </View>
       {web && chrome === 'site' && footer && <SiteFooter />}
     </>
   );
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.ivory }} edges={web ? [] : ['top']}>
-      {scroll ? <ScrollView contentContainerStyle={{ flexGrow: 1 }}>{body}</ScrollView> : body}
+      {scroll ? <ScrollView {...data({ scroller: 1 })} onScroll={onScroll} scrollEventThrottle={32} contentContainerStyle={{ flexGrow: 1 }}>{body}</ScrollView> : body}
     </SafeAreaView>
   );
 }
@@ -94,13 +118,22 @@ function IconLink({ href, icon, label, badge, color = colors.navy }: { href: Hre
   );
 }
 
-export function SiteHeader() {
+export function SiteHeader({ compact = false }: { compact?: boolean }) {
   const wide = useWide();
   const { t, lang, setLang, currency, isRTL } = useI18n();
   const { destination } = usePrefs();
   const { count } = useCart();
   const [sheet, setSheet] = useState<'dest' | 'cur' | 'menu' | null>(null);
   const toggleLang = () => setLang(lang === 'ar' ? 'en' : 'ar');
+  // Sticky header (web, +html.tsx): while compact, the banner keeps its full height (transparent, clicks pass through)
+  // so the page below never jumps as the header shrinks; the hold is released once it has grown back.
+  const natural = useRef(0);
+  const [hold, setHold] = useState<number | undefined>(undefined);
+  useEffect(() => {
+    if (compact) { setHold(natural.current || undefined); return; }
+    const id = setTimeout(() => setHold(undefined), 360);
+    return () => clearTimeout(id);
+  }, [compact]);
 
   const nav: { label: string; href: Href; external?: boolean }[] = [
     { label: t('navPerfumeOud'), href: { pathname: '/collections/[slug]', params: { slug: 'perfumes' } } },
@@ -112,12 +145,14 @@ export function SiteHeader() {
   const caps = (size: number) => (isRTL ? { fontSize: size + 2 } : { letterSpacing: size * 0.16, textTransform: 'uppercase' as const });
 
   return (
-    <View role="banner">
+    <View role="banner" {...data({ banner: wide ? 'wide' : 'narrow', compact })}
+      onLayout={(e) => { if (!compact && hold === undefined) natural.current = e.nativeEvent.layout.height; }}
+      style={{ pointerEvents: 'box-none', height: compact ? natural.current || undefined : hold }}>
       {wide ? (
         <>
-          {/* thin black bar: delivery, currency and the smaller links */}
+          {/* thin black bar: delivery, currency and the smaller links (exactly 36 px: it scrolls away, the house below stays) */}
           <View style={{ backgroundColor: colors.kiswah }}>
-            <Container style={{ minHeight: 36, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+            <Container style={{ height: 36, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
                 <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <T size={12} color={colors.onNightFaint}>{t('deliveringTo')}</T>
@@ -131,8 +166,8 @@ export function SiteHeader() {
               </View>
               <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center' }}>
                 <Link href={SELL_HREF as Href}><T size={12} color={colors.goldBright}>{t('sellWithUs')}</T></Link>
-                <Link href="/membership"><T size={12} color={colors.onNight}>{t('membership')}</T></Link>
-                <Link href="/concierge"><T size={12} color={colors.onNight}>{t('concierge')}</T></Link>
+                <Link href="/membership" {...data({ foot: 1 })}><T size={12} color={colors.onNight}>{t('membership')}</T></Link>
+                <Link href="/concierge" {...data({ foot: 1 })}><T size={12} color={colors.onNight}>{t('concierge')}</T></Link>
                 <Pressable accessibilityRole="button" onPress={toggleLang} style={{ borderStartWidth: 1, borderColor: 'rgba(255,255,255,0.14)', paddingStart: 16 }}>
                   <T size={12} color={colors.onNight} style={{ fontFamily: isRTL ? 'Manrope_600SemiBold' : 'ReadexPro_400Regular' }}>{t('language')}</T>
                 </Pressable>
@@ -140,19 +175,19 @@ export function SiteHeader() {
             </Container>
           </View>
           {/* the house: search, the logo in the centre, account and bag */}
-          <View style={{ backgroundColor: colors.ivory }}>
-            <Container style={{ paddingTop: 22, paddingBottom: 14, flexDirection: 'row', alignItems: 'center' }}>
+          <View {...data({ house: compact ? 'compact' : 'full' })} style={{ backgroundColor: colors.ivory }}>
+            <Container style={{ paddingTop: compact ? 10 : 22, paddingBottom: compact ? 6 : 14, flexDirection: 'row', alignItems: 'center' }}>
               <View style={{ flex: 1, alignItems: 'flex-start' }}><SearchBox /></View>
-              <Link href="/" accessibilityLabel={t('home')}><Logo height={48} line /></Link>
+              <Link href="/" accessibilityLabel={t('home')}><Logo height={48} line compact={compact} /></Link>
               <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: 2 }}>
                 <IconLink href="/concierge" icon="help" label={t('concierge')} />
                 <IconLink href="/account" icon="user" label={t('account')} />
                 <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} />
               </View>
             </Container>
-            <Container style={{ paddingBottom: 14, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', columnGap: 44 }}>
+            <Container style={{ paddingBottom: compact ? 4 : 14, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', columnGap: 44 }}>
               {nav.map((n) => (
-                <Link key={n.label} href={n.href} target={n.external ? '_blank' : undefined} style={{ paddingVertical: 8 }}>
+                <Link key={n.label} href={n.href} target={n.external ? '_blank' : undefined} {...data({ ul: 'center' })} style={{ paddingVertical: 8 }}>
                   <T w={500} size={12} color={colors.navy} style={caps(12)}>{n.label}</T>
                 </Link>
               ))}
@@ -162,7 +197,7 @@ export function SiteHeader() {
         </>
       ) : (
         <>
-          <View style={{ backgroundColor: colors.ivory, paddingVertical: 8, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderColor: colors.goldLine }}>
+          <View {...data({ house: compact ? 'compact' : 'full' })} style={{ backgroundColor: colors.ivory, paddingVertical: 8, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderColor: colors.goldLine }}>
             <Pressable accessibilityRole="button" accessibilityLabel={t('menu')} onPress={() => setSheet('menu')} style={ui.iconBtn}><Icon name="menu" stroke={1.5} /></Pressable>
             <Link href="/" accessibilityLabel={t('home')}><Logo height={32} /></Link>
             <View style={{ flexDirection: 'row' }}>
@@ -170,7 +205,7 @@ export function SiteHeader() {
               <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} />
             </View>
           </View>
-          <View style={{ flexDirection: 'row', backgroundColor: colors.kiswah }}>
+          <View {...data({ collapse: 1 })} style={{ flexDirection: 'row', backgroundColor: colors.kiswah }}>
             <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} style={{ flex: 1, minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16 }}>
               <T size={12.5} color={colors.onNightFaint}>{t('deliveringTo')}</T>
               <T w={600} size={12.5} color={colors.onNight}>{t(`dest_${destination}` as Key)}</T>
@@ -264,7 +299,7 @@ export function SiteFooter() {
   const col = (title: string, links: { label: string; href?: Href }[]) => (
     <View style={{ gap: 10, minWidth: 190, flex: 1 }}>
       <T w={700} color={colors.goldBright}>{title}</T>
-      {links.map((l) => (l.href ? <Link key={l.label} href={l.href} target={String(l.href).startsWith('http') ? '_blank' : undefined}><T size={14} color={colors.onNight}>{l.label}</T></Link> : <T key={l.label} size={14} color={colors.onNightFaint}>{l.label}</T>))}
+      {links.map((l) => (l.href ? <Link key={l.label} href={l.href} target={String(l.href).startsWith('http') ? '_blank' : undefined} {...data({ foot: 1 })}><T size={14} color={colors.onNight}>{l.label}</T></Link> : <T key={l.label} size={14} color={colors.onNightFaint}>{l.label}</T>))}
     </View>
   );
   return (

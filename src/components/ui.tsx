@@ -12,6 +12,7 @@ import { imageUrl } from '@/lib/images';
 import type { Product } from '@/lib/types';
 import { colors, MAX_WIDTH, radius, sans, serif, space, toneFor, WIDE, type Weight } from '@/theme';
 import { ArchMotif, Icon } from './icons';
+import { data, reveal as revealAttrs } from './motion';
 
 const noSubscribe = () => () => undefined;
 /** False while React hydrates the pre-rendered page (which was built without a screen size), true afterwards. */
@@ -68,18 +69,18 @@ export function H1({ children, size }: { children: React.ReactNode; size?: numbe
 }
 
 /** Section heading row: optional eyebrow, serif title, subtitle and a link on the far side. */
-export function SectionHead({ kicker, title, sub, link, href, size }: { kicker?: string; title: string; sub?: string; link?: string; href?: Href; size?: number }) {
+export function SectionHead({ kicker, title, sub, link, href, size, reveal }: { kicker?: string; title: string; sub?: string; link?: string; href?: Href; size?: number; reveal?: boolean }) {
   const wide = useWide();
   const { isRTL } = useI18n();
   return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, marginBottom: wide ? 24 : 14 }}>
+    <View {...(reveal ? revealAttrs(0) : {})} style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, marginBottom: wide ? 24 : 14 }}>
       <View style={{ flexShrink: 1 }}>
         {kicker ? <Eyebrow size={wide ? 12 : 11}>{kicker}</Eyebrow> : null}
         <Serif role="h2" size={size ?? (wide ? 46 : 30)} style={{ marginTop: kicker ? 8 : 0 }}>{title}</Serif>
         {sub ? <T color={colors.muted} style={{ marginTop: 4 }}>{sub}</T> : null}
       </View>
       {link && href ? (
-        <Link href={href} style={{ borderBottomWidth: 1, borderColor: colors.goldLine, paddingBottom: 3 }}>
+        <Link href={href} {...data({ caps: 1 })} style={{ borderBottomWidth: 1, borderColor: colors.goldLine, paddingBottom: 3 }}>
           <T w={600} size={isRTL ? 14 : 12} color={colors.navy} style={!isRTL && { letterSpacing: 1.6, textTransform: 'uppercase' }}>{link}</T>
         </Link>
       ) : null}
@@ -117,7 +118,7 @@ export function Button({ label, onPress, href, kind = 'primary', disabled, busy,
   if (href && !disabled) {
     return (
       <Link href={href} asChild>
-        <Pressable accessibilityRole="link" style={StyleSheet.flatten(base)}>{content}</Pressable>
+        <Pressable accessibilityRole="link" {...data({ btn: kind })} style={StyleSheet.flatten(base)}>{content}</Pressable>
       </Link>
     );
   }
@@ -126,7 +127,8 @@ export function Button({ label, onPress, href, kind = 'primary', disabled, busy,
       accessibilityRole="button"
       onPress={onPress}
       disabled={disabled || busy}
-      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [base, (pressed || hovered) && !disabled && kind !== 'text' && { opacity: 0.88 }]}>
+      {...data({ btn: disabled ? undefined : kind })}
+      style={({ pressed }: { pressed: boolean }) => [base, pressed && !disabled && kind !== 'text' && { opacity: 0.88 }]}>
       {content}
     </Pressable>
   );
@@ -166,6 +168,7 @@ export function Chip({ label, onPress, active, size = 'md' }: { label: string; o
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
       onPress={onPress}
+      {...data({ chip: active ? 'on' : 'off' })}
       style={[styles.chip, size === 'sm' && { minHeight: 36, paddingHorizontal: 12 }, active && { backgroundColor: colors.emeraldSoft, borderColor: colors.emerald }]}>
       <T w={active ? 600 : 500} size={13} color={active ? colors.emerald : colors.navy}>{label}</T>
     </Pressable>
@@ -188,8 +191,8 @@ export function Tag({ label, tone = 'mute' }: { label: string; tone?: keyof type
 }
 
 /** Photograph slot: product image when there is one, otherwise a soft tone (optionally with the arch motif). */
-export function Photo({ uri, tone, shape = 'rounded', ratio = 4 / 5, style, motif, label, fit = 'cover' }: {
-  uri?: string | null; tone?: string; shape?: 'rounded' | 'arch' | 'tall-arch'; ratio?: number; style?: StyleProp<ViewStyle>; motif?: number; label?: string; fit?: 'cover' | 'contain';
+export function Photo({ uri, tone, shape = 'rounded', ratio = 4 / 5, style, motif, label, fit = 'cover', fade = 200 }: {
+  uri?: string | null; tone?: string; shape?: 'rounded' | 'arch' | 'tall-arch'; ratio?: number; style?: StyleProp<ViewStyle>; motif?: number; label?: string; fit?: 'cover' | 'contain'; fade?: number;
 }) {
   const r = shape === 'rounded' ? { borderRadius: 4 } : { borderTopLeftRadius: 999, borderTopRightRadius: 999, borderBottomLeftRadius: 18, borderBottomRightRadius: 18 };
   return (
@@ -197,7 +200,12 @@ export function Photo({ uri, tone, shape = 'rounded', ratio = 4 / 5, style, moti
       accessible={!!label}
       accessibilityLabel={label}
       style={[{ width: '100%', aspectRatio: ratio, backgroundColor: tone ?? colors.sand, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }, r, style]}>
-      {uri ? <Image source={{ uri: imageUrl(uri) }} style={StyleSheet.absoluteFill} contentFit={fit} transition={200} /> : motif ? <ArchMotif width={motif} /> : null}
+      {uri ? (
+        // The zoom layer: photographs settle as they are revealed and zoom slowly under the pointer (web, see +html.tsx).
+        <View {...data({ zoom: 1 })} style={StyleSheet.absoluteFill}>
+          <Image source={{ uri: imageUrl(uri) }} style={StyleSheet.absoluteFill} contentFit={fit} transition={fade} />
+        </View>
+      ) : motif ? <ArchMotif width={motif} /> : null}
     </View>
   );
 }
@@ -228,12 +236,14 @@ export function ProductTile({ product, compact }: { product: Product; compact?: 
   const img = product.images[0];
   return (
     <Link href={{ pathname: '/product/[slug]', params: { slug: product.slug } }} asChild>
-      <Pressable accessibilityRole="link" style={StyleSheet.flatten([styles.tile, soldOut && { opacity: 0.6 }])}>
+      <Pressable accessibilityRole="link" {...data({ hover: 'tile' })} style={StyleSheet.flatten([styles.tile, soldOut && { opacity: 0.6 }])}>
         <Photo uri={img} tone={img ? colors.sandSoft : toneFor(product.slug)} fit="cover" motif={compact ? 54 : 80} style={{ borderRadius: 0 }} />
         <View style={{ gap: compact ? 3 : 4, paddingHorizontal: compact ? 10 : 14, paddingTop: compact ? 10 : 14, paddingBottom: compact ? 12 : 16 }}>
           {product.brand || (tag && !compact) ? <Eyebrow size={10.5}>{product.brand ? brandName(product.brand, isRTL) : pick(tag!, 'name')}</Eyebrow> : null}
           <Serif size={compact ? 17 : 21} color={colors.navy} style={!isRTL && { lineHeight: Math.round((compact ? 17 : 21) * 1.15) }} numberOfLines={2}>{shortName(pick(product, 'name'), product.brand)}</Serif>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, paddingTop: 4 }}>
+          {/* fine gold hairline under the name, drawn in on hover (web) */}
+          <View {...data({ hairline: 1 })} style={{ height: 1, width: compact ? 24 : 32, backgroundColor: colors.gold, marginTop: 2 }} />
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
             <Price product={product} size={compact ? 14 : 15.5} />
             {!compact && soldOut ? <T w={600} size={12} color={colors.sampleText}>{t('outOfStock')}</T> : null}
           </View>
@@ -243,8 +253,8 @@ export function ProductTile({ product, compact }: { product: Product; compact?: 
   );
 }
 
-/** Responsive grid: equal columns that wrap. */
-export function Grid({ children, min = 240, gap = 22, cols }: { children: React.ReactNode; min?: number; gap?: number; cols?: number }) {
+/** Responsive grid: equal columns that wrap. With `reveal`, each cell rises into view, the cells of a row 80 ms apart. */
+export function Grid({ children, min = 240, gap = 22, cols, reveal }: { children: React.ReactNode; min?: number; gap?: number; cols?: number; reveal?: boolean }) {
   const { width: w } = useWindowDimensions();
   const width = useHydrated() ? w : 0;
   const avail = Math.min(width, MAX_WIDTH) - (width >= WIDE ? 48 : 32);
@@ -253,7 +263,7 @@ export function Grid({ children, min = 240, gap = 22, cols }: { children: React.
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -gap / 2 }}>
       {items.map((c, i) => (
-        <View key={i} style={{ width: `${100 / n}%`, paddingHorizontal: gap / 2, marginBottom: gap }}>{c}</View>
+        <View key={i} {...(reveal ? revealAttrs(i % n) : {})} style={{ width: `${100 / n}%`, paddingHorizontal: gap / 2, marginBottom: gap }}>{c}</View>
       ))}
     </View>
   );
