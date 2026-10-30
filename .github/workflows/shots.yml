@@ -44,6 +44,16 @@ jobs:
       - name: Store screenshots (raw app screens, only when the commit message asks with [store-shots])
         if: contains(github.event.head_commit.message, '[store-shots]')
         run: node scripts/store-shots.mjs http://localhost:3000 shots/store
+      - name: Expo doctor and the SDK-aligned versions (report only, with [store-shots])
+        if: contains(github.event.head_commit.message, '[store-shots]')
+        run: |
+          set +e
+          mkdir -p shots/store
+          npx --yes expo-doctor > shots/store/expo-doctor.txt 2>&1
+          echo "exit $?" >> shots/store/expo-doctor.txt
+          cp package.json shots/store/package.aligned.json
+          tail -30 shots/store/expo-doctor.txt
+          exit 0
       - name: SEO report (live site)
         run: SEO_ONLY=1 node scripts/shots.mjs https://almukarramah.com shots/live && mv shots/live/seo-report.md shots/seo-live.md && rm -rf shots/live
       - name: Commit results

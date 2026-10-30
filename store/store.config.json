@@ -1,0 +1,52 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "copyright": "2026 Al Mukarramah",
+    "categories": ["SHOPPING", "LIFESTYLE"],
+    "release": {
+      "automaticRelease": false
+    },
+    "advisory": {
+      "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+      "contests": "NONE",
+      "gamblingSimulated": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "matureOrSuggestiveThemes": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+      "gambling": false,
+      "unrestrictedWebAccess": false,
+      "kidsAgeBand": null,
+      "ageRatingOverride": "NONE"
+    },
+    "info": {
+      "en-GB": {
+        "title": "Al Mukarramah",
+        "subtitle": "For every Muslim home",
+        "promoText": "Where your deen and dunya meet: perfumes, oud, prayer mats and gifts from trusted makers, delivered to your hotel in Madinah or Makkah, or to your door.",
+        "keywords": ["oud", "perfume", "attar", "bakhoor", "prayer mat", "sajjadah", "islamic gifts", "eid", "ramadan", "madinah", "makkah", "dates", "umrah"],
+        "description": "Where your deen and dunya meet.\n\nAl Mukarramah is a curated marketplace for every Muslim home, from Madinah: perfumes and oud from celebrated Arabian houses, prayer mats and woven rugs inspired by the Haramain, Madinah dates, keepsakes and gift sets. Every product is approved by our team before it appears.\n\nSHOP WITH CARE\n• Perfumes, oud oils and bakhoor, prayer mats and woven rugs, dates and gifts, in English and Arabic\n• Prices in Saudi riyals, UAE dirhams, pounds, dollars or euros, with VAT included\n• Delivery to your hotel in Madinah or Makkah during your stay, anywhere in Saudi Arabia, or abroad\n• The delivery charge and timing are shown before you pay\n\nGIFTS, TAKEN CARE OF\n• Every order is wrapped and presented, ready to give\n• A printed gift message, and prices never appear on anything the recipient sees\n• A gift assistant that suggests ideas by occasion, recipient and budget, from our live catalogue\n\nSECURE AND SIMPLE\n• Pay on Moyasar's secure page with mada, Apple Pay, STC Pay or card; we never see or store your card details\n• A ZATCA tax invoice with every order, kept in your account\n• Shop as a guest, or sign in with Apple, Google or your email\n\nMEMBERSHIP\nThe Al Mukarramah membership opens the Quran Trail: daily lessons, with the Quran text shown exactly as published by the Quran Foundation. It is a monthly subscription that renews automatically, paid through your Apple ID and managed in your App Store account settings.\n\nDATES CLUB\nA box of premium Madinah dates, delivered every month within Saudi Arabia.\n\nYOUR ACCOUNT, YOUR CHOICE\nMarketing messages only if you ask for them. Delete your account at any time in the app: Account, then Delete my account.\n\nTerms of use: https://almukarramah.com/terms\nPrivacy policy: https://almukarramah.com/privacy\nHelp: hello@almukarramah.com",
+        "releaseNotes": "The first version of the Al Mukarramah app.",
+        "marketingUrl": "https://almukarramah.com",
+        "supportUrl": "https://almukarramah.com/support",
+        "privacyPolicyUrl": "https://almukarramah.com/privacy"
+      },
+      "ar-SA": {
+        "title": "المكرمة",
+        "subtitle": "لكل بيت مسلم",
+        "promoText": "حيث يلتقي دينك ودنياك: عطور وعود وسجادات صلاة وهدايا من صنّاع موثوقين، نوصلها إلى فندقك في المدينة المنورة أو مكة المكرمة، أو إلى بابك.",
+        "keywords": ["عود", "عطور", "بخور", "دهن عود", "سجادة صلاة", "هدايا إسلامية", "عيد", "رمضان", "المدينة", "مكة", "تمور", "عمرة", "حج", "مسك"],
+        "description": "حيث يلتقي دينك ودنياك.\n\nالمكرمة سوق مختار لكل بيت مسلم، من المدينة المنورة: عطور وعود من دور عربية عريقة، وسجادات صلاة وسجاد منسوج مستوحى من الحرمين الشريفين، وتمور المدينة، وتذكارات ومجموعات هدايا. يعتمد فريقنا كل منتج قبل أن يظهر في السوق.\n\nتسوّق بعناية\n• عطور ودهن عود وبخور، وسجادات صلاة وسجاد منسوج، وتمور وهدايا، بالعربية والإنجليزية\n• الأسعار بالريال السعودي أو الدرهم الإماراتي أو الجنيه أو الدولار أو اليورو، شاملة ضريبة القيمة المضافة\n• التوصيل إلى فندقك في المدينة المنورة أو مكة المكرمة خلال إقامتك، وإلى جميع مناطق المملكة، وإلى الخارج\n• تظهر رسوم التوصيل وموعده قبل الدفع\n\nالإهداء علينا\n• يُغلَّف كل طلب ويُقدَّم جاهزًا للإهداء\n• رسالة إهداء مطبوعة، ولا تظهر الأسعار أبدًا على ما يصل إلى المُهدى إليه\n• مساعد هدايا يقترح عليك حسب المناسبة والشخص والميزانية، من كتالوجنا الحالي\n\nآمن وسهل\n• ادفع عبر صفحة ميسر الآمنة بمدى أو Apple Pay أو STC Pay أو البطاقة، ولا نرى بيانات بطاقتك ولا نحفظها\n• فاتورة ضريبية متوافقة مع هيئة الزكاة والضريبة والجمارك مع كل طلب، محفوظة في حسابك\n• تسوّق كضيف، أو سجّل الدخول عبر Apple أو Google أو بريدك الإلكتروني\n\nالعضوية\nتفتح لك عضوية المكرمة رحلة القرآن: دروس يومية يُعرض فيها نص القرآن الكريم كما نشرته مؤسسة القرآن (Quran Foundation) تمامًا. وهي اشتراك شهري يتجدد تلقائيًا، يُدفع عبر حساب Apple ID ويُدار من إعدادات حسابك في App Store.\n\nنادي التمور\nصندوق من تمور المدينة الفاخرة يصلك كل شهر داخل المملكة العربية السعودية.\n\nحسابك واختيارك\nلا رسائل تسويقية إلا إذا طلبتها. ويمكنك حذف حسابك في أي وقت من التطبيق: «حسابي» ثم «حذف حسابي».\n\nالشروط والأحكام: https://almukarramah.com/terms\nسياسة الخصوصية: https://almukarramah.com/privacy\nالمساعدة: hello@almukarramah.com",
+        "releaseNotes": "الإصدار الأول من تطبيق المكرمة.",
+        "marketingUrl": "https://almukarramah.com",
+        "supportUrl": "https://almukarramah.com/support",
+        "privacyPolicyUrl": "https://almukarramah.com/privacy"
+      }
+    }
+  }
+}

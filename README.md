@@ -27,6 +27,7 @@ Claude Code can do steps 4 to 8 for you: open this folder in Claude Code and say
 ## Publishing
 - **Website**: `npm run build:web`, then upload the `dist` folder to Cloudflare Pages (free).
 - **Apps**: Apple Developer (USD 99 a year) and Google Play (USD 25 once), then `npx eas build` and `npx eas submit`.
+  The step-by-step list is in `docs/app-stores.md`; store texts, privacy answers and reviewer notes are in `store/`.
 
 ## Not finished yet (next steps for Claude Code)
 - OTO live shipping rates and labels (zone rates work now).

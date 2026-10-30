@@ -41,8 +41,11 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-      - name: Install
+      - name: Install (versions aligned to the Expo SDK; EAS builds from this package.json)
         run: npm run vercel-install
+      - name: Expo doctor (report only)
+        continue-on-error: true
+        run: npx --yes expo-doctor
       - name: Build (production profile, waits for EAS)
         run: eas build --platform ${{ inputs.platform }} --profile production --non-interactive
       - name: Submit to the stores
