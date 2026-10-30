@@ -10,6 +10,7 @@
     "android": "expo run:android",
     "build:web": "node scripts/build-catalogue.mjs && node scripts/build-intro.mjs && expo export --platform web",
     "typecheck": "tsc --noEmit",
+    "test:market": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test supabase/tests/*.test.ts",
     "fix-deps": "expo install --fix",
     "vercel-install": "npm install --legacy-peer-deps && npx expo install --fix -- --legacy-peer-deps"
   },

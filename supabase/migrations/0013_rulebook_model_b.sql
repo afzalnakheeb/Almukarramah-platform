@@ -1,41 +1,23 @@
--- Model B shipping and the country rulebook.
+-- Marketplace (2 of 9): the country rulebook, seller KYC by country, product compliance, pickup addresses and the
+-- approved carriers for model B shipping.
 --
--- Shipping (model B): sellers pack and ship their own parcels, but ONLY through carriers Al Mukarramah selects and
--- contracts (through shipping aggregators). The seller prints our label from the seller dashboard, the carrier picks
--- up from the seller's address, tracking flows back by webhook, and the PLATFORM sets the delivery price the customer
--- pays. A marketplace warehouse comes later: shipments.fulfilment already has a 'warehouse' value for it.
---
--- Rulebook: every order line is decided from (ship-from country, ship-to country, product compliance):
+-- Rulebook: every order line is decided on the server by supabase/functions/_shared/rules.ts from
+-- (ship-from country, ship-to country, product compliance, category policy):
 --   allowed or not; who invoices and under which regime; which VAT; duties shown as paid (DDP) or not; which approved
---   carrier services may carry it; which permits it needs. The decision is made on the server by
---   supabase/functions/_shared/rules.ts from the tables below; rates and permissions live here, never in code.
+--   carrier services may carry it; which permits it needs. Rates and permissions live in the tables below, never in code.
 --
--- Corridors (from -> to) open in phases from the admin panel, each only after a tax adviser signs off:
+-- Corridors (from -> to) open in phases, toggled by owner/manager only (audited), each only after a tax adviser signs off:
 --   Phase 1 (open):   SA sellers -> SA customers, and Al Mukarramah's own products worldwide (existing house shipping)
 --   Phase 2 (closed): AE, KW, QA sellers domestically and into SA
 --   Phase 3 (closed): India -> GCC
 --
--- Nothing here moves money. Payout statements are views for reading; transfers are made by hand and recorded.
-
--- audit_trigger() expects an "id" column; these tables are keyed by a code or a composite key, named as the
--- trigger's arguments (e.g. audit_keyed('country', 'hs_prefix')).
-create or replace function audit_keyed() returns trigger language plpgsql security definer set search_path = public as $$
-declare
-  r jsonb := case when tg_op = 'DELETE' then to_jsonb(old) else to_jsonb(new) end;
-  k text;
-  rid text := '';
-begin
-  foreach k in array tg_argv loop
-    rid := rid || case when rid = '' then '' else ':' end || coalesce(r ->> k, '');
-  end loop;
-  insert into audit_log (actor, actor_label, table_name, row_id, action, old_data, new_data)
-  values (auth.uid(), coalesce(current_setting('request.jwt.claims', true)::jsonb ->> 'email', current_user), tg_table_name,
-          rid, tg_op,
-          case when tg_op in ('UPDATE', 'DELETE') then to_jsonb(old) end,
-          case when tg_op in ('INSERT', 'UPDATE') then to_jsonb(new) end);
-  return coalesce(new, old);
-end $$;
-revoke execute on function audit_keyed() from public, anon, authenticated;
+-- Shipping (model B): sellers pack and ship their own parcels, but ONLY through carriers Al Mukarramah selects and
+-- contracts (through shipping aggregators). The seller prints our label from the seller dashboard, the carrier picks
+-- up from the seller's pickup address, tracking flows back, and the PLATFORM sets the delivery price the customer pays.
+-- Shipments themselves (one per seller sub-order) are in 0018; a marketplace warehouse can be added later as another
+-- fulfilment value there.
+--
+-- Nothing here moves money.
 
 -- ================================================================ countries
 create table countries (
@@ -49,7 +31,7 @@ create table countries (
   einvoicing text not null default 'none' check (einvoicing in ('zatca', 'planned', 'none')),
   import_duty_bp int not null default 500 check (import_duty_bp between 0 and 10000),   -- default customs duty
   de_minimis_sar int not null default 0 check (de_minimis_sar >= 0),   -- halalas: consignments below pay no duty
-  customs_union text,                 -- 'GCC': goods of GCC origin move duty-free between members
+  customs_union text check (customs_union is null or customs_union in ('GCC')),   -- GCC-origin goods move duty-free between members
   notes text,
   updated_at timestamptz not null default now()
 );
@@ -78,7 +60,7 @@ create table duty_rates (
 -- ================================================================ corridors
 create table corridors (
   id uuid primary key default gen_random_uuid(),
-  scope text not null check (scope in ('house', 'marketplace')),   -- house: Al Mukarramah's own products
+  scope text not null check (scope in ('house', 'marketplace')),   -- house: Al Mukarramah's own products (incl. partners)
   from_country char(2) not null references countries,
   to_country text not null check (to_country = '*' or to_country ~ '^[A-Z]{2}$'),   -- '*': any other country
   phase int not null default 1 check (phase between 1 and 9),
@@ -96,7 +78,8 @@ create table corridors (
   updated_at timestamptz not null default now(),
   updated_by uuid references auth.users,
   unique (scope, from_country, to_country),
-  check (scope = 'marketplace' or invoicer = 'platform')
+  check (scope = 'marketplace' or invoicer = 'platform'),
+  check (to_country = '*' or to_country <> from_country or duties_mode = 'none')
 );
 
 -- A corridor opens (pilot or open) only with a tax adviser's sign-off on record, and its tax terms cannot change
@@ -157,8 +140,8 @@ grant execute on function open_corridors() to anon, authenticated;
 
 -- ================================================================ permits
 -- A product shipped to `to_country` needs `permit_key` when its HS code starts with one of hs_prefixes, its ship class
--- is one of ship_classes, or it is listed in one of category_slugs. Sellers enter the reference in products.permits;
--- staff check it in the compliance queue before the product can be bought there.
+-- is one of ship_classes, or its category (or a parent category) is in category_slugs. Sellers add the reference in
+-- product_permits; staff verify it before the product can be bought there.
 create table permit_rules (
   id uuid primary key default gen_random_uuid(),
   to_country char(2) not null references countries,
@@ -175,22 +158,47 @@ create table permit_rules (
 );
 insert into permit_rules (to_country, permit_key, label_en, label_ar, hs_prefixes, ship_classes, category_slugs, notes) values
   ('SA', 'sfda_ecosma', 'SFDA eCosma listing (perfume and cosmetics)', 'إدراج في نظام eCosma لدى هيئة الغذاء والدواء (العطور ومستحضرات التجميل)',
-   '{3303,3304,3305,3307}', '{perfume_spray,perfume_oil}', '{perfumes,oud-oils}', 'Perfume, oud oil and cosmetics sold into Saudi Arabia.'),
+   '{3303,3304,3305,3307}', '{perfume_spray,perfume_oil}', '{perfumes,attar,oud-oils,perfume-sprays,halal-cosmetics,natural-care-cosmetics}',
+   'Perfume, oud oil and cosmetics sold into or within Saudi Arabia.'),
   ('SA', 'sfda_food', 'SFDA food registration', 'تسجيل الغذاء لدى هيئة الغذاء والدواء',
-   '{0804,0409,1704,1806,2101}', '{}', '{dates}', 'Dates, honey and packaged food sold into Saudi Arabia.');
+   '{0804,0409,0901,1515,1704,1806,2101}', '{}', '{dates,honey,arabic-coffee,sweets,black-seed-oil,dates-food}',
+   'Dates, honey, coffee, sweets and edible oils sold into or within Saudi Arabia.');
 
 -- ================================================================ seller KYC (by country)
 alter table seller_private
-  add column legal_entity_type text,
-  add column export_code text,                      -- India: Importer-Exporter Code (IEC)
+  add column legal_entity_type text check (legal_entity_type is null or legal_entity_type in
+    ('sole_proprietorship', 'llc', 'partnership', 'joint_stock', 'branch', 'freelancer', 'other')),
+  add column export_code text check (char_length(export_code) <= 30),     -- India: Importer-Exporter Code (IEC)
   add column iban text check (iban is null or iban ~ '^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$'),
-  add column bank_name text,
-  add column account_holder text,
+  add column bank_name text check (char_length(bank_name) <= 120),
+  add column account_holder text check (char_length(account_holder) <= 200),
   add column kyc_status text not null default 'not_started'
-    check (kyc_status in ('not_started', 'submitted', 'approved', 'rejected', 'expired')),
+    check (kyc_status in ('not_started', 'submitted', 'info_requested', 'approved', 'rejected', 'expired')),
   add column kyc_note text,
   add column kyc_reviewed_at timestamptz,
   add column kyc_reviewed_by uuid references auth.users;
+
+-- IBAN check digits (ISO 13616, mod 97). Used by the KYC guard and the application.
+create or replace function private.iban_valid(p text) returns boolean
+language plpgsql immutable set search_path = public as $$
+declare
+  s text := upper(regexp_replace(coalesce(p, ''), '\s', '', 'g'));
+  digits text := '';
+  ch text;
+  rem int := 0;
+  i int;
+begin
+  if s !~ '^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$' then return false; end if;
+  s := substr(s, 5) || substr(s, 1, 4);
+  for i in 1 .. length(s) loop
+    ch := substr(s, i, 1);
+    digits := digits || case when ch ~ '[0-9]' then ch else (ascii(ch) - 55)::text end;
+  end loop;
+  for i in 1 .. length(digits) loop
+    rem := (rem * 10 + substr(digits, i, 1)::int) % 97;
+  end loop;
+  return rem = 1;
+end $$;
 
 -- Documents each country requires before a seller from there can sell.
 create table kyc_requirements (
@@ -198,6 +206,7 @@ create table kyc_requirements (
   doc_type text not null check (doc_type ~ '^[a-z_]{2,40}$'),
   label_en text not null,
   label_ar text not null,
+  required boolean not null default true,
   sort int not null default 0,
   primary key (country, doc_type)
 );
@@ -216,7 +225,7 @@ create table seller_documents (
   seller_id uuid not null references sellers on delete cascade,
   doc_type text not null check (doc_type ~ '^[a-z_]{2,40}$'),
   path text not null unique,                  -- seller-kyc bucket: <seller id>/<file>
-  file_name text,
+  file_name text check (char_length(file_name) <= 200),
   status text not null default 'pending' check (status in ('pending', 'accepted', 'rejected')),
   note text,
   expires_on date,
@@ -225,11 +234,12 @@ create table seller_documents (
   reviewed_by uuid references auth.users,
   reviewed_at timestamptz
 );
-create index seller_documents_seller on seller_documents (seller_id);
+create index seller_documents_seller on seller_documents (seller_id, uploaded_at desc);
 alter table seller_documents enable row level security;
 alter table kyc_requirements enable row level security;
 create policy "read kyc requirements" on kyc_requirements for select using (true);
-create policy "staff edit kyc requirements" on kyc_requirements for all using (private.is_staff(array['owner', 'manager']::staff_role[]));
+create policy "staff edit kyc requirements" on kyc_requirements for all
+  using (private.is_staff(array['owner', 'manager']::staff_role[])) with check (private.is_staff(array['owner', 'manager']::staff_role[]));
 create policy "members and staff read documents" on seller_documents for select
   using (private.is_seller_member(seller_id) or private.is_staff(array['owner', 'manager', 'finance']::staff_role[]));
 create policy "members add documents" on seller_documents for insert
@@ -237,18 +247,20 @@ create policy "members add documents" on seller_documents for insert
 create policy "members remove unreviewed documents" on seller_documents for delete
   using (private.is_seller_member(seller_id) and status <> 'accepted');
 create policy "staff review documents" on seller_documents for update
-  using (private.is_staff(array['owner', 'manager']::staff_role[]));
+  using (private.is_staff(array['owner', 'manager']::staff_role[])) with check (private.is_staff(array['owner', 'manager']::staff_role[]));
 
 create or replace function seller_documents_guard() returns trigger language plpgsql set search_path = public as $$
 begin
-  if private.is_staff() or coalesce(auth.role(), '') <> 'authenticated' then
-    if new.status is distinct from old.status then new.reviewed_by := auth.uid(); new.reviewed_at := now(); end if;
+  if not private.is_end_user() then
+    if tg_op = 'UPDATE' and new.status is distinct from old.status then new.reviewed_by := auth.uid(); new.reviewed_at := now(); end if;
     return new;
   end if;
   new.status := 'pending';
   new.note := null;
   new.reviewed_by := null;
   new.reviewed_at := null;
+  new.uploaded_by := auth.uid();
+  new.uploaded_at := now();
   return new;
 end $$;
 create trigger seller_documents_guard before insert or update on seller_documents for each row execute function seller_documents_guard();
@@ -258,8 +270,8 @@ create trigger audit_seller_documents after insert or update or delete on seller
 -- bank detail sends the account back for review.
 create or replace function seller_private_guard() returns trigger language plpgsql set search_path = public as $$
 begin
-  if private.is_staff() or coalesce(auth.role(), '') <> 'authenticated' then
-    if new.kyc_status is distinct from old.kyc_status and new.kyc_status in ('approved', 'rejected') then
+  if not private.is_end_user() then
+    if new.kyc_status is distinct from old.kyc_status and new.kyc_status in ('approved', 'rejected', 'info_requested') then
       new.kyc_reviewed_at := now();
       new.kyc_reviewed_by := auth.uid();
     end if;
@@ -269,9 +281,12 @@ begin
   new.kyc_note := old.kyc_note;
   new.kyc_reviewed_at := old.kyc_reviewed_at;
   new.kyc_reviewed_by := old.kyc_reviewed_by;
+  if new.iban is not null and new.iban is distinct from old.iban and not private.iban_valid(new.iban) then
+    raise exception 'Please check the IBAN: its check digits do not match';
+  end if;
   -- the only change a seller may make to the status: send it for review
   if new.kyc_status is distinct from old.kyc_status
-     and not (new.kyc_status = 'submitted' and old.kyc_status in ('not_started', 'rejected', 'expired')) then
+     and not (new.kyc_status = 'submitted' and old.kyc_status in ('not_started', 'info_requested', 'rejected', 'expired')) then
     new.kyc_status := old.kyc_status;
   end if;
   if old.kyc_status = 'approved'
@@ -281,7 +296,6 @@ begin
   end if;
   return new;
 end $$;
-create trigger audit_seller_private after insert or update or delete on seller_private for each row execute function audit_keyed('seller_id');
 
 -- seller-kyc: PRIVATE documents bucket (PDF or photos, 10 MB). Sellers write only in their own folder; an accepted
 -- document cannot be deleted by the seller.
@@ -304,7 +318,6 @@ alter table products
   add column length_mm int check (length_mm is null or length_mm between 1 and 3000),   -- one unit, packed
   add column width_mm int check (width_mm is null or width_mm between 1 and 3000),
   add column height_mm int check (height_mm is null or height_mm between 1 and 3000),
-  add column permits jsonb not null default '{}' check (jsonb_typeof(permits) = 'object'),   -- {"sfda_ecosma": "ECM-..."}
   add column allowed_destinations text[],   -- null: wherever the rulebook allows; otherwise only these countries
   add column compliance_status text not null default 'unreviewed'
     check (compliance_status in ('unreviewed', 'pending', 'cleared', 'rejected')),
@@ -323,7 +336,58 @@ begin
 end $$;
 create trigger products_dg_sync before insert or update on products for each row execute function products_dg_sync();
 
--- The seller guard from 0009, extended: compliance details (HS code, origin, dangerous goods, parcel size, permits,
+-- Permits per product (SFDA eCosma, SFDA food, ...): the seller adds the reference (and a document in seller-kyc),
+-- staff verify it. The rulebook only sells a product into a country whose required permits are verified.
+create table product_permits (
+  product_id uuid not null references products on delete cascade,
+  permit_key text not null check (permit_key ~ '^[a-z0-9_]{2,40}$'),
+  reference text not null check (char_length(reference) between 2 and 80),
+  document_path text,                       -- seller-kyc bucket, <seller id>/...
+  status text not null default 'pending' check (status in ('pending', 'verified', 'rejected')),
+  expires_on date,
+  note text,
+  updated_at timestamptz not null default now(),
+  reviewed_by uuid references auth.users,
+  reviewed_at timestamptz,
+  primary key (product_id, permit_key)
+);
+alter table product_permits enable row level security;
+create policy "members and staff read permits" on product_permits for select using (
+  private.is_staff() or exists (select 1 from products p where p.id = product_id and private.is_seller_member(p.seller_id)));
+create policy "members add permits" on product_permits for insert with check (
+  exists (select 1 from products p where p.id = product_id and private.is_seller_member(p.seller_id)));
+create policy "members update permits" on product_permits for update using (
+  private.is_staff(array['owner', 'manager', 'operations']::staff_role[])
+  or exists (select 1 from products p where p.id = product_id and private.is_seller_member(p.seller_id)))
+  with check (private.is_staff(array['owner', 'manager', 'operations']::staff_role[])
+  or exists (select 1 from products p where p.id = product_id and private.is_seller_member(p.seller_id)));
+create policy "members remove unverified permits" on product_permits for delete using (
+  status <> 'verified' and exists (select 1 from products p where p.id = product_id and private.is_seller_member(p.seller_id)));
+
+create or replace function product_permits_guard() returns trigger language plpgsql set search_path = public as $$
+declare sid uuid;
+begin
+  new.updated_at := now();
+  if not private.is_end_user() then
+    if tg_op = 'UPDATE' and new.status is distinct from old.status then new.reviewed_by := auth.uid(); new.reviewed_at := now(); end if;
+    return new;
+  end if;
+  select seller_id into sid from products where id = new.product_id;
+  if new.document_path is not null and new.document_path not like sid::text || '/%' then
+    raise exception 'Upload the permit document through your seller dashboard';
+  end if;
+  -- any change by the seller needs a fresh check
+  new.status := 'pending';
+  new.note := null;
+  new.reviewed_by := null;
+  new.reviewed_at := null;
+  if tg_op = 'UPDATE' then new.product_id := old.product_id; new.permit_key := old.permit_key; end if;
+  return new;
+end $$;
+create trigger product_permits_guard before insert or update on product_permits for each row execute function product_permits_guard();
+create trigger audit_product_permits after insert or update or delete on product_permits for each row execute function audit_keyed('product_id', 'permit_key');
+
+-- The seller guard from 0012, extended: compliance details (HS code, origin, dangerous goods, parcel size,
 -- destinations) do not send a listing back for content approval, but any change to them puts the product in the
 -- staff compliance queue, and only staff record the compliance decision.
 create or replace function products_seller_guard() returns trigger language plpgsql set search_path = public as $$
@@ -333,9 +397,9 @@ declare
   img text;
   staff_keys text[] := array['stock', 'is_active', 'updated_at', 'listing_status', 'submitted_at', 'ai_check', 'ai_checked_at', 'review_note', 'reviewed_at', 'reviewed_by',
                               'compliance_status', 'compliance_note', 'compliance_reviewed_at', 'compliance_reviewed_by'];
-  compliance_keys text[] := array['hs_code', 'origin_country', 'dangerous_goods', 'length_mm', 'width_mm', 'height_mm', 'permits', 'allowed_destinations', 'restricted_countries'];
+  compliance_keys text[] := array['hs_code', 'origin_country', 'dangerous_goods', 'length_mm', 'width_mm', 'height_mm', 'allowed_destinations', 'restricted_countries'];
 begin
-  if private.is_staff() or coalesce(auth.role(), '') <> 'authenticated' then
+  if not private.is_end_user() then
     if tg_op = 'UPDATE' and new.compliance_status is distinct from old.compliance_status and new.compliance_status in ('cleared', 'rejected') then
       new.compliance_reviewed_at := now();
       new.compliance_reviewed_by := auth.uid();
@@ -344,18 +408,14 @@ begin
   end if;
   if new.seller_id is null then raise exception 'Not allowed'; end if;
 
-  -- Photos must be the seller's own uploads (private, under their folder) or already-approved catalogue copies.
   foreach img in array coalesce(new.images, '{}') loop
-    if not (img like new.seller_id::text || '/%' or img like '%/storage/v1/object/public/catalogue/' || new.seller_id::text || '/%') then
+    if not (img like new.seller_id::text || '/media/%' or img like '%/storage/v1/object/public/catalogue/' || new.seller_id::text || '/%') then
       raise exception 'Photos must be uploaded through your seller dashboard';
     end if;
   end loop;
-  if coalesce(array_length(new.images, 1), 0) > 8 then raise exception 'Up to 8 photos per product'; end if;
+  if coalesce(array_length(new.images, 1), 0) > 10 then raise exception 'Up to 10 photos per product'; end if;
 
   new.updated_at := now();
-  new.compliance_note := case when tg_op = 'INSERT' then null else old.compliance_note end;
-  new.compliance_reviewed_at := case when tg_op = 'INSERT' then null else old.compliance_reviewed_at end;
-  new.compliance_reviewed_by := case when tg_op = 'INSERT' then null else old.compliance_reviewed_by end;
 
   if tg_op = 'INSERT' then
     new.listing_status := 'draft';
@@ -367,6 +427,9 @@ begin
     new.review_note := null;
     new.is_featured := false;
     new.compliance_status := 'pending';
+    new.compliance_note := null;
+    new.compliance_reviewed_at := null;
+    new.compliance_reviewed_by := null;
     return new;
   end if;
 
@@ -375,9 +438,12 @@ begin
   new.reviewed_by := old.reviewed_by;
   new.review_note := old.review_note;
   new.seller_id := old.seller_id;
-  -- Only the server (listing-check) writes the AI result.
+  new.submitted_at := old.submitted_at;
   new.ai_check := old.ai_check;
   new.ai_checked_at := old.ai_checked_at;
+  new.compliance_note := old.compliance_note;
+  new.compliance_reviewed_at := old.compliance_reviewed_at;
+  new.compliance_reviewed_by := old.compliance_reviewed_by;
 
   compliance_changed := (select jsonb_object_agg(k, to_jsonb(new) -> k) from unnest(compliance_keys) k)
                         is distinct from (select jsonb_object_agg(k, to_jsonb(old) -> k) from unnest(compliance_keys) k);
@@ -385,25 +451,19 @@ begin
 
   content_changed := (to_jsonb(new) - staff_keys - compliance_keys) is distinct from (to_jsonb(old) - staff_keys - compliance_keys);
   if content_changed then
+    if old.listing_status = 'suspended' then raise exception 'This listing is suspended. Please contact Al Mukarramah'; end if;
     new.ai_check := null;
     new.ai_checked_at := null;
-    if old.listing_status in ('approved', 'pending_review') then
-      new.listing_status := 'draft';   -- edits to a live listing are checked and approved again
+    if old.listing_status in ('approved', 'pending_review', 'check_pending') then
+      new.listing_status := 'draft';
     end if;
   end if;
 
-  if new.listing_status is distinct from old.listing_status then
-    if new.listing_status in ('approved', 'rejected') then
-      raise exception 'Only Al Mukarramah can approve or reject listings';
-    end if;
-    if new.listing_status = 'pending_review' then
-      if not private.seller_approved(new.seller_id) then raise exception 'Your seller account is not approved yet'; end if;
-      if new.ai_check is null or coalesce(new.ai_check ->> 'verdict', '') not in ('pass', 'review') then
-        raise exception 'Run the guideline check first. Listings the check blocks cannot be submitted';
-      end if;
-      if coalesce(array_length(new.images, 1), 0) < 1 then raise exception 'Add at least one photo'; end if;
-      new.submitted_at := now();
-    end if;
+  if new.listing_status is distinct from old.listing_status and new.listing_status <> 'draft' then
+    raise exception 'Only Al Mukarramah can move a listing to %', new.listing_status;
+  end if;
+  if new.listing_status = 'draft' and old.listing_status = 'suspended' then
+    raise exception 'This listing is suspended. Please contact Al Mukarramah';
   end if;
   return new;
 end $$;
@@ -421,17 +481,18 @@ create table seller_locations (
   id uuid primary key default gen_random_uuid(),
   seller_id uuid not null references sellers on delete cascade,
   label text not null default 'Main' check (char_length(label) between 1 and 40),
-  contact_name text not null,
-  phone text not null,
+  contact_name text not null check (char_length(contact_name) between 2 and 120),
+  phone text not null check (phone ~ '^\+?[0-9 ()-]{7,20}$'),
   country char(2) not null,           -- always the seller's own (KYC) country: the ship-from country
-  city text not null,
-  district text,
-  line1 text not null,
-  line2 text,
-  postal_code text,
-  short_address text,                 -- Saudi National Address short code, e.g. RRRD2929
+  city text not null check (char_length(city) between 2 and 80),
+  district text check (char_length(district) <= 80),
+  line1 text not null check (char_length(line1) between 3 and 200),
+  line2 text check (char_length(line2) <= 200),
+  postal_code text check (char_length(postal_code) <= 12),
+  short_address text check (short_address is null or short_address ~ '^[A-Z]{4}[0-9]{4}$'),   -- Saudi National Address short code
   pickup_from time not null default '10:00',
   pickup_to time not null default '18:00',
+  provider_refs jsonb not null default '{}' check (jsonb_typeof(provider_refs) = 'object'),   -- e.g. an aggregator's pickup location id
   is_default boolean not null default false,
   active boolean not null default true,
   created_at timestamptz not null default now(),
@@ -454,6 +515,10 @@ begin
   if new.country is distinct from home then
     raise exception 'Pickup addresses must be in your registered country (%)', home;
   end if;
+  if private.is_end_user() then
+    new.provider_refs := case when tg_op = 'UPDATE' then old.provider_refs else '{}'::jsonb end;   -- set by the server only
+    if tg_op = 'UPDATE' then new.seller_id := old.seller_id; end if;
+  end if;
   new.updated_at := now();
   return new;
 end $$;
@@ -461,12 +526,12 @@ create trigger seller_locations_guard before insert or update on seller_location
 create trigger audit_seller_locations after insert or update or delete on seller_locations for each row execute function audit_trigger();
 
 -- ================================================================ approved carriers (through aggregators)
--- Providers are the aggregator platforms we integrate with (API keys are Supabase secrets set by Afzal; only their
--- NAMES are stored here). Services are the carrier services we have approved per region.
+-- Providers are the aggregator platforms we integrate with (API keys are Supabase secrets set by Afzal at the end of
+-- the project; only their NAMES are stored here). Services are the carrier services we have approved per region.
 create table carrier_providers (
   id text primary key check (id ~ '^[a-z0-9_-]{2,30}$'),
   name text not null,
-  kind text not null default 'aggregator' check (kind in ('aggregator', 'duties', 'both')),
+  kind text not null default 'aggregator' check (kind in ('aggregator', 'carrier', 'duties', 'both')),
   regions text not null,
   mode text not null default 'sandbox' check (mode in ('sandbox', 'test', 'live')),
   active boolean not null default false,
@@ -476,9 +541,18 @@ create table carrier_providers (
   updated_at timestamptz not null default now()
 );
 insert into carrier_providers (id, name, kind, regions, mode, active, secret_names, supports, notes) values
-  ('sandbox', 'Sandbox (no real parcels)', 'both', 'Everywhere', 'sandbox', true, '{CARRIER_SANDBOX_SECRET}',
+  ('sandbox', 'Sandbox (no real parcels)', 'both', 'Everywhere', 'sandbox', true, '{}',
    '{"quote": true, "label": true, "pickup": true, "track": true, "cancel": true, "landed_cost": true, "webhook": true}',
-   'Deterministic rates from carrier_rate_cards, a sample PDF label and simulated tracking, so the whole flow works before any real account exists.');
+   'Deterministic rates from carrier_rate_cards, a sample PDF label and simulated tracking, so the whole flow works before any real account exists.'),
+  ('oto', 'OTO (tryoto) marketplace API', 'aggregator', 'Origins: Saudi Arabia, UAE', 'sandbox', false, '{OTO_API_KEY,OTO_WEBHOOK_SECRET}',
+   '{"quote": true, "label": true, "pickup": true, "track": true, "cancel": true, "landed_cost": false, "webhook": true}',
+   'Planned (end of project): multi-vendor sub-accounts / pickup locations per seller. Not connected.'),
+  ('shiprocket', 'Shiprocket X (India origin)', 'aggregator', 'Origin: India', 'sandbox', false, '{SHIPROCKET_API_KEY}',
+   '{"quote": true, "label": true, "pickup": true, "track": true, "cancel": true, "landed_cost": false, "webhook": true}',
+   'Planned for phase 3 (India to GCC). Not connected.'),
+  ('dhl_express', 'DHL Express (MyDHL API)', 'carrier', 'Cross-border express, DDP', 'sandbox', false, '{DHL_API_KEY,DHL_API_SECRET}',
+   '{"quote": true, "label": true, "pickup": true, "track": true, "cancel": true, "landed_cost": true, "webhook": false}',
+   'Planned for cross-border express with duties paid. Not connected.');
 
 create table carrier_services (
   id uuid primary key default gen_random_uuid(),
@@ -504,7 +578,8 @@ insert into carrier_services (provider_id, code, carrier_name, service_name, ser
   ('sandbox', 'sbx-sa-road', 'Sandbox road courier', 'Saudi domestic (road)', 'شحن محلي بري داخل المملكة', '{SA}', '{SA}', true, true, true, false, 1, 3, 1),
   ('sandbox', 'sbx-gcc-local', 'Sandbox local courier', 'Domestic (road)', 'شحن محلي بري', '{AE,KW,QA,OM,BH}', '{AE,KW,QA,OM,BH}', true, true, true, false, 1, 2, 2),
   ('sandbox', 'sbx-gcc-express', 'Sandbox express', 'GCC express, duties paid', 'شحن سريع خليجي، الرسوم مدفوعة', '{SA,AE,KW,QA,OM,BH}', '{SA,AE,KW,QA,OM,BH}', false, false, false, true, 2, 5, 3),
-  ('sandbox', 'sbx-in-gcc', 'Sandbox international', 'India to GCC, duties paid', 'من الهند إلى الخليج، الرسوم مدفوعة', '{IN}', '{SA,AE,KW,QA,OM,BH}', false, false, false, true, 4, 8, 4);
+  ('sandbox', 'sbx-in-gcc', 'Sandbox international', 'India to GCC, duties paid', 'من الهند إلى الخليج، الرسوم مدفوعة', '{IN}', '{SA,AE,KW,QA,OM,BH}', false, false, false, true, 4, 8, 4),
+  ('sandbox', 'sbx-world', 'Sandbox international express', 'International express', 'شحن دولي سريع', '{SA}', '{*}', false, false, false, false, 3, 8, 5);
 
 -- What the carrier charges US (sandbox rates; real providers return live rates). Never shown to customers.
 create table carrier_rate_cards (
@@ -517,11 +592,12 @@ create table carrier_rate_cards (
 );
 insert into carrier_rate_cards (service_id, from_country, to_country, first_kg_sar, extra_kg_sar)
 select id, '*', '*', v.first, v.extra from carrier_services s
-join (values ('sbx-sa-road', 1800, 300), ('sbx-gcc-local', 1500, 300), ('sbx-gcc-express', 4800, 1300), ('sbx-in-gcc', 6500, 2200)) as v(code, first, extra)
+join (values ('sbx-sa-road', 1800, 300), ('sbx-gcc-local', 1500, 300), ('sbx-gcc-express', 4800, 1300), ('sbx-in-gcc', 6500, 2200), ('sbx-world', 9000, 2600)) as v(code, first, extra)
   on v.code = s.code where s.provider_id = 'sandbox';
 
--- What the CUSTOMER pays for delivery, set by the platform per corridor (most specific row wins:
+-- What the CUSTOMER pays for marketplace delivery, set by the platform per corridor (most specific row wins:
 -- exact from/to and service, then exact from/to, then wildcards). Sellers never set shipping prices.
+-- Al Mukarramah's own products keep the existing delivery zones (shipping_zones).
 create table delivery_prices (
   id uuid primary key default gen_random_uuid(),
   from_country text not null check (from_country = '*' or from_country ~ '^[A-Z]{2}$'),
@@ -555,15 +631,23 @@ create policy "staff read providers" on carrier_providers for select using (priv
 create policy "staff read services" on carrier_services for select using (private.is_staff());
 create policy "staff read rate cards" on carrier_rate_cards for select using (private.is_staff());
 create policy "staff read delivery prices" on delivery_prices for select using (private.is_staff());
--- Only owner/manager change the rulebook; operations also manage carriers and delivery prices. Every change is audited.
-create policy "owner and manager edit countries" on countries for all using (private.is_staff(array['owner', 'manager']::staff_role[]));
-create policy "owner and manager edit duty rates" on duty_rates for all using (private.is_staff(array['owner', 'manager']::staff_role[]));
-create policy "owner and manager edit corridors" on corridors for all using (private.is_staff(array['owner', 'manager']::staff_role[]));
-create policy "owner and manager edit permit rules" on permit_rules for all using (private.is_staff(array['owner', 'manager']::staff_role[]));
-create policy "ops edit providers" on carrier_providers for all using (private.is_staff(array['owner', 'manager', 'operations']::staff_role[]));
-create policy "ops edit services" on carrier_services for all using (private.is_staff(array['owner', 'manager', 'operations']::staff_role[]));
-create policy "ops edit rate cards" on carrier_rate_cards for all using (private.is_staff(array['owner', 'manager', 'operations']::staff_role[]));
-create policy "owner and manager edit delivery prices" on delivery_prices for all using (private.is_staff(array['owner', 'manager']::staff_role[]));
+-- Only owner/manager change the rulebook; operations also manage carriers. Every change is audited.
+create policy "owner and manager edit countries" on countries for all
+  using (private.is_staff(array['owner', 'manager']::staff_role[])) with check (private.is_staff(array['owner', 'manager']::staff_role[]));
+create policy "owner and manager edit duty rates" on duty_rates for all
+  using (private.is_staff(array['owner', 'manager']::staff_role[])) with check (private.is_staff(array['owner', 'manager']::staff_role[]));
+create policy "owner and manager edit corridors" on corridors for all
+  using (private.is_staff(array['owner', 'manager']::staff_role[])) with check (private.is_staff(array['owner', 'manager']::staff_role[]));
+create policy "owner and manager edit permit rules" on permit_rules for all
+  using (private.is_staff(array['owner', 'manager']::staff_role[])) with check (private.is_staff(array['owner', 'manager']::staff_role[]));
+create policy "ops edit providers" on carrier_providers for all
+  using (private.is_staff(array['owner', 'manager', 'operations']::staff_role[])) with check (private.is_staff(array['owner', 'manager', 'operations']::staff_role[]));
+create policy "ops edit services" on carrier_services for all
+  using (private.is_staff(array['owner', 'manager', 'operations']::staff_role[])) with check (private.is_staff(array['owner', 'manager', 'operations']::staff_role[]));
+create policy "ops edit rate cards" on carrier_rate_cards for all
+  using (private.is_staff(array['owner', 'manager', 'operations']::staff_role[])) with check (private.is_staff(array['owner', 'manager', 'operations']::staff_role[]));
+create policy "owner and manager edit delivery prices" on delivery_prices for all
+  using (private.is_staff(array['owner', 'manager']::staff_role[])) with check (private.is_staff(array['owner', 'manager']::staff_role[]));
 
 create trigger audit_countries after insert or update or delete on countries for each row execute function audit_keyed('code');
 create trigger audit_duty_rates after insert or update or delete on duty_rates for each row execute function audit_keyed('country', 'hs_prefix');
@@ -574,215 +658,6 @@ create trigger audit_carrier_services after insert or update or delete on carrie
 create trigger audit_rate_cards after insert or update or delete on carrier_rate_cards for each row execute function audit_keyed('service_id', 'from_country', 'to_country');
 create trigger audit_delivery_prices after insert or update or delete on delivery_prices for each row execute function audit_trigger();
 create trigger audit_kyc_requirements after insert or update or delete on kyc_requirements for each row execute function audit_keyed('country', 'doc_type');
-
--- ================================================================ orders and shipments
-alter table orders
-  add column duties_minor int not null default 0 check (duties_minor >= 0),   -- DDP duties and import taxes collected
-  add column duties jsonb;                                                    -- breakdown per shipment
-
--- One shipment per seller per order (and one for anything Al Mukarramah ships itself).
-create table shipments (
-  id uuid primary key default gen_random_uuid(),
-  order_id uuid not null references orders on delete cascade,
-  seller_id uuid references sellers,                -- null: Al Mukarramah's own products (house)
-  fulfilment text not null default 'seller' check (fulfilment in ('seller', 'house', 'warehouse')),   -- 'warehouse': later phase
-  status text not null default 'pending' check (status in ('pending', 'label_created', 'pickup_booked', 'picked_up', 'in_transit',
-    'out_for_delivery', 'delivered', 'exception', 'returned', 'cancelled')),
-  ship_from_country char(2) not null,
-  ship_to_country char(2) not null,
-  location_id uuid references seller_locations,
-  ship_from jsonb,                                  -- pickup address snapshot at label time
-  provider_id text references carrier_providers,
-  service_id uuid references carrier_services,
-  zone_id uuid references shipping_zones,           -- house shipments: the delivery zone chosen at checkout
-  carrier_name text,
-  service_name text,
-  price_minor int not null default 0 check (price_minor >= 0),     -- delivery charged to the customer (order currency)
-  duties_minor int not null default 0 check (duties_minor >= 0),   -- duties and import taxes collected (DDP)
-  duties_mode text not null default 'none' check (duties_mode in ('none', 'ddp', 'dap')),
-  dangerous_goods boolean not null default false,
-  parcels jsonb not null default '[]',
-  provider_shipment_id text,
-  tracking_number text,
-  tracking_url text,
-  label_path text,                                  -- shipping-labels bucket: <seller id or 'house'>/<shipment id>.pdf
-  pickup_ref text,
-  pickup_date date,
-  label_created_at timestamptz,
-  picked_up_at timestamptz,
-  delivered_at timestamptz,
-  cancelled_at timestamptz,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-create unique index shipments_one_per_seller on shipments (order_id, coalesce(seller_id, '00000000-0000-0000-0000-000000000000'::uuid));
-create index shipments_seller on shipments (seller_id, created_at desc);
-create index shipments_tracking on shipments (tracking_number) where tracking_number is not null;
-create index shipments_provider_ref on shipments (provider_id, provider_shipment_id) where provider_shipment_id is not null;
-
--- What the carrier charged us for a shipment: staff only (it is our margin).
-create table shipment_costs (
-  shipment_id uuid primary key references shipments on delete cascade,
-  cost_minor int not null,
-  currency char(3) not null default 'SAR',
-  quote jsonb,
-  created_at timestamptz not null default now()
-);
-
-create table shipment_events (
-  id bigint generated always as identity primary key,
-  shipment_id uuid not null references shipments on delete cascade,
-  at timestamptz not null default now(),
-  status text not null,
-  code text,
-  description text,
-  location text,
-  source text not null check (source in ('provider', 'sandbox', 'seller', 'staff', 'system')),
-  raw jsonb
-);
-create index shipment_events_shipment on shipment_events (shipment_id, at);
-
-alter table order_items
-  add column shipment_id uuid references shipments,
-  add column invoicer text check (invoicer in ('platform', 'seller')),
-  add column vat_rate_bp int,
-  add column rule jsonb;                          -- the rulebook decision for this line, kept with the order
-
--- Customers read their own order lines (row-level security is unchanged), but never our commission or the rulebook
--- working: those columns are left out of what the API can select. Staff see them through the statement functions.
-revoke select on order_items from anon, authenticated;
-grant select (id, order_id, product_id, name_en, name_ar, unit_price_minor, quantity, line_total_minor, custom, seller_id, shipment_id, invoicer, vat_rate_bp)
-  on order_items to anon, authenticated;
-
-alter table shipments enable row level security;
-alter table shipment_costs enable row level security;
-alter table shipment_events enable row level security;
-create policy "customer, seller and staff read shipments" on shipments for select using (
-  private.is_staff() or private.is_seller_member(seller_id)
-  or exists (select 1 from orders o where o.id = shipments.order_id and o.user_id = auth.uid())
-);
-create policy "staff edit shipments" on shipments for update using (private.is_staff(array['owner', 'manager', 'operations', 'support']::staff_role[]));
-create policy "staff read costs" on shipment_costs for select using (private.is_staff(array['owner', 'manager', 'operations', 'finance']::staff_role[]));
-create policy "read events of visible shipments" on shipment_events for select using (
-  exists (select 1 from shipments s where s.id = shipment_events.shipment_id
-          and (private.is_staff() or private.is_seller_member(s.seller_id)
-               or exists (select 1 from orders o where o.id = s.order_id and o.user_id = auth.uid())))
-);
--- Shipments and events are written by server functions (create-payment, create-shipment, carrier-webhook).
-create trigger audit_shipments after insert or update or delete on shipments for each row execute function audit_trigger();
-
--- shipping-labels: PRIVATE. Written only by the server; sellers read their own folder, staff read everything.
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('shipping-labels', 'shipping-labels', false, 5242880, array['application/pdf', 'image/png', 'application/zpl'])
-on conflict (id) do nothing;
-create policy "sellers and staff read labels" on storage.objects for select to authenticated
-  using (bucket_id = 'shipping-labels' and (private.member_of_folder((storage.foldername(name))[1]) or private.is_staff()));
-
--- A seller sees only their part of paid orders: the delivery details they need, their lines and their shipment.
-create or replace function seller_orders(p_seller uuid) returns jsonb
-language plpgsql stable security definer set search_path = public as $$
-begin
-  if not (private.is_seller_member(p_seller) or private.is_staff()) then raise exception 'Not allowed'; end if;
-  return coalesce((
-    select jsonb_agg(x order by x ->> 'paid_at' desc nulls last) from (
-      select jsonb_build_object(
-        'shipment_id', s.id, 'status', s.status, 'carrier_name', s.carrier_name, 'service_name', s.service_name,
-        'tracking_number', s.tracking_number, 'tracking_url', s.tracking_url, 'label_path', s.label_path,
-        'pickup_ref', s.pickup_ref, 'pickup_date', s.pickup_date, 'dangerous_goods', s.dangerous_goods,
-        'ship_to_country', s.ship_to_country, 'duties_mode', s.duties_mode, 'parcels', s.parcels,
-        'order_number', o.number, 'created_at', o.created_at, 'paid_at', o.paid_at, 'currency', o.currency,
-        'ship_to', o.ship_to - 'email', 'gift_message', o.gift_message,
-        'events', (select coalesce(jsonb_agg(jsonb_build_object('at', e.at, 'status', e.status, 'description', e.description, 'location', e.location) order by e.at desc), '[]'::jsonb)
-                   from shipment_events e where e.shipment_id = s.id),
-        'items', (select jsonb_agg(jsonb_build_object('name_en', i.name_en, 'name_ar', i.name_ar, 'quantity', i.quantity,
-                    'unit_price_minor', i.unit_price_minor, 'line_total_minor', i.line_total_minor, 'commission_minor', i.commission_minor, 'custom', i.custom))
-                  from order_items i where i.order_id = o.id and i.seller_id = p_seller)
-      ) as x
-      from shipments s join orders o on o.id = s.order_id
-      where s.seller_id = p_seller and o.status not in ('pending_payment', 'cancelled')
-    ) t
-  ), '[]'::jsonb);
-end $$;
-revoke all on function seller_orders(uuid) from public, anon;
-grant execute on function seller_orders(uuid) to authenticated;
-
--- ================================================================ payout statements (read-only; no automated transfers)
--- One row per seller order line from paid orders. Refunded orders count in gross and again as a refund.
-create view statement_lines with (security_invoker = true) as
-  select i.id as order_item_id, i.seller_id, s.name_en as seller_name,
-         date_trunc('month', o.paid_at at time zone 'Asia/Riyadh')::date as month,
-         o.id as order_id, o.number as order_number, o.paid_at, o.status as order_status, o.currency,
-         i.name_en, i.quantity, i.line_total_minor,
-         coalesce(i.commission_minor, 0) as commission_minor,
-         case when o.status = 'refunded' then i.line_total_minor else 0 end as refund_minor,
-         case when o.status = 'refunded' then 0 else i.line_total_minor - coalesce(i.commission_minor, 0) end as net_minor
-  from order_items i
-  join orders o on o.id = i.order_id
-  join sellers s on s.id = i.seller_id
-  where i.seller_id is not null and o.paid_at is not null and o.status not in ('pending_payment', 'cancelled');
-
--- Payouts are made by hand (bank transfer) and recorded here by finance, so statements show what was paid.
-create table payout_records (
-  id uuid primary key default gen_random_uuid(),
-  seller_id uuid not null references sellers,
-  month date not null check (extract(day from month) = 1),
-  currency char(3) not null,
-  amount_minor int not null check (amount_minor > 0),
-  paid_on date not null,
-  reference text not null,
-  recorded_by uuid default auth.uid() references auth.users,
-  created_at timestamptz not null default now()
-);
-alter table payout_records enable row level security;
-create policy "finance reads payouts" on payout_records for select using (private.is_staff(array['owner', 'manager', 'finance']::staff_role[]) or private.is_seller_member(seller_id));
-create policy "finance records payouts" on payout_records for insert with check (private.is_staff(array['owner', 'finance']::staff_role[]));
-create trigger audit_payout_records after insert or update or delete on payout_records for each row execute function audit_trigger();
-
-create view monthly_statements with (security_invoker = true) as
-  select l.seller_id, l.seller_name, l.month, l.currency,
-         count(distinct l.order_id) as orders,
-         sum(l.line_total_minor) as gross_minor,
-         sum(case when l.order_status = 'refunded' then 0 else l.commission_minor end) as commission_minor,
-         sum(l.refund_minor) as refunds_minor,
-         sum(l.net_minor) as net_minor,
-         coalesce((select sum(p.amount_minor) from payout_records p where p.seller_id = l.seller_id and p.month = l.month and p.currency = l.currency), 0) as paid_minor
-  from statement_lines l
-  group by l.seller_id, l.seller_name, l.month, l.currency;
-
--- The views hold commission, so the API cannot read them directly; sellers and staff use the functions below.
-revoke all on statement_lines, monthly_statements from anon, authenticated;
-
--- Staff: every seller's statement for a month (or every month when p_month is null).
-create or replace function admin_statements(p_month date default null) returns jsonb
-language plpgsql stable security definer set search_path = public as $$
-begin
-  if not private.is_staff(array['owner', 'manager', 'finance']::staff_role[]) then raise exception 'Not allowed'; end if;
-  return coalesce((select jsonb_agg(to_jsonb(m) order by m.month desc, m.seller_name)
-                   from monthly_statements m where p_month is null or m.month = p_month), '[]'::jsonb);
-end $$;
-revoke all on function admin_statements(date) from public, anon;
-grant execute on function admin_statements(date) to authenticated;
-
--- A seller's statement for one month (or the list of months with sales when p_month is null).
-create or replace function seller_statement(p_seller uuid, p_month date default null) returns jsonb
-language plpgsql stable security definer set search_path = public as $$
-begin
-  if not (private.is_seller_member(p_seller) or private.is_staff()) then raise exception 'Not allowed'; end if;
-  if p_month is null then
-    return coalesce((select jsonb_agg(to_jsonb(m) order by m.month desc) from monthly_statements m where m.seller_id = p_seller), '[]'::jsonb);
-  end if;
-  return jsonb_build_object(
-    'summary', (select coalesce(jsonb_agg(to_jsonb(m)), '[]'::jsonb) from monthly_statements m where m.seller_id = p_seller and m.month = p_month),
-    'lines', (select coalesce(jsonb_agg(jsonb_build_object('order_number', l.order_number, 'paid_at', l.paid_at, 'name_en', l.name_en,
-               'quantity', l.quantity, 'currency', l.currency, 'line_total_minor', l.line_total_minor, 'commission_minor', l.commission_minor,
-               'refund_minor', l.refund_minor, 'net_minor', l.net_minor, 'order_status', l.order_status) order by l.paid_at), '[]'::jsonb)
-              from statement_lines l where l.seller_id = p_seller and l.month = p_month),
-    'payouts', (select coalesce(jsonb_agg(jsonb_build_object('amount_minor', p.amount_minor, 'currency', p.currency, 'paid_on', p.paid_on, 'reference', p.reference)), '[]'::jsonb)
-                from payout_records p where p.seller_id = p_seller and p.month = p_month)
-  );
-end $$;
-revoke all on function seller_statement(uuid, date) from public, anon;
-grant execute on function seller_statement(uuid, date) to authenticated;
 
 -- ================================================================ staff: the seller list gains KYC and documents
 create or replace function admin_sellers() returns jsonb
