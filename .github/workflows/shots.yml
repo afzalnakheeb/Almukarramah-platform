@@ -40,9 +40,7 @@ jobs:
         run: |
           npx serve dist -l 3000 >/dev/null 2>&1 &
           sleep 3
-          rm -rf shots && node scripts/shots.mjs http://localhost:3000 shots && cp typecheck.txt shots/
-      - name: SEO report (live site)
-        run: SEO_ONLY=1 node scripts/shots.mjs https://almukarramah.com shots/live && mv shots/live/seo-report.md shots/seo-live.md && rm -rf shots/live
+          rm -rf shots && node scripts/shots-decks.mjs http://localhost:3000 shots && cp typecheck.txt shots/
       - name: Commit results
         run: |
           git config user.name "shots-bot"
