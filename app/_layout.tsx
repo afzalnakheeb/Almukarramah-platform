@@ -1,5 +1,5 @@
 import { Amiri_400Regular, Amiri_700Bold } from '@expo-google-fonts/amiri';
-import { CormorantGaramond_600SemiBold } from '@expo-google-fonts/cormorant-garamond';
+import { CormorantGaramond_500Medium } from '@expo-google-fonts/cormorant-garamond';
 import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold } from '@expo-google-fonts/manrope';
 import { ReadexPro_400Regular, ReadexPro_500Medium, ReadexPro_600SemiBold } from '@expo-google-fonts/readex-pro';
 import { useFonts } from 'expo-font';
@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AssistantDock } from '@/components/assistant';
+import { BrandIntro } from '@/components/brand-intro';
 import { AssistantProvider } from '@/lib/assistant';
 import { takeNext } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
@@ -40,7 +41,7 @@ function Boot() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    CormorantGaramond_600SemiBold,
+    CormorantGaramond_500Medium,
     Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold,
     Amiri_400Regular, Amiri_700Bold,
     ReadexPro_400Regular, ReadexPro_500Medium, ReadexPro_600SemiBold,
@@ -77,6 +78,7 @@ export default function RootLayout() {
                 <Stack.Screen name="admin" options={{ headerShown: false }} />
               </Stack>
               <AssistantDock />
+              <BrandIntro />
               </AssistantProvider>
             </CartProvider>
           </SessionProvider>

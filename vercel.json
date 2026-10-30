@@ -91,7 +91,7 @@
       ]
     },
     {
-      "source": "/(products|images)/(.*)",
+      "source": "/(products|images|films)/(.*)",
       "headers": [
         {
           "key": "Cache-Control",

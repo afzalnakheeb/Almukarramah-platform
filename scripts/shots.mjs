@@ -10,11 +10,12 @@ const base = (process.argv[2] || 'http://localhost:3000').replace(/\/$/, '');
 const out = process.argv[3] || 'shots';
 mkdirSync(out, { recursive: true });
 
-const pages = (process.env.SHOT_PAGES || '/,/collections/perfumes,/collections/oud-oils,/product/aam-zumar-60-ml,/product/kaaba-door-prayer-mat,/shop,/membership,/apps').split(',');
+const pages = (process.env.SHOT_PAGES || '/,/collections/perfumes,/collections/oud-oils,/product/aam-zumar-60-ml,/product/kaaba-door-prayer-mat,/shop,/membership,/apps,/cart,/account,/concierge').split(',');
 const views = [
   { name: 'd', width: 1440, height: 900, dsf: 1, chunk: 1100, locale: 'en-GB' },
   { name: 'm', width: 390, height: 844, dsf: 2, chunk: 1300, locale: 'en-GB' },
-  { name: 'ar', width: 1440, height: 900, dsf: 1, chunk: 1100, locale: 'ar-SA', only: ['/', '/product/kaaba-door-prayer-mat'] },
+  { name: 'ar', width: 1440, height: 900, dsf: 1, chunk: 1100, locale: 'ar-SA', only: ['/', '/collections/perfumes', '/product/aam-zumar-60-ml', '/cart', '/account'] },
+  { name: 'arm', width: 390, height: 844, dsf: 2, chunk: 1300, locale: 'ar-SA', only: ['/', '/product/aam-zumar-60-ml'] },
 ];
 const slug = (p) => (p === '/' ? 'home' : p.replace(/^\//, '').replace(/[^a-z0-9]+/gi, '-'));
 
@@ -25,6 +26,8 @@ for (const v of process.env.SEO_ONLY ? [] : views) {
     if (v.only && !v.only.includes(path)) continue;
     // React Native Web scrolls inside an inner view, so measure the content and use a viewport that tall.
     const ctx = await browser.newContext({ viewport: { width: v.width, height: v.height }, deviceScaleFactor: v.dsf, locale: v.locale });
+    // the first-visit brand intro is captured separately below (frozen frames); normal shots never show it
+    await ctx.addInitScript(() => { try { sessionStorage.setItem('amIntro', '1'); } catch { /* ignore */ } });
     const page = await ctx.newPage();
     page.on('pageerror', (e) => errors.push(`${v.name} ${path} pageerror: ${e.message}\n${(e.stack || '').split('\n').slice(0, 6).join('\n')}`));
     page.on('console', (m) => { if (m.type() === 'error') errors.push(`${v.name} ${path} console: ${m.text().slice(0, 600)}`); });
@@ -45,6 +48,56 @@ for (const v of process.env.SEO_ONLY ? [] : views) {
       console.log(`${v.name} ${path}: ${total}px`);
     } catch (e) {
       console.log(`${v.name} ${path}: FAILED ${e.message}`);
+    }
+    await ctx.close();
+  }
+}
+// States a plain page load never shows: the phone menu and filter sheet, the compact header, a bag with a gift in it.
+const states = [
+  { v: 'm', name: 'state-menu', path: '/', act: async (p) => { await p.locator('[data-banner] [data-icon]').first().click(); } },
+  { v: 'arm', name: 'state-menu', path: '/', act: async (p) => { await p.locator('[data-banner] [data-icon]').first().click(); } },
+  { v: 'm', name: 'state-filters', path: '/collections/perfumes', act: async (p) => { await p.getByText(/Filter and sort/i).first().click(); } },
+  { v: 'd', name: 'state-compact', path: '/collections/perfumes', act: async (p) => { await p.evaluate(() => { const s = document.querySelector('[data-scroller]'); if (s) s.scrollTop = 900; }); } },
+  { v: 'd', name: 'state-bag', path: '/product/aam-zumar-60-ml', act: async (p) => { await p.getByText(/Add to bag/i).first().click(); await p.waitForURL(/\/cart/, { timeout: 15000 }); } },
+  { v: 'm', name: 'state-bag', path: '/product/kaaba-door-prayer-mat', act: async (p) => { await p.getByText(/^Add to bag$/i).first().click(); await p.waitForURL(/\/cart/, { timeout: 15000 }); } },
+  { v: 'ar', name: 'state-bag', path: '/product/aam-zumar-60-ml', act: async (p) => { await p.locator('[data-btn="primary"]').first().click(); await p.waitForURL(/\/cart/, { timeout: 15000 }); } },
+];
+for (const st of process.env.SEO_ONLY ? [] : states) {
+  const v = views.find((x) => x.name === st.v);
+  const ctx = await browser.newContext({ viewport: { width: v.width, height: v.height }, deviceScaleFactor: v.dsf, locale: v.locale });
+  await ctx.addInitScript(() => { try { sessionStorage.setItem('amIntro', '1'); } catch { /* ignore */ } });
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => errors.push(`${v.name} ${st.name} pageerror: ${e.message}`));
+  try {
+    await page.goto(base + st.path, { waitUntil: 'networkidle', timeout: 60000 });
+    await page.waitForTimeout(1500);
+    await st.act(page);
+    await page.waitForTimeout(1800);
+    if (st.name === 'state-bag') {
+      const h = await page.evaluate(() => { let m = document.documentElement.scrollHeight; document.querySelectorAll('div').forEach((d) => { if (d.scrollHeight > m && d.scrollHeight < 40000) m = d.scrollHeight; }); return m; });
+      await page.setViewportSize({ width: v.width, height: Math.min(h, 2600) });
+      await page.waitForTimeout(800);
+    }
+    await page.screenshot({ path: join(out, `${v.name}-${st.name}.jpg`), type: 'jpeg', quality: 72, fullPage: false });
+  } catch (e) {
+    console.log(`${v.name} ${st.name}: FAILED ${e.message}`);
+  }
+  await ctx.close();
+}
+
+// The brand intro, frozen at moments of its timeline (?intro=<seconds>, see src/components/brand-intro.tsx).
+const introTimes = { d: [0.6, 1.8, 2.8, 3.8, 4.9, 5.6, 6.6, 7.25], m: [1.8, 3.6, 5.0, 6.6, 7.25], ar: [3.6, 6.6, 7.25], arm: [6.6] };
+for (const v of process.env.SEO_ONLY || process.env.NO_INTRO ? [] : views) {
+  for (const t of introTimes[v.name] ?? []) {
+    const ctx = await browser.newContext({ viewport: { width: v.width, height: v.height }, deviceScaleFactor: v.dsf, locale: v.locale });
+    const page = await ctx.newPage();
+    page.on('pageerror', (e) => errors.push(`${v.name} intro ${t} pageerror: ${e.message}`));
+    try {
+      await page.goto(`${base}/?intro=${t}`, { waitUntil: 'networkidle', timeout: 60000 });
+      await page.waitForTimeout(1600);
+      await page.screenshot({ path: join(out, `intro-${v.name}-${String(t).replace('.', '_')}.jpg`), type: 'jpeg', quality: 78 });
+    } catch (e) {
+      console.log(`intro ${v.name} ${t}: FAILED ${e.message}`);
     }
     await ctx.close();
   }
