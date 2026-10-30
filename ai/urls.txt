@@ -4,3 +4,5 @@ corner-1.png https://media.weavy.ai/image/upload/v1793346771/uploads/Mq6Zbrl5dXe
 corner-2.png https://media.weavy.ai/image/upload/v1793346761/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/ja6tzljtweys3kvtpdcl.png
 logo-kling-1.mp4 https://media.weavy.ai/video/upload/v1793347170/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/qfyltavzksrvq1tikzfk.mp4
 plate-loop-test.mp4 https://media.weavy.ai/video/upload/v1793347169/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/eugsnvmwzdsows1gklg6.mp4
+emadphoto.html https://emadphoto.com
+emadphoto-www.html https://www.emadphoto.com
