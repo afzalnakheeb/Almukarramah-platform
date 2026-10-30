@@ -1,0 +1,13 @@
+{
+  "note": "Encrypted deck and film bundle for /decks: see scripts/decks-media.mjs. Replaced whenever a new bundle is published.",
+  "version": "test-1",
+  "sha256": "ad89bd0b3125d5c9c1fdb716d769a7c2401c5533d77c588e8a0cbd57cba0fdd1",
+  "bytes": 163868,
+  "parts": [
+    {
+      "url": "https://raw.githubusercontent.com/afzalnakheeb/Almukarramah-platform/d8b71f0125e051cf75ee5a9abb610dbc875aff01/decks/test-1/part-00.enc",
+      "sha256": "ad89bd0b3125d5c9c1fdb716d769a7c2401c5533d77c588e8a0cbd57cba0fdd1",
+      "bytes": 163868
+    }
+  ]
+}

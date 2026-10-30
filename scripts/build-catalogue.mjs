@@ -97,6 +97,7 @@ Disallow: /checkout
 Disallow: /cart
 Disallow: /pay
 Disallow: /subscribe
+Disallow: /decks/
 
 # AI assistants and answer engines may read and cite the catalogue (same private areas excluded)
 User-agent: GPTBot
@@ -119,6 +120,7 @@ Disallow: /checkout
 Disallow: /cart
 Disallow: /pay
 Disallow: /subscribe
+Disallow: /decks/
 
 Sitemap: ${SITE}/sitemap.xml
 `);
