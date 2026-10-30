@@ -12,6 +12,7 @@ import { openExternal } from '@/lib/links';
 import { DESTINATIONS, usePrefs, type Destination } from '@/lib/prefs';
 import { colors, sans, space } from '@/theme';
 import { Icon, type IconName } from './icons';
+import { LogoMark } from './logo-motion';
 import { bootMotion, data, motionBooted } from './motion';
 import { Container, Notice, OptionCard, Sheet, styles as ui, T, useWide } from './ui';
 
@@ -29,7 +30,10 @@ export function Logo({ height = 44, white, line, compact }: { height?: number; w
   const { t, isRTL } = useI18n();
   // compact (the header once scrolled past the hero): about 80% of the height (48 -> 38) and the line fades out (motion: +html.tsx)
   const h = compact ? Math.round(height * 0.8) : height;
-  const img = <Image source={white ? LOGO_GOLD : LOGO} style={{ height: h, width: h * LOGO_RATIO }} contentFit="contain" accessibilityLabel={t('appName')} />;
+  // Website: the vector logo with its gold-thread intro and hover glint (logo-motion.tsx). Apps: the PNG artwork.
+  const img = Platform.OS === 'web'
+    ? <LogoMark height={h} gold={white} label={t('appName')} />
+    : <Image source={white ? LOGO_GOLD : LOGO} style={{ height: h, width: h * LOGO_RATIO }} contentFit="contain" accessibilityLabel={t('appName')} />;
   if (!line) return img;
   const size = Math.max(8.5, Math.round(height * 0.2 * 10) / 10);
   return (
