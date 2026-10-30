@@ -62,16 +62,15 @@ Contact: hello@almukarramah.com
 Choose "All or some functionality in my app is restricted" and add one set of instructions:
 - Name: Review account
 - Username / Password: the review account (Play Console fields only)
-- Instructions:
+- Any other instructions (kept under 500 characters, in case the form limits it):
 
-  Sign-in is optional: products, the bag and checkout work as a guest. To see orders, the membership and account
-  deletion, open the Account tab, tap "Have a password? Sign in with it" and use this account. Physical products
-  are paid on Moyasar's secure payment page; you do not need to pay. The membership is a Google Play subscription
-  (Account tab > Membership > Join), with Restore purchases on the same screen. The gift assistant (Anthropic's
-  Claude) asks for permission before the first message, and every reply has "Report this reply" so offensive AI
-  output can be flagged without leaving the app. Delete the account under Account > Delete my account; we recreate
-  the review account before each release.
+  Sign-in is optional; shopping and checkout work as a guest. For orders, the membership and account deletion: Account tab > "Have a password? Sign in with it". Products are paid on Moyasar's page; no payment is needed. Membership: Google Play subscription (Account > Membership > Join; Restore purchases there). The AI gift assistant asks for consent first; each reply has "Report this reply". Delete: Account > Delete my account.
+
+If the form takes more text, add the publisher paragraph:
+
   Al Mukarramah is the brand of [PUBLISHER] (app publisher). The online store at almukarramah.com is operated by Al Mukarramah Stores Trading Est. (مؤسسة متاجر المكرمة للتجارة, Saudi Arabia). Both are managed by Afzal Nakheeb.
+
+Google has no other notes field; if a reviewer asks who runs the store, reply with that paragraph.
 
 ## The review account (Afzal creates it)
 
