@@ -703,22 +703,6 @@ insert into policy_rules (code, level, applies_to, sort, needs_scholar_confirmat
  '[]', '[]', 'Swords, khanjars or daggers presented as traditional or ceremonial pieces.',
  '{"en": ["sword", "khanjar", "dagger"], "ar": ["سيف", "خنجر"]}');
 
--- What the public guidance pages show: no keywords or AI instructions (they would help people get around them).
-create or replace function mp_guidance() returns jsonb
-language sql stable security definer set search_path = public as $$
-  select jsonb_build_object(
-    'categories', mp_category_tree(),
-    'rules', (select coalesce(jsonb_agg(jsonb_build_object('code', code, 'level', level, 'severity', severity, 'title_en', title_en, 'title_ar', title_ar,
-               'guidance_en', guidance_en, 'guidance_ar', guidance_ar, 'rejected_examples', rejected_examples, 'accepted_examples', accepted_examples,
-               'needs_scholar_confirmation', needs_scholar_confirmation and scholar_confirmed_at is null) order by level, sort), '[]'::jsonb)
-              from policy_rules where active),
-    'documents', (select coalesce(jsonb_agg(to_jsonb(d) order by d.sort), '[]'::jsonb) from document_types d),
-    'permits', (select coalesce(jsonb_agg(jsonb_build_object('to_country', to_country, 'permit_key', permit_key, 'label_en', label_en,
-                'label_ar', label_ar, 'category_slugs', category_slugs) order by to_country, permit_key), '[]'::jsonb) from permit_rules where active),
-    'settings', mp_public_settings());
-$$;
-grant execute on function mp_guidance() to anon, authenticated;
-
 -- ================================================================ made-to-measure garment styles (the tailoring seam)
 -- Regional styles a made-to-measure listing can be made in. The measurements each brand needs are declared on the
 -- listing (products.tailoring -> measurements); default_measurements here is filled by the tailoring workstream.
@@ -757,3 +741,21 @@ language sql stable security definer set search_path = public as $$
                   (select default_commission_bps from mp_settings where id = 1));
 $$;
 revoke all on function mp_commission_bps(uuid, uuid) from public, anon, authenticated;
+
+-- What the public guidance pages show: no keywords or AI instructions (they would help people get around them).
+create or replace function mp_guidance() returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'categories', mp_category_tree(),
+    'rules', (select coalesce(jsonb_agg(jsonb_build_object('code', code, 'level', level, 'severity', severity, 'title_en', title_en, 'title_ar', title_ar,
+               'guidance_en', guidance_en, 'guidance_ar', guidance_ar, 'rejected_examples', rejected_examples, 'accepted_examples', accepted_examples,
+               'needs_scholar_confirmation', needs_scholar_confirmation and scholar_confirmed_at is null) order by level, sort), '[]'::jsonb)
+              from policy_rules where active),
+    'documents', (select coalesce(jsonb_agg(to_jsonb(d) order by d.sort), '[]'::jsonb) from document_types d),
+    'styles', (select coalesce(jsonb_agg(jsonb_build_object('code', code, 'garment', garment, 'label_en', label_en, 'label_ar', label_ar,
+                'countries', countries, 'default_measurements', default_measurements) order by sort), '[]'::jsonb) from garment_styles where active),
+    'permits', (select coalesce(jsonb_agg(jsonb_build_object('to_country', to_country, 'permit_key', permit_key, 'label_en', label_en,
+                'label_ar', label_ar, 'category_slugs', category_slugs) order by to_country, permit_key), '[]'::jsonb) from permit_rules where active),
+    'settings', mp_public_settings());
+$$;
+grant execute on function mp_guidance() to anon, authenticated;

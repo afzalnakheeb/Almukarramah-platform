@@ -71,3 +71,33 @@ The standard is store policy reviewed by a qualified scholar, not a fatwa. Every
 18. **Keywords never reject on their own.** The keyword lists in each rule only send a listing to staff review; the
     AI's judgement (and our team) decides. This avoids false rejections such as "oud" (the fragrance, not the lute),
     "wine red" (a colour) or "Islamic rosary" (a tasbih).
+
+## AI screening (M3)
+
+19. **What the automatic check decides.** It can only send a listing back to the seller (with the reasons in English
+    and Arabic) or pass it to our team with notes. It never puts anything live: every listing is approved by a person.
+    Listings it sends back never appear in the approval queue; staff can still see them under "Rejected by the check"
+    and override with a written reason (recorded, and any strike is cancelled).
+20. **When unsure, people decide.** Low confidence, a restricted item, sacred text, a possible counterfeit logo or a
+    "block" the strong model is not sure about all go to our team rather than being rejected. Problems the seller can
+    fix (contact details in the text, photo quality, a photo that shows a person) are sent back straight away.
+21. **People in photos.** Any person in a product photo sends the photo back (hands holding a small item are fine).
+    With the setting "modestly dressed models for modest fashion" switched on, modest-fashion photos with a modestly
+    dressed model go to our team instead. The setting is off.
+22. **Strikes.** A prohibited item or image is a strike. Three strikes within 90 days suspend the seller until our
+    team reviews the account. Severe cases (drugs, weapons, adult or immodest content, disrespected sacred text,
+    depictions of prophets) suspend the listing at once and flag the seller. All three numbers are settings.
+23. **Quarantine.** Prohibited images are moved to a private bucket only owner, manager and marketing staff can open,
+    and deleted after 30 days (setting). Their fingerprint (SHA-256) is blocked so the same file cannot be uploaded
+    again by anyone.
+24. **Limits.** 120 photo uploads an hour and 60 listing checks a day per seller; 100 AI translation drafts a day.
+25. **Models.** A fast model checks everything; a stronger model looks again when the fast one is unsure or wants to
+    reject. Defaults are the models the site already uses (`claude-haiku-5-5` and `claude-sonnet-5-5`); they can be
+    changed with `SCREENING_FAST_MODEL` and `SCREENING_STRONG_MODEL` without a code change. No new secret is needed:
+    the existing `ANTHROPIC_API_KEY` is used.
+26. **AI drafts of the second language.** Sellers can ask for a draft of the Arabic (or English) text to check and
+    edit. Quranic text is never sent for translation or rewriting: the draft leaves it out and tells the seller to
+    add it exactly as printed.
+27. **Staff pages stay in English.** The admin panel is internal and English-only, as it is today; everything sellers
+    and customers see is in English and Arabic.
+

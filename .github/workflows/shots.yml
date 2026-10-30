@@ -18,6 +18,8 @@ jobs:
       EXPO_PUBLIC_SUPABASE_URL: https://axpwiixtqkjwjbsqzwqv.supabase.co
       EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_9jo51p9M2YQDQkkMWbyZ8Q_bpPh7S6c
       EXPO_PUBLIC_SITE_URL: https://almukarramah.com
+      # marketplace screens show example data in this build (never set in a real deployment)
+      EXPO_PUBLIC_MARKET_DEMO: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

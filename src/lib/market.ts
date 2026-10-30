@@ -8,6 +8,9 @@ import type { Bi } from './guidelines';
 
 /** Demo data for marketplace screens (screenshots before the marketplace tables exist). Set only in the screenshot build. */
 export const MARKET_DEMO = process.env.EXPO_PUBLIC_MARKET_DEMO === '1';
+/** Set once the marketplace migrations are applied (see docs/marketplace/SWITCH-ON.md). Until then the handbook
+ *  reads the snapshot built into the site and makes no marketplace calls. */
+export const MARKET_LIVE = process.env.EXPO_PUBLIC_MARKET_LIVE === '1' && !MARKET_DEMO;
 
 export type ReturnPolicy = 'standard' | 'unopened_only' | 'faulty_only' | 'none';
 export type CategoryPolicy = {
@@ -43,7 +46,8 @@ export type PerfThresholds = {
   return_bps: { warn: number; suspend: number }; rating_x100: { warn: number; suspend: number }; min_orders: number;
 };
 export type PermitRule = { to_country: string; permit_key: string; label_en: string; label_ar: string; category_slugs: string[] };
-export type Guidance = { categories: CategoryNode[]; rules: PolicyRule[]; documents: DocumentType[]; permits: PermitRule[]; settings: PublicSettings };
+export type GarmentStyle = { code: string; garment: string; label_en: string; label_ar: string; countries: string[]; default_measurements: { key: string; min_cm?: number; max_cm?: number }[] };
+export type Guidance = { categories: CategoryNode[]; rules: PolicyRule[]; documents: DocumentType[]; permits: PermitRule[]; styles: GarmentStyle[]; settings: PublicSettings };
 
 export const guidanceSnapshot = snapshot as unknown as Guidance;
 
@@ -51,7 +55,7 @@ export const guidanceSnapshot = snapshot as unknown as Guidance;
 export function useGuidance(): Guidance {
   const [g, setG] = useState<Guidance>(guidanceSnapshot);
   useEffect(() => {
-    if (!isConfigured || MARKET_DEMO) return;
+    if (!isConfigured || !MARKET_LIVE) return;
     supabase.rpc('mp_guidance').then(({ data, error }: { data: Guidance | null; error: unknown }) => {
       if (!error && data?.categories?.length) setG(data);
     }, () => undefined);

@@ -60,3 +60,32 @@ export async function fxPerSar(db: Db, currency: string): Promise<number> {
   if (!data) throw new Error(`No exchange rate for ${currency}`);
   return Number(data.per_sar);
 }
+
+/** A client acting as the signed-in caller (row-level security applies), for RPCs that check auth.uid(). */
+export function asCaller(req: Request): SupabaseClient {
+  return createClient(env('SUPABASE_URL'), env('SUPABASE_ANON_KEY'), {
+    auth: { persistSession: false },
+    global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
+  });
+}
+
+/** Whether the user is a member of the seller account. */
+export async function isSellerMember(db: Db, sellerId: string, userId: string): Promise<boolean> {
+  const { data } = await db.from('seller_members').select('user_id').eq('seller_id', sellerId).eq('user_id', userId).maybeSingle();
+  return !!data;
+}
+
+/** Scheduled jobs and staff tools share a secret header. */
+export function cronAuthorized(req: Request): boolean {
+  const s = Deno.env.get('CRON_SECRET');
+  return !!s && req.headers.get('x-cron-secret') === s;
+}
+
+export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/** Counts one use against a limit (marketplace rate limits); true while within it. */
+export async function withinLimit(db: Db, key: string, windowSeconds: number, limit: number): Promise<boolean> {
+  const { data, error } = await db.rpc('mp_rate_hit', { p_key: key, p_window_seconds: windowSeconds, p_limit: limit });
+  if (error) throw error;
+  return data === true;
+}

@@ -373,6 +373,68 @@
    "needs_scholar_confirmation": true
   }
  ],
+ "styles": [
+  {
+   "code": "saudi_thobe",
+   "garment": "thobe",
+   "label_ar": "الثوب السعودي",
+   "label_en": "Saudi thobe",
+   "countries": [
+    "SA"
+   ],
+   "default_measurements": []
+  },
+  {
+   "code": "emirati_kandura",
+   "garment": "thobe",
+   "label_ar": "الكندورة الإماراتية",
+   "label_en": "Emirati kandura",
+   "countries": [
+    "AE"
+   ],
+   "default_measurements": []
+  },
+  {
+   "code": "kuwaiti_dishdasha",
+   "garment": "thobe",
+   "label_ar": "الدشداشة الكويتية",
+   "label_en": "Kuwaiti dishdasha",
+   "countries": [
+    "KW"
+   ],
+   "default_measurements": []
+  },
+  {
+   "code": "omani_dishdasha",
+   "garment": "thobe",
+   "label_ar": "الدشداشة العمانية",
+   "label_en": "Omani dishdasha",
+   "countries": [
+    "OM"
+   ],
+   "default_measurements": []
+  },
+  {
+   "code": "qatari_thobe",
+   "garment": "thobe",
+   "label_ar": "الثوب القطري",
+   "label_en": "Qatari thobe",
+   "countries": [
+    "QA"
+   ],
+   "default_measurements": []
+  },
+  {
+   "code": "bahraini_thobe",
+   "garment": "thobe",
+   "label_ar": "الثوب البحريني",
+   "label_en": "Bahraini thobe",
+   "countries": [
+    "BH"
+   ],
+   "default_measurements": []
+  }
+ ],
  "permits": [
   {
    "label_ar": "إدراج في نظام eCosma لدى هيئة الغذاء والدواء (العطور ومستحضرات التجميل)",
@@ -585,7 +647,7 @@
  ],
  "categories": [
   {
-   "id": "97de4c33-9be2-4991-b07d-aee7612e946f",
+   "id": "53141b8a-d400-49a5-ad10-85a863863309",
    "kind": "category",
    "slug": "prayer-mats",
    "sort": 1,
@@ -613,7 +675,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": true,
-   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "parent_id": "b399491a-93a5-4329-9ee9-a1ccbbfcacf3",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -622,7 +684,7 @@
    "rejected_examples": []
   },
   {
-   "id": "7e080846-c4f3-4b03-840c-a6bd84647338",
+   "id": "5d8ae019-9259-4fa5-8ef3-a1577f6a30da",
    "kind": "category",
    "slug": "gift-sets",
    "sort": 2,
@@ -650,7 +712,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": true,
-   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "parent_id": "bc29756b-2b68-4fcf-97de-06e4f36df353",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -659,7 +721,7 @@
    "rejected_examples": []
   },
   {
-   "id": "107e2757-9142-4f53-a5e5-30e203f168be",
+   "id": "c6cd255d-4b1b-4ffa-b23a-112050913d3e",
    "kind": "category",
    "slug": "prayer",
    "sort": 2,
@@ -687,7 +749,7 @@
    "blurb_en": null,
    "listable": false,
    "is_active": false,
-   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "parent_id": "b399491a-93a5-4329-9ee9-a1ccbbfcacf3",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -696,7 +758,7 @@
    "rejected_examples": []
   },
   {
-   "id": "108e3169-a288-4b0f-b455-42b06f430930",
+   "id": "cea3f64b-f78b-411c-8790-43abebf3f736",
    "kind": "category",
    "slug": "fragrance",
    "sort": 3,
@@ -724,7 +786,7 @@
    "blurb_en": null,
    "listable": false,
    "is_active": false,
-   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "parent_id": "41f63e17-f7af-4e3a-9ea9-1493e3e86c63",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -733,7 +795,7 @@
    "rejected_examples": []
   },
   {
-   "id": "6e054bdb-68ea-4825-9f70-bf8718820046",
+   "id": "b8411e76-72e6-4101-9848-9a597e2153b6",
    "kind": "category",
    "slug": "woven-rugs",
    "sort": 3,
@@ -761,7 +823,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": true,
-   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "parent_id": "b399491a-93a5-4329-9ee9-a1ccbbfcacf3",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -770,7 +832,7 @@
    "rejected_examples": []
   },
   {
-   "id": "9e9b1b87-f96a-4f3b-b2ee-09a9bec7a139",
+   "id": "785a283e-df63-40fd-bdbe-8f1cb82a31a7",
    "kind": "category",
    "slug": "hampers",
    "sort": 4,
@@ -798,7 +860,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "parent_id": "bc29756b-2b68-4fcf-97de-06e4f36df353",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -807,7 +869,7 @@
    "rejected_examples": []
   },
   {
-   "id": "ad719bfe-b718-430b-bbf7-f42dfc35efde",
+   "id": "3909591b-d875-47e4-9aef-a9ebf96a46b5",
    "kind": "category",
    "slug": "dates",
    "sort": 4,
@@ -835,7 +897,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": true,
-   "parent_id": "7a9b5ebb-6bea-4c51-90dc-4b8b77face8a",
+   "parent_id": "86cd04f3-442c-49c3-b830-214c71c15730",
    "attributes": [
     {
      "key": "variety",
@@ -902,7 +964,7 @@
    "rejected_examples": []
   },
   {
-   "id": "5df39094-3a8f-4563-83eb-b240f5200994",
+   "id": "493f1b02-2bf2-4226-b035-6ab43bac64f5",
    "kind": "category",
    "slug": "keepsakes",
    "sort": 5,
@@ -930,7 +992,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": true,
-   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "parent_id": "bc29756b-2b68-4fcf-97de-06e4f36df353",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -939,7 +1001,7 @@
    "rejected_examples": []
   },
   {
-   "id": "9c69555e-66ff-4d03-a10e-90e38ba61a6a",
+   "id": "2ae484cb-e488-4706-8b56-d84f8f5dbbf3",
    "kind": "category",
    "slug": "perfumes",
    "sort": 6,
@@ -971,7 +1033,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": true,
-   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "parent_id": "41f63e17-f7af-4e3a-9ea9-1493e3e86c63",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": "العطر المحتوي على الكحول من البضائع الخطرة (UN1266)، ولا يُباع حاليًا إلا من بائعين في السعودية إلى عملاء في السعودية عبر الشحن البري.",
@@ -980,7 +1042,7 @@
    "rejected_examples": []
   },
   {
-   "id": "fbdb99bd-8c36-4d47-b0ae-899aabf345c5",
+   "id": "d931f9ec-e5d6-4a17-9bc9-7f488ff64f3e",
    "kind": "category",
    "slug": "oud-oils",
    "sort": 7,
@@ -1008,7 +1070,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": true,
-   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "parent_id": "41f63e17-f7af-4e3a-9ea9-1493e3e86c63",
    "attributes": [
     {
      "key": "oud_origin",
@@ -1060,7 +1122,7 @@
    "rejected_examples": []
   },
   {
-   "id": "e841eecf-ad18-4a47-b528-d8aa88f63cb0",
+   "id": "70c0c45c-1a89-4a4c-88df-2f44a83b0aab",
    "kind": "category",
    "slug": "thobes",
    "sort": 20,
@@ -1088,7 +1150,7 @@
    "blurb_en": "Ready-made and tailor-made thobes for men and boys.",
    "listable": true,
    "is_active": false,
-   "parent_id": "4771f146-fef1-47d1-9f15-cd56773beae9",
+   "parent_id": "fe3dc5b1-2acb-407a-99c5-57d90182792e",
    "attributes": [],
    "department": "fashion",
    "guidance_ar": null,
@@ -1097,7 +1159,7 @@
    "rejected_examples": []
   },
   {
-   "id": "e86a969e-3373-44d4-878d-60e8f122f451",
+   "id": "99319f46-53fa-477e-a44d-ac15667cc08f",
    "kind": "category",
    "slug": "abayas",
    "sort": 21,
@@ -1125,7 +1187,7 @@
    "blurb_en": "Ready-made and tailor-made abayas.",
    "listable": true,
    "is_active": false,
-   "parent_id": "147ea77b-25fb-43b7-bf5d-9a982289f870",
+   "parent_id": "0c2039c0-788b-4617-be55-1be5d4321acf",
    "attributes": [],
    "department": "fashion",
    "guidance_ar": null,
@@ -1134,7 +1196,7 @@
    "rejected_examples": []
   },
   {
-   "id": "a9d5e6f0-9868-48d2-9c89-0d0360e37ad1",
+   "id": "779c4e57-13c5-45b5-ac02-10e229bce746",
    "kind": "category",
    "slug": "modest-dresses",
    "sort": 22,
@@ -1162,7 +1224,7 @@
    "blurb_en": "Modest dresses, jilbabs and prayer dresses.",
    "listable": true,
    "is_active": false,
-   "parent_id": "147ea77b-25fb-43b7-bf5d-9a982289f870",
+   "parent_id": "0c2039c0-788b-4617-be55-1be5d4321acf",
    "attributes": [],
    "department": "fashion",
    "guidance_ar": null,
@@ -1171,7 +1233,7 @@
    "rejected_examples": []
   },
   {
-   "id": "8e3c9542-34ef-4dd8-98c8-ec2eb0adb72d",
+   "id": "f8b9356a-1394-4628-b7f4-87f944cd3dc4",
    "kind": "category",
    "slug": "hijabs",
    "sort": 23,
@@ -1199,7 +1261,7 @@
    "blurb_en": "Hijabs, shaylas, niqabs and scarves.",
    "listable": true,
    "is_active": false,
-   "parent_id": "147ea77b-25fb-43b7-bf5d-9a982289f870",
+   "parent_id": "0c2039c0-788b-4617-be55-1be5d4321acf",
    "attributes": [],
    "department": "fashion",
    "guidance_ar": null,
@@ -1208,7 +1270,7 @@
    "rejected_examples": []
   },
   {
-   "id": "cc00eb5a-0e32-4dd3-b944-8b8198793c4e",
+   "id": "efbc5cd4-cd40-4e51-b0d7-ade0dea71cbb",
    "kind": "category",
    "slug": "kids-modest",
    "sort": 24,
@@ -1236,7 +1298,7 @@
    "blurb_en": "Thobes, abayas and modest wear for children.",
    "listable": true,
    "is_active": false,
-   "parent_id": "0718bac0-03c4-4659-a324-e5ff48b1645e",
+   "parent_id": "55144e30-6853-40d0-94e4-b5c46c01ee52",
    "attributes": [],
    "department": "fashion",
    "guidance_ar": null,
@@ -1245,7 +1307,7 @@
    "rejected_examples": []
   },
   {
-   "id": "e0b2a362-e8ee-4c55-8662-c4b541c68f8a",
+   "id": "28bfc97b-61da-45c3-9bf4-a93b1d1237f9",
    "kind": "category",
    "slug": "bakhoor",
    "sort": 80,
@@ -1273,7 +1335,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "parent_id": "41f63e17-f7af-4e3a-9ea9-1493e3e86c63",
    "attributes": [
     {
      "key": "volume_ml",
@@ -1372,7 +1434,7 @@
    "rejected_examples": []
   },
   {
-   "id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "id": "41f63e17-f7af-4e3a-9ea9-1493e3e86c63",
    "kind": "department",
    "slug": "fragrance-oud",
    "sort": 100,
@@ -1528,7 +1590,7 @@
    ]
   },
   {
-   "id": "ecf6d5de-aacf-42e0-96be-7ea2e2d825eb",
+   "id": "26c2b259-945b-4d17-bc81-9962ff9f7b18",
    "kind": "category",
    "slug": "attar",
    "sort": 101,
@@ -1556,7 +1618,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "parent_id": "41f63e17-f7af-4e3a-9ea9-1493e3e86c63",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -1565,7 +1627,7 @@
    "rejected_examples": []
   },
   {
-   "id": "9c46d139-12c7-498d-ac87-a9c03c658773",
+   "id": "0303b088-60e8-4b82-b32a-9e2e9a1062d4",
    "kind": "category",
    "slug": "incense-burners",
    "sort": 105,
@@ -1593,7 +1655,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "parent_id": "41f63e17-f7af-4e3a-9ea9-1493e3e86c63",
    "attributes": [
     {
      "key": "volume_ml",
@@ -1686,7 +1748,7 @@
    "rejected_examples": []
   },
   {
-   "id": "c3e3d0ea-25aa-44d7-a340-53747703ff44",
+   "id": "a161c816-2880-4585-9ec8-84cefc9291bb",
    "kind": "category",
    "slug": "fragrance-gift-sets",
    "sort": 106,
@@ -1714,7 +1776,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "5c0c6bf3-ada5-49c6-be4d-2b8a78d472a8",
+   "parent_id": "41f63e17-f7af-4e3a-9ea9-1493e3e86c63",
    "attributes": [
     {
      "key": "volume_ml",
@@ -1769,7 +1831,7 @@
    "rejected_examples": []
   },
   {
-   "id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "id": "b399491a-93a5-4329-9ee9-a1ccbbfcacf3",
    "kind": "department",
    "slug": "prayer-worship",
    "sort": 200,
@@ -1867,7 +1929,7 @@
    ]
   },
   {
-   "id": "fa2a16ea-b1b5-4e52-84af-1dfffe1aece5",
+   "id": "0038d648-457c-452d-a958-289579ddf799",
    "kind": "category",
    "slug": "tasbih",
    "sort": 203,
@@ -1895,7 +1957,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "parent_id": "b399491a-93a5-4329-9ee9-a1ccbbfcacf3",
    "attributes": [
     {
      "key": "bead_count",
@@ -1937,7 +1999,7 @@
    "rejected_examples": []
   },
   {
-   "id": "4da92870-7fb5-4a05-967f-c1bd66f7dd55",
+   "id": "5ce971f0-51d1-4559-9ea8-6167fc1501c8",
    "kind": "category",
    "slug": "prayer-clothing",
    "sort": 204,
@@ -1965,7 +2027,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "parent_id": "b399491a-93a5-4329-9ee9-a1ccbbfcacf3",
    "attributes": [
     {
      "key": "care",
@@ -1986,7 +2048,7 @@
    "rejected_examples": []
   },
   {
-   "id": "0c7b2e9e-cf24-45df-9a33-4c1a954aa56d",
+   "id": "db68242e-9088-43cc-9ec3-cfe5b31c1301",
    "kind": "category",
    "slug": "quran-stands",
    "sort": 205,
@@ -2014,7 +2076,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "parent_id": "b399491a-93a5-4329-9ee9-a1ccbbfcacf3",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -2023,7 +2085,7 @@
    "rejected_examples": []
   },
   {
-   "id": "f0fad121-1d8e-40f7-a701-8699cf57c802",
+   "id": "9fbd4fda-fdad-43a5-b221-008505222c2b",
    "kind": "category",
    "slug": "qibla-tools",
    "sort": 206,
@@ -2051,7 +2113,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "parent_id": "b399491a-93a5-4329-9ee9-a1ccbbfcacf3",
    "attributes": [
     {
      "key": "tool_type",
@@ -2083,7 +2145,7 @@
    "rejected_examples": []
   },
   {
-   "id": "3048b0dd-6393-42ad-98ee-ccea2b64279a",
+   "id": "346f2b6d-b274-46a9-84c4-93c32914868a",
    "kind": "category",
    "slug": "miswak",
    "sort": 207,
@@ -2111,7 +2173,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "5908c5d4-04cb-4726-b631-78f2405fc2f1",
+   "parent_id": "b399491a-93a5-4329-9ee9-a1ccbbfcacf3",
    "attributes": [
     {
      "key": "pack_count",
@@ -2144,7 +2206,7 @@
    "rejected_examples": []
   },
   {
-   "id": "72ddb074-e1dc-4a58-8bdc-7eda8c6f5655",
+   "id": "fb5307a6-ebe1-4bb9-8416-a7841191927e",
    "kind": "department",
    "slug": "quran-books",
    "sort": 300,
@@ -2301,7 +2363,7 @@
    ]
   },
   {
-   "id": "e10e1cc9-8b86-46a4-8197-fe92598f0a55",
+   "id": "ec611d89-d423-4f67-8d92-89a71f30b1a2",
    "kind": "category",
    "slug": "mushaf",
    "sort": 301,
@@ -2331,7 +2393,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "72ddb074-e1dc-4a58-8bdc-7eda8c6f5655",
+   "parent_id": "fb5307a6-ebe1-4bb9-8416-a7841191927e",
    "attributes": [
     {
      "key": "printer",
@@ -2427,7 +2489,7 @@
    "rejected_examples": []
   },
   {
-   "id": "8782648c-dda5-48ad-aaee-d191c0d939d9",
+   "id": "910bf2cc-22eb-4f57-9c7c-e11bad1b99aa",
    "kind": "category",
    "slug": "islamic-books",
    "sort": 302,
@@ -2457,7 +2519,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "72ddb074-e1dc-4a58-8bdc-7eda8c6f5655",
+   "parent_id": "fb5307a6-ebe1-4bb9-8416-a7841191927e",
    "attributes": [
     {
      "key": "author",
@@ -2541,7 +2603,7 @@
    "rejected_examples": []
   },
   {
-   "id": "18c7c373-f33e-4621-8fb9-a918c524f807",
+   "id": "1911cff4-db15-481f-9560-caec035c678a",
    "kind": "department",
    "slug": "modest-fashion",
    "sort": 400,
@@ -2681,7 +2743,7 @@
    ]
   },
   {
-   "id": "4771f146-fef1-47d1-9f15-cd56773beae9",
+   "id": "fe3dc5b1-2acb-407a-99c5-57d90182792e",
    "kind": "group",
    "slug": "mens-fashion",
    "sort": 410,
@@ -2693,7 +2755,7 @@
    "blurb_en": null,
    "listable": false,
    "is_active": false,
-   "parent_id": "18c7c373-f33e-4621-8fb9-a918c524f807",
+   "parent_id": "1911cff4-db15-481f-9560-caec035c678a",
    "attributes": [],
    "department": "fashion",
    "guidance_ar": null,
@@ -2702,7 +2764,7 @@
    "rejected_examples": []
   },
   {
-   "id": "ae3ed37f-c90d-4b7a-9e0e-58d6a563ad5a",
+   "id": "0c3e575c-3663-4ff7-a6b0-ac43676b62bc",
    "kind": "category",
    "slug": "ghutra-shemagh",
    "sort": 412,
@@ -2730,7 +2792,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "4771f146-fef1-47d1-9f15-cd56773beae9",
+   "parent_id": "fe3dc5b1-2acb-407a-99c5-57d90182792e",
    "attributes": [],
    "department": "fashion",
    "guidance_ar": null,
@@ -2739,7 +2801,7 @@
    "rejected_examples": []
   },
   {
-   "id": "e05b14a1-0003-4d98-8f87-1c50622d075a",
+   "id": "ea3057e8-65bf-4728-b064-3023530deafc",
    "kind": "category",
    "slug": "bisht",
    "sort": 413,
@@ -2767,7 +2829,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "4771f146-fef1-47d1-9f15-cd56773beae9",
+   "parent_id": "fe3dc5b1-2acb-407a-99c5-57d90182792e",
    "attributes": [],
    "department": "fashion",
    "guidance_ar": null,
@@ -2776,7 +2838,7 @@
    "rejected_examples": []
   },
   {
-   "id": "266ad2fe-e8ef-4212-92d4-e2764d0aa05d",
+   "id": "acbee9ab-8d36-4f7d-8657-48bb67d83f83",
    "kind": "category",
    "slug": "kufi",
    "sort": 414,
@@ -2804,7 +2866,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "4771f146-fef1-47d1-9f15-cd56773beae9",
+   "parent_id": "fe3dc5b1-2acb-407a-99c5-57d90182792e",
    "attributes": [],
    "department": "fashion",
    "guidance_ar": null,
@@ -2813,7 +2875,7 @@
    "rejected_examples": []
   },
   {
-   "id": "147ea77b-25fb-43b7-bf5d-9a982289f870",
+   "id": "0c2039c0-788b-4617-be55-1be5d4321acf",
    "kind": "group",
    "slug": "womens-fashion",
    "sort": 420,
@@ -2825,7 +2887,7 @@
    "blurb_en": null,
    "listable": false,
    "is_active": false,
-   "parent_id": "18c7c373-f33e-4621-8fb9-a918c524f807",
+   "parent_id": "1911cff4-db15-481f-9560-caec035c678a",
    "attributes": [],
    "department": "fashion",
    "guidance_ar": null,
@@ -2834,7 +2896,7 @@
    "rejected_examples": []
   },
   {
-   "id": "0718bac0-03c4-4659-a324-e5ff48b1645e",
+   "id": "55144e30-6853-40d0-94e4-b5c46c01ee52",
    "kind": "group",
    "slug": "kids-fashion",
    "sort": 430,
@@ -2846,7 +2908,7 @@
    "blurb_en": null,
    "listable": false,
    "is_active": false,
-   "parent_id": "18c7c373-f33e-4621-8fb9-a918c524f807",
+   "parent_id": "1911cff4-db15-481f-9560-caec035c678a",
    "attributes": [],
    "department": "fashion",
    "guidance_ar": null,
@@ -2855,7 +2917,7 @@
    "rejected_examples": []
   },
   {
-   "id": "f5005be9-8235-46e6-adcc-6a46ce52ef7c",
+   "id": "a743eae3-ed9d-4c44-b525-9160038183a1",
    "kind": "department",
    "slug": "home-art",
    "sort": 500,
@@ -2943,7 +3005,7 @@
    "rejected_examples": []
   },
   {
-   "id": "a3456c3d-38a8-434b-9944-8dd05436d500",
+   "id": "e89a20ca-8ba4-4e61-a16b-d534866b1eb2",
    "kind": "category",
    "slug": "calligraphy",
    "sort": 501,
@@ -2971,7 +3033,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "f5005be9-8235-46e6-adcc-6a46ce52ef7c",
+   "parent_id": "a743eae3-ed9d-4c44-b525-9160038183a1",
    "attributes": [
     {
      "key": "technique",
@@ -3066,7 +3128,7 @@
    "rejected_examples": []
   },
   {
-   "id": "982bef0a-cf72-400e-ac61-4ab299a78cb5",
+   "id": "c150e72a-ae57-412f-8fe1-5b0e36e828b8",
    "kind": "category",
    "slug": "lanterns",
    "sort": 502,
@@ -3094,7 +3156,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "f5005be9-8235-46e6-adcc-6a46ce52ef7c",
+   "parent_id": "a743eae3-ed9d-4c44-b525-9160038183a1",
    "attributes": [
     {
      "key": "power",
@@ -3131,7 +3193,7 @@
    "rejected_examples": []
   },
   {
-   "id": "2671daad-670f-4001-a468-e7d712d31978",
+   "id": "89177d94-ea02-4f24-9bb3-7755e3b83114",
    "kind": "category",
    "slug": "ramadan-eid-decor",
    "sort": 503,
@@ -3159,7 +3221,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "f5005be9-8235-46e6-adcc-6a46ce52ef7c",
+   "parent_id": "a743eae3-ed9d-4c44-b525-9160038183a1",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -3168,7 +3230,7 @@
    "rejected_examples": []
   },
   {
-   "id": "2b3fe2dd-9891-4aa1-9bdd-446a7cc00f98",
+   "id": "f7ac2dd5-ddbf-46a9-9966-34742530607c",
    "kind": "category",
    "slug": "coffee-sets",
    "sort": 504,
@@ -3196,7 +3258,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "f5005be9-8235-46e6-adcc-6a46ce52ef7c",
+   "parent_id": "a743eae3-ed9d-4c44-b525-9160038183a1",
    "attributes": [
     {
      "key": "pieces",
@@ -3218,7 +3280,7 @@
    "rejected_examples": []
   },
   {
-   "id": "a0eceed7-3b4e-49e9-89b4-b11b8715f1f3",
+   "id": "d388e647-92ce-4f9b-b613-ee3b4d67698a",
    "kind": "category",
    "slug": "home-textiles",
    "sort": 505,
@@ -3246,7 +3308,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "f5005be9-8235-46e6-adcc-6a46ce52ef7c",
+   "parent_id": "a743eae3-ed9d-4c44-b525-9160038183a1",
    "attributes": [
     {
      "key": "care",
@@ -3267,7 +3329,7 @@
    "rejected_examples": []
   },
   {
-   "id": "7a9b5ebb-6bea-4c51-90dc-4b8b77face8a",
+   "id": "86cd04f3-442c-49c3-b830-214c71c15730",
    "kind": "department",
    "slug": "dates-food",
    "sort": 600,
@@ -3404,7 +3466,7 @@
    ]
   },
   {
-   "id": "859b990b-bab1-41fe-93af-27ddddd02fda",
+   "id": "c1225f49-3faf-4ccd-97e7-0fa481362f41",
    "kind": "category",
    "slug": "honey",
    "sort": 602,
@@ -3432,7 +3494,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "7a9b5ebb-6bea-4c51-90dc-4b8b77face8a",
+   "parent_id": "86cd04f3-442c-49c3-b830-214c71c15730",
    "attributes": [
     {
      "key": "floral_source",
@@ -3453,7 +3515,7 @@
    "rejected_examples": []
   },
   {
-   "id": "08c62dda-7ff8-439c-9b8b-367351aee330",
+   "id": "bfe11889-aa3e-4785-a15c-2df7161a0070",
    "kind": "category",
    "slug": "arabic-coffee",
    "sort": 603,
@@ -3481,7 +3543,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "7a9b5ebb-6bea-4c51-90dc-4b8b77face8a",
+   "parent_id": "86cd04f3-442c-49c3-b830-214c71c15730",
    "attributes": [
     {
      "key": "roast",
@@ -3518,7 +3580,7 @@
    "rejected_examples": []
   },
   {
-   "id": "add6d851-7591-48c0-af13-c4a29ace0c4d",
+   "id": "9ee32131-3590-4992-b0cf-14bf1a7c51e8",
    "kind": "category",
    "slug": "sweets",
    "sort": 604,
@@ -3548,7 +3610,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "7a9b5ebb-6bea-4c51-90dc-4b8b77face8a",
+   "parent_id": "86cd04f3-442c-49c3-b830-214c71c15730",
    "attributes": [
     {
      "key": "halal_certified",
@@ -3569,7 +3631,7 @@
    "rejected_examples": []
   },
   {
-   "id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "id": "bc29756b-2b68-4fcf-97de-06e4f36df353",
    "kind": "department",
    "slug": "gifts-occasions",
    "sort": 700,
@@ -3688,7 +3750,7 @@
    "rejected_examples": []
   },
   {
-   "id": "fbb45879-175a-48dc-aa44-29bd9f7bc057",
+   "id": "f93d2ce2-ffbf-4a1b-87c0-5457f4f07369",
    "kind": "category",
    "slug": "hajj-umrah-gifts",
    "sort": 701,
@@ -3716,7 +3778,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "parent_id": "bc29756b-2b68-4fcf-97de-06e4f36df353",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -3725,7 +3787,7 @@
    "rejected_examples": []
   },
   {
-   "id": "e872ca14-4071-4c07-a0ce-8db96c53469b",
+   "id": "3ba49b25-4d95-4c00-aecc-00289e30c9de",
    "kind": "category",
    "slug": "ramadan-gifts",
    "sort": 702,
@@ -3753,7 +3815,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "parent_id": "bc29756b-2b68-4fcf-97de-06e4f36df353",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -3762,7 +3824,7 @@
    "rejected_examples": []
   },
   {
-   "id": "5c2b2a27-aeab-418c-981f-9fc03a54d80c",
+   "id": "9ab29402-091b-46df-a297-fe404c7f76d7",
    "kind": "category",
    "slug": "eid-gifts",
    "sort": 703,
@@ -3790,7 +3852,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "parent_id": "bc29756b-2b68-4fcf-97de-06e4f36df353",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -3799,7 +3861,7 @@
    "rejected_examples": []
   },
   {
-   "id": "0ce040c2-1332-4da7-9e92-bcb885a54ad3",
+   "id": "69fd4387-ac04-4816-ba65-3d830bdbe234",
    "kind": "category",
    "slug": "newborn-gifts",
    "sort": 704,
@@ -3827,7 +3889,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "d79d16e5-472b-479b-b36e-824c4d52c985",
+   "parent_id": "bc29756b-2b68-4fcf-97de-06e4f36df353",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -3836,7 +3898,7 @@
    "rejected_examples": []
   },
   {
-   "id": "8824fb94-14ff-4fe8-a4e1-5867613c74dd",
+   "id": "40110dd7-505f-4376-9fa8-98b2faadef50",
    "kind": "department",
    "slug": "natural-care",
    "sort": 800,
@@ -3946,7 +4008,7 @@
    "rejected_examples": []
   },
   {
-   "id": "256800b7-de43-4268-8f03-f15e92cab131",
+   "id": "e1143d0a-0ecd-46ea-8169-520f19d148b6",
    "kind": "category",
    "slug": "black-seed-oil",
    "sort": 801,
@@ -3974,7 +4036,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "8824fb94-14ff-4fe8-a4e1-5867613c74dd",
+   "parent_id": "40110dd7-505f-4376-9fa8-98b2faadef50",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -3983,7 +4045,7 @@
    "rejected_examples": []
   },
   {
-   "id": "63ea36d6-c6a6-43e4-86c8-f920d5758482",
+   "id": "8c0145bb-5f96-4b12-b609-a8bd18ecc9e3",
    "kind": "category",
    "slug": "halal-cosmetics",
    "sort": 802,
@@ -4013,7 +4075,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "8824fb94-14ff-4fe8-a4e1-5867613c74dd",
+   "parent_id": "40110dd7-505f-4376-9fa8-98b2faadef50",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -4022,7 +4084,7 @@
    "rejected_examples": []
   },
   {
-   "id": "8c1ac080-f3aa-4ad2-8a8e-f60cd08ca8bb",
+   "id": "b96c71b3-6b1d-4938-b065-bd31e6e9f20a",
    "kind": "department",
    "slug": "kids-learning",
    "sort": 900,
@@ -4142,7 +4204,7 @@
    "rejected_examples": []
   },
   {
-   "id": "526dae8a-20b7-40f3-9b95-89f88a2c1f4f",
+   "id": "c2baba35-55b9-4c6e-9566-40c5bd061beb",
    "kind": "category",
    "slug": "learning-toys",
    "sort": 901,
@@ -4170,7 +4232,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "8c1ac080-f3aa-4ad2-8a8e-f60cd08ca8bb",
+   "parent_id": "b96c71b3-6b1d-4938-b065-bd31e6e9f20a",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -4179,7 +4241,7 @@
    "rejected_examples": []
   },
   {
-   "id": "d69cf76c-af5c-409d-acbe-1d6d0b024f2a",
+   "id": "a1c64dc6-40af-41d8-b399-6e09f895c753",
    "kind": "category",
    "slug": "kids-books",
    "sort": 902,
@@ -4207,7 +4269,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "8c1ac080-f3aa-4ad2-8a8e-f60cd08ca8bb",
+   "parent_id": "b96c71b3-6b1d-4938-b065-bd31e6e9f20a",
    "attributes": [],
    "department": "gifts",
    "guidance_ar": null,
@@ -4216,7 +4278,7 @@
    "rejected_examples": []
   },
   {
-   "id": "73aa5b97-22f5-44ed-afea-0880d2310f35",
+   "id": "c667d140-d966-4be1-9f9a-0d76d31539b9",
    "kind": "department",
    "slug": "accessories",
    "sort": 1000,
@@ -4282,7 +4344,7 @@
    "rejected_examples": []
   },
   {
-   "id": "ffb32b19-e3af-40e7-b649-92afebc2228c",
+   "id": "e9fc2500-76e5-4f00-86c8-8453079e5fcf",
    "kind": "category",
    "slug": "silver-rings",
    "sort": 1001,
@@ -4310,7 +4372,7 @@
    "blurb_en": null,
    "listable": true,
    "is_active": false,
-   "parent_id": "73aa5b97-22f5-44ed-afea-0880d2310f35",
+   "parent_id": "c667d140-d966-4be1-9f9a-0d76d31539b9",
    "attributes": [
     {
      "key": "metal",

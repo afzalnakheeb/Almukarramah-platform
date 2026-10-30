@@ -10,7 +10,6 @@ import { Card, Container, Eyebrow, Grid, Notice, ProductTile, Serif, T, useWide 
 import { getSellerBySlug, getSellerProducts } from '@/lib/catalogue';
 import { useI18n } from '@/lib/i18n';
 import { SITE_URL } from '@/lib/images';
-import { formatMoney } from '@/lib/money';
 import { snapshotBySeller, snapshotSeller, snapshotSellers } from '@/lib/snapshot';
 import type { Product, Seller } from '@/lib/types';
 import { colors } from '@/theme';
@@ -64,7 +63,6 @@ export default function SellerShop() {
             <T w={700} size={15} color={colors.navy}>{t('deliveryAndReturns')}</T>
             <T size={13.5} color={colors.body}>{t('shipsFrom')} {countryName(s.country, lang)}{s.city ? `, ${s.city}` : ''}</T>
             <T size={13.5} color={colors.body}>{t('shipsWithin')} {s.handling_days} {t('businessDays')}</T>
-            {s.free_ship_over_minor ? <T size={13.5} color={colors.body}>{t('freeShippingOver')} {formatMoney(s.free_ship_over_minor, 'SAR', lang)}</T> : null}
             {returns ? <T size={13} lh={1.55} color={colors.muted}>{returns}</T> : null}
           </Card>
         </View>

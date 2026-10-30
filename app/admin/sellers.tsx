@@ -20,7 +20,7 @@ type Row = {
 function SellerCard({ r, onChanged }: { r: Row; onChanged: () => void }) {
   const s = r.seller;
   const [note, setNote] = useState(s.review_note ?? '');
-  const [pct, setPct] = useState(String(s.commission_bps / 100));
+  const [pct, setPct] = useState(s.commission_bps === null ? '' : String(s.commission_bps / 100));
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'warn'; text: string } | null>(null);

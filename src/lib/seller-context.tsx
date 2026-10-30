@@ -15,5 +15,5 @@ export function useSeller(): Ctx {
   return v;
 }
 
-export const STATUS_TONE = { pending: 'info', approved: 'ok', rejected: 'err', suspended: 'err' } as const;
-export const LISTING_TONE = { draft: 'mute', pending_review: 'info', approved: 'ok', rejected: 'err' } as const;
+export const STATUS_TONE = { pending: 'info', info_requested: 'warn', approved: 'ok', rejected: 'err', suspended: 'err' } as const;
+export const LISTING_TONE = { draft: 'mute', check_pending: 'info', pending_review: 'info', approved: 'ok', rejected: 'err', suspended: 'err' } as const;

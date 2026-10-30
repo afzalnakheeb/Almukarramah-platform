@@ -26,11 +26,13 @@ export type Product = {
   categories?: Pick<Category, 'slug' | 'name_en' | 'name_ar'> | null;
   // Marketplace
   seller_id?: string | null;
-  listing_status?: 'draft' | 'pending_review' | 'approved' | 'rejected';
+  listing_status?: 'draft' | 'check_pending' | 'pending_review' | 'approved' | 'rejected' | 'suspended';
   sellers?: SellerRef | null;
   // Modest fashion
   made_to_measure?: boolean;
-  garment?: 'thobe' | 'abaya' | 'other' | null;
+  garment?: string | null;
+  garment_style?: string | null;
+  attributes?: Record<string, unknown>;
   sizes?: string[] | null;
   size_chart?: SizeChart | null;
   tailoring?: Tailoring | null;
@@ -46,20 +48,23 @@ export type Seller = SellerRef & {
   tagline_en: string | null; tagline_ar: string | null;
   about_en: string | null; about_ar: string | null;
   city: string | null; logo: string | null; banner: string | null; website: string | null;
-  ships_to: string[]; handling_days: number;
-  ship_home_minor: number; ship_intl_minor: number; ship_overrides: Record<string, number>; free_ship_over_minor: number | null;
+  handling_days: number;
   returns_en: string | null; returns_ar: string | null;
   kind: 'marketplace' | 'partner';
-  status: 'pending' | 'approved' | 'rejected' | 'suspended';
-  commission_bps: number; review_note: string | null;
+  status: 'pending' | 'info_requested' | 'approved' | 'rejected' | 'suspended';
+  /** negotiated commission; null: the category's rate */
+  commission_bps: number | null; review_note: string | null;
   created_at: string;
 };
 
 export type SizeChart = { unit: 'cm' | 'in'; columns: string[]; rows: Record<string, string | number>[] };
 
-export type TailoringChoice = { id: string; label: Bi; image?: string | null; price_minor: number };
+export type TailoringChoice = { id: string; label: Bi; image?: string | null; price_minor: number; season?: 'summer' | 'winter' | 'all' };
 export type TailoringOption = { key: string; label: Bi; choices: TailoringChoice[] };
-export type Tailoring = { production_days: number; options: TailoringOption[] };
+/** Made-to-measure seam (owned with the tailoring workstream): the regional style, the measurements this brand needs
+ *  (centimetres), the design options with price adjustments (fabrics are the option "fabric", with a season). */
+export type TailoringMeasurement = { key: string; label?: Bi; min_cm?: number; max_cm?: number; required?: boolean };
+export type Tailoring = { production_days: number; options: TailoringOption[]; style?: string; measurements?: TailoringMeasurement[] };
 
 /** What the customer chose for one cart line (size, design options, measurements in cm). */
 export type LineCustom = {

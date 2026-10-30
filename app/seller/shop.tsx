@@ -2,16 +2,14 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { Screen } from '@/components/chrome';
-import { countryName, CountryPicker } from '@/components/country';
+import { countryName } from '@/components/country';
 import { Seo } from '@/components/seo';
-import { Button, Card, Chip, Field, Notice, Serif, T, useWide } from '@/components/ui';
+import { Button, Card, Field, Notice, Serif, T, useWide } from '@/components/ui';
 import { useI18n } from '@/lib/i18n';
 import { updateSeller, updateSellerPrivate } from '@/lib/seller';
 import { useSeller } from '@/lib/seller-context';
 import { colors } from '@/theme';
 
-const sar = (minor: number | null | undefined) => (minor ? (minor / 100).toString() : '');
-const minor = (v: string) => Math.round((Number(v.replace(',', '.').replace(/[^\d.]/g, '')) || 0) * 100);
 
 export default function SellerShop() {
   const wide = useWide();
@@ -21,13 +19,9 @@ export default function SellerShop() {
   const [f, setF] = useState({
     name_ar: s.name_ar ?? '', tagline_en: s.tagline_en ?? '', tagline_ar: s.tagline_ar ?? '', about_en: s.about_en ?? '', about_ar: s.about_ar ?? '',
     city: s.city ?? '', website: s.website ?? '', returns_en: s.returns_en ?? '', returns_ar: s.returns_ar ?? '',
-    handling_days: String(s.handling_days ?? 3), ship_home: sar(s.ship_home_minor), ship_intl: sar(s.ship_intl_minor), free_over: sar(s.free_ship_over_minor),
+    handling_days: String(s.handling_days ?? 3),
   });
-  const [worldwide, setWorldwide] = useState((s.ships_to ?? ['*']).includes('*'));
-  const [shipsTo, setShipsTo] = useState<string[]>((s.ships_to ?? []).filter((c) => c !== '*'));
-  const [overrides, setOverrides] = useState<Record<string, number>>(s.ship_overrides ?? {});
-  const [addCountry, setAddCountry] = useState('');
-  const [p, setP] = useState({ contact_name: me.private?.contact_name ?? '', contact_email: me.private?.contact_email ?? '', contact_phone: me.private?.contact_phone ?? '', legal_name: me.private?.legal_name ?? '', registration_no: me.private?.registration_no ?? '', vat_no: me.private?.vat_no ?? '' });
+  const [p, setP] = useState({ contact_name: me.private?.contact_name ?? '', contact_email: me.private?.contact_email ?? '', contact_phone: me.private?.contact_phone ?? '', legal_name: me.private?.legal_name ?? '', registration_no: me.private?.registration_no ?? '', tax_registration_no: me.private?.tax_registration_no ?? '' });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'warn'; text: string } | null>(null);
   const set = (k: keyof typeof f) => (v: string) => setF((x) => ({ ...x, [k]: v }));
@@ -40,11 +34,9 @@ export default function SellerShop() {
         name_ar: f.name_ar.trim() || null, tagline_en: f.tagline_en.trim() || null, tagline_ar: f.tagline_ar.trim() || null,
         about_en: f.about_en.trim() || null, about_ar: f.about_ar.trim() || null, city: f.city.trim() || null, website: f.website.trim() || null,
         returns_en: f.returns_en.trim() || null, returns_ar: f.returns_ar.trim() || null,
-        handling_days: Math.min(30, Math.max(1, Number(f.handling_days) || 3)),
-        ship_home_minor: minor(f.ship_home), ship_intl_minor: minor(f.ship_intl), free_ship_over_minor: f.free_over ? minor(f.free_over) : null,
-        ships_to: worldwide ? ['*'] : shipsTo.length ? shipsTo : [s.country], ship_overrides: overrides,
+        handling_days: Math.min(10, Math.max(1, Number(f.handling_days) || 3)),
       });
-      await updateSellerPrivate(s.id, { ...p, contact_phone: p.contact_phone || null, legal_name: p.legal_name || null, registration_no: p.registration_no || null, vat_no: p.vat_no || null });
+      await updateSellerPrivate(s.id, { ...p, contact_phone: p.contact_phone || null, legal_name: p.legal_name || null, registration_no: p.registration_no || null, tax_registration_no: p.tax_registration_no || null });
       await reload();
       setMsg({ tone: 'ok', text: t('pfSaved') });
     } catch (e) {
@@ -77,31 +69,6 @@ export default function SellerShop() {
         </>, t('ssProfileHint'))}
 
         {card(t('ssShipping'), <>
-          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
-            <Chip size="sm" label={t('ssWorldwide')} active={worldwide} onPress={() => setWorldwide(true)} />
-            <Chip size="sm" label={t('ssChosenCountries')} active={!worldwide} onPress={() => setWorldwide(false)} />
-          </View>
-          {!worldwide && (
-            <View style={{ gap: 6 }}>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                {shipsTo.map((c) => <Chip key={c} size="sm" label={`${countryName(c, lang)} ×`} active onPress={() => setShipsTo(shipsTo.filter((x) => x !== c))} />)}
-              </View>
-              <CountryPicker label={t('ssAddCountry')} value={addCountry} onChange={(c) => { setAddCountry(''); if (!shipsTo.includes(c)) setShipsTo([...shipsTo, c]); }} />
-            </View>
-          )}
-          {row(<>{col(<Field label={`${t('ssHomeRate')} (${countryName(s.country, lang)})`} value={f.ship_home} onChangeText={set('ship_home')} keyboardType="decimal-pad" hint="SAR" dirLtr />)}
-            {col(<Field label={t('ssIntlRate')} value={f.ship_intl} onChangeText={set('ship_intl')} keyboardType="decimal-pad" hint="SAR" dirLtr />)}
-            {col(<Field label={t('ssFreeOver')} value={f.free_over} onChangeText={set('free_over')} keyboardType="decimal-pad" hint={t('ssFreeOverHint')} dirLtr />)}</>)}
-          <T w={600} size={13}>{t('ssOverrides')}</T>
-          <T size={12.5} color={colors.muted}>{t('ssOverridesHint')}</T>
-          {Object.entries(overrides).map(([c, v]) => (
-            <View key={c} style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end' }}>
-              <T size={14} style={{ width: 160, paddingBottom: 26 }}>{countryName(c, lang)}</T>
-              <View style={{ flex: 1 }}><Field label="SAR" value={sar(v)} onChangeText={(x) => setOverrides({ ...overrides, [c]: minor(x) })} keyboardType="decimal-pad" dirLtr /></View>
-              <Button label={t('remove')} kind="text" size="sm" onPress={() => { const o = { ...overrides }; delete o[c]; setOverrides(o); }} style={{ marginBottom: 18 }} />
-            </View>
-          ))}
-          <CountryPicker label={t('ssAddOverride')} value="" onChange={(c) => setOverrides({ ...overrides, [c]: overrides[c] ?? 0 })} />
           <Field label={t('ssHandlingDays')} value={f.handling_days} onChangeText={set('handling_days')} keyboardType="number-pad" hint={t('ssHandlingHint')} dirLtr />
         </>, t('ssShippingHint'))}
 
@@ -112,7 +79,7 @@ export default function SellerShop() {
 
         {card(t('ssPrivate'), <>
           {row(<>{col(<Field label={t('contactName')} value={p.contact_name} onChangeText={setPv('contact_name')} />)}{col(<Field label={t('contactEmail')} value={p.contact_email} onChangeText={setPv('contact_email')} autoCapitalize="none" dirLtr />)}{col(<Field label={t('contactPhone')} value={p.contact_phone} onChangeText={setPv('contact_phone')} dirLtr />)}</>)}
-          {row(<>{col(<Field label={t('legalName')} value={p.legal_name} onChangeText={setPv('legal_name')} />)}{col(<Field label={t('registrationNo')} value={p.registration_no} onChangeText={setPv('registration_no')} dirLtr />)}{col(<Field label={t('vatNo')} value={p.vat_no} onChangeText={setPv('vat_no')} dirLtr />)}</>)}
+          {row(<>{col(<Field label={t('legalName')} value={p.legal_name} onChangeText={setPv('legal_name')} />)}{col(<Field label={t('registrationNo')} value={p.registration_no} onChangeText={setPv('registration_no')} dirLtr />)}{col(<Field label={t('vatNo')} value={p.tax_registration_no} onChangeText={setPv('tax_registration_no')} dirLtr />)}</>)}
         </>, t('ssPrivateHint'))}
 
         {msg && <Notice tone={msg.tone} text={msg.text} />}

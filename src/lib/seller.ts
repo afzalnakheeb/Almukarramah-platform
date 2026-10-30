@@ -4,29 +4,42 @@ import { useCallback, useEffect, useState } from 'react';
 import { callFunction, supabase } from './supabase';
 import type { Seller, SizeChart, Tailoring } from './types';
 import { useSession } from './session';
+import { MARKET_DEMO, guidanceSnapshot } from './market';
+import { DEMO_LISTINGS, DEMO_MEDIA, DEMO_SELLER, demoListing } from './market-demo';
+import type { QualityResult } from '../../supabase/functions/_shared/quality';
 
 export type SellerPrivate = {
   seller_id: string; contact_name: string; contact_email: string; contact_phone: string | null;
-  legal_name: string | null; registration_no: string | null; vat_no: string | null; product_summary: string | null;
+  legal_name: string | null; registration_no: string | null; tax_registration_no: string | null; product_summary: string | null;
 };
 export type MySeller = { seller: Seller & { agreed_guidelines_at: string | null }; private: SellerPrivate | null; role: 'owner' | 'staff' };
 
-export type AiIssue = { severity: 'block' | 'fix' | 'note'; field: string; photo?: number; en: string; ar: string };
-export type AiCheck = {
-  verdict: 'pass' | 'review' | 'block'; summary_en: string; summary_ar: string; issues: AiIssue[];
-  suggested_ar?: { name?: string; description?: string }; checked_at: string; photos_checked: number;
+export type Reason = { code: string; en: string; ar: string; field?: string; photo?: number };
+export type MediaKind = 'listing_photo' | 'seller_logo' | 'seller_banner' | 'portfolio';
+export type MediaAsset = {
+  id: string; kind: MediaKind; path: string | null; status: 'pending' | 'passed' | 'review' | 'rejected' | 'blocked';
+  reasons: Reason[]; flags: string[]; width: number | null; height: number | null; mime?: string;
 };
+/** The latest screening of a listing, kept on the product for the seller and staff. */
+export type AiCheck = {
+  verdict: 'pass' | 'review' | 'block' | 'error'; summary_en: string; summary_ar: string; reasons: Reason[];
+  draft?: { name_en?: string; name_ar?: string; description_en?: string; description_ar?: string } | null;
+  quality_score?: number; checked_at: string; override?: { reason: string; outcome: string; at: string } | null;
+};
+export type ListingDecision = { verdict: AiCheck['verdict']; reasons: Reason[]; summary_en: string; summary_ar: string; draft?: AiCheck['draft']; quality_score?: number };
+export type { QualityResult };
 
 export type Listing = {
   id: string; slug: string; seller_id: string; category_id: string | null;
   name_en: string; name_ar: string; description_en: string | null; description_ar: string | null;
   base_price_sar: number; stock: number; weight_g: number; is_active: boolean; ship_class: 'standard' | 'perfume_spray' | 'perfume_oil';
-  images: string[]; listing_status: 'draft' | 'pending_review' | 'approved' | 'rejected'; review_note: string | null;
+  images: string[]; listing_status: 'draft' | 'check_pending' | 'pending_review' | 'approved' | 'rejected' | 'suspended'; review_note: string | null;
+  attributes: Record<string, unknown>;
   ai_check: AiCheck | null; ai_checked_at: string | null; submitted_at: string | null; updated_at: string;
   made_to_measure: boolean; garment: 'thobe' | 'abaya' | 'other' | null; sizes: string[] | null; size_chart: SizeChart | null; tailoring: Tailoring | null;
 };
 
-const LISTING_COLUMNS = 'id, slug, seller_id, category_id, name_en, name_ar, description_en, description_ar, base_price_sar, stock, weight_g, is_active, ship_class, images, listing_status, review_note, ai_check, ai_checked_at, submitted_at, updated_at, made_to_measure, garment, sizes, size_chart, tailoring';
+const LISTING_COLUMNS = 'id, slug, seller_id, category_id, name_en, name_ar, description_en, description_ar, base_price_sar, stock, weight_g, is_active, ship_class, images, listing_status, review_note, ai_check, ai_checked_at, submitted_at, updated_at, made_to_measure, garment, sizes, size_chart, tailoring, attributes';
 
 /** The signed-in user's seller account, if any. */
 export function useMySeller() {
@@ -34,14 +47,15 @@ export function useMySeller() {
   const [data, setData] = useState<MySeller | null>(null);
   const [loading, setLoading] = useState(true);
   const reload = useCallback(async () => {
+    if (MARKET_DEMO) { setData(DEMO_SELLER); setLoading(false); return; }
     if (!session) { setData(null); setLoading(false); return; }
     setLoading(true);
     const { data: rows } = await supabase.rpc('my_sellers');
     setData(((rows as MySeller[] | null) ?? [])[0] ?? null);
     setLoading(false);
   }, [session?.user.id]);
-  useEffect(() => { if (!sessionLoading) reload(); }, [reload, sessionLoading]);
-  return { me: data, loading: loading || sessionLoading, reload, session };
+  useEffect(() => { if (!sessionLoading || MARKET_DEMO) reload(); }, [reload, sessionLoading]);
+  return { me: data, loading: MARKET_DEMO ? loading : loading || sessionLoading, reload, session: MARKET_DEMO ? ({ user: { id: 'demo', email: 'seller@example.com' } } as never) : session };
 }
 
 export async function applyAsSeller(p: Record<string, unknown>): Promise<string> {
@@ -60,13 +74,17 @@ export async function updateSellerPrivate(id: string, patch: Partial<SellerPriva
   if (error) throw new Error(error.message);
 }
 
+const demoCat = (slug: string) => guidanceSnapshot.categories.find((c) => c.slug === slug)?.id ?? null;
+
 export async function myListings(sellerId: string): Promise<Listing[]> {
+  if (MARKET_DEMO) return DEMO_LISTINGS.map((l) => demoListing(l.id, demoCat)!);
   const { data, error } = await supabase.from('products').select(LISTING_COLUMNS).eq('seller_id', sellerId).order('updated_at', { ascending: false });
   if (error) throw new Error(error.message);
   return data as unknown as Listing[];
 }
 
 export async function getListing(id: string): Promise<Listing | null> {
+  if (MARKET_DEMO) return demoListing(id, demoCat);
   const { data, error } = await supabase.from('products').select(LISTING_COLUMNS).eq('id', id).maybeSingle();
   if (error) throw new Error(error.message);
   return data as unknown as Listing | null;
@@ -97,13 +115,14 @@ export async function deleteListing(id: string) {
   if (error) throw new Error(error.message);
 }
 
-export async function runGuidelineCheck(productId: string): Promise<AiCheck> {
-  return callFunction<AiCheck>('listing-check', { productId });
+/** The server's view of a listing before submission: quality score, tips and contact details found (no AI, free). */
+export async function previewCheck(productId: string): Promise<{ status: string; quality: QualityResult; contacts: { kind: string; field: string; match: string }[] }> {
+  return callFunction('listing-check', { productId });
 }
 
-export async function submitForReview(productId: string) {
-  const { error } = await supabase.from('products').update({ listing_status: 'pending_review' }).eq('id', productId);
-  if (error) throw new Error(error.message);
+/** Submits a listing: the premium standard is checked, then the full AI screening. Blocked listings come straight back. */
+export async function submitListing(productId: string): Promise<{ submitted: boolean; status: string; decision?: ListingDecision; quality: QualityResult }> {
+  return callFunction('listing-check', { productId, submit: true });
 }
 
 export async function setStock(productId: string, stock: number, isActive?: boolean) {
@@ -112,28 +131,43 @@ export async function setStock(productId: string, stock: number, isActive?: bool
 }
 
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
-/** Uploads photos (web) into the seller's private folder. Returns storage paths, not public links. */
-export async function uploadPhotos(sellerId: string, files: File[]): Promise<string[]> {
-  const out: string[] = [];
-  for (const f of files) {
-    if (!ALLOWED.includes(f.type)) throw new Error('Photos must be JPEG, PNG or WEBP');
-    if (f.size > 5 * 1024 * 1024) throw new Error('Each photo must be 5 MB or less');
-    const ext = f.type === 'image/png' ? 'png' : f.type === 'image/webp' ? 'webp' : 'jpg';
-    const path = `${sellerId}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error } = await supabase.storage.from('seller-uploads').upload(path, f, { contentType: f.type, upsert: false });
-    if (error) throw new Error(error.message);
-    out.push(path);
-  }
-  return out;
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Uploads one photo into the seller's private incoming folder and has it screened (type and size from its bytes,
+ * hidden location data removed, AI check). Returns the screened asset, or the reasons it was refused.
+ * Nothing uploaded here is public.
+ */
+export async function uploadMedia(sellerId: string, file: File, kind: MediaKind, ctx: { productId?: string; categoryId?: string } = {}):
+  Promise<{ asset: MediaAsset | null; reasons: Reason[]; duplicate?: boolean }> {
+  if (!ALLOWED.includes(file.type)) return { asset: null, reasons: [{ code: 'type', en: 'Photos must be JPEG, PNG or WebP.', ar: 'يجب أن تكون الصور بصيغة JPEG أو PNG أو WebP.' }] };
+  if (file.size > MAX_UPLOAD_BYTES) return { asset: null, reasons: [{ code: 'size', en: 'Each photo must be 10 MB or less.', ar: 'يجب ألا يتجاوز حجم الصورة ١٠ ميغابايت.' }] };
+  const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+  const path = `${sellerId}/incoming/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+  const { error } = await supabase.storage.from('seller-uploads').upload(path, file, { contentType: file.type, upsert: false });
+  if (error) throw new Error(error.message);
+  const r = await callFunction<{ asset: MediaAsset | null; reasons?: Reason[]; duplicate?: boolean }>('screen-image', { path, kind, ...ctx });
+  return { asset: r.asset, reasons: r.asset?.reasons?.length ? r.asset.reasons : r.reasons ?? [], duplicate: r.duplicate };
 }
 
-/** Viewable links for private uploads (1 hour); public catalogue links are returned as they are. */
+/** Screening records for photos already on a listing (status, reasons, size). */
+export async function mediaFor(paths: string[]): Promise<Record<string, MediaAsset>> {
+  if (MARKET_DEMO) return Object.fromEntries(paths.filter((x) => DEMO_MEDIA[x]).map((x) => [x, DEMO_MEDIA[x]]));
+  const ids = paths.map((p) => /([0-9a-f-]{36})\.[a-z]+$/.exec(p)?.[1]).filter(Boolean) as string[];
+  if (!ids.length) return {};
+  const { data } = await supabase.from('media_assets').select('id, kind, path, status, reasons, flags, width, height, mime').in('id', ids);
+  const byId = new Map(((data as MediaAsset[] | null) ?? []).map((a) => [a.id, a]));
+  return Object.fromEntries(paths.map((p) => [p, byId.get(/([0-9a-f-]{36})\.[a-z]+$/.exec(p)?.[1] ?? '')]).filter((x) => x[1])) as Record<string, MediaAsset>;
+}
+
+/** Viewable links for private media (1 hour); public catalogue links are returned as they are. */
 export async function photoUrls(paths: string[]): Promise<Record<string, string>> {
+  if (MARKET_DEMO) return Object.fromEntries(paths.map((x) => [x, x]));
   const priv = paths.filter((p) => !/^https?:\/\//.test(p));
   const map: Record<string, string> = Object.fromEntries(paths.filter((p) => /^https?:\/\//.test(p)).map((p) => [p, p]));
   if (priv.length) {
     const { data } = await supabase.storage.from('seller-uploads').createSignedUrls(priv, 3600);
-    (data ?? []).forEach((d) => { if (d.path && d.signedUrl) map[d.path] = d.signedUrl; });
+    ((data as { path: string | null; signedUrl: string }[] | null) ?? []).forEach((d) => { if (d.path && d.signedUrl) map[d.path] = d.signedUrl; });
   }
   return map;
 }
@@ -155,4 +189,39 @@ export async function sellerOrders(sellerId: string): Promise<SellerOrder[]> {
 export async function updateShipment(id: string, status: 'packing' | 'shipped' | 'delivered', carrier: string, tracking: string, url: string) {
   const { error } = await supabase.rpc('seller_update_shipment', { p_shipment: id, p_status: status, p_carrier: carrier, p_tracking: tracking, p_url: url });
   if (error) throw new Error(error.message);
+}
+
+// ---------------------------------------------------------------- listing documents and drafts
+export type ProductDocument = { id: string; doc_type: string; status: 'pending' | 'accepted' | 'rejected'; file_name: string | null; note: string | null };
+
+export async function productDocuments(productId: string): Promise<ProductDocument[]> {
+  if (MARKET_DEMO) return [];
+  const { data, error } = await supabase.from('product_documents').select('id, doc_type, status, file_name, note').eq('product_id', productId).order('uploaded_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data as ProductDocument[]) ?? [];
+}
+
+/** A category's required document (halal certificate, printer licence...) into the private documents bucket. */
+export async function uploadProductDocument(sellerId: string, productId: string, docType: string, file: File) {
+  if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) throw new Error('PDF, JPEG or PNG only');
+  if (file.size > MAX_UPLOAD_BYTES) throw new Error('Up to 10 MB');
+  const ext = file.type === 'application/pdf' ? 'pdf' : file.type === 'image/png' ? 'png' : 'jpg';
+  const path = `${sellerId}/products/${productId}/${docType}-${Date.now().toString(36)}.${ext}`;
+  const { error } = await supabase.storage.from('seller-kyc').upload(path, file, { contentType: file.type, upsert: false });
+  if (error) throw new Error(error.message);
+  const { error: e2 } = await supabase.from('product_documents').insert({ product_id: productId, doc_type: docType, path, file_name: file.name.slice(0, 200) });
+  if (e2) throw new Error(e2.message);
+}
+
+/** The AI drafts the other language for the seller to check (never saved by itself; Quran text is never translated). */
+export async function draftTranslation(sellerId: string, to: 'ar' | 'en', name: string, description: string) {
+  return callFunction<{ name: string; description: string; quran_text_present: boolean }>('translate-draft', { sellerId, to, name, description });
+}
+
+/** What a category requires, from the server (falls back to the handbook snapshot before switch-on). */
+export async function categoryRequirements(categoryId: string): Promise<{ attributes: import('./market').CategoryAttribute[]; policy: import('./market').CategoryPolicy } | null> {
+  if (MARKET_DEMO) return null;
+  const { data, error } = await supabase.rpc('mp_category_requirements', { p_cat: categoryId });
+  if (error || !data) return null;
+  return data as never;
 }

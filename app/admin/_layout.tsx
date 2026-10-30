@@ -5,7 +5,8 @@ import React from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Logo } from '@/components/chrome';
-import { Loading, T, useWide } from '@/components/ui';
+import { Loading, T, useHydrated, useWide } from '@/components/ui';
+import { MARKET_DEMO } from '@/lib/market';
 import { useSession } from '@/lib/session';
 import { colors } from '@/theme';
 
@@ -23,10 +24,15 @@ const LINKS: { href: Href; label: string; group?: string }[] = [
 export default function AdminLayout() {
   const wide = useWide();
   const path = usePathname();
-  const { session, staffRole, loading } = useSession();
-  if (loading) return <View style={{ flex: 1, backgroundColor: colors.ivory }}><Loading /></View>;
+  const { session, staffRole: role, loading } = useSession();
+  // The screenshot build (EXPO_PUBLIC_MARKET_DEMO=1, served on localhost) shows the marketplace pages with example
+  // data and no sign-in. Anywhere else, and in every real build, staff sign in as usual.
+  const hydrated = useHydrated();
+  const demo = MARKET_DEMO && hydrated && typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const staffRole = demo ? 'demo' : role;
+  if (loading && !demo) return <View style={{ flex: 1, backgroundColor: colors.ivory }}><Loading /></View>;
   // Not signed in (or not staff): sign in first, then come straight back here.
-  if (!session || !staffRole) return <Redirect href={{ pathname: '/account', params: { next: path } }} />;
+  if (!demo && (!session || !staffRole)) return <Redirect href={{ pathname: '/account', params: { next: path } }} />;
 
   const active = (h: Href) => (h === '/admin' ? path === '/admin' : path === h);
 
