@@ -13,8 +13,8 @@ database or deployed. Read this first if you are picking the work up.
 | M4 | Onboarding, KYC and admin review | done |
 | M5 | Listings with variants, storefronts, search | done |
 | M6 | Checkout, rulebook, sub-orders, sandbox shipping, order flows | done |
-| M7 | Statements, returns/disputes, reviews, messages, notifications, performance | next |
-| M8 | Dashboards, polish, screenshots, docs | |
+| M7 | Statements, returns/disputes, reviews, messages, notifications, performance | done |
+| M8 | Dashboards, polish, screenshots, docs | next |
 
 ## Where things are
 
@@ -25,7 +25,9 @@ database or deployed. Read this first if you are picking the work up.
     · 0015 AI screening: media assets, verdict records, strikes, quarantine, rate limits, product documents
     · 0016 onboarding: the vetting application, checklist, categories per seller, review history, seller review
     · 0017 listings and search: variants and stock, the price guard, public columns only, mp_search, storefronts
-    · 0018 orders and shipping: sub-orders, shipments, tracking events, labels, the seller's order flow, tracking.
+    · 0018 orders and shipping: sub-orders, shipments, tracking events, labels, the seller's order flow, tracking
+    · 0019 after the sale: the seller ledger, statements and recorded payouts, refunds, returns and disputes, reviews
+    and replies, messages, the notifications outbox and its templates, seller performance.
 - Shared pure modules (no imports; the app imports them too): `supabase/functions/_shared/quality.ts`,
   `contact.ts`, `search.ts` (Arabic normalisation and the in-memory search the site uses before switch-on).
 - Products: anon and authenticated read every column except the review fields (0017). A new products column the
@@ -39,7 +41,14 @@ database or deployed. Read this first if you are picking the work up.
   Carriers: `_shared/carriers/` (`types.ts` the adapter interface, `sandbox.ts`, `index.ts` the registry).
   Functions (M6): `shipping-quote` (website), `shipping-rates` (older apps, same rulebook), `create-payment`
   (rewritten: idempotent, sub-orders), `moyasar-webhook` (hands paid orders to `mp_order_paid`, invoices only what we
-  sell), `create-shipment`, `carrier-webhook` (HMAC), `shipment-sync` (cron).
+  sell), `create-shipment`, `carrier-webhook` (HMAC), `shipment-sync` (cron). M7: `after-sale` (messages, returns,
+  reviews, replies, moderation: text masked with `_shared/aftersale.ts`), `refund-order` (rewritten: partial,
+  idempotent, credit notes), `screen-image` (customers' review and return photos, bucket `customer-uploads`).
+- After-sale client code: `src/lib/aftersale.ts` (calls), `src/lib/aftersale-demo.ts` (screenshot data),
+  `src/components/aftersale.tsx` (stars, a return, the return form, the statement, standards, updates),
+  `conversation.tsx`, `reviews.tsx`, `admin-refund.tsx`. Pages: `/seller/{returns,messages,reviews,statements,
+  performance}`, `/messages`, `/review`, returns and reviews on `/order`, reviews on product pages,
+  `/admin/{returns,reviews,payouts,messages,notifications,performance}`.
 - Build flags: `src/lib/flags.ts`. `EXPO_PUBLIC_MARKET_LIVE=1` is set at switch-on; until then the catalogue and the
   build script read only the columns the live database has (the earlier preview's marketplace columns caused 400s).
 - Demo mode: `EXPO_PUBLIC_MARKET_DEMO=1` (set only in `.github/workflows/shots.yml`) shows the seller and admin
@@ -124,4 +133,20 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
   clock); tracking events are de-duplicated and never go backwards, and carry the sub-order and the order along.
   Checkout shows each seller's parcel, items that cannot come to the address (with the reason), duties; the customer's
   order page shows each parcel with its tracking and return policy. Tests: 15 rulebook, 5 carrier, 9 SQL (147 in all).
+- M7: 0019. Statements: an append-only ledger in SAR (sale and commission booked on delivery, payable after the return
+  window and a 3-day hold with no open return; refunds with the commission given back; adjustments with a reason;
+  payouts recorded by finance from bank transfers, reversible, never more than is payable), monthly statements.
+  Refunds: staff only through refund-order; worked out on the server (a whole order, a parcel, an approved return or
+  chosen lines; delivery when the whole parcel comes back), reserved under an idempotency key before Moyasar, never
+  twice, refused until our invoice exists; credit notes for what we invoiced; stock back when fit to sell; the seller's
+  statement follows. Returns and disputes (policy and windows checked in the database, made to measure faulty only,
+  problems up to 30 days, photos screened, the seller answers in 3 days, the customer can take it to us, our decision
+  final). Verified-purchase reviews read by our team first, photos published to the catalogue on approval, seller
+  replies, product ratings kept. Messages masked by the after-sale function, flagged when someone asks to deal
+  elsewhere, rate-limited. Notifications: 40 English/Arabic templates queued (never sent), in-app updates for
+  customers and sellers. Seller performance against the thresholds; weekly warnings; automatic suspension off.
+  Pages for customers, sellers and our team. Tests: 24 SQL (every new table's readers and writers: anon, customers,
+  sellers A and B, each staff role), 8 unit (masking, return reasons, customer photo decisions), and the scripted
+  end-to-end journey (apply, approve, list, AI verdicts, approve the listing, order with the rulebook, label,
+  tracking, delivery, statement, review, payout): 185 in all.
 

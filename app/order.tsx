@@ -1,14 +1,18 @@
-// One order in the account: items, totals, delivery, tracking and tax invoice. Only the shopper (or staff) can read it.
-import { useLocalSearchParams } from 'expo-router';
+// One order in the account: items, totals, delivery, tracking and tax invoice; for each parcel, returns (ask, follow,
+// take to our team), a conversation with the seller and reviews of what arrived. Only the shopper (or staff) can read it.
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { ReturnCard, ReturnForm } from '@/components/aftersale';
 import { Screen } from '@/components/chrome';
+import { StartConversation } from '@/components/conversation';
 import { Icon } from '@/components/icons';
 import { Seo } from '@/components/seo';
-import { Button, Card, Divider, H1, Loading, Notice, Row, T, Tag, useWide } from '@/components/ui';
+import { Button, Card, Divider, H1, Loading, Notice, Row, T, Tag, useHydrated, useWide } from '@/components/ui';
+import { MARKET_DEMO } from '@/lib/flags';
 import { useI18n, type Key } from '@/lib/i18n';
 import { formatMoney } from '@/lib/money';
-import { orderTracking, type OrderTracking } from '@/lib/orders';
+import { orderTracking, type OrderTracking, type ParcelTracking } from '@/lib/orders';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/theme';
@@ -34,9 +38,15 @@ export default function OrderPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading');
   const [parcels, setParcels] = useState<OrderTracking | null>(null);
-  useEffect(() => { if (session && id) orderTracking(id).then(setParcels).catch(() => undefined); }, [session, id]);
+  const [asking, setAsking] = useState<string | null>(null);
+  // the example order exists only in the screenshot build, and only once the page is live (the page is pre-rendered without it)
+  const hydrated = useHydrated();
+  const demo = hydrated && MARKET_DEMO && id === 'demo-order';
+  const reloadParcels = () => { if ((session || demo) && id) orderTracking(id).then(setParcels).catch(() => undefined); };
+  useEffect(reloadParcels, [session, id, demo]);
 
   useEffect(() => {
+    if (demo) { setOrder(DEMO_ORDER); setState('ready'); return; }
     if (!session || !id) return;
     supabase
       .from('orders')
@@ -47,7 +57,7 @@ export default function OrderPage() {
         setOrder((data as Order) ?? null);
         setState(data ? 'ready' : 'missing');
       });
-  }, [session, id]);
+  }, [session, id, demo]);
 
   const money = (m: number) => formatMoney(m, order?.currency ?? 'SAR', lang);
   const date = (s: string) => new Date(s).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -57,9 +67,10 @@ export default function OrderPage() {
     <Screen>
       <Seo title="Order | Al Mukarramah" description="Your order." path="/order" noindex />
       <Button kind="text" size="sm" label={t('backToAccount')} href="/account" style={{ alignSelf: 'flex-start', marginBottom: 6 }} />
-      {!session && <Notice text={t('signInToSeeOrder')} />}
+      {!session && !demo && <Notice text={t('signInToSeeOrder')} />}
       {session && state === 'loading' && <Loading />}
       {session && state === 'missing' && <Notice tone="warn" text={t('orderNotFound')} />}
+      {demo ? <Notice text={t('lfDemo')} /> : null}
       {order && (
         <>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
@@ -86,6 +97,14 @@ export default function OrderPage() {
             </Card>
           )}
 
+          {parcels && parcels.sub_orders.length === 1 && parcels.sub_orders[0].kind === 'house' ? (
+            // one parcel of our own: the steps above show it; returns and messages are here
+            <Card pad={wide ? 20 : 14} style={{ marginBottom: 16 }}>
+              <AfterSale p={parcels.sub_orders[0]} asking={asking === parcels.sub_orders[0].id} onAsk={() => setAsking(parcels.sub_orders[0].id)}
+                onClose={() => setAsking(null)} onDone={() => { setAsking(null); reloadParcels(); }} />
+            </Card>
+          ) : null}
+
           {parcels && parcels.sub_orders.length > 1 || parcels?.sub_orders.some((p) => p.kind !== 'house') ? (
             <View style={{ gap: 12, marginBottom: 16 }}>
               <T w={700} size={17} color={colors.navy}>{t('trParcels')}</T>
@@ -97,9 +116,16 @@ export default function OrderPage() {
                   </View>
                   <T size={12.5} color={colors.muted} num>{p.number}</T>
                   {p.lines.map((l, i) => (
-                    <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
-                      <T size={13.5} style={{ flex: 1 }}>{l.quantity} × {pick(l, 'name')}{l.variant ? ` · ${l.variant}` : ''}</T>
-                      <T size={12.5} color={colors.muted}>{l.return_policy ? t(`trReturn_${l.return_policy}` as Key).replace('{n}', String(l.return_window_days ?? 0)) : ''}</T>
+                    <View key={i} style={{ gap: 2 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
+                        <T size={13.5} style={{ flex: 1 }}>{l.quantity} × {pick(l, 'name')}{l.variant ? ` · ${l.variant}` : ''}</T>
+                        <T size={12.5} color={colors.muted}>{l.return_policy ? t(`trReturn_${l.return_policy}` as Key).replace('{n}', String(l.return_window_days ?? 0)) : ''}</T>
+                      </View>
+                      {p.status === 'delivered' && l.product_id ? (
+                        l.review ? <T size={12.5} color={colors.muted}>{t('rvYours')}: {'★'.repeat(l.review.rating)} · {t(`rvStatus_${l.review.status}` as Key)}</T>
+                          : <Link href={{ pathname: '/review', params: { item: l.id } }}><T size={12.5} w={600} color={colors.emerald}>{t('rvWrite')}</T></Link>
+                      ) : null}
+                      {l.refunded_quantity ? <T size={12.5} color={colors.emerald}>{t('rtRefundedQty').replace('{n}', String(l.refunded_quantity))}</T> : null}
                     </View>
                   ))}
                   {p.production_days && ['awaiting_acceptance', 'accepted', 'in_production'].includes(p.status) ? <T size={13} color={colors.brassText}>{t('trMaking').replace('{n}', String(p.production_days))}</T> : null}
@@ -115,6 +141,7 @@ export default function OrderPage() {
                       ))}
                     </View>
                   ) : null}
+                  <AfterSale p={p} asking={asking === p.id} onAsk={() => setAsking(p.id)} onClose={() => setAsking(null)} onDone={() => { setAsking(null); reloadParcels(); }} />
                 </Card>
               ))}
             </View>
@@ -132,6 +159,9 @@ export default function OrderPage() {
               <Row label={t('shipping')} value={money(order.shipping_minor)} />
               <Row label={t('total')} value={money(order.total_minor)} bold />
               <T size={12} color={colors.muted}>{t('vatIncludedAmount')} {money(order.vat_minor)}</T>
+              {parcels?.refunds.filter((f) => f.status === 'succeeded').map((f, i) => (
+                <T key={i} size={13} color={colors.emerald}>{t('rtRefundLine').replace('{amount}', money(f.amount_minor)).replace('{date}', date(f.completed_at ?? f.created_at))}{f.credit_note ? ` · ${f.credit_note}` : ''}</T>
+              ))}
               {order.invoices?.[0] && (
                 <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 6 }}>
                   <Icon name="shield" size={18} color={colors.success} />
@@ -165,3 +195,36 @@ export default function OrderPage() {
     </Screen>
   );
 }
+
+// Returns, the conversation with the seller and the button to ask, under each parcel.
+function AfterSale({ p, asking, onAsk, onClose, onDone }: { p: ParcelTracking; asking: boolean; onAsk: () => void; onClose: () => void; onDone: () => void }) {
+  const { t } = useI18n();
+  const today = new Date().toISOString().slice(0, 10);
+  const canAsk = (p.status === 'delivered' && !!p.problem_until && p.problem_until >= today) || (!!p.not_received_from && today >= p.not_received_from);
+  return (
+    <View style={{ gap: 10 }}>
+      {p.returns.map((r) => (
+        <ReturnCard key={r.id} r={r} side="customer" onDone={onDone} messagesHref={r.thread_id ? { pathname: '/messages', params: { thread: r.thread_id } } : undefined} />
+      ))}
+      {asking ? <ReturnForm parcel={p} onDone={onDone} onCancel={onClose} /> : (
+        <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          {canAsk ? <Button size="sm" kind="secondary" label={t('rtAsk')} onPress={onAsk} /> : null}
+          {p.thread_id ? <Button size="sm" kind="text" label={p.seller ? t('msOpenWithSeller') : t('msOpenWithUs')} href={{ pathname: '/messages', params: { thread: p.thread_id } }} />
+            : <StartConversation as="customer" subOrderId={p.id} label={p.seller ? t('msAskSeller') : t('msAskUs')} onSent={(id) => router.push({ pathname: '/messages', params: { thread: id } })} />}
+        </View>
+      )}
+    </View>
+  );
+}
+
+// The example order in the screenshot build (EXPO_PUBLIC_MARKET_DEMO=1) only.
+const DEMO_ORDER: Order = {
+  id: 'demo-order', number: 104960, status: 'delivered', currency: 'SAR', kind: 'shop', created_at: '2026-10-27T09:58:00Z', paid_at: '2026-10-27T10:00:00Z',
+  subtotal_minor: 104000, shipping_minor: 5500, discount_minor: 0, total_minor: 109500, vat_minor: 14283,
+  ship_to: { recipient_name: 'Yusuf', city: 'Dammam', country: 'SA', line1: '—' }, gift_message: null, shipping_carrier: null, tracking_number: null,
+  order_items: [
+    { id: 'i1', name_en: 'Ameer al oud, aged oud oil, 6 ml', name_ar: 'أمير العود، دهن عود معتّق ٦ مل', quantity: 1, unit_price_minor: 98000, line_total_minor: 98000 },
+    { id: 'i6', name_en: 'Ajwa dates, 1 kg', name_ar: 'تمر عجوة، ١ كغ', quantity: 1, unit_price_minor: 6000, line_total_minor: 6000 },
+  ],
+  invoices: [{ id: 'inv', number: 'INV-2026-000412', created_at: '2026-10-27T10:00:00Z' }],
+};

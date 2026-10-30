@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Screen } from '@/components/chrome';
-import { Button, Chip, H1, Notice, T } from '@/components/ui';
+import { Chip, H1, Notice, T } from '@/components/ui';
 import { formatMoney } from '@/lib/money';
-import { callFunction, supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { RefundButton } from '@/components/admin-refund';
 import { colors, radius, space, type } from '@/theme';
 import { Seo } from '@/components/seo';
 
@@ -38,16 +39,6 @@ export default function AdminOrders() {
     load();
   }
 
-  async function refund(o: Order) {
-    // Refunds go through a server function: it refunds in Moyasar and issues a ZATCA credit note.
-    try {
-      await callFunction('refund-order', { orderId: o.id, reason: 'Refund from admin panel' });
-      setMsg(`Refund started for AM-${o.number}`);
-      load();
-    } catch (e) {
-      setMsg(String(e));
-    }
-  }
 
   return (
     <Screen chrome="none" style={{ maxWidth: 1180 }}>
@@ -68,7 +59,8 @@ export default function AdminOrders() {
           ))}
           <View style={{ flexDirection: 'row', gap: space(1), flexWrap: 'wrap', marginTop: space(1) }}>
             {STATUSES.filter((s) => s !== o.status).map((s) => <Chip key={s} label={`→ ${s}`} onPress={() => setStatus(o, s)} />)}
-            {o.status !== 'refunded' && o.status !== 'pending_payment' && <Button kind="danger" label="Refund" onPress={() => refund(o)} />}
+            {/* everything still refundable on the order (refund-order works it out; returns and single parcels are on Returns and refunds) */}
+            {o.status !== 'refunded' && o.status !== 'pending_payment' && <RefundButton orderId={o.id} label="Refund the order" onDone={load} />}
           </View>
         </View>
       ))}

@@ -1,10 +1,12 @@
-// Seller dashboard home: account status, what to do next, and listing counts.
+// Seller dashboard home: account status, what to do next, listing counts, and the latest updates from Al Mukarramah.
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { NoticeList } from '@/components/aftersale';
 import { Screen } from '@/components/chrome';
 import { Ornament } from '@/components/decor';
 import { Seo } from '@/components/seo';
 import { Button, Card, Notice, Serif, T, useWide } from '@/components/ui';
+import { markNotificationsRead, notifications, type Notice as AppNotice } from '@/lib/aftersale';
 import { useI18n, type Key } from '@/lib/i18n';
 import { myListings, mySellerFile, type Checklist, type Listing } from '@/lib/seller';
 import { useSeller } from '@/lib/seller-context';
@@ -17,6 +19,8 @@ export default function SellerHome() {
   const s = me.seller;
   const [rows, setRows] = useState<Listing[] | null>(null);
   const [check, setCheck] = useState<Checklist | null>(null);
+  const [updates, setUpdates] = useState<AppNotice[]>([]);
+  useEffect(() => { notifications(s.id).then((n) => { setUpdates(n.items.slice(0, 6)); if (n.unread) markNotificationsRead(s.id).catch(() => undefined); }).catch(() => undefined); }, [s.id]);
   useEffect(() => { myListings(s.id).then(setRows).catch(() => setRows([])); }, [s.id]);
   useEffect(() => { if (s.status !== 'approved') mySellerFile(s.id).then((f) => setCheck(f.checklist)).catch(() => setCheck(null)); }, [s.id, s.status]);
   const count = (st: Listing['listing_status']) => (rows ?? []).filter((r) => r.listing_status === st).length;
@@ -52,6 +56,13 @@ export default function SellerHome() {
           </Card>
         ))}
       </View>
+
+      {updates.length ? (
+        <Card pad={wide ? 22 : 14} style={{ marginTop: 16, gap: 4 }}>
+          <T w={700} size={16} color={colors.navy} style={{ marginBottom: 4 }}>{t('ntUpdates')}</T>
+          <NoticeList items={updates} empty="" />
+        </Card>
+      ) : null}
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 20 }}>
         <Button label={t('sdAddProduct')} href="/seller/product" disabled={s.status !== 'approved'} />

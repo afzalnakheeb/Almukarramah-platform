@@ -10,7 +10,9 @@ import { SizePicker, TailorConfigurator } from '@/components/tailoring';
 import { Icon } from '@/components/icons';
 import { brandName, NOT_STUDIO, Breadcrumb, Button, CapsLink, Chip, Divider, EmptyState, Eyebrow, Grid, KiswahRule, Loading, Notice, Photo, Price, SectionHead, Serif, shortName, Stepper, T, useWide } from '@/components/ui';
 import { useCart } from '@/lib/cart';
+import { StartConversation } from '@/components/conversation';
 import { Facts, Faq } from '@/components/faq';
+import { ReviewsSection } from '@/components/reviews';
 import { data, reveal } from '@/components/motion';
 import { breadcrumbLd, faqLd, productLd, Seo } from '@/components/seo';
 import { getFeatured, getProduct } from '@/lib/catalogue';
@@ -19,6 +21,7 @@ import { snapshot, snapshotFeatured, snapshotProduct } from '@/lib/snapshot';
 import { formatMoney, priceIn } from '@/lib/money';
 import { usePrefs } from '@/lib/prefs';
 import { MARKET_LIVE } from '@/lib/flags';
+import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { Product, ProductVariant } from '@/lib/types';
 import { colors, toneFor } from '@/theme';
@@ -46,6 +49,7 @@ export default function ProductScreen() {
   const { t, pick, currency, lang, isRTL } = useI18n();
   const { destination } = usePrefs();
   const { add } = useCart();
+  const { session } = useSession();
   const [product, setProduct] = useState<Product | null | undefined>(() => snapshotProduct(slug) ?? undefined);
   const [others, setOthers] = useState<Product[]>(() => snapshotFeatured().filter((r) => r.slug !== slug && !NOT_STUDIO.includes(r.slug)).slice(0, 3));
   const [image, setImage] = useState(0);
@@ -287,9 +291,19 @@ export default function ProductScreen() {
               <Serif role="h2" size={wide ? 44 : 30}>{t('reviewsTitle')}</Serif>
             </View>
             <View style={{ flex: wide ? 1.25 : undefined, alignSelf: 'stretch', gap: 14, paddingVertical: wide ? 8 : 0 }}>
-              <KiswahRule width={72} />
-              <T w={500} size={15.5} color={colors.navy}>{t('reviewsEmptyTitle')}</T>
-              <T size={14.5} lh={1.7} color={colors.body}>{t('reviewsEmptyBody')}</T>
+              <ReviewsSection productId={product.id} slug={product.slug} empty={(
+                <>
+                  <KiswahRule width={72} />
+                  <T w={500} size={15.5} color={colors.navy}>{t('reviewsEmptyTitle')}</T>
+                  <T size={14.5} lh={1.7} color={colors.body}>{t('reviewsEmptyBody')}</T>
+                </>
+              )} />
+              {MARKET_LIVE && seller && session ? (
+                <View style={{ marginTop: 10, gap: 8, alignItems: 'flex-start' }}>
+                  <T size={13.5} color={colors.body}>{t('msQuestion').replace('{seller}', pick(seller as unknown as Record<string, unknown>, 'name') || seller.name_en)}</T>
+                  <StartConversation as="customer" productId={product.id} label={t('msAskSeller')} onSent={(id) => router.push({ pathname: '/messages', params: { thread: id } })} />
+                </View>
+              ) : null}
             </View>
           </View>
         </View>

@@ -12,11 +12,17 @@ import { colors } from '@/theme';
 
 const LINKS: { href: Href; label: string; group?: string }[] = [
   { href: '/admin', label: 'Home' },
-  { href: '/admin/orders', label: 'Orders & refunds', group: 'Customers' },
+  { href: '/admin/orders', label: 'Orders', group: 'Customers' },
+  { href: '/admin/returns', label: 'Returns and refunds' },
+  { href: '/admin/reviews', label: 'Reviews to publish' },
+  { href: '/admin/messages', label: 'Conversations' },
+  { href: '/admin/notifications', label: 'Notifications outbox' },
   { href: '/admin/products', label: 'Products & stock', group: 'Catalogue' },
   { href: '/admin/drafts', label: 'Drafts to approve' },
   { href: '/admin/listings', label: 'Seller listings to approve', group: 'Marketplace' },
   { href: '/admin/sellers', label: 'Sellers and partners' },
+  { href: '/admin/payouts', label: 'Seller payouts' },
+  { href: '/admin/performance', label: 'Seller performance' },
   { href: '/admin/audit', label: 'Audit history', group: 'System' },
   { href: '/', label: '← Back to the shop', group: ' ' },
 ];

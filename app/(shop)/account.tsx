@@ -18,6 +18,9 @@ import { GoogleButton } from '@/components/google';
 import { AppCard } from '@/components/apps';
 import { APPS } from '@/lib/apps';
 import { rememberNext } from '@/lib/auth';
+import { NoticeList } from '@/components/aftersale';
+import { markNotificationsRead, notifications, type Notice as AppNotice } from '@/lib/aftersale';
+import { MARKET_LIVE } from '@/lib/flags';
 
 type SubRow = { id: string; source: string; status: string; cancel_at_period_end: boolean; current_period_end: string | null; plans: { name_en: string; name_ar: string; price_sar: number; kind: string } | null };
 type OrderRow = { id: string; number: number; status: string; currency: string; total_minor: number; created_at: string; invoices: { id: string; number: string }[] };
@@ -233,6 +236,8 @@ export default function Account() {
         {orders.length > 0 && <T size={12.5} color={colors.muted} style={{ marginTop: 6 }}>{t('guestOrdersNote')}</T>}
       </Card>
 
+      {MARKET_LIVE ? <Updates /> : null}
+
       <View style={{ marginTop: 28, gap: 12 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
           <Serif size={26}>{t('ourApps')}</Serif>
@@ -270,5 +275,24 @@ export default function Account() {
           icon={<Icon name={isRTL ? 'arrowLeft' : 'arrowRight'} size={16} />} />
       </View>
     </Screen>
+  );
+}
+
+// Updates about orders, returns and reviews (in the app; emails come once a provider is connected), and messages.
+function Updates() {
+  const { t } = useI18n();
+  const wide = useWide();
+  const [items, setItems] = useState<AppNotice[] | null>(null);
+  useEffect(() => {
+    notifications().then((n) => { setItems(n.items.slice(0, 8)); if (n.unread) markNotificationsRead().catch(() => undefined); }).catch(() => setItems([]));
+  }, []);
+  return (
+    <Card pad={wide ? 22 : 16} style={{ marginTop: 20, gap: 4 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+        <Serif size={26}>{t('ntUpdates')}</Serif>
+        <Button size="sm" kind="secondary" label={t('msTitle')} href="/messages" />
+      </View>
+      {items ? <NoticeList items={items} empty={t('ntNone')} /> : null}
+    </Card>
   );
 }

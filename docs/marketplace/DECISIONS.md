@@ -173,3 +173,56 @@ The standard is store policy reviewed by a qualified scholar, not a fatwa. Every
     OTO, Shiprocket and DHL Express are listed but not connected. The sandbox signs its webhooks with `CRON_SECRET`
     unless `SANDBOX_WEBHOOK_SECRET` is set; no new secret is needed.
 
+
+## After the sale (M7)
+
+50. **Statements in SAR.** Every seller's statement is in SAR. A sale in another currency is converted at the rate the
+    customer paid at (kept on the order).
+51. **When money becomes payable.** A sale, less our commission, is booked when the parcel is delivered and becomes
+    payable after the item's return window plus 3 days (setting `payout_hold_days`), unless a return is open on that
+    parcel. Refunds, payouts and deductions count at once. A refund after a payout can leave a negative balance, which
+    later sales make up.
+52. **Payouts are recorded, not made.** Finance (owner, manager, finance) makes the bank transfer, then records it: the
+    amount (never more than is payable), the bank's reference and the date (within the last 31 days). A transfer that
+    comes back is reversed and owed again. Adjustments always carry a reason the seller sees. Nothing is ever edited.
+53. **Tax treatment of statements** (VAT on sales we invoice as the supplier, VAT on our commission, self-billing):
+    to confirm with the adviser before the first payout. Until then statements show VAT-inclusive amounts.
+54. **Refunds are staff only.** Owner, manager, finance and support, through refund-order only. The amount is worked
+    out on the server from the lines; partial and repeated refunds are supported; each press has its own key, so
+    nothing is refunded twice. A refund is refused while our tax invoice for the order has not been issued, because its
+    credit note needs it. If the credit note fails after the money has gone back, it is flagged for finance
+    (CREDIT_NOTE_PENDING), never skipped.
+55. **Delivery is refunded** when the whole parcel comes back (any reason) or the parcel is cancelled; not for part of
+    a parcel. (The UK and EU require the standard delivery to be refunded on a cancellation: adviser to confirm per
+    market.) **Duties** are refunded for a cancelled parcel, and otherwise only when our team chooses.
+56. **Return windows.** A change of mind: within the item's return window (category setting, default 14 days;
+    "unopened only" items must be unopened). A problem (faulty, damaged, wrong item, item missing, not as described):
+    up to 30 days after delivery whatever the item's policy, made to measure included (setting `faulty_claim_days`).
+    A parcel not received: from 3 days after the latest delivery estimate.
+57. **Who answers a return.** The seller has 3 days (setting `return_response_days`) to accept or to decline with a
+    reason. The customer can then ask us to decide within 7 days of a decline (setting `dispute_window_days`), or if
+    the seller has not answered in time, or 14 days after acceptance if the seller has not confirmed the item came
+    back. Our team's decision is final. Our team answers returns of our own products.
+58. **Back in stock** only when the seller (or our team) confirms the items came back fit to sell. A parcel the seller
+    cancelled had its stock put back at the time.
+59. **Reviews.** Verified purchases only: one review per item bought, from delivery until 365 days after (setting).
+    Our team reads every review and every seller reply before it appears (setting `review_auto_publish` is off).
+    Contact details are masked, and what was found is shown to the moderators. The name shown is the first name and an
+    initial (Latin script) or the first name (Arabic). An item that was returned can still be reviewed. A review our
+    team removed cannot be sent again.
+60. **Review photos.** Up to 3, of the item only: a photo showing a person is refused, for privacy. They are screened
+    like sellers' photos and copied to the public catalogue only when the review is published.
+61. **Review invitations** appear in the app 3 days after delivery and are never emailed (an email asking for a review
+    can count as marketing in some markets).
+62. **Messages** go only through Al Mukarramah. Contact details are masked before a message is stored (the original is
+    not kept), and a message inviting the other person to deal elsewhere flags the conversation for our team. Up to 30
+    messages an hour per person (setting). A seller can write to a customer only about that customer's order; a guest
+    order (no account) cannot be messaged, and our team contacts that customer.
+63. **Notifications.** 40 service templates in English and Arabic (owner and manager can change the wording), queued
+    with the recipient's language. Nothing is sent until an email or push provider is connected
+    (`notifications_send_enabled` is off, and nothing reads it yet); in-app notifications already show. Marketing is
+    never queued here.
+64. **Seller standards** over 90 days: late shipments (warn at 5%, limit 15%), seller cancellations (2.5%, 10%), returns
+    for a problem (10%, 25%; a change of mind does not count), average rating (warn at 4.0 or below, limit 3.5, from 3
+    reviews). A shop with fewer than 10 orders is "new" and not judged. Warnings at most weekly. Automatic suspension
+    is OFF: our team decides.
