@@ -487,6 +487,12 @@ const en = {
   pageNotFoundTitle: 'This page could not be found',
   pageNotFoundBody: 'The address may have changed. Everything in the marketplace is a step away.',
   goHome: 'Return home',
+
+  // Design (shots/ui, round 2): story, answers aside
+  storyImageAlt: 'The Seal of the Prophet’s Mosque Door keepsake with two Arabian perfumes, in morning light',
+  emblemAlt: 'The Al Mukarramah emblem, filled with the corner of the Kaaba',
+  faqAside: 'Something else on your mind? Our gift assistant answers from the live catalogue, in English and Arabic.',
+  faqAsideCta: 'Ask the gift assistant',
 };
 
 const ar: typeof en = {
@@ -574,7 +580,7 @@ const ar: typeof en = {
   invoice: 'فاتورة ضريبية',
 
   topBar: 'سوق مختار لأفضل الصنّاع من أنحاء العالم الإسلامي',
-  searchPlaceholder: 'ابحث عن التمور والعود وسجادات الصلاة…',
+  searchPlaceholder: 'ابحث عن عود، تمور، سجادات…',
   deliveringTo: 'التوصيل إلى',
   'dest_madinah-hotel': 'فندق في المدينة',
   'dest_makkah-hotel': 'فندق في مكة',
@@ -634,7 +640,7 @@ const ar: typeof en = {
   stepDetails: 'البيانات والدفع',
 
   heroKicker: 'السوق المختار للبيت المسلم',
-  heroTitle: 'دينك ودنياك… في بيت واحد',
+  heroTitle: 'دينك ودنياك…\nفي بيت واحد',
   heroBody: 'عطور وعود وسجادات صلاة وهدايا من صنّاع موثوقين في أنحاء العالم الإسلامي، يعتمد فريقنا كل منتج منها.',
   exploreGifts: 'تصفّح السوق',
   heroTrust1: 'كل منتج يعتمده فريقنا',
@@ -960,6 +966,11 @@ const ar: typeof en = {
   pageNotFoundTitle: 'لم نجد هذه الصفحة',
   pageNotFoundBody: 'ربما تغيّر العنوان، وكل ما في السوق على بُعد خطوة.',
   goHome: 'العودة إلى الرئيسية',
+
+  storyImageAlt: 'تذكار ختم باب المسجد النبوي مع عطرين عربيين في ضوء الصباح',
+  emblemAlt: 'شعار المكرمة وفيه ركن الكعبة المشرفة',
+  faqAside: 'لديك سؤال آخر؟ يجيبك مساعد الهدايا من كتالوجنا الحالي، بالعربية والإنجليزية.',
+  faqAsideCta: 'اسأل مساعد الهدايا',
 };
 
 export type Key = keyof typeof en;
@@ -970,6 +981,8 @@ export const strings = { en, ar };
 type I18n = {
   lang: Lang;
   isRTL: boolean;
+  /** True once the saved or device language has been applied (web starts in English to match the pre-rendered page). */
+  settled: boolean;
   t: (k: Key) => string;
   setLang: (l: Lang) => void;
   currency: string;
@@ -991,6 +1004,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   // then switches to the saved or device language straight after. The apps use the device language at once.
   const [lang, setLangState] = useState<Lang>(Platform.OS === 'web' ? 'en' : device);
   const [currency, setCurrencyState] = useState('SAR');
+  const [settled, setSettled] = useState(Platform.OS !== 'web');
 
   useEffect(() => {
     AsyncStorage.multiGet(['lang', 'currency']).then((pairs) => {
@@ -999,7 +1013,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       if (l === 'ar' || l === 'en') setLangState(l);
       else if (device === 'ar') setLangState('ar');
       if (c) setCurrencyState(c);
-    }).catch(() => device === 'ar' && setLangState('ar'));
+    }).catch(() => device === 'ar' && setLangState('ar')).finally(() => setSettled(true));
   }, []);
 
   useEffect(() => {
@@ -1012,6 +1026,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<I18n>(() => ({
     lang,
     isRTL: lang === 'ar',
+    settled,
     t: (k) => (lang === 'ar' ? ar : en)[k],
     setLang: (l) => {
       setLangState(l);
@@ -1028,7 +1043,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       AsyncStorage.setItem('currency', c);
     },
     pick: (row, field) => String(row[`${field}_${lang}`] ?? row[`${field}_en`] ?? ''),
-  }), [lang, currency]);
+  }), [lang, currency, settled]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -102,6 +102,25 @@ export function Corners({ at = ['ts', 'be'], len = 16, inset = -9, color = color
   );
 }
 
+/** A fine satin-gold rule that fades out at both ends (the logo lock-up, section openers). */
+export function FadeRule({ width, height = 1, opacity = 0.85, style }: { width: number | `${number}%`; height?: number; opacity?: number; style?: StyleProp<ViewStyle> }) {
+  const id = `fade${React.useId().replace(/[^a-zA-Z0-9]/g, '')}`; // stable between the pre-rendered HTML and hydration
+  return (
+    <View {...hidden} style={[{ width, height }, style]}>
+      <Svg width="100%" height={height} preserveAspectRatio="none">
+        <Defs>
+          <LinearGradient id={id} x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0" stopColor={colors.gold} stopOpacity={0} />
+            <Stop offset="0.5" stopColor={colors.gold} stopOpacity={opacity} />
+            <Stop offset="1" stopColor={colors.gold} stopOpacity={0} />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height={height} fill={`url(#${id})`} />
+      </Svg>
+    </View>
+  );
+}
+
 /** Thin gold rule across the full width. */
 export function GoldRule({ style }: { style?: StyleProp<ViewStyle> }) {
   return <View {...hidden} style={[{ height: 1, backgroundColor: colors.goldLine }, style]} />;
@@ -193,21 +212,25 @@ export function SideShade({ color = colors.night, from = 'left', strength = 0.92
 }
 
 /**
- * Hero film: a muted, looping video on the website (desktop or phone cut, chosen after hydration so phones never
- * download the desktop file), with the poster image shown first and kept for visitors who prefer less motion.
- * In the iPhone and Android apps the poster is shown with the slow camera drift instead.
+ * Hero film: a muted, seamless 12-second loop on the website, with its poster (frame 0 of the film) painted first and
+ * kept underneath. The cut (desktop or phone, left-to-right or Arabic) is chosen only once the screen size and the
+ * language are known (`enabled`), so nobody downloads a film they will not see; visitors who prefer less motion keep
+ * the poster. In the iPhone and Android apps the poster is shown still.
  */
-export function HeroFilm({ desktop, phone, poster, posterPhone, label, wide }: { desktop: string; phone: string; poster: string; posterPhone?: string; label?: string; wide: boolean }) {
-  const [ready, setReady] = React.useState(false);
-  React.useEffect(() => { setReady(!reducedMotion()); }, []);
-  const still = wide ? poster : posterPhone ?? poster;
-  if (Platform.OS !== 'web') return <CinematicPhoto uri={still} label={label} sweep={false} />;
+export function HeroFilm({ film, poster, label, position = 'center', enabled = true }: {
+  film: string; poster: string; label?: string; position?: 'center' | 'left' | 'right'; enabled?: boolean;
+}) {
+  const [motionOk, setMotionOk] = React.useState(false);
+  React.useEffect(() => { setMotionOk(!reducedMotion()); }, []);
+  if (Platform.OS !== 'web') {
+    return <Image source={{ uri: imageUrl(poster) }} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={position} accessibilityLabel={label} />;
+  }
   return (
     <View style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]} accessible={!!label} accessibilityLabel={label} accessibilityRole={label ? 'image' : undefined}>
-      <Image source={{ uri: imageUrl(still) }} style={StyleSheet.absoluteFill} contentFit="cover" priority="high" />
-      {ready ? (
-        <video key={wide ? 'd' : 'm'} src={imageUrl(wide ? desktop : phone)} poster={imageUrl(still)} autoPlay muted loop playsInline preload="auto" aria-hidden
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+      <Image source={{ uri: imageUrl(poster) }} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={position} priority="high" />
+      {motionOk && enabled ? (
+        <video key={film} src={imageUrl(film)} poster={imageUrl(poster)} autoPlay muted loop playsInline preload="auto" aria-hidden
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${position} center` }} />
       ) : null}
     </View>
   );

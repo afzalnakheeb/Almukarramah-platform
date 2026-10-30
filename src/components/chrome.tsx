@@ -12,9 +12,9 @@ import { CURRENCIES } from '@/lib/money';
 import { openExternal } from '@/lib/links';
 import { DESTINATIONS, usePrefs, type Destination } from '@/lib/prefs';
 import { colors, sans, space } from '@/theme';
-import { Ornament } from './decor';
+import { FadeRule, Ornament } from './decor';
 import { Icon, type IconName } from './icons';
-import { LogoMark } from './logo-motion';
+import { lockup, LogoMark } from './logo-motion';
 import { bootMotion, data, motionBooted } from './motion';
 import { Container, Notice, OptionCard, Serif, Sheet, styles as ui, T, useWide } from './ui';
 
@@ -27,27 +27,28 @@ export const SELL_HREF = 'mailto:hello@almukarramah.com?subject=Selling%20on%20A
 export const destIcon = (d: Destination): IconName => (d === 'saudi' ? 'house' : d === 'international' ? 'globe' : 'bed');
 
 /** The logo: ink on the light pages (gold only where a dark surface remains, e.g. the apps' splash). With line, the
- *  descriptor "For every Muslim home" (لكل بيت مسلم) sits under it in spaced capitals, between fine gold hairlines. */
-export function Logo({ height = 44, white, line, compact }: { height?: number; white?: boolean; line?: boolean; compact?: boolean }) {
+ *  lock-up: a fine gold rule that fades at both ends, then "For every Muslim home" (لكل بيت مسلم) in spaced capitals.
+ *  `slot` marks the site header's logo, where the first-visit intro (brand-intro.tsx) lands. */
+export function Logo({ height = 44, white, line, compact, slot }: { height?: number; white?: boolean; line?: boolean; compact?: boolean; slot?: boolean }) {
   const { t, isRTL } = useI18n();
-  // compact (the header once scrolled past the hero): about 80% of the height (48 -> 38) and the line fades out (motion: +html.tsx)
+  // compact (the header once scrolled past the hero): 80% of the height and the line folds away (motion: +html.tsx)
   const h = compact ? Math.round(height * 0.8) : height;
-  // Website: the exact vector mark, still (the coming Kaaba-corner animation plugs into LogoMark's overlay). Apps: the PNG.
+  // Website: the exact vector mark, always still. Apps: the PNG.
   const img = Platform.OS === 'web'
-    ? <LogoMark height={h} gold={white} label={t('appName')} intro={false} />
+    ? <LogoMark height={h} gold={white} label={t('appName')} slot={slot} />
     : <Image source={white ? LOGO_GOLD : LOGO} style={{ height: h, width: h * LOGO_RATIO }} contentFit="contain" accessibilityLabel={t('appName')} />;
   if (!line) return img;
-  const size = Math.max(8.5, Math.round(height * 0.19 * 10) / 10);
+  // proportions shared with the intro, so its large lock-up lands exactly on this one
+  const L = lockup(height, isRTL);
   return (
-    <View {...data({ logo: compact === undefined ? undefined : compact ? 'compact' : 'full' })} style={{ alignItems: 'center', gap: Math.round(height * 0.12) }}>
+    <View {...data({ logo: compact === undefined ? undefined : compact ? 'compact' : 'full' })} style={{ alignItems: 'center', gap: L.gap }}>
       {img}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <View style={{ width: 14, height: StyleSheet.hairlineWidth, backgroundColor: colors.gold }} />
-        <T w={isRTL ? 500 : 600} size={isRTL ? size * 1.25 : size} color={colors.brassText} lh={1.25}
-          style={{ letterSpacing: isRTL ? 0 : size * 0.22, textTransform: 'uppercase' }}>
+      <View {...data({ brandline: slot ? 1 : undefined })} style={{ alignItems: 'center' }}>
+        <FadeRule width={L.ruleW} />
+        <T w={isRTL ? 500 : 600} size={L.size} color={colors.brassText}
+          style={{ marginTop: L.ruleGap, lineHeight: L.size * 1.25, letterSpacing: L.size * L.track, textTransform: isRTL ? 'none' : 'uppercase' }}>
           {t('logoLine')}
         </T>
-        <View style={{ width: 14, height: StyleSheet.hairlineWidth, backgroundColor: colors.gold }} />
       </View>
     </View>
   );
@@ -173,8 +174,9 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
       style={{ pointerEvents: 'box-none', height: compact ? natural.current || undefined : hold }}>
       {wide ? (
         <>
-          {/* utility bar on stone: delivery and currency, the smaller links (exactly 36 px: it scrolls away, the house below stays) */}
-          <View style={{ backgroundColor: colors.stone, borderBottomWidth: 1, borderColor: colors.line }}>
+          {/* utility row: no bar, just the ivory page and a gold hairline; delivery and currency, the smaller links
+              (exactly 36 px: it scrolls away, the house below stays) */}
+          <View style={{ backgroundColor: colors.ivory, borderBottomWidth: 1, borderColor: colors.hair }}>
             <Container style={{ height: 35, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
                 <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} {...data({ foot: 1 })} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -202,19 +204,20 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
           </View>
           {/* the house: search, the logo in the centre, assistant, account and bag */}
           <View {...data({ house: compact ? 'compact' : 'full' })} style={{ backgroundColor: colors.ivory }}>
-            <Container style={{ paddingTop: compact ? 10 : 24, paddingBottom: compact ? 6 : 16, flexDirection: 'row', alignItems: 'center' }}>
+            <Container style={{ paddingTop: compact ? 10 : 26, paddingBottom: compact ? 4 : 12, flexDirection: 'row', alignItems: 'center' }}>
               <View style={{ flex: 1, alignItems: 'flex-start' }}><SearchBox /></View>
-              <Link href="/" accessibilityLabel={t('home')}><Logo height={46} line compact={compact} /></Link>
-              <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: 4 }}>
+              <Link href="/" accessibilityLabel={t('home')}><Logo height={50} line compact={compact} slot /></Link>
+              <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: 6 }}>
                 <IconLink href="/concierge" icon="sparkle" label={t('concierge')} />
                 <IconLink href="/account" icon="user" label={t('account')} />
                 <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} />
               </View>
             </Container>
-            <Container style={{ paddingBottom: compact ? 6 : 14, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', columnGap: 52 }}>
+            {/* the doors, in spaced capitals; the current one is underlined in Madinah green */}
+            <Container style={{ paddingBottom: compact ? 4 : 10, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', columnGap: 56 }}>
               {nav.map((n) => (
-                <Link key={n.label} href={n.href} {...data({ ul: 'center', cur: isCurrent(path, n.match) ? 1 : undefined })} style={{ paddingVertical: 9 }}>
-                  <T w={500} size={11.5} caps color={colors.navy} style={!isRTL && { letterSpacing: 2.3 }}>{n.label}</T>
+                <Link key={n.label} href={n.href} {...data({ ul: 'nav', cur: isCurrent(path, n.match) ? 1 : undefined })} style={{ paddingVertical: 11 }}>
+                  <T w={isRTL ? 500 : 600} size={isRTL ? 14 : 11} color={colors.navy} style={isRTL ? undefined : { letterSpacing: 2.2, textTransform: 'uppercase' }}>{n.label}</T>
                 </Link>
               ))}
             </Container>
@@ -228,14 +231,14 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
               <IconLink icon="menu" label={t('menu')} onPress={() => setSheet('menu')} />
               <IconLink icon="search" label={t('searchPlaceholder')} onPress={() => setSheet('search')} />
             </View>
-            <Link href="/" accessibilityLabel={t('home')}><Logo height={30} /></Link>
+            <Link href="/" accessibilityLabel={t('home')}><Logo height={30} slot /></Link>
             <View style={{ flexDirection: 'row', width: 96, justifyContent: 'flex-end' }}>
               <IconLink href="/account" icon="user" label={t('account')} />
               <IconLink href="/cart" icon="bag" label={t('cart')} badge={count || undefined} />
             </View>
           </View>
-          {/* delivery strip on stone; it folds away as the page scrolls */}
-          <View {...data({ collapse: 1 })} style={{ flexDirection: 'row', backgroundColor: colors.stone, borderBottomWidth: 1, borderColor: colors.line }}>
+          {/* delivery strip: ivory under a gold hairline (no bar); it folds away as the page scrolls */}
+          <View {...data({ collapse: 1 })} style={{ flexDirection: 'row', backgroundColor: colors.ivory, borderBottomWidth: 1, borderColor: colors.hair }}>
             <Pressable accessibilityRole="button" onPress={() => setSheet('dest')} style={{ flex: 1, minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 20 }}>
               <Icon name={destIcon(destination)} size={14} stroke={1.4} color={colors.brass} />
               <T size={12.5} color={colors.muted}>{t('deliveringTo')}</T>
@@ -512,7 +515,7 @@ export function CheckoutHeader({ step }: { step: 1 | 2 | 3 }) {
 }
 
 const styles = StyleSheet.create({
-  search: { width: 248, flexDirection: 'row', alignItems: 'center', gap: 10, borderBottomWidth: 1, borderColor: colors.goldLine, minHeight: 38 },
+  search: { width: 264, flexDirection: 'row', alignItems: 'center', gap: 10, borderBottomWidth: 1, borderColor: colors.goldLine, minHeight: 38 },
   badge: { position: 'absolute', top: 7, end: 5, backgroundColor: colors.emerald, borderRadius: 999, minWidth: 15, height: 15, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   menuRow: { minHeight: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderColor: colors.line },
   prefRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48, paddingHorizontal: 14, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.porcelain },

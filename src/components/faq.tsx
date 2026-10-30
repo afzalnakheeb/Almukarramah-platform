@@ -5,12 +5,13 @@ import { colors } from '@/theme';
 import { Eyebrow, Serif, T, useWide } from './ui';
 
 /** Answers as a list between fine hairlines. `split` (desktop): the title on the start side, the answers beside it. */
-export function Faq({ title, items, kicker, split }: { title: string; items: { q: string; a: string }[]; kicker?: string; split?: boolean }) {
+export function Faq({ title, items, kicker, split, aside }: { title: string; items: { q: string; a: string }[]; kicker?: string; split?: boolean; aside?: React.ReactNode }) {
   const wide = useWide();
   const head = (
     <View style={{ gap: 12, marginBottom: split ? 0 : 18 }}>
       {kicker ? <Eyebrow rule>{kicker}</Eyebrow> : null}
       <Serif role="h2" size={split ? 44 : wide ? 34 : 28}>{title}</Serif>
+      {aside ? <View style={{ marginTop: split ? 18 : 6 }}>{aside}</View> : null}
     </View>
   );
   const list = (

@@ -54,6 +54,7 @@ html[data-motion="reduced"] [data-reveal]{transition:opacity 200ms linear!import
 [data-ul]{position:relative}
 [data-ul]::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:1px;background:${colors.gold};transform:scaleX(0);transform-origin:0 50%;transition:transform 500ms var(--am-ease);pointer-events:none}
 [data-ul="center"]::after{bottom:3px;transform-origin:50% 50%}
+[data-ul="nav"]::after{bottom:6px;transform-origin:50% 50%}
 html[dir="rtl"] [data-ul="start"]::after{transform-origin:100% 50%}
 [data-cur]::after{transform:scaleX(1);background:${colors.emerald}}
 [data-hairline]{transform:scaleX(0);transform-origin:0 50%;transition:transform 600ms var(--am-ease)}
@@ -75,6 +76,7 @@ html[dir="rtl"] [data-hairline]{transform-origin:100% 50%}
   [data-btn="secondary"]:hover,[data-btn="outlineLight"]:hover{background-color:${colors.ink}!important;border-color:${colors.ink}!important}
   [data-btn="secondary"]:hover *,[data-btn="outlineLight"]:hover *{color:${colors.ivory}!important}
   [data-btn="gold"]:hover{background-color:${colors.goldSoft}!important}
+  [data-btn="fab"]:hover{border-color:${colors.emerald}!important;background-color:${colors.ivory}!important}
   [data-btn="light"]:hover{border-color:${colors.ink}!important}
   [data-btn="quiet"]:hover [data-ul]{border-color:${colors.emerald}!important}
   [data-btn="quiet"]:hover *{color:${colors.emerald}!important}
@@ -98,7 +100,7 @@ html body [data-banner="narrow"]{top:0}
 [data-banner][data-compact] [data-collapse]{max-height:0;opacity:0}
 [data-logo]{transition:gap 300ms var(--am-ease),row-gap 300ms var(--am-ease)}
 [data-logo]>:first-child{transition:height 300ms var(--am-ease),width 300ms var(--am-ease)}
-[data-logo]>:not(:first-child){max-height:24px;transition:opacity 200ms ease,max-height 300ms var(--am-ease)}
+[data-logo]>:not(:first-child){max-height:34px;transition:opacity 200ms ease,max-height 300ms var(--am-ease)}
 [data-logo="compact"]{gap:0!important;row-gap:0!important}
 [data-logo="compact"]>:not(:first-child){opacity:0;max-height:0!important;overflow:hidden}
 
@@ -115,7 +117,25 @@ html body [data-banner="narrow"]{top:0}
   [data-page="a"],[data-page="b"]{animation-duration:150ms}
 }
 @media print{[data-reveal]{opacity:1!important;transform:none!important}}
+
+/* first-visit brand intro (src/components/brand-intro.tsx): the dark field is painted before the scripts arrive, so the
+   page never flashes; it fades by itself after 3.4 s if the scripts are slow. The header's logo and its tagline are
+   held back while the intro's logo glides into their place. */
+html[data-intro="1"] body::after{content:"";position:fixed;inset:0;z-index:2147483000;background:radial-gradient(ellipse at 50% 45%,#2a241d 0%,#14110e 55%,#0c0a08 100%);animation:amIntroCover 600ms ease 3.4s forwards}
+@keyframes amIntroCover{to{opacity:0;visibility:hidden}}
+@keyframes amIntroShow{to{opacity:1}}
+html[data-intro="1"] [data-brandslot],html[data-intro="1"] [data-brandline]{opacity:0;animation:amIntroShow 0s linear 4s forwards}
+html[data-intro="live"] [data-brandslot],html[data-intro="live"] [data-brandline]{opacity:0!important}
 `;
+
+// Decides on the first-visit intro before the first paint: once per session, not for reduced motion, crawlers or
+// link previews, not on checkout, payment, order or admin pages. ?intro=0 turns it off; ?intro=play or ?intro=2.5
+// (frozen at 2.5 s, for design review) force it. Preloads the emblem photograph only when the intro will play.
+const INTRO_JS = `(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get('intro');if(q==='0')return;var f=q!==null;
+if(!f){if(sessionStorage.getItem('amIntro'))return;if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+if(/bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|whatsapp|telegram|headless|lighthouse/i.test(navigator.userAgent))return;
+if(/^\\/(admin|checkout|pay|order|subscribe)/.test(location.pathname))return;sessionStorage.setItem('amIntro','1');d.setAttribute('data-intro','1');}
+var l=document.createElement('link');l.rel='preload';l.as='image';l.type='image/webp';l.href='/images/brand/emblem-kaaba.webp';document.head.appendChild(l);}catch(e){}})();`;
 
 export default function Root({ children }: PropsWithChildren) {
   return (
@@ -135,6 +155,7 @@ export default function Root({ children }: PropsWithChildren) {
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: `body{background-color:${colors.ivory};} #root{background-color:${colors.ivory};}` }} />
         <style dangerouslySetInnerHTML={{ __html: MOTION_CSS }} />
+        <script dangerouslySetInnerHTML={{ __html: INTRO_JS }} />
       </head>
       <body>{children}</body>
     </html>

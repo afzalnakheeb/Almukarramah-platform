@@ -26,6 +26,8 @@ for (const v of process.env.SEO_ONLY ? [] : views) {
     if (v.only && !v.only.includes(path)) continue;
     // React Native Web scrolls inside an inner view, so measure the content and use a viewport that tall.
     const ctx = await browser.newContext({ viewport: { width: v.width, height: v.height }, deviceScaleFactor: v.dsf, locale: v.locale });
+    // the first-visit brand intro is captured separately below (frozen frames); normal shots never show it
+    await ctx.addInitScript(() => { try { sessionStorage.setItem('amIntro', '1'); } catch { /* ignore */ } });
     const page = await ctx.newPage();
     page.on('pageerror', (e) => errors.push(`${v.name} ${path} pageerror: ${e.message}\n${(e.stack || '').split('\n').slice(0, 6).join('\n')}`));
     page.on('console', (m) => { if (m.type() === 'error') errors.push(`${v.name} ${path} console: ${m.text().slice(0, 600)}`); });
@@ -46,6 +48,23 @@ for (const v of process.env.SEO_ONLY ? [] : views) {
       console.log(`${v.name} ${path}: ${total}px`);
     } catch (e) {
       console.log(`${v.name} ${path}: FAILED ${e.message}`);
+    }
+    await ctx.close();
+  }
+}
+// The brand intro, frozen at moments of its timeline (?intro=<seconds>, see src/components/brand-intro.tsx).
+const introTimes = { d: [0.6, 1.8, 2.8, 3.8, 4.9, 5.6, 6.6, 7.25], m: [1.8, 3.6, 5.0, 6.6, 7.25], ar: [3.6, 6.6, 7.25], arm: [6.6] };
+for (const v of process.env.SEO_ONLY || process.env.NO_INTRO ? [] : views) {
+  for (const t of introTimes[v.name] ?? []) {
+    const ctx = await browser.newContext({ viewport: { width: v.width, height: v.height }, deviceScaleFactor: v.dsf, locale: v.locale });
+    const page = await ctx.newPage();
+    page.on('pageerror', (e) => errors.push(`${v.name} intro ${t} pageerror: ${e.message}`));
+    try {
+      await page.goto(`${base}/?intro=${t}`, { waitUntil: 'networkidle', timeout: 60000 });
+      await page.waitForTimeout(1600);
+      await page.screenshot({ path: join(out, `intro-${v.name}-${String(t).replace('.', '_')}.jpg`), type: 'jpeg', quality: 78 });
+    } catch (e) {
+      console.log(`intro ${v.name} ${t}: FAILED ${e.message}`);
     }
     await ctx.close();
   }
