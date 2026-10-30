@@ -4,10 +4,16 @@ Paste the Apple text into App Store Connect > the version > App Review Informati
 characters), and the Google text into Play Console > App content > App access. The review account's email and
 password go only into the sign-in fields of those forms, never into this repository.
 
+Before pasting, replace **[PUBLISHER]** (twice below) with the publisher's legal name from the "Publisher" line at
+the top of `docs/app-stores.md`, the only place it is written. No city anywhere in these notes.
+
 ## Apple (App Review Information > Notes)
 
-Al Mukarramah is a curated marketplace for physical products from Madinah, Saudi Arabia: perfumes, oud, prayer
-mats, dates and gifts. Sign-in is optional; you can browse and check out as a guest.
+Al Mukarramah is a curated marketplace for physical products: perfumes, oud, prayer mats, dates and gifts.
+Sign-in is optional; you can browse and check out as a guest.
+
+PUBLISHER AND STORE
+Al Mukarramah is the brand of [PUBLISHER] (app publisher). The online store at almukarramah.com is operated by Al Mukarramah Stores Trading Est. (مؤسسة متاجر المكرمة للتجارة, Saudi Arabia). Both are managed by Afzal Nakheeb.
 
 PAYMENTS
 - Physical products, and the Dates Club (a box of dates delivered every month to an address in Saudi Arabia), are
@@ -28,7 +34,8 @@ reordered or translated by AI. Lessons are reviewed by a qualified scholar befor
 AI ASSISTANT
 "Ask Al Mukarramah" (the round button at the bottom of the screen, and Gift assistant) uses Anthropic's Claude to
 suggest products from our live catalogue and to write gift-card messages. Before the first message the app explains
-what is sent to Anthropic and asks for permission. It gives no religious rulings and cannot place orders.
+what is sent to Anthropic and asks for permission. Every reply has "Report this reply". It gives no religious
+rulings and cannot place orders.
 
 SIGN-IN AND THE REVIEW ACCOUNT
 Account tab: Sign in with Apple, Continue with Google, or an email code. For this review use the account in the
@@ -60,8 +67,11 @@ Choose "All or some functionality in my app is restricted" and add one set of in
   Sign-in is optional: products, the bag and checkout work as a guest. To see orders, the membership and account
   deletion, open the Account tab, tap "Have a password? Sign in with it" and use this account. Physical products
   are paid on Moyasar's secure payment page; you do not need to pay. The membership is a Google Play subscription
-  (Account tab > Membership > Join), with Restore purchases on the same screen. Delete the account under
-  Account > Delete my account; we recreate the review account before each release.
+  (Account tab > Membership > Join), with Restore purchases on the same screen. The gift assistant (Anthropic's
+  Claude) asks for permission before the first message, and every reply has "Report this reply" so offensive AI
+  output can be flagged without leaving the app. Delete the account under Account > Delete my account; we recreate
+  the review account before each release.
+  Al Mukarramah is the brand of [PUBLISHER] (app publisher). The online store at almukarramah.com is operated by Al Mukarramah Stores Trading Est. (مؤسسة متاجر المكرمة للتجارة, Saudi Arabia). Both are managed by Afzal Nakheeb.
 
 ## The review account (Afzal creates it)
 

@@ -1,5 +1,10 @@
 # App Store and Google Play: what Afzal does, in order
 
+**Publisher (legal name):** ALMUKARRAMAH INVESTMENTS L.L.C · المكرمة للاستثمار ش.ذ.م.م (not final: Afzal confirms the publishing company before step 3)
+
+That line is the only place the publisher's legal name is written. If the publishing company changes, change that
+line and nothing else; every other file says "the publisher" and points here.
+
 The app side is ready on branch `shots/apps`: build profiles (`eas.json`), icons and splash, Sign in with Apple,
 account deletion, the in-app membership, store texts (`store/`), privacy answers (`store/privacy.md`), reviewer notes
 (`store/review-notes.md`) and a release workflow. What is left needs accounts that only the company can open.
@@ -7,6 +12,34 @@ Steps marked **Claude** can be done by Claude Code once you say yes.
 
 Keep every password, key file (.p8, .json) and token in a password manager. Never paste them into chat, the
 repository or an email.
+
+## Rules for anything the public sees
+- The brand is **Al Mukarramah**, presented as a global initiative. No city, and nothing about where the publishing
+  company is registered, in the store names, subtitles, descriptions, promotional text, keywords, screenshots, the
+  copyright line, release notes or any text added to the website. (This repository is public, so the same goes for
+  everything committed here.)
+- The publisher's legal name goes only where a store requires it: the D-U-N-S request, the developer enrolments,
+  agreements, tax and banking, the Google payments profile, and the private notes to the reviewers. Never with a city.
+- **Copyright line: "2026 Al Mukarramah"** (chosen). It names the brand, not the company, so it stays right whichever
+  company publishes the apps. It is set in `store/store.config.json` (Apple) and needs no change on Google Play.
+
+## Decisions for Afzal
+**A. App Store developer name (before step 8).** Apple shows it under the app's name. It is set once, when the first
+app record is created, and can never be changed afterwards. It may be the publisher's legal name or a trade name
+registered to the publisher (Apple may ask for proof of the trade name). Confirm which one before anyone creates the
+first app record; Claude has not chosen.
+
+**B. What the stores show about the company (before steps 7 and 10).** Both stores publish some company details
+next to the app, outside our control:
+- Apple shows the publisher's legal name as the seller. If the app is offered in any of the 27 EU countries, Apple
+  also shows trader contact details on the EU product pages, and for an organisation "the address associated with
+  your D-U-N-S Number will automatically display". That address includes a city. To keep it off the App Store, leave
+  the EU countries out under App Store Connect > the app > Pricing and Availability (they can be added later).
+- Google shows the developer name (choose **Al Mukarramah**), the developer email (use hello@almukarramah.com) and
+  phone. Accounts that sell in-app purchases (the membership) are merchant accounts, and Google says merchant
+  accounts "must show their full address on Google Play", taken from the payments profile, so a city will appear
+  there. The only way round it is to launch Android without the in-app membership (the app hides it when there is no
+  Google Play product). Choose before setting up the merchant account in step 10.
 
 ## 1. A company email for the store accounts (15 minutes)
 1. Create a mailbox on our domain that only you read, for example `apps@almukarramah.com`.
@@ -19,22 +52,24 @@ repository or an email.
 ## 3. D-U-N-S number (free; 1 to 30 days)
 Apple and Google both need it for an organisation account.
 1. Open developer.apple.com/enroll/duns-lookup and sign in with the new Apple ID.
-2. Enter the company **exactly as on the Saudi commercial registration (CR)**: legal name, address, phone.
+2. Enter the publisher (the line at the top) **exactly as on its registration documents**: legal name, address, phone.
 3. If it is found, write the number down. If not, press **Submit** to request one; Dun & Bradstreet will email or
    call you. It can take up to 30 days; after you receive it, Apple needs up to 2 working days to see it.
 
 ## 4. Google Play organisation account (USD 25 once; 1 to 7 days)
 1. Go to play.google.com/console/signup with a Google account on `apps@almukarramah.com`.
-2. Choose **An organisation**; enter the D-U-N-S number, the legal name and address as on the CR, the website
-   almukarramah.com, `hello@almukarramah.com` as the public contact email and a contact phone.
+2. Choose **An organisation**; enter the D-U-N-S number, the publisher's legal name and address as on its
+   registration documents, the website almukarramah.com, `hello@almukarramah.com` as the public contact email and a
+   contact phone. Developer name (shown on Google Play): **Al Mukarramah**.
 3. Create the **payments profile** for the organisation when asked and pay USD 25.
-4. Verify the documents Google asks for (CR, ID). Organisation accounts skip the 12-tester rule for new apps.
+4. Verify the documents Google asks for (the company's registration documents, your ID). Organisation accounts skip
+   the 12-tester rule for new apps.
 
 ## 5. Apple Developer Program, as an organisation (USD 99 a year; 2 days to 2 weeks)
 1. Install the **Apple Developer** app on your iPhone (fastest) or go to developer.apple.com/programs/enroll.
 2. Sign in with the company Apple ID > Enroll > **Organisation**.
-3. Enter the D-U-N-S number, the legal name exactly as on the CR, the website almukarramah.com and your role (you
-   must be able to sign legal agreements for the company).
+3. Enter the D-U-N-S number, the publisher's legal name exactly as on its registration documents, the website
+   almukarramah.com and your role (you must be able to sign legal agreements for the company).
 4. Answer Apple's verification call or email, then pay USD 99.
 
 ## 6. Expo account and the GitHub secret (20 minutes)
@@ -50,11 +85,16 @@ Apple and Google both need it for an organisation account.
 3. Add the company bank account (IBAN), the US tax form W-8BEN-E for a non-US company, and the contacts.
 4. Enrol in the **App Store Small Business Program** at developer.apple.com/app-store/small-business-program
    (15% commission on the membership instead of 30%).
+5. Business > **Digital Services Act**: declare the trader status, following decision B. Apple's guidance: if no app
+   is offered in the EU you are not acting as a trader on the App Store; if the app is offered in the EU, the account
+   is a trader and the D-U-N-S address appears on the EU product pages.
 
 ## 8. Create the apps in the stores (20 minutes)
-1. App Store Connect > Apps > **+** > New App: iOS, name **Al Mukarramah**, primary language (see
+1. First confirm decision A (the developer name): this first app record fixes it for good.
+   App Store Connect > Apps > **+** > New App: iOS, name **Al Mukarramah**, primary language (see
    `store/listing.md`), bundle ID **com.almukarramah.app** (register it under Certificates, Identifiers & Profiles >
-   Identifiers if it is not offered), SKU `almukarramah-ios`.
+   Identifiers if it is not offered), SKU `almukarramah-ios`. Then Pricing and Availability: the countries, following
+   decision B.
 2. Open App Information and copy the **Apple ID** number. **Claude** adds it to `eas.json` as
    `submit.production.ios.ascAppId`.
 3. Play Console > Create app: name **Al Mukarramah**, default language, App, Free, accept the declarations.
@@ -67,7 +107,8 @@ Apple and Google both need it for an organisation account.
    Add a new key, and give it the file, Key ID and Issuer ID. (Or answer the same questions at the first `eas submit`.)
 
 ## 10. Play Console: payments and a service account for uploads (30 minutes)
-1. Play Console > Setup > **Payments profile**: check the bank account (needed to sell the membership).
+1. Play Console > Setup > **Payments profile**: set up the merchant account and the bank account (needed to sell the
+   membership; this is what makes the address public on Google Play, see decision B).
 2. console.cloud.google.com > create a project "almukarramah-play" > APIs & Services > enable
    **Google Play Android Developer API**.
 3. IAM & Admin > Service accounts > Create `eas-submit` > Keys > Add key > **JSON** > download.
@@ -99,8 +140,9 @@ Apple and Google both need it for an organisation account.
    `<p>رمز الدخول: <strong>{{ .Token }}</strong></p>`. The app signs in with this code; the website keeps the link.
 2. Authentication > URL Configuration > Redirect URLs: add `almukarramah://**` (Continue with Google returns to
    the app through it).
-3. **Claude**, after your yes: apply migration `0010_account_deletion.sql` and deploy the `delete-account` and
-   `revenuecat-webhook` functions. Account deletion must work before the first submission: Apple tests it.
+3. **Claude**, after your yes: apply migrations `0010_account_deletion.sql` and `0011_assistant_reports.sql` and
+   deploy the `delete-account` and `revenuecat-webhook` functions. Account deletion must work before the first
+   submission: Apple tests it. Reports of assistant replies (Google's AI rule) need 0011.
 
 ## 13. RevenueCat and the membership (1 hour; after steps 7, 8 and 10)
 Follow `store/in-app-purchases.md`: create the subscription in App Store Connect and Play Console (your price
@@ -123,12 +165,16 @@ Information > Sign-in required) and Play Console (App content > App access).
 3. Test on a phone: Sign in with Apple, Google and the email code; a product to the bag and up to Moyasar's page;
    Arabic; the assistant's permission; the membership in sandbox; Delete my account (with a spare account).
 4. Fill the listings from `store/listing.md`, the privacy forms from `store/privacy.md`, upload the screenshots,
-   paste the reviewer notes, then **Submit for review** (App Store Connect) and **Send for review** (Play Console).
+   paste the reviewer notes (putting the publisher's legal name from the line at the top where they say so), then
+   **Submit for review** (App Store Connect) and **Send for review** (Play Console).
 
 ## What each step unblocks
 
 | Your step | Unblocks |
 | --- | --- |
+| Publisher confirmed (the line at the top) | The D-U-N-S request (3) and both enrolments (4, 5) |
+| Decision A, developer name | Creating the first App Store app record (8) |
+| Decision B, what the stores show | The DSA declaration (7.5), country availability (8), the Google merchant account (10) |
 | 1–3 Email, Apple ID, D-U-N-S | Steps 4 and 5 |
 | 4 Google Play account | Android store listing, service account (10), Play subscription (13), first Android upload (15) |
 | 5 Apple Developer Program | Bundle ID and Sign in with Apple key (11), App Store Connect (7–9), TestFlight, iOS subscription (13) |

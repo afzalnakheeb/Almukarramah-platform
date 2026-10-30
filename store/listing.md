@@ -7,12 +7,20 @@ Change the JSON files first and copy from here, so the two never drift.
 Tone: premium, warm, "For every Muslim home". Homepage headline: "Where your deen and dunya meet" / «حيث يلتقي دينك ودنياك».
 Public contact: hello@almukarramah.com only.
 
+**Public text rule (Afzal):** the brand is "Al Mukarramah", presented as a global initiative. No city, and nothing
+about where the publishing company is registered, in anything public: names, subtitles, descriptions, promotional
+text, keywords, screenshots, the copyright line, release notes. The publisher's legal name (written only in the
+"Publisher" line at the top of `docs/app-stores.md`) goes only into the fields the stores require (enrolment,
+agreements, payments, the private reviewer notes), never with a city.
+
 ## Decisions for Afzal before the first submission
 1. **Primary language** in App Store Connect: English (U.K.) with an Arabic localisation (recommended), or Arabic as primary.
 2. **Name**: "Al Mukarramah" / «المكرمة». If Apple or Google says the name is taken, use "Al Mukarramah Marketplace" / «سوق المكرمة».
 3. **Subtitle**: "For every Muslim home" (brand line). A more searchable alternative: "Perfumes, oud & prayer mats" / «عطور وعود وسجادات صلاة».
-4. **Copyright line**: "2026" followed by the company's legal name exactly as on the commercial registration (the file says "2026 Al Mukarramah" until then).
-5. **Membership in version 1.0**: if the in-app membership is not ready (products, RevenueCat keys), delete the MEMBERSHIP paragraph from both descriptions; the app then hides the membership by itself.
+4. **Membership in version 1.0**: if the in-app membership is not ready (products, RevenueCat keys), delete the MEMBERSHIP paragraph from both descriptions; the app then hides the membership by itself.
+5. **App Store developer name** (set once, can never be changed): see `docs/app-stores.md`, decision A.
+
+The copyright line is **"2026 Al Mukarramah"** (chosen; noted in `docs/app-stores.md`).
 
 ## App Store (iPhone and iPad)
 
@@ -20,11 +28,13 @@ Public contact: hello@almukarramah.com only.
 | --- | --- | --- |
 | App name (≤30) | Al Mukarramah (13) | المكرمة (7) |
 | Subtitle (≤30) | For every Muslim home (21) | لكل بيت مسلم (12) |
-| Promotional text (≤170) | Where your deen and dunya meet: perfumes, oud, prayer mats and gifts from trusted makers, delivered to your hotel in Madinah or Makkah, or to your door. (152) | حيث يلتقي دينك ودنياك: عطور وعود وسجادات صلاة وهدايا من صنّاع موثوقين، نوصلها إلى فندقك في المدينة المنورة أو مكة المكرمة، أو إلى بابك. (135) |
-| Keywords (≤100) | `oud,perfume,attar,bakhoor,prayer mat,sajjadah,islamic gifts,eid,ramadan,madinah,makkah,dates,umrah` (98) | `عود,عطور,بخور,دهن عود,سجادة صلاة,هدايا إسلامية,عيد,رمضان,المدينة,مكة,تمور,عمرة,حج,مسك` (85) |
+| Promotional text (≤170) | Where your deen and dunya meet: perfumes, oud, prayer mats and gifts from trusted makers across the Muslim world, delivered to your hotel or to your door. (154) | حيث يلتقي دينك ودنياك: عطور وعود وسجادات صلاة وهدايا من صنّاع موثوقين في أنحاء العالم الإسلامي، نوصلها إلى فندقك أو إلى بابك. (125) |
+| Keywords (≤100) | `oud,perfume,attar,bakhoor,prayer mat,sajjadah,islamic gifts,eid,ramadan,dates,umrah,hajj,musk,rug` (97) | `عود,عطور,عطر,بخور,دهن عود,مسك,سجادة صلاة,سجاد,هدايا إسلامية,هدايا,عيد,رمضان,تمور,عمرة,حج` (88) |
 | What's new (1.0) | The first version of the Al Mukarramah app. | الإصدار الأول من تطبيق المكرمة. |
+| Copyright | 2026 Al Mukarramah | (one field for all languages) |
 
-Keywords leave out the words already in the name and subtitle (Apple searches those anyway) and never name other apps or brands.
+Keywords leave out the words already in the name and subtitle (Apple searches those anyway), never name other apps
+or brands, and never name a city.
 
 - **Primary category**: Shopping. **Secondary**: Lifestyle.
 - **Support URL**: https://almukarramah.com/support
@@ -32,22 +42,22 @@ Keywords leave out the words already in the name and subtitle (Apple searches th
 - **Privacy policy URL**: https://almukarramah.com/privacy
 - **Licence agreement**: Apple's standard EULA (leave the custom EULA empty). The description and the membership screen link to it and to our terms.
 
-### Description (English, 1,815 of 4,000)
+### Description (English, 1,865 of 4,000)
 
 Where your deen and dunya meet.
 
-Al Mukarramah is a curated marketplace for every Muslim home, from Madinah: perfumes and oud from celebrated Arabian houses, prayer mats and woven rugs inspired by the Haramain, Madinah dates, keepsakes and gift sets. Every product is approved by our team before it appears.
+Al Mukarramah is a curated marketplace for every Muslim home, bringing together trusted makers from across the Muslim world: perfumes and oud from celebrated Arabian houses, prayer mats and woven rugs inspired by the Haramain, premium dates, keepsakes and gift sets. Every product is approved by our team before it appears.
 
 SHOP WITH CARE
 • Perfumes, oud oils and bakhoor, prayer mats and woven rugs, dates and gifts, in English and Arabic
-• Prices in Saudi riyals, UAE dirhams, pounds, dollars or euros, with VAT included
-• Delivery to your hotel in Madinah or Makkah during your stay, anywhere in Saudi Arabia, or abroad
+• Prices in Saudi riyals and other major currencies, with VAT included
+• Delivery to your hotel during Umrah or Hajj, to homes and offices across Saudi Arabia, or abroad
 • The delivery charge and timing are shown before you pay
 
 GIFTS, TAKEN CARE OF
 • Every order is wrapped and presented, ready to give
 • A printed gift message, and prices never appear on anything the recipient sees
-• A gift assistant that suggests ideas by occasion, recipient and budget, from our live catalogue
+• A gift assistant that suggests ideas by occasion, recipient and budget, from our live catalogue, and writes your card
 
 SECURE AND SIMPLE
 • Pay on Moyasar's secure page with mada, Apple Pay, STC Pay or card; we never see or store your card details
@@ -58,7 +68,7 @@ MEMBERSHIP
 The Al Mukarramah membership opens the Quran Trail: daily lessons, with the Quran text shown exactly as published by the Quran Foundation. It is a monthly subscription that renews automatically, paid through your Apple ID and managed in your App Store account settings.
 
 DATES CLUB
-A box of premium Madinah dates, delivered every month within Saudi Arabia.
+A box of premium dates, delivered every month within Saudi Arabia.
 
 YOUR ACCOUNT, YOUR CHOICE
 Marketing messages only if you ask for them. Delete your account at any time in the app: Account, then Delete my account.
@@ -67,22 +77,22 @@ Terms of use: https://almukarramah.com/terms
 Privacy policy: https://almukarramah.com/privacy
 Help: hello@almukarramah.com
 
-### الوصف (العربية، ١٬٦١١ من ٤٬٠٠٠)
+### الوصف (العربية، ١٬٦١٦ من ٤٬٠٠٠)
 
 حيث يلتقي دينك ودنياك.
 
-المكرمة سوق مختار لكل بيت مسلم، من المدينة المنورة: عطور وعود من دور عربية عريقة، وسجادات صلاة وسجاد منسوج مستوحى من الحرمين الشريفين، وتمور المدينة، وتذكارات ومجموعات هدايا. يعتمد فريقنا كل منتج قبل أن يظهر في السوق.
+المكرمة سوق مختار لكل بيت مسلم، يجمع صنّاعًا موثوقين من أنحاء العالم الإسلامي: عطور وعود من دور عربية عريقة، وسجادات صلاة وسجاد منسوج مستوحى من الحرمين الشريفين، وتمور فاخرة، وتذكارات ومجموعات هدايا. يعتمد فريقنا كل منتج قبل أن يظهر في السوق.
 
 تسوّق بعناية
 • عطور ودهن عود وبخور، وسجادات صلاة وسجاد منسوج، وتمور وهدايا، بالعربية والإنجليزية
-• الأسعار بالريال السعودي أو الدرهم الإماراتي أو الجنيه أو الدولار أو اليورو، شاملة ضريبة القيمة المضافة
-• التوصيل إلى فندقك في المدينة المنورة أو مكة المكرمة خلال إقامتك، وإلى جميع مناطق المملكة، وإلى الخارج
+• الأسعار بالريال السعودي وعملات رئيسية أخرى، شاملة ضريبة القيمة المضافة
+• التوصيل إلى فندقك خلال العمرة أو الحج، وإلى المنازل والمكاتب في جميع مناطق المملكة، وإلى الخارج
 • تظهر رسوم التوصيل وموعده قبل الدفع
 
 الإهداء علينا
 • يُغلَّف كل طلب ويُقدَّم جاهزًا للإهداء
 • رسالة إهداء مطبوعة، ولا تظهر الأسعار أبدًا على ما يصل إلى المُهدى إليه
-• مساعد هدايا يقترح عليك حسب المناسبة والشخص والميزانية، من كتالوجنا الحالي
+• مساعد هدايا يقترح عليك حسب المناسبة والشخص والميزانية، من كتالوجنا الحالي، ويكتب لك بطاقة الإهداء
 
 آمن وسهل
 • ادفع عبر صفحة ميسر الآمنة بمدى أو Apple Pay أو STC Pay أو البطاقة، ولا نرى بيانات بطاقتك ولا نحفظها
@@ -93,7 +103,7 @@ Help: hello@almukarramah.com
 تفتح لك عضوية المكرمة رحلة القرآن: دروس يومية يُعرض فيها نص القرآن الكريم كما نشرته مؤسسة القرآن (Quran Foundation) تمامًا. وهي اشتراك شهري يتجدد تلقائيًا، يُدفع عبر حساب Apple ID ويُدار من إعدادات حسابك في App Store.
 
 نادي التمور
-صندوق من تمور المدينة الفاخرة يصلك كل شهر داخل المملكة العربية السعودية.
+صندوق من التمور الفاخرة يصلك كل شهر داخل المملكة العربية السعودية.
 
 حسابك واختيارك
 لا رسائل تسويقية إلا إذا طلبتها. ويمكنك حذف حسابك في أي وقت من التطبيق: «حسابي» ثم «حذف حسابي».
@@ -120,15 +130,15 @@ Answer **None / No** to everything; the expected rating is **4+**.
 | Field | English | Arabic |
 | --- | --- | --- |
 | App name (≤30) | Al Mukarramah | المكرمة |
-| Short description (≤80) | Perfumes, oud, prayer mats and gifts for every Muslim home, from Madinah. (73) | عطور وعود وسجادات صلاة وهدايا لكل بيت مسلم، من المدينة المنورة. (63) |
-| Full description (≤4,000) | `store/google-play.json`, 1,739 characters | `store/google-play.json`, 1,527 characters |
+| Short description (≤80) | Perfumes, oud, prayer mats and gifts for every Muslim home, chosen with care. (77) | عطور وعود وسجادات صلاة وهدايا لكل بيت مسلم، مختارة بعناية. (58) |
+| Full description (≤4,000) | `store/google-play.json`, 1,789 characters | `store/google-play.json`, 1,532 characters |
 
 The Google text is the App Store text with three changes: payment is "mada, STC Pay or card" (Apple Pay only on Apple
 devices), sign-in is "Google or your email", and the membership is "paid through Google Play and managed in your
 Google Play subscriptions". Deletion also names almukarramah.com/delete-account.
 
 - **App category**: Shopping. **Tags**: Shopping, Gifts, Lifestyle (pick the closest Google offers).
-- **Contact email**: hello@almukarramah.com. **Website**: https://almukarramah.com
+- **Developer name shown on Google Play**: Al Mukarramah. **Contact email**: hello@almukarramah.com. **Website**: https://almukarramah.com
 - **Privacy policy**: https://almukarramah.com/privacy
 - **Delete account URL** (Data safety): https://almukarramah.com/delete-account
 - **Graphics**: app icon 512 × 512 (from `assets/app-icon.png`), feature graphic 1024 × 500, phone screenshots (see the screenshot folder).

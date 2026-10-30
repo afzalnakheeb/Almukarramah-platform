@@ -6,7 +6,7 @@ const CONTACT = 'hello@almukarramah.com';
 
 const en: LegalDoc = {
   title: 'Terms of service',
-  updated: 'Last updated 30 October 2026',
+  updated: 'Last updated 29 October 2026',
   intro: 'These terms apply when you shop at almukarramah.com or use the Al Mukarramah apps. Al Mukarramah is based in Madinah, Saudi Arabia. By placing an order or creating an account you agree to them.',
   sections: [
     { h: 'Your account', p: [
@@ -41,7 +41,7 @@ const en: LegalDoc = {
 
 const ar: LegalDoc = {
   title: 'الشروط والأحكام',
-  updated: 'آخر تحديث: ٣٠ أكتوبر ٢٠٢٦',
+  updated: 'آخر تحديث: ٢٩ أكتوبر ٢٠٢٦',
   intro: 'تنطبق هذه الشروط عند التسوق في almukarramah.com أو استخدام تطبيقات المكرمة. مقر المكرمة في المدينة المنورة بالمملكة العربية السعودية. بإتمام طلب أو إنشاء حساب فإنك توافق عليها.',
   sections: [
     { h: 'حسابك', p: [

@@ -6,7 +6,7 @@ const CONTACT = 'hello@almukarramah.com';
 
 const en: LegalDoc = {
   title: 'Privacy policy',
-  updated: 'Last updated 30 October 2026',
+  updated: 'Last updated 29 October 2026',
   intro: 'Al Mukarramah is a gift house in Madinah, Saudi Arabia. This policy explains what we collect when you use almukarramah.com and our apps, why, and the choices you have. We collect only what we need to serve you, we never sell your data, and we show no advertising.',
   sections: [
     { h: 'What we collect', p: [
@@ -39,7 +39,7 @@ const en: LegalDoc = {
 
 const ar: LegalDoc = {
   title: 'سياسة الخصوصية',
-  updated: 'آخر تحديث: ٣٠ أكتوبر ٢٠٢٦',
+  updated: 'آخر تحديث: ٢٩ أكتوبر ٢٠٢٦',
   intro: 'المكرمة دار هدايا في المدينة المنورة بالمملكة العربية السعودية. توضح هذه السياسة ما نجمعه عند استخدامك almukarramah.com وتطبيقاتنا، ولماذا، والخيارات المتاحة لك. نجمع فقط ما نحتاجه لخدمتك، ولا نبيع بياناتك أبدًا، ولا نعرض إعلانات.',
   sections: [
     { h: 'ما الذي نجمعه', p: [
