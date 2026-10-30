@@ -13,10 +13,17 @@ export function AppCard({ a, compact }: { a: PlatformApp; compact?: boolean }) {
   const { t, lang } = useI18n();
   const wide = useWide();
   const ar = lang === 'ar';
-  const status: Record<PlatformApp['status'], [Key, 'ok' | 'info' | 'mute']> = {
+  const statusOf: Record<PlatformApp['status'], [Key, 'ok' | 'info' | 'mute']> = {
     live_web: ['appLiveWeb', 'ok'], beta: ['appBeta', 'info'], coming_soon: ['appComingSoon', 'mute'],
   };
-  const [label, tone] = status[a.status];
+  const [label, tone] = statusOf[a.status];
+  // status: a fine dot and small capitals, not a box (beside the name on desktop, under it on phones)
+  const status = (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', marginTop: 6 }}>
+      <View style={{ width: 6, height: 6, borderRadius: 999, backgroundColor: tone === 'ok' ? colors.emerald : tone === 'info' ? colors.gold : colors.line }} />
+      <T w={600} size={10} caps color={tone === 'ok' ? colors.emerald : tone === 'info' ? colors.brassText : colors.muted}>{t(label)}</T>
+    </View>
+  );
   return (
     <Card pad={compact ? 18 : wide ? 32 : 20} style={{ gap: 14, flex: 1, minWidth: wide ? 320 : undefined, borderTopColor: colors.gold }}>
       <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
@@ -27,12 +34,9 @@ export function AppCard({ a, compact }: { a: PlatformApp; compact?: boolean }) {
           <Serif size={compact ? 22 : 26}>{ar ? a.name_ar : a.name_en}</Serif>
           {/* the name in the other script sits under the first, aligned with it */}
           <T size={13} color={colors.muted} style={{ textAlign: ar ? 'right' : 'left' }}>{ar ? a.name_en : a.name_ar}</T>
+          {!wide && status}
         </View>
-        {/* status: a fine dot and small capitals, not a box */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', marginTop: 6 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 999, backgroundColor: tone === 'ok' ? colors.emerald : tone === 'info' ? colors.gold : colors.line }} />
-          <T w={600} size={10} caps color={tone === 'ok' ? colors.emerald : tone === 'info' ? colors.brassText : colors.muted}>{t(label)}</T>
-        </View>
+        {wide && status}
       </View>
       <T w={500} size={compact ? 14 : 15} color={colors.navy} lh={1.55}>{ar ? a.tagline_ar : a.tagline_en}</T>
       {!compact && <T size={14.5} lh={1.65} color={colors.body}>{ar ? a.description_ar : a.description_en}</T>}

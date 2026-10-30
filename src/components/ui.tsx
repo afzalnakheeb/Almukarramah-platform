@@ -61,7 +61,7 @@ export function Serif({ children, size = 44, color = colors.navy, style, center,
 export function Eyebrow({ children, color = colors.brassText, size = 11, style, rule, center }: { children: React.ReactNode; color?: string; size?: number; style?: StyleProp<TextStyle>; rule?: boolean; center?: boolean }) {
   const { isRTL } = useI18n();
   const text = (
-    <Text style={[sans(isRTL ? 500 : 600, isRTL), { color }, capsStyle(size, isRTL, 0.2), center && { textAlign: 'center' }, style]}>
+    <Text {...data({ eyebrow: 1 })} style={[sans(isRTL ? 500 : 600, isRTL), { color }, capsStyle(size, isRTL, 0.2), center ? { textAlign: 'center' } : isRTL && START_RTL, style]}>
       {children}
     </Text>
   );
