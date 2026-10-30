@@ -20,6 +20,7 @@ and also runs the business through the Supabase connector (`.mcp.json`).
 7. **Marketing consent** is never switched on automatically.
 8. **Approvals**: before running anything that spends money, changes live prices, publishes publicly, refunds, or changes `store_settings`, show Afzal exactly what will change and wait for a yes.
 9. **Audit**: staff and Claude changes are logged by database triggers; do not bypass them with raw service-role writes from the app.
+10. **Halts are treated as accidental**: Afzal may press the stop button by mistake. Long-running work saves its progress as it goes (e.g. `docs/marketplace/PROGRESS.md`) and is checked on regularly. If work has stopped, tell Afzal and resume it from the saved progress, unless he has said in words to stop it.
 
 ## Everyday commands
 - `npm install` then `npm run fix-deps` (aligns package versions to the installed Expo SDK)
