@@ -1,5 +1,5 @@
 // The vector logo (website). The mark is the brand artwork as vector paths (logo-data.ts), drawn exactly as the PNGs.
-// It is always still: the first-visit Kaaba-corner intro (brand-intro.tsx) is a separate overlay that ends by gliding
+// It is always still: the first-visit Kaaba-corner intro (public/intro.js, from scripts/build-intro.mjs) is a separate overlay that ends by gliding
 // into the header's logo, which carries `slot` so the intro can find it. The old thread intro and hover glint are gone.
 //
 // `overlay` draws extra SVG over the mark inside the same <Svg> (viewBox 917 x 264; the arch monogram spans

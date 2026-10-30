@@ -121,24 +121,26 @@ html body [data-banner="narrow"]{top:0}
 }
 @media print{[data-reveal]{opacity:1!important;transform:none!important}}
 
-/* first-visit brand intro (src/components/brand-intro.tsx): the dark field is painted before the scripts arrive, so the
-   page never flashes; it fades by itself after 3.4 s if the scripts are slow. The header's logo and its tagline are
-   held back while the intro's logo glides into their place. */
-html[data-intro="1"] body::after{content:"";position:fixed;inset:0;z-index:2147483000;background:radial-gradient(ellipse at 50% 45%,#2a241d 0%,#14110e 55%,#0c0a08 100%);animation:amIntroCover 600ms ease 3.4s forwards}
+/* first-visit brand intro (public/intro.js, built by scripts/build-intro.mjs): the dark field is painted before the
+   intro script arrives, so the page never flashes; it fades by itself after 5 s if that script never comes. The
+   header's logo and its tagline are held back while the intro's logo glides into their place. */
+html[data-intro="1"] body::after{content:"";position:fixed;inset:0;z-index:2147483000;background:radial-gradient(ellipse at 50% 45%,#2a241d 0%,#14110e 55%,#0c0a08 100%);animation:amIntroCover 600ms ease 5s forwards}
 @keyframes amIntroCover{to{opacity:0;visibility:hidden}}
 @keyframes amIntroShow{to{opacity:1}}
-html[data-intro="1"] [data-brandslot],html[data-intro="1"] [data-brandline]{opacity:0;animation:amIntroShow 0s linear 4s forwards}
+html[data-intro="1"] [data-brandslot],html[data-intro="1"] [data-brandline]{opacity:0;animation:amIntroShow 0s linear 5.6s forwards}
 html[data-intro="live"] [data-brandslot],html[data-intro="live"] [data-brandline]{opacity:0!important}
 `;
 
 // Decides on the first-visit intro before the first paint: once per session, not for reduced motion, crawlers or
 // link previews, not on checkout, payment, order or admin pages. ?intro=0 turns it off; ?intro=play or ?intro=2.5
-// (frozen at 2.5 s, for design review) force it. Preloads the emblem photograph only when the intro will play.
+// (frozen at 2.5 s, for design review) force it. Only when the intro will play does it preload the emblem photograph
+// and load public/intro.js, which draws the intro straight away, without waiting for the app's JavaScript.
 const INTRO_JS = `(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get('intro');if(q==='0')return;var f=q!==null;
 if(!f){if(sessionStorage.getItem('amIntro'))return;if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 if(/bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|whatsapp|telegram|headless|lighthouse/i.test(navigator.userAgent))return;
 if(/^\\/(admin|checkout|pay|order|subscribe)/.test(location.pathname))return;sessionStorage.setItem('amIntro','1');d.setAttribute('data-intro','1');}
-var l=document.createElement('link');l.rel='preload';l.as='image';l.type='image/webp';l.href='/images/brand/emblem-kaaba.webp';document.head.appendChild(l);}catch(e){}})();`;
+var l=document.createElement('link');l.rel='preload';l.as='image';l.type='image/webp';l.href='/images/brand/emblem-kaaba.webp';document.head.appendChild(l);
+var s=document.createElement('script');s.src='/intro.js';s.async=true;document.head.appendChild(s);}catch(e){}})();`;
 
 export default function Root({ children }: PropsWithChildren) {
   return (

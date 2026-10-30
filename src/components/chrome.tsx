@@ -28,7 +28,7 @@ export const destIcon = (d: Destination): IconName => (d === 'saudi' ? 'house' :
 
 /** The logo: ink on the light pages (gold only where a dark surface remains, e.g. the apps' splash). With line, the
  *  lock-up: a fine gold rule that fades at both ends, then "For every Muslim home" (لكل بيت مسلم) in spaced capitals.
- *  `slot` marks the site header's logo, where the first-visit intro (brand-intro.tsx) lands. */
+ *  `slot` marks the site header's logo, where the first-visit intro (public/intro.js) lands. */
 export function Logo({ height = 44, white, line, compact, slot }: { height?: number; white?: boolean; line?: boolean; compact?: boolean; slot?: boolean }) {
   const { t, isRTL } = useI18n();
   // compact (the header once scrolled past the hero): 80% of the height and the line folds away (motion: +html.tsx)

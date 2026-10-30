@@ -9,7 +9,6 @@ import React, { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AssistantDock } from '@/components/assistant';
-import { BrandIntro } from '@/components/brand-intro';
 import { AssistantProvider } from '@/lib/assistant';
 import { takeNext } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
@@ -78,7 +77,6 @@ export default function RootLayout() {
                 <Stack.Screen name="admin" options={{ headerShown: false }} />
               </Stack>
               <AssistantDock />
-              <BrandIntro />
               </AssistantProvider>
             </CartProvider>
           </SessionProvider>
