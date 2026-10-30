@@ -501,6 +501,12 @@ create or replace function private.user_is_member(p_seller uuid, p_user uuid) re
 language sql stable security definer set search_path = public as $$
   select p_seller is not null and p_user is not null and exists (select 1 from seller_members where seller_id = p_seller and user_id = p_user);
 $$;
+-- Staff (with one of the roles), or a server-side caller: a function using the service role, or a direct database
+-- session (Claude's connector, a scheduled job), which carries no API request at all. API users are never "server".
+create or replace function private.is_staff_or_server(p_roles staff_role[] default null) returns boolean
+language sql stable security definer set search_path = public as $$
+  select private.is_staff(p_roles) or coalesce(auth.role(), 'none') in ('service_role', 'none');
+$$;
 
 -- English and Arabic of one thing, for templates
 create or replace function private.bi(p_en text, p_ar text) returns jsonb language sql immutable as $$
@@ -705,7 +711,7 @@ grant select on seller_statement_months to authenticated;
 create or replace function seller_balance(p_seller uuid) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not (private.is_seller_member(p_seller) or private.is_staff(array['owner', 'manager', 'finance']::staff_role[])) then raise exception 'Not allowed'; end if;
+  if not (private.is_seller_member(p_seller) or private.is_staff_or_server(array['owner', 'manager', 'finance']::staff_role[])) then raise exception 'Not allowed'; end if;
   return private.ledger_available(p_seller) || jsonb_build_object(
     'currency', 'SAR',
     'last_payout', (select jsonb_build_object('amount_sar_minor', amount_sar_minor, 'paid_on', paid_on, 'reference', reference)
@@ -721,7 +727,7 @@ declare
   v_open int;
   v_net int;
 begin
-  if not (private.is_seller_member(p_seller) or private.is_staff(array['owner', 'manager', 'finance']::staff_role[])) then raise exception 'Not allowed'; end if;
+  if not (private.is_seller_member(p_seller) or private.is_staff_or_server(array['owner', 'manager', 'finance']::staff_role[])) then raise exception 'Not allowed'; end if;
   select coalesce(sum(amount_sar_minor), 0) into v_open from seller_ledger where seller_id = p_seller and month < m;
   select coalesce(sum(amount_sar_minor), 0) into v_net from seller_ledger where seller_id = p_seller and month = m;
   return jsonb_build_object(
@@ -1930,14 +1936,14 @@ end $$;
 create or replace function mp_seller_performance(p_seller uuid) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not (private.is_seller_member(p_seller) or private.is_staff()) then raise exception 'Not allowed'; end if;
+  if not (private.is_seller_member(p_seller) or private.is_staff_or_server()) then raise exception 'Not allowed'; end if;
   return private.seller_performance(p_seller);
 end $$;
 
 create or replace function admin_seller_performance() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff() then raise exception 'Not allowed'; end if;
+  if not private.is_staff_or_server() then raise exception 'Not allowed'; end if;
   return coalesce((select jsonb_agg(private.seller_performance(s.id) || jsonb_build_object('name_en', s.name_en, 'slug', s.slug, 'seller_status', s.status, 'kind', s.kind)
                                     order by s.name_en)
                    from sellers s where s.status in ('approved', 'suspended')), '[]'::jsonb);
@@ -1958,7 +1964,7 @@ declare
   summary_ar text;
 begin
   -- owner or manager, a server function (service role) or a scheduled job in the database (no request at all)
-  if not (private.is_staff(array['owner', 'manager']::staff_role[]) or coalesce(auth.role(), 'none') in ('service_role', 'none')) then
+  if not private.is_staff_or_server(array['owner', 'manager']::staff_role[]) then
     raise exception 'Not allowed';
   end if;
   for s in select id, name_en, name_ar, status from sellers where status = 'approved' loop
@@ -2039,7 +2045,7 @@ end $$;
 create or replace function admin_returns(p_status text default null) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff(array['owner', 'manager', 'support', 'operations', 'finance']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff_or_server(array['owner', 'manager', 'support', 'operations', 'finance']::staff_role[]) then raise exception 'Not allowed'; end if;
   return coalesce((select jsonb_agg(private.return_json(r.id, 'staff') order by r.created_at desc)
                    from return_requests r where p_status is null or r.status = p_status), '[]'::jsonb);
 end $$;
@@ -2047,7 +2053,7 @@ end $$;
 create or replace function admin_refund_queue() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff(array['owner', 'manager', 'finance', 'support']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff_or_server(array['owner', 'manager', 'finance', 'support']::staff_role[]) then raise exception 'Not allowed'; end if;
   return jsonb_build_object(
     'returns', (select coalesce(jsonb_agg(private.return_json(r.id, 'staff') order by r.approved_at), '[]'::jsonb) from return_requests r where r.status = 'approved'),
     'cancelled', (select coalesce(jsonb_agg(jsonb_build_object('sub_order_id', s.id, 'number', format('AM-%s-%s', o.number, s.seq), 'order_id', o.id,
@@ -2065,7 +2071,7 @@ end $$;
 create or replace function admin_reviews(p_status text default 'pending') returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff(array['owner', 'manager', 'marketing', 'support']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff_or_server(array['owner', 'manager', 'marketing', 'support']::staff_role[]) then raise exception 'Not allowed'; end if;
   return jsonb_build_object(
     'reviews', (select coalesce(jsonb_agg(jsonb_build_object(
         'id', r.id, 'status', r.status, 'rating', r.rating, 'title', r.title, 'body', r.body, 'lang', r.lang, 'author', r.author_name, 'flags', to_jsonb(r.flags),
@@ -2085,7 +2091,7 @@ end $$;
 create or replace function admin_payouts() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff(array['owner', 'manager', 'finance']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff_or_server(array['owner', 'manager', 'finance']::staff_role[]) then raise exception 'Not allowed'; end if;
   return coalesce((select jsonb_agg(jsonb_build_object(
       'id', s.id, 'name_en', s.name_en, 'slug', s.slug, 'country', s.country, 'status', s.status, 'kind', s.kind,
       'kyc_status', p.kyc_status, 'iban_last4', nullif(right(upper(regexp_replace(coalesce(p.iban, ''), '\s', '', 'g')), 4), ''),
@@ -2099,7 +2105,7 @@ end $$;
 create or replace function admin_threads(p_flagged boolean default true) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff(array['owner', 'manager', 'support', 'operations']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff_or_server(array['owner', 'manager', 'support', 'operations']::staff_role[]) then raise exception 'Not allowed'; end if;
   return coalesce((select jsonb_agg(private.thread_json(t, 'staff') order by t.last_message_at desc nulls last)
                    from (select * from message_threads where (not p_flagged or flagged) order by last_message_at desc nulls last limit 200) t), '[]'::jsonb);
 end $$;

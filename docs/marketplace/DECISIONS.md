@@ -226,3 +226,11 @@ The standard is store policy reviewed by a qualified scholar, not a fatwa. Every
     for a problem (10%, 25%; a change of mind does not count), average rating (warn at 4.0 or below, limit 3.5, from 3
     reviews). A shop with fewer than 10 orders is "new" and not judged. Warnings at most weekly. Automatic suspension
     is OFF: our team decides.
+
+## Dashboards and tracking (M8)
+
+65. **Public tracking.** Anyone with a tracking number can follow the parcel at `/track` (statuses, times and places),
+    as on a courier's own site: never a name, an address or what is inside.
+66. **Claude reads the dashboards.** Our team's read-only queues, figures, statements and standards can also be read
+    by Claude through the database connector and by scheduled jobs. Every change (a refund, a payout, a decision on a
+    return or a review) still goes through the staff functions, with Afzal's approval when Claude prepares it.

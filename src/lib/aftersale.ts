@@ -260,3 +260,31 @@ export async function outbox(filter: { audience?: string; key?: string }): Promi
 
 /** A fresh key for one press of a button that must never act twice (refunds). */
 export const freshKey = (prefix: string) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+
+// ---------------------------------------------------------------- the marketplace dashboard (our team)
+export type Overview = {
+  days: number;
+  queues: Record<'sellers_to_review' | 'listings_waiting' | 'listings_checking' | 'photos_checking' | 'returns_to_answer' | 'disputes' | 'refunds_to_make'
+    | 'credit_notes_pending' | 'refunds_stuck' | 'reviews_to_publish' | 'conversations_flagged' | 'awaiting_acceptance' | 'late_to_ship' | 'not_collected' | 'delivery_failed', number>;
+  sales: { orders: number; parcels: number; marketplace_parcels: number; marketplace_sar_minor: number; house_sar_minor: number; delivery_sar_minor: number;
+    commission_sar_minor: number; refunded_sar_minor: number; cancelled_by_sellers: number; delivered: number };
+  owed_to_sellers: { available_sar_minor: number; held_sar_minor: number; balance_sar_minor: number }; paid_out_sar_minor: number;
+  sellers: { approved: number; partners: number; applying: number; suspended: number }; listings: { live: number; waiting: number; drafts: number };
+  top_sellers: { id: string; name_en: string; slug: string; parcels: number; sales_sar_minor: number; commission_sar_minor: number; rating_avg: number | null; standard: string }[];
+  destinations: { country: string; parcels: number }[]; notifications_queued: number;
+};
+export async function adminOverview(days = 30): Promise<Overview> {
+  if (MARKET_DEMO) return demo.demoOverview();
+  return rpc('admin_marketplace_overview', { p_days: days });
+}
+
+// ---------------------------------------------------------------- public tracking (/track)
+export type ParcelTrack = {
+  tracking_number: string; status: string; carrier: string | null; expected_to: string | null; delivered_at: string | null;
+  events: { status: string; at: string; en: string | null; ar: string | null; location: string | null }[];
+};
+export async function trackParcel(number: string): Promise<ParcelTrack | null> {
+  if (MARKET_DEMO) return demo.demoTrack(number);
+  if (!MARKET_LIVE) return null;
+  return rpc<ParcelTrack | null>('track_parcel', { p_number: number });
+}

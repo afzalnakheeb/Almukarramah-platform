@@ -14,7 +14,7 @@ export function RefundButton({ orderId, label, returnId, subOrderId, onDone }: {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'warn'; text: string } | null>(null);
   const key = useRef(freshKey('rf'));
-  if (!open) return <Button size="sm" kind="danger" label={label} onPress={() => setOpen(true)} />;
+  if (!open) return <Button size="sm" kind="danger" label={label} onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start' }} />;
   return (
     <View style={{ gap: 8, alignSelf: 'stretch' }}>
       <Field label="Reason (on the credit note and the seller's statement)" value={reason} onChangeText={setReason} maxLength={500} />

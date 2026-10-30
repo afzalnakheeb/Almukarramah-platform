@@ -47,7 +47,7 @@ function ReturnRow({ r, onDone }: { r: ReturnRequest; onDone: () => void }) {
         <T size={13.5}>{formatMoney(r.value_minor, r.currency)}</T>
       </View>
       <T size={12.5} color={colors.muted}>{r.sub_order_number} · {r.seller ? r.seller.name_en : 'Al Mukarramah (our products)'} · customer {r.customer ?? ''} · {day(r.created_at)}</T>
-      {r.lines.map((l) => <T key={l.order_item_id} size={13.5}>{l.quantity} of {l.bought} × {l.name_en}{l.variant ? ` · ${l.variant}` : ''} · policy {l.return_policy ?? 'standard'}{l.custom ? ' · made to measure' : ''}</T>)}
+      {r.lines.map((l) => <T key={l.order_item_id} size={13.5}>{l.quantity} of {l.bought} × {l.name_en}{l.variant ? ` · ${l.variant}` : ''} · return policy: {(l.return_policy ?? 'standard').replace(/_/g, ' ')}{l.custom ? ' · made to measure' : ''}</T>)}
       <T size={13}><T w={600} size={13}>Reason:</T> {REASON[r.reason]}{r.unopened ? ' · says unopened' : ''}</T>
       {r.details ? <T size={13} lh={1.5} color={colors.body}>Customer: “{r.details}”</T> : null}
       {r.seller_note ? <T size={13} lh={1.5} color={colors.body}>Seller: “{r.seller_note}”</T> : null}

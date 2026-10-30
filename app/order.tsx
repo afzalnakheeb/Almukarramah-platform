@@ -200,7 +200,9 @@ export default function OrderPage() {
 function AfterSale({ p, asking, onAsk, onClose, onDone }: { p: ParcelTracking; asking: boolean; onAsk: () => void; onClose: () => void; onDone: () => void }) {
   const { t } = useI18n();
   const today = new Date().toISOString().slice(0, 10);
-  const canAsk = (p.status === 'delivered' && !!p.problem_until && p.problem_until >= today) || (!!p.not_received_from && today >= p.not_received_from);
+  // something in the parcel can still be returned, and it is delivered (within 30 days) or overdue
+  const canAsk = p.lines.some((l) => l.returnable_quantity > 0)
+    && ((p.status === 'delivered' && !!p.problem_until && p.problem_until >= today) || (!!p.not_received_from && today >= p.not_received_from));
   return (
     <View style={{ gap: 10 }}>
       {p.returns.map((r) => (
@@ -221,7 +223,7 @@ function AfterSale({ p, asking, onAsk, onClose, onDone }: { p: ParcelTracking; a
 const DEMO_ORDER: Order = {
   id: 'demo-order', number: 104960, status: 'delivered', currency: 'SAR', kind: 'shop', created_at: '2026-10-27T09:58:00Z', paid_at: '2026-10-27T10:00:00Z',
   subtotal_minor: 104000, shipping_minor: 5500, discount_minor: 0, total_minor: 109500, vat_minor: 14283,
-  ship_to: { recipient_name: 'Yusuf', city: 'Dammam', country: 'SA', line1: '—' }, gift_message: null, shipping_carrier: null, tracking_number: null,
+  ship_to: { recipient_name: 'Yusuf', city: 'Dammam', country: 'SA', line1: 'Al Shati district, 12th Street' }, gift_message: null, shipping_carrier: null, tracking_number: null,
   order_items: [
     { id: 'i1', name_en: 'Ameer al oud, aged oud oil, 6 ml', name_ar: 'أمير العود، دهن عود معتّق ٦ مل', quantity: 1, unit_price_minor: 98000, line_total_minor: 98000 },
     { id: 'i6', name_en: 'Ajwa dates, 1 kg', name_ar: 'تمر عجوة، ١ كغ', quantity: 1, unit_price_minor: 6000, line_total_minor: 6000 },

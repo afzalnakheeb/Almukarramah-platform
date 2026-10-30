@@ -14,7 +14,7 @@ database or deployed. Read this first if you are picking the work up.
 | M5 | Listings with variants, storefronts, search | done |
 | M6 | Checkout, rulebook, sub-orders, sandbox shipping, order flows | done |
 | M7 | Statements, returns/disputes, reviews, messages, notifications, performance | done |
-| M8 | Dashboards, polish, screenshots, docs | next |
+| M8 | Dashboards, polish, screenshots, docs | done |
 
 ## Where things are
 
@@ -27,7 +27,10 @@ database or deployed. Read this first if you are picking the work up.
     · 0017 listings and search: variants and stock, the price guard, public columns only, mp_search, storefronts
     · 0018 orders and shipping: sub-orders, shipments, tracking events, labels, the seller's order flow, tracking
     · 0019 after the sale: the seller ledger, statements and recorded payouts, refunds, returns and disputes, reviews
-    and replies, messages, the notifications outbox and its templates, seller performance.
+    and replies, messages, the notifications outbox and its templates, seller performance
+    · 0020 our team's marketplace dashboard (`admin_marketplace_overview`) and public parcel tracking (`track_parcel`).
+- Switching it on: `docs/marketplace/SWITCH-ON.md` (the order, the checks, the secrets, the jobs, how to undo it, and
+  what waits for the legal and accounts phase).
 - Shared pure modules (no imports; the app imports them too): `supabase/functions/_shared/quality.ts`,
   `contact.ts`, `search.ts` (Arabic normalisation and the in-memory search the site uses before switch-on).
 - Products: anon and authenticated read every column except the review fields (0017). A new products column the
@@ -149,4 +152,12 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
   sellers A and B, each staff role), 8 unit (masking, return reasons, customer photo decisions), and the scripted
   end-to-end journey (apply, approve, list, AI verdicts, approve the listing, order with the rulebook, label,
   tracking, delivery, statement, review, payout): 185 in all.
+- M8: 0020. The marketplace dashboard (`/admin/marketplace`: queues linked to their pages, the last 30 days' sales by
+  sellers and our own products in SAR, commission, refunds, what is payable to sellers, the busiest sellers with
+  their standards, destinations), readable by staff and by server-side callers (Claude's connector, scheduled jobs:
+  `private.is_staff_or_server`), never by customers or sellers. Public tracking at `/track?number=` (the link on
+  labels and emails): progress only, no names or addresses. The checkout example with duties paid at checkout for the
+  screenshots (`/checkout?demo=ddp`, screenshot build only). Screenshots of every after-sale page in English and
+  Arabic, phone and desktop. `SWITCH-ON.md`; marketplace routines added to `docs/run-from-claude.md`.
+  Tests: 4 more SQL (189 in all).
 

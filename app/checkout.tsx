@@ -1,21 +1,21 @@
 // Delivery and payment — follows HotelDelivery / Checkout.dc.html (steps 2–3).
 // Card details are never collected here: payment happens on Moyasar's hosted page.
 import * as WebBrowser from 'expo-web-browser';
-import { Link, router } from 'expo-router';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
-import { Button, Card, Divider, Field, H1, Notice, OptionCard, Row, Serif, T, useWide } from '@/components/ui';
+import { Button, Card, Divider, Field, H1, Notice, OptionCard, Row, Serif, T, useHydrated, useWide } from '@/components/ui';
 import { useCart } from '@/lib/cart';
-import { MARKET_LIVE } from '@/lib/flags';
+import { MARKET_DEMO, MARKET_LIVE } from '@/lib/flags';
 import { getSettings } from '@/lib/catalogue';
 import { useI18n } from '@/lib/i18n';
 import { convertFromSar, formatMoney } from '@/lib/money';
 import { usePrefs } from '@/lib/prefs';
 import { useSession } from '@/lib/session';
 import { callFunction } from '@/lib/supabase';
-import type { ShippingQuote, ShipTo } from '@/lib/types';
+import type { CartLine, ShippingQuote, ShipTo } from '@/lib/types';
 import { colors } from '@/theme';
 import { Seo } from '@/components/seo';
 import { AskAssistant } from '@/components/assistant';
@@ -25,12 +25,27 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 type Parcel = { name: { en: string; ar: string }; amountSar: number; free?: boolean; daysMin?: number; daysMax?: number; handlingDays: number; productionDays?: number; dutiesMode?: string; dutiesSar?: number };
 const newKey = () => `co_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
 
+// The screenshot build only (EXPO_PUBLIC_MARKET_DEMO=1, /checkout?demo=ddp): a Saudi seller's parcel to Dubai with
+// import duties paid at checkout (DDP), as the rulebook plans it. Nothing here is real and nothing can be paid.
+const DEMO_LINES: CartLine[] = [
+  { productId: 'demo-live', slug: 'ameer-al-oud-6ml', key: 'd1', name_en: 'Ameer al oud, aged oud oil, 6 ml', name_ar: 'أمير العود، دهن عود معتّق ٦ مل', unitPriceSar: 98000, quantity: 1, sellerName: 'Dar Al Oud Madinah' },
+  { productId: 'demo-burner', slug: 'crystal-bakhoor-burner', key: 'd2', name_en: 'Crystal bakhoor burner, hand-cut', name_ar: 'مبخرة كريستال مقطوعة يدويًا', unitPriceSar: 49000, quantity: 1, sellerName: 'Dar Al Oud Madinah' },
+];
+const DEMO_SHIP: ShipTo = { kind: 'home', recipient_name: 'Maryam Al Harbi', phone: '+971 50 000 0000', country: 'AE', city: 'Dubai', line1: 'Al Wasl Road, Villa 12' };
+const DEMO_PARCELS: Parcel[] = [{ name: { en: 'Dar Al Oud Madinah', ar: 'دار العود المدينة' }, amountSar: 4500, daysMin: 3, daysMax: 6, handlingDays: 2, dutiesMode: 'ddp', dutiesSar: 2450 }];
+
 export default function Checkout() {
   const wide = useWide();
   const { t, pick, currency, lang } = useI18n();
   const { session } = useSession();
   const { destination } = usePrefs();
-  const { lines, subtotalSar, clear, giftMessage, setQty } = useCart();
+  const cart = useCart();
+  const { clear, giftMessage, setQty } = cart;
+  const hydrated = useHydrated();
+  const params = useLocalSearchParams<{ demo?: string }>();
+  const demo = hydrated && MARKET_DEMO && params.demo === 'ddp';
+  const lines = demo ? DEMO_LINES : cart.lines;
+  const subtotalSar = demo ? DEMO_LINES.reduce((n, l) => n + l.unitPriceSar * l.quantity, 0) : cart.subtotalSar;
   const initial = useMemo<ShipTo>(() => {
     if (destination === 'madinah-hotel') return { kind: 'hotel', recipient_name: '', phone: '', country: 'SA', city: 'Madinah', line1: '' };
     if (destination === 'makkah-hotel') return { kind: 'hotel', recipient_name: '', phone: '', country: 'SA', city: 'Makkah', line1: '' };
@@ -54,6 +69,10 @@ export default function Checkout() {
   const [checkoutOpen, setCheckoutOpen] = useState(true);
 
   useEffect(() => setShipTo(initial), [initial]);
+  useEffect(() => {
+    if (!demo) return;
+    setShipTo(DEMO_SHIP); setEmail('maryam@example.com'); setQuotes([]); setNeedsZone(false); setSellerShip(DEMO_PARCELS); setBlocked([]);
+  }, [demo]);
   // The assistant can fill in the delivery form from what the shopper types; nothing is sent until they press Pay.
   useAssistantFill((f) => {
     setShipTo((s) => ({ ...s, ...f, country: (f.country ?? s.country).toUpperCase().slice(0, 2) }));
@@ -73,7 +92,7 @@ export default function Checkout() {
     setChosen(null);
     idem.current = newKey();
   };
-  useEffect(() => { setQuotes(null); setChosen(null); setBlocked([]); idem.current = newKey(); }, [lines.length]);
+  useEffect(() => { if (demo) return; setQuotes(null); setChosen(null); setBlocked([]); idem.current = newKey(); }, [lines.length]);
   const money = (sar: number) => formatMoney(convertFromSar(sar, currency), currency, lang);
   const items = lines.map((l) => ({ productId: l.productId, variantId: l.variantId ?? null, quantity: l.quantity, custom: l.custom }));
   const emailOk = EMAIL.test(email.trim());
@@ -111,6 +130,7 @@ export default function Checkout() {
   const ratesReady = !!quotes && (needsZone ? !!chosen : true) && !blocked.length;
   async function pay() {
     if (!ratesReady) return;
+    if (demo) { setError(t('lfDemo')); return; }
     setError(null);
     setBusy('pay');
     try {

@@ -140,8 +140,9 @@ export function BalanceCards({ b, lang }: { b: Statement['balance']; lang: 'ar' 
   const { t } = useI18n();
   const wide = useWide();
   const money = (m: number) => formatMoney(m, 'SAR', lang);
+  // on a phone the amount that can be paid out has the full width; the other two share a row
   const cell = (label: string, value: string, hint?: string, strong?: boolean) => (
-    <Card pad={16} style={{ flex: 1, minWidth: wide ? 180 : 140, gap: 4 }}>
+    <Card pad={16} style={{ flexGrow: 1, flexBasis: wide ? 180 : strong ? '100%' : 140, gap: 4 }}>
       <T size={12} color={colors.muted} caps>{label}</T>
       <T size={strong ? 24 : 20} w={700} color={strong ? colors.emerald : colors.navy} num>{value}</T>
       {hint ? <T size={12} color={colors.muted}>{hint}</T> : null}
@@ -172,7 +173,7 @@ export function StatementView({ s, onMonth }: { s: Statement; onMonth: (m: strin
         <Card pad={wide ? 20 : 14} style={{ width: wide ? 320 : '100%', gap: 8 }}>
           <T w={700} size={16} color={colors.navy}>{month(s.month)}</T>
           <Row label={t('stOpening')} value={money(s.opening_sar_minor)} />
-          <Row label={`${t('stSales')} (${s.totals.orders})`} value={money(s.totals.sales)} />
+          <Row label={`${t('stSales')} (${s.totals.orders.toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-GB')})`} value={money(s.totals.sales)} />
           <Row label={t('stCommission')} value={money(s.totals.commission)} />
           {s.totals.refunds ? <Row label={t('stRefunds')} value={money(s.totals.refunds)} /> : null}
           {s.totals.adjustments ? <Row label={t('stAdjustments')} value={money(s.totals.adjustments)} /> : null}

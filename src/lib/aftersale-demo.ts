@@ -255,3 +255,36 @@ export function demoOrderTracking(): import('./orders').OrderTracking {
     ],
   };
 }
+
+export function demoOverview(): import('./aftersale').Overview {
+  return {
+    days: 30,
+    queues: { sellers_to_review: 3, listings_waiting: 7, listings_checking: 1, photos_checking: 2, returns_to_answer: 2, disputes: 1, refunds_to_make: 2,
+      credit_notes_pending: 0, refunds_stuck: 0, reviews_to_publish: 3, conversations_flagged: 1, awaiting_acceptance: 1, late_to_ship: 1, not_collected: 0, delivery_failed: 0 },
+    sales: { orders: 184, parcels: 236, marketplace_parcels: 97, marketplace_sar_minor: 6845000, house_sar_minor: 9120000, delivery_sar_minor: 702500,
+      commission_sar_minor: 1711250, refunded_sar_minor: 188000, cancelled_by_sellers: 2, delivered: 201 },
+    owed_to_sellers: { available_sar_minor: 1820000, held_sar_minor: 2430000, balance_sar_minor: 4250000 }, paid_out_sar_minor: 3170000,
+    sellers: { approved: 12, partners: 2, applying: 5, suspended: 0 }, listings: { live: 318, waiting: 7, drafts: 41 },
+    top_sellers: [
+      { id: 's1', name_en: 'Dar Al Oud Madinah', slug: 'dar-al-oud-madinah', parcels: 38, sales_sar_minor: 2860000, commission_sar_minor: 715000, rating_avg: 4.71, standard: 'warn' },
+      { id: 's2', name_en: 'Al Noor Tailoring', slug: 'al-noor-tailoring', parcels: 24, sales_sar_minor: 2170000, commission_sar_minor: 542500, rating_avg: 4.88, standard: 'ok' },
+      { id: 's3', name_en: 'Rawdah Looms', slug: 'rawdah-looms', parcels: 3, sales_sar_minor: 135000, commission_sar_minor: 33750, rating_avg: 5, standard: 'new' },
+    ],
+    destinations: [{ country: 'SA', parcels: 171 }, { country: 'AE', parcels: 31 }, { country: 'KW', parcels: 14 }, { country: 'GB', parcels: 11 }, { country: 'QA', parcels: 9 }],
+    notifications_queued: 412,
+  };
+}
+
+export function demoTrack(number: string): import('./aftersale').ParcelTrack | null {
+  if (!/^SBX\d{10}$/i.test(number)) return null;
+  const e = (status: string, at: string, en: string, ar: string, location: string | null) => ({ status, at, en, ar, location });
+  return {
+    tracking_number: number.toUpperCase(), status: 'out_for_delivery', carrier: 'Sandbox road courier', expected_to: '2026-11-02', delivered_at: null,
+    events: [
+      e('out_for_delivery', '2026-11-01T07:10:00Z', 'Out for delivery', 'خرجت للتوصيل', 'Dammam'),
+      e('in_transit', '2026-10-31T16:00:00Z', 'On the way', 'في الطريق', 'Riyadh hub'),
+      e('picked_up', '2026-10-31T10:00:00Z', 'Collected from the seller', 'استلمها المندوب من البائع', 'Madinah'),
+      e('label_created', '2026-10-31T08:00:00Z', 'Label created; waiting for the courier', 'تم إنشاء ملصق الشحن، بانتظار المندوب', null),
+    ],
+  };
+}

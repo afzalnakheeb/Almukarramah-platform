@@ -1261,6 +1261,21 @@ const en = {
   pfSummary_warn: 'Something needs attention ({n} orders in the last {days} days). See below what to improve.',
   pfSummary_suspend: 'Your shop is below our standard ({n} orders in the last {days} days). Our team will contact you.',
   pfSummary_new: '{n} orders so far: we start measuring after {min} orders in {days} days.',
+  tkTitle: 'Track a parcel',
+  tkIntro: 'Enter the tracking number from your email or from your order page.',
+  tkNumber: 'Tracking number',
+  tkFind: 'Track',
+  tkNotFound: 'We could not find a parcel with this number. Check it and try again.',
+  tkExpected: 'Expected by',
+  tk_label_created: 'Waiting for the courier',
+  tk_pickup_scheduled: 'Collection booked',
+  tk_picked_up: 'Collected',
+  tk_in_transit: 'On the way',
+  tk_out_for_delivery: 'Out for delivery',
+  tk_delivered: 'Delivered',
+  tk_failed: 'Delivery failed',
+  tk_cancelled: 'Cancelled',
+  tk_returned: 'Returned to the sender',
 };
 
 const ar: typeof en = {
@@ -2507,6 +2522,21 @@ const ar: typeof en = {
   pfSummary_warn: 'هناك ما يحتاج إلى عناية ({n} طلبًا خلال آخر {days} يومًا). اطّلع أدناه على ما يلزم تحسينه.',
   pfSummary_suspend: 'متجرك دون معيارنا ({n} طلبًا خلال آخر {days} يومًا). سيتواصل معك فريقنا.',
   pfSummary_new: '{n} طلبًا حتى الآن: نبدأ القياس بعد {min} طلبات خلال {days} يومًا.',
+  tkTitle: 'تتبّع طردًا',
+  tkIntro: 'أدخل رقم التتبع الموجود في رسالتك أو في صفحة طلبك.',
+  tkNumber: 'رقم التتبع',
+  tkFind: 'تتبّع',
+  tkNotFound: 'لم نجد طردًا بهذا الرقم. تحقّق منه وحاول مجددًا.',
+  tkExpected: 'يُتوقع وصوله بحلول',
+  tk_label_created: 'بانتظار المندوب',
+  tk_pickup_scheduled: 'تم حجز موعد الاستلام',
+  tk_picked_up: 'تم الاستلام',
+  tk_in_transit: 'في الطريق',
+  tk_out_for_delivery: 'خرج للتوصيل',
+  tk_delivered: 'تم التوصيل',
+  tk_failed: 'تعذّر التوصيل',
+  tk_cancelled: 'أُلغي',
+  tk_returned: 'أُعيد إلى المرسل',
 };
 
 export type Key = keyof typeof en;
