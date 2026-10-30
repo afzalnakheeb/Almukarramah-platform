@@ -12,8 +12,8 @@ database or deployed. Read this first if you are picking the work up.
 | M3 | AI screening (images at upload, full listing at submission) | done |
 | M4 | Onboarding, KYC and admin review | done |
 | M5 | Listings with variants, storefronts, search | done |
-| M6 | Checkout, rulebook, sub-orders, sandbox shipping, order flows | next |
-| M7 | Statements, returns/disputes, reviews, messages, notifications, performance | |
+| M6 | Checkout, rulebook, sub-orders, sandbox shipping, order flows | done |
+| M7 | Statements, returns/disputes, reviews, messages, notifications, performance | next |
 | M8 | Dashboards, polish, screenshots, docs | |
 
 ## Where things are
@@ -24,7 +24,8 @@ database or deployed. Read this first if you are picking the work up.
     carriers · 0014 category tree and policies, attributes, the Islamic standard, settings, document types, styles
     · 0015 AI screening: media assets, verdict records, strikes, quarantine, rate limits, product documents
     · 0016 onboarding: the vetting application, checklist, categories per seller, review history, seller review
-    · 0017 listings and search: variants and stock, the price guard, public columns only, mp_search, storefronts.
+    · 0017 listings and search: variants and stock, the price guard, public columns only, mp_search, storefronts
+    · 0018 orders and shipping: sub-orders, shipments, tracking events, labels, the seller's order flow, tracking.
 - Shared pure modules (no imports; the app imports them too): `supabase/functions/_shared/quality.ts`,
   `contact.ts`, `search.ts` (Arabic normalisation and the in-memory search the site uses before switch-on).
 - Products: anon and authenticated read every column except the review fields (0017). A new products column the
@@ -33,6 +34,12 @@ database or deployed. Read this first if you are picking the work up.
 - Server functions (M3): `screen-image`, `listing-check`, `screening-retry` (cron), `review-screening` (staff
   overrides), `review-listing` (approval publishes photos), `translate-draft`. M4: `review-seller` (approval through
   the database checks, then publishes the shop's logo and banner).
+- The rulebook: `supabase/functions/_shared/rules.ts` (pure, 15 unit tests); the server checkout: `cart.ts` (prices,
+  options, made-to-measure from the listing's own measurement list), `checkout.ts` (tables, plan, totals), `quote.ts`.
+  Carriers: `_shared/carriers/` (`types.ts` the adapter interface, `sandbox.ts`, `index.ts` the registry).
+  Functions (M6): `shipping-quote` (website), `shipping-rates` (older apps, same rulebook), `create-payment`
+  (rewritten: idempotent, sub-orders), `moyasar-webhook` (hands paid orders to `mp_order_paid`, invoices only what we
+  sell), `create-shipment`, `carrier-webhook` (HMAC), `shipment-sync` (cron).
 - Build flags: `src/lib/flags.ts`. `EXPO_PUBLIC_MARKET_LIVE=1` is set at switch-on; until then the catalogue and the
   build script read only the columns the live database has (the earlier preview's marketplace columns caused 400s).
 - Demo mode: `EXPO_PUBLIC_MARKET_DEMO=1` (set only in `.github/workflows/shots.yml`) shows the seller and admin
@@ -104,4 +111,17 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
   (filters and facets, phone sheet), storefront with logo/banner, rating, categories and shop search; options and
   stock in the listing form. The header search moves to `/search` once `EXPO_PUBLIC_MARKET_LIVE` is set.
   Tests: 10 SQL tests and 4 unit tests (118 in all).
+- M6: 0018 and the rulebook. Every line decided on the server from the tables: corridor (open, or a pilot with the
+  seller), category routes, restricted/allowed destinations, customs clearance for cross-border sellers, permits
+  (SFDA for perfume/oud and food into Saudi Arabia, verified and unexpired), dangerous goods needing a courier that
+  takes them, an approved carrier service, the platform's delivery price (most specific row, weight steps, free over),
+  VAT by the corridor (origin, destination, zero; our exports zero-rated only when switched on), duties at checkout
+  (DDP: longest HS prefix, GCC-made goods free within the GCC, de minimis) or on delivery (DAP), import VAT collected
+  at checkout on low-value routes once we are registered, made-to-measure production time, and the return policy
+  (made to measure: faulty only). One sub-order per seller (and ours); paid orders move on in the database
+  (`mp_order_paid`: ours accepted, sellers accept theirs, stock off the option or product); the seller accepts, makes,
+  packs and prints our label (sandbox: deterministic tracking numbers, a real PDF marked SAMPLE, tracking by the
+  clock); tracking events are de-duplicated and never go backwards, and carry the sub-order and the order along.
+  Checkout shows each seller's parcel, items that cannot come to the address (with the reason), duties; the customer's
+  order page shows each parcel with its tracking and return policy. Tests: 15 rulebook, 5 carrier, 9 SQL (147 in all).
 

@@ -26,3 +26,11 @@ verify_jwt = false
 # Scheduled every 5 minutes with the x-cron-secret header (see docs/marketplace/SWITCH-ON.md).
 [functions.screening-retry]
 verify_jwt = false
+
+# Marketplace: carrier tracking webhooks check their own signature (HMAC) before reading anything.
+[functions.carrier-webhook]
+verify_jwt = false
+
+# Marketplace: pulls tracking for parcels on their way, every 15 minutes (x-cron-secret).
+[functions.shipment-sync]
+verify_jwt = false

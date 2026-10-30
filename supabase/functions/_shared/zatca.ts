@@ -18,7 +18,7 @@ type Settings = {
 export type OrderForInvoice = {
   id: string; number: number; currency: string; total_minor: number; shipping_minor: number;
   ship_to: { country: string; recipient_name: string; city: string; line1: string };
-  order_items: { name_en: string; name_ar: string; unit_price_minor: number; quantity: number; line_total_minor: number }[];
+  order_items: { name_en: string; name_ar: string; unit_price_minor: number; quantity: number; line_total_minor: number; vat_rate_bp?: number | null }[];
 };
 
 // ---------------------------------------------------------------- QR (TLV, base64)
@@ -49,6 +49,12 @@ export async function issueInvoice(db: Db, order: OrderForInvoice, opts: { doc?:
 
   const exportSale = order.ship_to.country !== 'SA';
   const rateBp = exportSale && settings.zero_rate_exports ? 0 : settings.vat_rate_bp;
+  // Marketplace lines carry the rate the rulebook applied. One invoice has one rate today (every open corridor
+  // agrees); a different rate means a multi-rate invoice is needed, so nothing is issued rather than a wrong one.
+  const lineRates = order.order_items.map((l) => l.vat_rate_bp).filter((r): r is number => typeof r === 'number');
+  if (lineRates.some((r) => r !== rateBp)) {
+    throw new Error(`Order ${order.number}: line VAT ${[...new Set(lineRates)].join('/')} differs from the invoice rate ${rateBp}; a multi-rate invoice is needed`);
+  }
 
   const total = order.total_minor;
   const vat = vatIncluded(total, rateBp);

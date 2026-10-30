@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   const db = admin();
   const { data: order } = await db
     .from('orders')
-    .select('*, order_items(*)')
+    .select('*, order_items(*), sub_orders(id, invoicer, shipping_minor, duties_minor)')
     .or(`payment_ref.eq.${payment.invoice_id ?? '-'},id.eq.${payment.metadata?.order_id ?? '00000000-0000-0000-0000-000000000000'}`)
     .maybeSingle();
   if (!order) return json({ error: 'order not found' }, 404);
@@ -27,12 +27,9 @@ Deno.serve(async (req) => {
 
   await db.from('orders').update({ status: 'paid', payment_id: payment.id, paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', order.id);
 
-  // stock
-  for (const item of order.order_items) {
-    if (!item.product_id) continue;
-    const { data: p } = await db.from('products').select('stock').eq('id', item.product_id).single();
-    if (p) await db.from('products').update({ stock: Math.max(0, p.stock - item.quantity) }).eq('id', item.product_id);
-  }
+  // sub-orders move on (ours accepted, sellers' waiting for them) and stock comes off, in the database
+  const { error: paidErr } = await db.rpc('mp_order_paid', { p_order: order.id });
+  if (paidErr) throw paidErr;
 
   // membership / box club: activate and keep the saved card token for monthly charges
   if (order.kind === 'subscription' && order.subscription_id) {
@@ -43,7 +40,23 @@ Deno.serve(async (req) => {
     }).eq('id', order.subscription_id);
   }
 
-  // ZATCA tax invoice (Phase 1 now; reported in Phase 2 by zatca-report)
-  const invoice = await issueInvoice(db, order as OrderForInvoice);
-  return json({ ok: true, invoice: invoice.number });
+  // ZATCA tax invoice (Phase 1 now; reported in Phase 2 by zatca-report) for what WE sell: our own products and the
+  // sub-orders where the platform is the supplier. Sub-orders a seller invoices (corridors not open yet) are left out,
+  // and so are duties collected for customs (a disbursement: to confirm with the adviser).
+  const subs = (order.sub_orders ?? []) as { id: string; invoicer: string; shipping_minor: number; duties_minor: number }[];
+  const ours = new Set(subs.filter((x) => x.invoicer === 'platform').map((x) => x.id));
+  const theirs = subs.filter((x) => x.invoicer !== 'platform');
+  const items = (order.order_items as { sub_order_id: string | null; line_total_minor: number }[]).filter((i) => !i.sub_order_id || ours.has(i.sub_order_id));
+  const shipping = subs.length ? subs.filter((x) => ours.has(x.id)).reduce((n, x) => n + x.shipping_minor, 0) : order.shipping_minor;
+  const forInvoice = { ...order, order_items: items, shipping_minor: shipping, total_minor: items.reduce((n, i) => n + i.line_total_minor, 0) + shipping } as OrderForInvoice;
+  if (!items.length) return json({ ok: true, invoice: null, seller_invoiced: theirs.length });
+  try {
+    const invoice = await issueInvoice(db, forInvoice);
+    return json({ ok: true, invoice: invoice.number });
+  } catch (e) {
+    // the payment stands; the missing invoice is flagged for our team (never a wrong invoice)
+    console.error('invoice not issued', order.id, e);
+    await db.from('audit_log').insert({ actor_label: 'moyasar-webhook', table_name: 'orders', row_id: order.id, action: 'INVOICE_PENDING', new_data: { error: String((e as Error).message ?? e) } });
+    return json({ ok: true, invoice: null, invoice_error: true });
+  }
 });

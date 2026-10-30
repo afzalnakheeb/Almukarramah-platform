@@ -151,3 +151,25 @@ The standard is store policy reviewed by a qualified scholar, not a fatwa. Every
     each word matches the start of a word; attribute values are searched, attribute names are not. Our own products
     and every approved seller's live listings appear together; sellers' shops can be searched on their own.
 
+## Checkout, shipping and the seller's orders (M6)
+
+43. **Prices stay as shown.** Prices are VAT-inclusive; the VAT inside a price is the rate the corridor applies
+    (Saudi 15% today). Delivery is VAT-inclusive at the same rate. Customs duties, when paid at checkout (DDP), are
+    added on top. Our own exports stay as today (zero-rated only once `store_settings.zero_rate_exports` is on).
+44. **Who accepts.** Our own products are accepted as soon as payment is confirmed; each seller accepts their part.
+    The ship-by date is acceptance + production days (made to measure) + the seller's handling days.
+45. **A seller who cannot fulfil** cancels with a reason the customer sees; stock goes back and the part is flagged
+    for our team to refund (refunds stay staff-only, M7). A label must be cancelled before the order can be.
+46. **Labels.** Bought by the seller (or our operations team) through the approved carrier for the route, with an
+    idempotency key (pressing twice never buys two); kept private (the seller of the order and operations staff).
+    Pickup is offered the next working day (Friday skipped) within the address's hours.
+47. **Tracking.** Carriers push events (signed webhooks) or we ask every 15 minutes; events are never edited, never
+    counted twice and never move a parcel backwards (a failure, return or cancellation always shows).
+48. **Invoices.** The ZATCA invoice covers what we sell: our own products and the sub-orders where we are the
+    supplier. Parts a seller invoices (corridors not open yet) are left out, and so are duties collected for customs
+    (to confirm with the adviser). An order whose lines need different VAT rates is never invoiced at one rate: it is
+    flagged for our team (it cannot happen on the corridors open today).
+49. **Sandbox until the accounts exist.** All marketplace shipping runs on the sandbox provider (no real parcels);
+    OTO, Shiprocket and DHL Express are listed but not connected. The sandbox signs its webhooks with `CRON_SECRET`
+    unless `SANDBOX_WEBHOOK_SECRET` is set; no new secret is needed.
+

@@ -8,6 +8,7 @@ import { Seo } from '@/components/seo';
 import { Button, Card, Divider, H1, Loading, Notice, Row, T, Tag, useWide } from '@/components/ui';
 import { useI18n, type Key } from '@/lib/i18n';
 import { formatMoney } from '@/lib/money';
+import { orderTracking, type OrderTracking } from '@/lib/orders';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/theme';
@@ -32,6 +33,8 @@ export default function OrderPage() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [order, setOrder] = useState<Order | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading');
+  const [parcels, setParcels] = useState<OrderTracking | null>(null);
+  useEffect(() => { if (session && id) orderTracking(id).then(setParcels).catch(() => undefined); }, [session, id]);
 
   useEffect(() => {
     if (!session || !id) return;
@@ -82,6 +85,40 @@ export default function OrderPage() {
               )}
             </Card>
           )}
+
+          {parcels && parcels.sub_orders.length > 1 || parcels?.sub_orders.some((p) => p.kind !== 'house') ? (
+            <View style={{ gap: 12, marginBottom: 16 }}>
+              <T w={700} size={17} color={colors.navy}>{t('trParcels')}</T>
+              {parcels!.sub_orders.map((p) => (
+                <Card key={p.id} pad={wide ? 20 : 14} style={{ gap: 8 }}>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
+                    <T w={700} size={15} color={colors.navy}>{p.seller ? (lang === 'ar' ? p.seller.name_ar : p.seller.name_en) : t('srHouse')}</T>
+                    <Tag label={t(`tr_${p.status}` as Key)} tone={p.status === 'delivered' ? 'ok' : p.status === 'cancelled' || p.status === 'delivery_failed' ? 'err' : 'info'} />
+                  </View>
+                  <T size={12.5} color={colors.muted} num>{p.number}</T>
+                  {p.lines.map((l, i) => (
+                    <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
+                      <T size={13.5} style={{ flex: 1 }}>{l.quantity} × {pick(l, 'name')}{l.variant ? ` · ${l.variant}` : ''}</T>
+                      <T size={12.5} color={colors.muted}>{l.return_policy ? t(`trReturn_${l.return_policy}` as Key).replace('{n}', String(l.return_window_days ?? 0)) : ''}</T>
+                    </View>
+                  ))}
+                  {p.production_days && ['awaiting_acceptance', 'accepted', 'in_production'].includes(p.status) ? <T size={13} color={colors.brassText}>{t('trMaking').replace('{n}', String(p.production_days))}</T> : null}
+                  {p.expected_from && p.expected_to && !['delivered', 'cancelled'].includes(p.status) ? (
+                    <T size={13} color={colors.body}>{t('trExpected')} {date(p.expected_from)} – {date(p.expected_to)}</T>
+                  ) : null}
+                  {p.cancel_reason ? <Notice tone="warn" text={`${t('trCancelled')} ${p.cancel_reason}`} /> : null}
+                  {p.shipments[0] ? (
+                    <View style={{ gap: 4, borderTopWidth: 1, borderColor: colors.lineSoft, paddingTop: 8 }}>
+                      <T size={13} num>{t('tracking')}: {p.shipments[0].carrier ? `${p.shipments[0].carrier} · ` : ''}<T w={700} size={13}>{p.shipments[0].tracking_number}</T></T>
+                      {p.shipments[0].events.slice(0, 5).map((e, i) => (
+                        <T key={i} size={12.5} color={i ? colors.muted : colors.body}>{date(e.at)} · {(lang === 'ar' ? e.ar : e.en) ?? e.status}{e.location ? ` · ${e.location}` : ''}</T>
+                      ))}
+                    </View>
+                  ) : null}
+                </Card>
+              ))}
+            </View>
+          ) : null}
 
           <View style={{ flexDirection: wide ? 'row' : 'column', gap: 16, alignItems: 'flex-start' }}>
             <Card pad={wide ? 22 : 16} style={{ flex: 1, alignSelf: 'stretch', gap: 10 }}>

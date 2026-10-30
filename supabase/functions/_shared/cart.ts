@@ -1,105 +1,147 @@
-// Prices a cart on the server (never trusting the app): products, sizes, tailoring add-ons and measurements,
-// which seller ships what, each seller's delivery charge, and Al Mukarramah's margin per line.
-// Al Mukarramah holds no stock: lines with a seller are shipped by that seller (marketplace seller or partner);
-// lines without one are shipped through our own delivery zones.
+// Prices a bag on the server (never trusting the app): each product and its option (size, volume, colour), sizes,
+// made-to-measure design options (price adjustments added here) and measurements (checked against what that listing
+// asks for: no list of measurements is fixed in this code), and everything the rulebook needs about each line.
+import type { Line } from './rules.ts';
 import type { Db } from './util.ts';
 
-export type CartItem = { productId: string; quantity: number; custom?: { size?: string; options?: Record<string, string>; measurements?: Record<string, number>; profileName?: string } };
-type ShipTo = { country: string; city: string; kind: string };
-
-type SellerRow = {
-  id: string; name_en: string; country: string; kind: string; status: string; ships_to: string[]; handling_days: number;
-  ship_home_minor: number; ship_intl_minor: number; ship_overrides: Record<string, number>; free_ship_over_minor: number | null; commission_bps: number;
+export type CartItem = {
+  productId: string; variantId?: string | null; quantity: number;
+  custom?: { size?: string; options?: Record<string, string>; measurements?: Record<string, number>; profileName?: string };
 };
+type Measure = { key: string; min_cm?: number; max_cm?: number; required?: boolean };
+type ProductRow = {
+  id: string; name_en: string; name_ar: string; base_price_sar: number; stock: number; is_active: boolean; listing_status: string; weight_g: number | null;
+  ship_class: string; dangerous_goods: boolean | null; restricted_countries: string[] | null; allowed_destinations: string[] | null; hs_code: string | null;
+  origin_country: string | null; compliance_status: string | null; seller_id: string | null; category_id: string | null; made_to_measure: boolean | null;
+  garment_style: string | null; sizes: string[] | null;
+  tailoring: { production_days?: number; options?: { key: string; choices: { id: string; price_minor?: number }[] }[]; measurements?: Measure[]; style?: string } | null;
+  product_prices: { currency: string; amount_minor: number }[];
+  product_permits: { permit_key: string; status: string; expires_on: string | null }[];
+};
+type VariantRow = { id: string; product_id: string; label_en: string; label_ar: string; price_minor: number | null; stock: number; weight_g: number | null; is_active: boolean };
+type SellerRow = { id: string; name_en: string; name_ar: string | null; country: string; kind: 'marketplace' | 'partner'; status: string; handling_days: number };
+type CategoryRow = { id: string; slug: string; parent_id: string | null };
 
 export type PricedLine = {
-  product: { id: string; name_en: string; name_ar: string; weight_g: number; ship_class: string; seller_id: string | null };
-  quantity: number; unitSar: number; custom: CartItem['custom'] | null; seller: SellerRow | null;
-};
-export type SellerShipping = { sellerId: string; name: string; amountSar: number; handlingDays: number; partner: boolean };
-
-const REQUIRED: Record<string, string[]> = {
-  thobe: ['height', 'neck', 'shoulder', 'chest', 'waist', 'hips', 'sleeve', 'bicep', 'cuff', 'length'],
-  abaya: ['height', 'shoulder', 'chest', 'waist', 'hips', 'sleeve', 'bicep', 'cuff', 'length'],
+  key: string; item: CartItem; product: ProductRow; variant: VariantRow | null; quantity: number;
+  /** SAR halalas, VAT included, with the option's price and design add-ons */
+  unitSar: number; custom: CartItem['custom'] | null; seller: SellerRow | null; commissionBps: number | null; categoryId: string | null;
+  rule: Line;
 };
 
-export async function priceCart(db: Db, items: CartItem[], shipTo: ShipTo) {
+export async function priceCart(db: Db, items: CartItem[]): Promise<PricedLine[]> {
   if (!items.length) throw new Error('Your bag is empty');
   if (items.length > 50) throw new Error('Too many items');
+  const ids = [...new Set(items.map((i) => i.productId))];
   const { data: products, error } = await db.from('products')
-    .select('id, name_en, name_ar, base_price_sar, stock, is_active, listing_status, weight_g, ship_class, restricted_countries, seller_id, made_to_measure, garment, sizes, tailoring, product_prices(currency, amount_minor)')
-    .in('id', [...new Set(items.map((i) => i.productId))]);
+    .select('id, name_en, name_ar, base_price_sar, stock, is_active, listing_status, weight_g, ship_class, dangerous_goods, restricted_countries, allowed_destinations, hs_code, origin_country, compliance_status, seller_id, category_id, made_to_measure, garment_style, sizes, tailoring, product_prices(currency, amount_minor), product_permits(permit_key, status, expires_on)')
+    .in('id', ids);
   if (error) throw error;
-  const sellerIds = [...new Set((products ?? []).map((p) => p.seller_id).filter(Boolean))] as string[];
-  const { data: sellers } = sellerIds.length
-    ? await db.from('sellers').select('id, name_en, country, kind, status, ships_to, handling_days, ship_home_minor, ship_intl_minor, ship_overrides, free_ship_over_minor, commission_bps').in('id', sellerIds)
-    : { data: [] as SellerRow[] };
-  const country = shipTo.country.toUpperCase();
+  const variantIds = [...new Set(items.map((i) => i.variantId).filter(Boolean))] as string[];
+  const { data: variants } = variantIds.length ? await db.from('product_variants').select('id, product_id, label_en, label_ar, price_minor, stock, weight_g, is_active').in('id', variantIds) : { data: [] };
+  const sellerIds = [...new Set(((products ?? []) as ProductRow[]).map((p) => p.seller_id).filter(Boolean))] as string[];
+  const { data: sellers } = sellerIds.length ? await db.from('sellers').select('id, name_en, name_ar, country, kind, status, handling_days').in('id', sellerIds) : { data: [] };
+  const { data: cats } = await db.from('categories').select('id, slug, parent_id');
+  const { data: hasVariants } = await db.from('product_variants').select('product_id').in('product_id', ids).eq('is_active', true);
+  const withOptions = new Set(((hasVariants ?? []) as { product_id: string }[]).map((x) => x.product_id));
+  const chain = (id: string | null) => {
+    const out: string[] = [];
+    let c = (cats as CategoryRow[] | null)?.find((x) => x.id === id);
+    for (let d = 0; c && d < 8; d++) { out.unshift(c.slug); c = (cats as CategoryRow[]).find((x) => x.id === c!.parent_id); }
+    return out;
+  };
+  const policies = new Map<string, Record<string, unknown> | null>();
+  const policyOf = async (cat: string | null) => {
+    if (!cat) return null;
+    if (!policies.has(cat)) policies.set(cat, ((await db.rpc('mp_category_policy', { p_cat: cat })).data as Record<string, unknown> | null) ?? null);
+    return policies.get(cat)!;
+  };
+  const styles = new Map<string, Measure[]>();
+  const styleMeasures = async (code: string | null | undefined) => {
+    if (!code) return [];
+    if (!styles.has(code)) styles.set(code, (((await db.from('garment_styles').select('default_measurements').eq('code', code).maybeSingle()).data?.default_measurements) as Measure[] | null) ?? []);
+    return styles.get(code)!;
+  };
 
-  const lines: PricedLine[] = items.map((i) => {
-    const p = products!.find((x) => x.id === i.productId);
+  const out: PricedLine[] = [];
+  for (const [n, i] of items.entries()) {
+    const p = (products as ProductRow[] | null)?.find((x) => x.id === i.productId);
     if (!p || !p.is_active || p.listing_status !== 'approved') throw new Error('A product is no longer available');
     const qty = Math.floor(Number(i.quantity));
     if (!(qty >= 1 && qty <= 99)) throw new Error('Invalid quantity');
-    const seller = (sellers ?? []).find((s) => s.id === p.seller_id) as SellerRow | undefined;
+    const seller = (sellers as SellerRow[] | null)?.find((s) => s.id === p.seller_id) ?? null;
     if (p.seller_id && seller?.status !== 'approved') throw new Error(`${p.name_en} is no longer available`);
-    if (!p.made_to_measure && p.stock < qty) throw new Error(`Only ${p.stock} left of ${p.name_en}`);
-    if ((p.restricted_countries as string[]).includes(country)) throw new Error(`${p.name_en} cannot be sent to ${country}`);
 
-    let unitSar = p.base_price_sar as number;
+    // the option (size, volume...) when the listing has options
+    let variant: VariantRow | null = null;
+    if (withOptions.has(p.id)) {
+      variant = (variants as VariantRow[] | null)?.find((v) => v.id === i.variantId && v.product_id === p.id && v.is_active) ?? null;
+      if (!variant) throw new Error(`Please choose an option for ${p.name_en}`);
+      if (variant.stock < qty) throw new Error(`Only ${variant.stock} left of ${p.name_en} (${variant.label_en})`);
+    } else if (!p.made_to_measure && p.stock < qty) {
+      throw new Error(`Only ${p.stock} left of ${p.name_en}`);
+    }
+
+    let unitSar = variant?.price_minor ?? p.base_price_sar;
     let custom: CartItem['custom'] | null = null;
-    const sizes = (p.sizes as string[] | null) ?? [];
-    if (!p.made_to_measure && sizes.length) {
+    const sizes = p.sizes ?? [];
+    if (!p.made_to_measure && sizes.length && !variant) {
       if (!i.custom?.size || !sizes.includes(i.custom.size)) throw new Error(`Please choose a size for ${p.name_en}`);
       custom = { size: i.custom.size };
     }
     if (p.made_to_measure) {
-      const t = p.tailoring as { options?: { key: string; choices: { id: string; price_minor: number }[] }[] } | null;
+      const t = p.tailoring ?? {};
       const chosen: Record<string, string> = {};
-      for (const o of t?.options ?? []) {
-        const pick = i.custom?.options?.[o.key];
-        const c = o.choices.find((x) => x.id === pick);
+      for (const o of t.options ?? []) {
+        const c = o.choices.find((x) => x.id === i.custom?.options?.[o.key]);
         if (!c) throw new Error(`Please choose every design option for ${p.name_en}`);
         chosen[o.key] = c.id;
-        unitSar += Math.max(0, Math.round(c.price_minor || 0));
+        unitSar += Math.max(0, Math.round(c.price_minor || 0));     // design add-ons are priced here, never by the app
       }
-      const m = i.custom?.measurements ?? {};
-      const need = REQUIRED[p.garment === 'abaya' ? 'abaya' : 'thobe'];
+      // the measurements this listing asks for (else its style's), within the range the brand can make
+      const asked = (t.measurements?.length ? t.measurements : await styleMeasures(p.garment_style ?? t.style)).filter((m) => m.key);
+      const given = i.custom?.measurements ?? {};
       const clean: Record<string, number> = {};
-      for (const k of need) {
-        const v = Number(m[k]);
-        if (!(v >= 10 && v <= 250)) throw new Error(`Measurements for ${p.name_en} are incomplete`);
-        clean[k] = Math.round(v * 10) / 10;
+      if (asked.length) {
+        for (const m of asked) {
+          const v = Number(given[m.key]);
+          const lo = m.min_cm ?? 10;
+          const hi = m.max_cm ?? 300;
+          if (!(v >= lo && v <= hi)) {
+            if (m.required === false && given[m.key] === undefined) continue;
+            throw new Error(`Measurements for ${p.name_en} are incomplete`);
+          }
+          clean[m.key] = Math.round(v * 10) / 10;
+        }
+      } else {
+        for (const [k, v] of Object.entries(given).slice(0, 40)) {
+          if (/^[a-z][a-z0-9_]{0,39}$/.test(k) && Number(v) >= 10 && Number(v) <= 300) clean[k] = Math.round(Number(v) * 10) / 10;
+        }
+        if (!Object.keys(clean).length) throw new Error(`Measurements for ${p.name_en} are incomplete`);
       }
       custom = { options: chosen, measurements: clean, profileName: i.custom?.profileName?.slice(0, 40) };
     }
-    if (p.ship_class === 'perfume_spray' && seller && (country !== 'SA' || seller.country !== 'SA')) {
-      throw new Error(`${p.name_en} is a perfume spray: it can only be delivered within Saudi Arabia from a seller in Saudi Arabia`);
-    }
-    return { product: p, quantity: qty, unitSar, custom, seller: seller ?? null };
-  });
 
-  // Delivery charged by each seller (they ship their own items).
-  const bySeller = new Map<string, PricedLine[]>();
-  for (const l of lines) if (l.seller) bySeller.set(l.seller.id, [...(bySeller.get(l.seller.id) ?? []), l]);
-  const sellerShipping: SellerShipping[] = [];
-  for (const [id, group] of bySeller) {
-    const s = group[0].seller!;
-    const ships = s.ships_to ?? ['*'];
-    if (!ships.includes('*') && !ships.includes(country)) throw new Error(`${s.kind === 'partner' ? group[0].product.name_en : s.name_en} does not deliver to ${country} yet`);
-    const groupSar = group.reduce((sum, l) => sum + l.unitSar * l.quantity, 0);
-    let amount = s.ship_overrides?.[country] ?? (country === s.country ? s.ship_home_minor : s.ship_intl_minor);
-    if (s.free_ship_over_minor && groupSar >= s.free_ship_over_minor) amount = 0;
-    sellerShipping.push({ sellerId: id, name: s.kind === 'partner' ? 'Al Mukarramah' : s.name_en, amountSar: Math.max(0, Math.round(amount)), handlingDays: s.handling_days, partner: s.kind === 'partner' });
+    const policy = (await policyOf(p.category_id)) ?? {};
+    const commission = seller && seller.kind === 'marketplace' && p.category_id
+      ? Number((await db.rpc('mp_commission_bps', { p_seller: seller.id, p_cat: p.category_id })).data ?? 2500) : null;
+    const key = `${n}:${p.id}:${variant?.id ?? ''}`;
+    out.push({
+      key, item: i, product: p, variant, quantity: qty, unitSar, custom, seller, commissionBps: commission, categoryId: p.category_id,
+      rule: {
+        key, product_id: p.id, variant_id: variant?.id ?? null, name_en: p.name_en, name_ar: p.name_ar, quantity: qty, unit_minor: unitSar,
+        weight_g: variant?.weight_g ?? p.weight_g ?? 500, ship_class: p.ship_class, dangerous_goods: !!p.dangerous_goods,
+        hs_code: p.hs_code, origin_country: p.origin_country, category_slugs: chain(p.category_id),
+        policy: {
+          ship_domestic_only: policy.ship_domestic_only as boolean | null, ship_to_countries: policy.ship_to_countries as string[] | null,
+          ship_from_countries: policy.ship_from_countries as string[] | null, return_policy: policy.return_policy as Line['policy']['return_policy'],
+          return_window_days: policy.return_window_days as number | null, mtm_return_policy: policy.mtm_return_policy as Line['policy']['mtm_return_policy'],
+        },
+        allowed_destinations: p.allowed_destinations, restricted_countries: p.restricted_countries, compliance_status: p.compliance_status,
+        permits: p.product_permits ?? [], made_to_measure: !!p.made_to_measure, production_days: Math.max(0, Math.round(p.tailoring?.production_days ?? 0)),
+        seller: seller ? { id: seller.id, kind: seller.kind, country: seller.country, handling_days: seller.handling_days } : null,
+      },
+    });
   }
-
-  const house = lines.filter((l) => !l.seller);
-  return {
-    lines,
-    sellerShipping,
-    sellerShippingSar: sellerShipping.reduce((s, x) => s + x.amountSar, 0),
-    needsZone: house.length > 0,
-    houseWeightG: house.reduce((g, l) => g + (l.product.weight_g || 500) * l.quantity, 0),
-    houseSpray: house.some((l) => l.product.ship_class === 'perfume_spray'),
-  };
+  return out;
 }

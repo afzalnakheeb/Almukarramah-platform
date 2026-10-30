@@ -1,8 +1,9 @@
 // Creates an order (or a first membership/box payment) and a Moyasar hosted payment page.
-// Prices, shipping and totals are always recalculated here from the database; the app's numbers are never trusted.
+// Prices, delivery, duties and totals are always recalculated here from the database, every line decided by the
+// rulebook; the app's numbers are never trusted. An idempotency key from the app makes a retry return the same order.
 import { createInvoice } from '../_shared/moyasar.ts';
-import { priceCart, type CartItem } from '../_shared/cart.ts';
-import { quotes } from '../_shared/shipping.ts';
+import type { CartItem } from '../_shared/cart.ts';
+import { inCurrency, planCheckout } from '../_shared/checkout.ts';
 import { admin, caller, env, fxPerSar, handle, json, vatIncluded } from '../_shared/util.ts';
 
 type Body = {
@@ -15,6 +16,7 @@ type Body = {
   partnerCode?: string | null;
   planId?: string;
   lang?: 'ar' | 'en';
+  idempotencyKey?: string;
 };
 
 Deno.serve(handle(async (req) => {
@@ -51,58 +53,66 @@ Deno.serve(handle(async (req) => {
   // ------------------------------------------------ shop order
   const items = body.items ?? [];
   if (!items.length || !body.shipTo || !body.email) throw new Error('Missing order details');
+  const key = body.idempotencyKey && /^[A-Za-z0-9_-]{8,80}$/.test(body.idempotencyKey) ? body.idempotencyKey : null;
+  if (key) {
+    // the same checkout pressed twice (or retried after a network error): the same order and payment page
+    const { data: again } = await db.from('orders').select('id, status, payment_url').eq('idempotency_key', key).maybeSingle();
+    if (again) return json(again.status === 'pending_payment' && again.payment_url ? { paymentUrl: again.payment_url, orderId: again.id } : { orderId: again.id, status: again.status });
+  }
   const currency = (body.currency ?? 'SAR').toUpperCase();
   const perSar = await fxPerSar(db, currency);
 
-  // Products, sizes, tailoring and each seller's delivery charge, recalculated here.
-  const cart = await priceCart(db, items, body.shipTo);
-  let houseShippingSar = 0;
-  let carrierLabel: string | null = null;
-  if (cart.needsZone) {
+  // every line decided by the rulebook; anything that cannot be delivered here stops the payment, with the reason
+  const checkout = await planCheckout(db, items, body.shipTo);
+  if (checkout.blocked.length) return json({ error: checkout.blocked.map((b) => (body.lang === 'ar' ? b.ar : b.en)).join(' '), blocked: checkout.blocked }, 409);
+  let zone = null;
+  if (checkout.zones) {
     if (!body.zoneId) throw new Error('Choose a delivery option');
-    const quote = (await quotes(db, body.shipTo, cart.houseWeightG, cart.houseSpray)).find((q) => q.zoneId === body.zoneId);
-    if (!quote) throw new Error('Delivery option not available for this address');
-    houseShippingSar = quote.amountSar;
-    carrierLabel = `${quote.carrier} ${quote.service}`;
+    zone = checkout.zones.find((q) => q.zoneId === body.zoneId) ?? null;
+    if (!zone) throw new Error('Delivery option not available for this address');
   }
-
-  const lines = cart.lines.map((l) => {
-    const p = l.product as unknown as { id: string; name_en: string; name_ar: string; product_prices: { currency: string; amount_minor: number }[] };
-    // A fixed price in the shopper's currency applies only when nothing was added (sizes keep it; tailoring add-ons do not).
-    const fixed = !l.custom?.options ? p.product_prices.find((x) => x.currency === currency) : undefined;
-    const unit = fixed ? fixed.amount_minor : Math.round(l.unitSar * perSar);
-    const total = unit * l.quantity;
-    const bps = l.seller?.commission_bps ?? null;
-    return { l, unit, total, bps, commission: bps === null ? null : Math.round((total * bps) / 10000) };
-  });
-
-  const subtotal = lines.reduce((s, x) => s + x.total, 0);
-  const sellerShipping = cart.sellerShipping.map((s) => ({ ...s, minor: Math.round(s.amountSar * perSar) }));
-  const shipping = Math.round(houseShippingSar * perSar) + sellerShipping.reduce((s, x) => s + x.minor, 0);
-  const total = subtotal + shipping;
+  const t = inCurrency(checkout, currency, perSar, zone);
 
   const { data: order, error: oErr } = await db.from('orders').insert({
-    user_id: user?.id ?? null, email: body.email, currency, subtotal_minor: subtotal, shipping_minor: shipping,
-    total_minor: total, vat_minor: vatIncluded(total, settings.vat_rate_bp), ship_to: body.shipTo,
-    gift_message: body.giftMessage, partner_code: body.partnerCode?.toUpperCase() ?? null, shipping_carrier: carrierLabel,
+    user_id: user?.id ?? null, email: body.email, currency, subtotal_minor: t.items, shipping_minor: t.shipping, duties_minor: t.duties,
+    total_minor: t.total, vat_minor: t.vat, ship_to: body.shipTo, gift_message: body.giftMessage, partner_code: body.partnerCode?.toUpperCase() ?? null,
+    shipping_carrier: zone ? `${zone.carrier} ${zone.service}` : null, idempotency_key: key,
   }).select('id, number').single();
-  if (oErr) throw oErr;
+  if (oErr) {
+    if (key && /duplicate|unique/i.test(oErr.message)) {
+      const { data: again } = await db.from('orders').select('id, payment_url').eq('idempotency_key', key).single();
+      return json({ paymentUrl: again?.payment_url, orderId: again?.id });
+    }
+    throw oErr;
+  }
 
-  await db.from('order_items').insert(lines.map((x) => ({
-    order_id: order.id, product_id: x.l.product.id, name_en: x.l.product.name_en, name_ar: x.l.product.name_ar,
-    unit_price_minor: x.unit, quantity: x.l.quantity, line_total_minor: x.total,
-    seller_id: x.l.seller?.id ?? null, commission_bps: x.bps, commission_minor: x.commission, custom: x.l.custom,
-  })));
-  // One shipment per seller (and one for anything we ship ourselves), each with its own tracking.
-  await db.from('order_shipments').insert([
-    ...(cart.needsZone ? [{ order_id: order.id, seller_id: null, shipping_minor: Math.round(houseShippingSar * perSar), carrier: carrierLabel }] : []),
-    ...sellerShipping.map((s) => ({ order_id: order.id, seller_id: s.sellerId, shipping_minor: s.minor })),
-  ]);
+  // one sub-order per seller (and one for ours), with what the rulebook decided, then the lines
+  for (const [n, x] of t.subOrders.entries()) {
+    const s = x.s;
+    const { data: sub, error: sErr } = await db.from('sub_orders').insert({
+      order_id: order.id, seq: n + 1, seller_id: s.seller_id, kind: s.kind, currency, items_minor: x.items, shipping_minor: x.shipping,
+      duties_minor: x.duties, vat_minor: x.vat, commission_minor: x.commission, corridor_id: s.corridor_id, invoicer: s.invoicer, vat_mode: s.vat_mode,
+      duties_mode: s.duties_mode, import_tax_regime: s.import_tax_regime, import_tax_collected: s.import_tax_collected, from_country: s.from_country,
+      to_country: s.to_country, service_id: s.service_id, zone_id: s.kind === 'house' ? zone?.zoneId ?? null : null,
+      delivery_price_id: s.delivery.mode === 'price' ? s.delivery.price_id : null, weight_g: s.weight_g, handling_days: s.handling_days,
+      production_days: s.production_days, days_min: s.kind === 'house' && zone ? zone.daysMin : s.days_min, days_max: s.kind === 'house' && zone ? zone.daysMax : s.days_max,
+    }).select('id').single();
+    if (sErr) throw sErr;
+    const { error: iErr } = await db.from('order_items').insert(x.lines.map((y) => ({
+      order_id: order.id, sub_order_id: sub.id, product_id: y.l.product.id, variant_id: y.l.variant?.id ?? null,
+      variant_label: y.l.variant ? `${y.l.variant.label_en} / ${y.l.variant.label_ar}` : null,
+      name_en: y.l.product.name_en, name_ar: y.l.product.name_ar, unit_price_minor: y.unit, quantity: y.pl.quantity, line_total_minor: y.total,
+      seller_id: y.l.seller?.id ?? null, commission_bps: y.l.commissionBps, commission_minor: y.commission, custom: y.l.custom,
+      vat_rate_bp: y.pl.vat_rate_bp, vat_minor: y.vat, duty_bp: y.pl.duty_bp, duty_minor: y.duty, production_days: y.pl.made_to_measure ? y.pl.production_days : 0,
+      return_policy: y.pl.return_policy, return_window_days: y.pl.return_window_days, hs_code: y.l.product.hs_code, origin_country: y.l.product.origin_country,
+    })));
+    if (iErr) throw iErr;
+  }
 
   const inv = await createInvoice({
-    amount: total, currency, description: `Al Mukarramah order AM-${order.number}`,
+    amount: t.total, currency, description: `Al Mukarramah order AM-${order.number}`,
     successUrl: `${site}/account`, backUrl: `${site}/cart`, metadata: { order_id: order.id },
   });
-  await db.from('orders').update({ payment_ref: inv.id }).eq('id', order.id);
+  await db.from('orders').update({ payment_ref: inv.id, payment_url: inv.url }).eq('id', order.id);
   return json({ paymentUrl: inv.url, orderId: order.id });
 }));

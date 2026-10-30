@@ -5,7 +5,7 @@ import { callFunction, supabase } from './supabase';
 import type { Seller, SizeChart, Tailoring } from './types';
 import { useSession } from './session';
 import { MARKET_DEMO, guidanceSnapshot } from './market';
-import { DEMO_LISTINGS, DEMO_MEDIA, demoFile, demoListing, demoSeller } from './market-demo';
+import { DEMO_LISTINGS, DEMO_MEDIA, demoFile, demoListing, demoSeller, demoSubOrders } from './market-demo';
 import type { QualityResult } from '../../supabase/functions/_shared/quality';
 
 export type SellerPrivate = {
@@ -189,23 +189,42 @@ export async function photoUrls(paths: string[]): Promise<Record<string, string>
   return map;
 }
 
-export type SellerOrder = {
-  shipment_id: string; status: 'pending' | 'packing' | 'shipped' | 'delivered' | 'cancelled';
-  carrier: string | null; tracking_number: string | null; tracking_url: string | null; shipped_at: string | null; shipping_minor: number;
-  order_number: number; created_at: string; paid_at: string | null; currency: string;
-  ship_to: Record<string, string>; gift_message: string | null;
-  items: { name_en: string; quantity: number; unit_price_minor: number; line_total_minor: number; commission_minor: number | null; custom: Record<string, unknown> | null }[];
+// ---------------------------------------------------------------- orders (one sub-order per seller per order)
+export type SubOrderStatus = 'awaiting_acceptance' | 'accepted' | 'in_production' | 'ready_to_ship' | 'shipped' | 'delivered' | 'delivery_failed' | 'cancelled' | 'returned';
+export type TrackingEvent = { status: string; at: string; en: string | null; ar: string | null; location: string | null };
+export type SellerSubOrder = {
+  id: string; number: string; status: SubOrderStatus; currency: string; items_minor: number; commission_minor: number; paid_at: string | null; created_at: string;
+  accepted_at: string | null; ship_by: string | null; handling_days: number; production_days: number; to_country: string; city: string | null; recipient: string;
+  gift_message: string | null; cancel_reason: string | null; weight_g: number;
+  service: { carrier: string; service: string; service_ar: string | null } | null;
+  lines: { id: string; name_en: string; name_ar: string; variant: string | null; quantity: number; unit_price_minor: number; line_total_minor: number; commission_minor: number | null;
+    custom: { size?: string; options?: Record<string, string>; measurements?: Record<string, number> } | null; production_days: number | null }[];
+  shipment: { id: string; status: string; tracking_number: string | null; tracking_url: string | null; label_path: string | null; pickup_from: string | null; pickup_to: string | null; events: TrackingEvent[] } | null;
 };
 
-export async function sellerOrders(sellerId: string): Promise<SellerOrder[]> {
-  const { data, error } = await supabase.rpc('seller_orders', { p_seller: sellerId });
+export async function sellerSubOrders(sellerId: string, status?: SubOrderStatus): Promise<SellerSubOrder[]> {
+  if (MARKET_DEMO) return demoSubOrders().filter((x) => !status || x.status === status);
+  const { data, error } = await supabase.rpc('seller_sub_orders', { p_seller: sellerId, p_status: status ?? null });
   if (error) throw new Error(error.message);
-  return (data as SellerOrder[]) ?? [];
+  return (data as SellerSubOrder[]) ?? [];
 }
-
-export async function updateShipment(id: string, status: 'packing' | 'shipped' | 'delivered', carrier: string, tracking: string, url: string) {
-  const { error } = await supabase.rpc('seller_update_shipment', { p_shipment: id, p_status: status, p_carrier: carrier, p_tracking: tracking, p_url: url });
+const rpcOrThrow = async (name: string, args: Record<string, unknown>) => {
+  const { data, error } = await supabase.rpc(name, args);
   if (error) throw new Error(error.message);
+  return data;
+};
+export const acceptSubOrder = (id: string) => rpcOrThrow('seller_accept_sub_order', { p_sub: id });
+export const productionDone = (id: string) => rpcOrThrow('seller_production_done', { p_sub: id });
+export const cancelSubOrder = (id: string, reason: string) => rpcOrThrow('seller_cancel_sub_order', { p_sub: id, p_reason: reason });
+
+/** Buys the label through our approved courier (the same key never buys two). */
+export async function createLabel(subOrderId: string, idempotencyKey: string, locationId?: string, weightG?: number) {
+  return callFunction<{ tracking_number: string; tracking_url: string; label_url: string | null; pickup: { from: string; to: string } | null }>('create-shipment', { subOrderId, idempotencyKey, locationId, weightG });
+}
+export const cancelLabel = (subOrderId: string) => callFunction('create-shipment', { subOrderId, action: 'cancel' });
+export async function labelLink(path: string): Promise<string | null> {
+  const { data } = await supabase.storage.from('labels').createSignedUrl(path, 600);
+  return data?.signedUrl ?? null;
 }
 
 // ---------------------------------------------------------------- listing documents and drafts

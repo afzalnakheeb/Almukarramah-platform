@@ -107,7 +107,12 @@ export type CartLine = {
   key?: string;
   custom?: LineCustom;
   sellerName?: string | null;
+  /** the option chosen (size, volume, colour) when the listing has options */
+  variantId?: string | null;
+  variantLabel?: { en: string; ar: string } | null;
 };
+/** One option of a listing as the shop shows it (price in halalas, VAT included; null: the product's price). */
+export type ProductVariant = { id: string; label_en: string; label_ar: string; price_minor: number | null; stock: number; sort: number };
 
 export type ShipTo = {
   kind: 'home' | 'hotel' | 'office';

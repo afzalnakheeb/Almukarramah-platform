@@ -1,7 +1,7 @@
 // Demo data for the marketplace screens, used ONLY in the screenshot build (EXPO_PUBLIC_MARKET_DEMO=1) while the live
 // database has no marketplace tables. Nothing here is real: no customer, seller or order. Photos are our own public
 // product photos. In every other build these values are never read.
-import type { AiCheck, Listing, MediaAsset, MySeller, SellerFile } from './seller';
+import type { AiCheck, Listing, MediaAsset, MySeller, SellerFile, SellerSubOrder } from './seller';
 
 export const DEMO_SELLER_ID = '6f1d2c3b-4a5e-4f60-8a7b-9c0d1e2f3a4b';
 
@@ -206,5 +206,30 @@ export function demoAdminSellers() {
     };
   };
   return [row({ ...DEMO_APPLICANT, seller: { ...DEMO_APPLICANT.seller, status: 'pending' } }, 0, 0), row(DEMO_SELLER, 3, 2)];
+}
+
+// ---------------------------------------------------------------- orders (seller's flow and the customer's tracking)
+const line = (id: string, name_en: string, name_ar: string, unit: number, qty: number, variant: string | null = null) =>
+  ({ id, name_en, name_ar, variant, quantity: qty, unit_price_minor: unit, line_total_minor: unit * qty, commission_minor: Math.round(unit * qty * 0.25), custom: null, production_days: 0 });
+const evs = (steps: [string, string, string, string][]) => steps.map(([status, at, en, ar]) => ({ status, at, en, ar, location: null }));
+export function demoSubOrders(): SellerSubOrder[] {
+  const base = { currency: 'SAR', commission_minor: 0, handling_days: 2, production_days: 0, to_country: 'SA', gift_message: null, cancel_reason: null, weight_g: 600,
+    service: { carrier: 'Sandbox road courier', service: 'Saudi domestic (road)', service_ar: 'شحن محلي بري داخل المملكة' } };
+  const rows: SellerSubOrder[] = [
+    { ...base, id: 'so1', number: 'AM-104987-1', status: 'awaiting_acceptance', items_minor: 135000, paid_at: '2026-10-31T07:40:00Z', created_at: '2026-10-31T07:38:00Z', accepted_at: null,
+      ship_by: null, city: 'Riyadh', recipient: 'Maryam', gift_message: 'Eid Mubarak, with love from Huda', lines: [line('l1', 'Ameer al oud, aged oud oil, 6 ml', 'أمير العود ٦ مل', 98000, 1, '6 ml'), line('l2', 'Cambodian oud oil, 3 ml', 'دهن عود كمبودي ٣ مل', 37000, 1)], shipment: null },
+    { ...base, id: 'so2', number: 'AM-104981-2', status: 'accepted', items_minor: 45000, paid_at: '2026-10-30T15:10:00Z', created_at: '2026-10-30T15:08:00Z', accepted_at: '2026-10-30T18:00:00Z',
+      ship_by: '2026-11-01', city: 'Jeddah', recipient: 'Abdullah', lines: [line('l3', 'Cambodian oud oil, 3 ml', 'دهن عود كمبودي ٣ مل', 45000, 1)], shipment: null },
+    { ...base, id: 'so3', number: 'AM-104976-1', status: 'ready_to_ship', items_minor: 90000, paid_at: '2026-10-29T10:00:00Z', created_at: '2026-10-29T09:58:00Z', accepted_at: '2026-10-29T12:00:00Z',
+      ship_by: '2026-10-31', city: 'Madinah', recipient: 'Fatimah', lines: [line('l4', 'Cambodian oud oil, 3 ml', 'دهن عود كمبودي ٣ مل', 45000, 2)],
+      shipment: { id: 'sh3', status: 'label_created', tracking_number: 'SBX4820193746', tracking_url: 'https://almukarramah.com/track?number=SBX4820193746', label_path: null,
+        pickup_from: '2026-11-01T07:00:00Z', pickup_to: '2026-11-01T15:00:00Z', events: evs([['label_created', '2026-10-31T09:00:00Z', 'Label created; waiting for the courier', 'تم إنشاء ملصق الشحن، بانتظار المندوب']]) } },
+    { ...base, id: 'so4', number: 'AM-104960-3', status: 'shipped', items_minor: 98000, paid_at: '2026-10-27T10:00:00Z', created_at: '2026-10-27T09:58:00Z', accepted_at: '2026-10-27T11:00:00Z',
+      ship_by: '2026-10-29', city: 'Dammam', recipient: 'Yusuf', lines: [line('l5', 'Ameer al oud, aged oud oil, 6 ml', 'أمير العود ٦ مل', 98000, 1, '6 ml')],
+      shipment: { id: 'sh4', status: 'in_transit', tracking_number: 'SBX1093847562', tracking_url: 'https://almukarramah.com/track?number=SBX1093847562', label_path: null, pickup_from: null, pickup_to: null,
+        events: evs([['in_transit', '2026-10-29T14:00:00Z', 'On the way', 'في الطريق'], ['picked_up', '2026-10-29T10:00:00Z', 'Collected from the seller', 'استلمها المندوب من البائع'],
+          ['label_created', '2026-10-29T08:00:00Z', 'Label created; waiting for the courier', 'تم إنشاء ملصق الشحن، بانتظار المندوب']]) } },
+  ];
+  return rows.map((r) => ({ ...r, commission_minor: r.lines.reduce((n, l) => n + (l.commission_minor ?? 0), 0) }));
 }
 

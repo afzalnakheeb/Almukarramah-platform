@@ -8,7 +8,7 @@ import { Corners } from '@/components/decor';
 import { countryName } from '@/components/country';
 import { SizePicker, TailorConfigurator } from '@/components/tailoring';
 import { Icon } from '@/components/icons';
-import { brandName, NOT_STUDIO, Breadcrumb, Button, CapsLink, Divider, EmptyState, Eyebrow, Grid, KiswahRule, Loading, Notice, Photo, Price, SectionHead, Serif, shortName, Stepper, T, useWide } from '@/components/ui';
+import { brandName, NOT_STUDIO, Breadcrumb, Button, CapsLink, Chip, Divider, EmptyState, Eyebrow, Grid, KiswahRule, Loading, Notice, Photo, Price, SectionHead, Serif, shortName, Stepper, T, useWide } from '@/components/ui';
 import { useCart } from '@/lib/cart';
 import { Facts, Faq } from '@/components/faq';
 import { data, reveal } from '@/components/motion';
@@ -18,7 +18,9 @@ import { strings, useI18n, type Key } from '@/lib/i18n';
 import { snapshot, snapshotFeatured, snapshotProduct } from '@/lib/snapshot';
 import { formatMoney, priceIn } from '@/lib/money';
 import { usePrefs } from '@/lib/prefs';
-import type { Product } from '@/lib/types';
+import { MARKET_LIVE } from '@/lib/flags';
+import { supabase } from '@/lib/supabase';
+import type { Product, ProductVariant } from '@/lib/types';
 import { colors, toneFor } from '@/theme';
 
 /** Pre-render a page for every product in the build-time catalogue. */
@@ -52,6 +54,15 @@ export default function ProductScreen() {
   const [destOpen, setDestOpen] = useState(false);
   const [size, setSize] = useState<string | undefined>(undefined);
   const [needSize, setNeedSize] = useState(false);
+  // a marketplace listing's options (sizes, volumes, colours), each with its own stock and price
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [variant, setVariant] = useState<ProductVariant | null>(null);
+  useEffect(() => {
+    setVariants([]); setVariant(null);
+    if (!MARKET_LIVE || !product?.id || !product.seller_id) return;
+    supabase.from('product_variants').select('id, label_en, label_ar, price_minor, stock, sort').eq('product_id', product.id).eq('is_active', true).order('sort')
+      .then(({ data }: { data: ProductVariant[] | null }) => setVariants(data ?? []), () => undefined);
+  }, [product?.id]);
 
   useEffect(() => {
     setProduct((cur) => (cur?.slug === slug ? cur : snapshotProduct(slug) ?? undefined));
@@ -98,16 +109,17 @@ export default function ProductScreen() {
     />
   );
 
-  const soldOut = product.stock <= 0;
-  const unit = priceIn(product, currency);
+  const soldOut = variant ? variant.stock <= 0 : product.stock <= 0;
+  const unit = variant?.price_minor ? priceIn({ base_price_sar: variant.price_minor, product_prices: [] }, currency) : priceIn(product, currency);
   const total = formatMoney(unit * qty, currency, lang);
   const tag = product.product_tags?.[0]?.tags;
   const tailored = !!product.made_to_measure && !!product.tailoring;
   const hasSizes = !tailored && (product.sizes?.length ?? 0) > 0;
   const seller = product.sellers?.kind === 'marketplace' ? product.sellers : null;
   const addToBag = () => {
-    if (hasSizes && !size) return setNeedSize(true);
-    add(product, qty, hasSizes ? { size } : undefined);
+    if (variants.length && !variant) return setNeedSize(true);
+    if (hasSizes && !size && !variants.length) return setNeedSize(true);
+    add(product, qty, hasSizes && !variants.length ? { size } : undefined, variant);
     router.push('/cart');
   };
   const addLabel = soldOut ? t('outOfStock') : `${t('addToBag')} · ${total}`;
@@ -177,8 +189,16 @@ export default function ProductScreen() {
         <TailorConfigurator product={product} onAdd={(custom) => { add(product, 1, custom); router.push('/cart'); }} />
       ) : (
         <>
-          {hasSizes && <SizePicker product={product} value={size} onChange={(s) => { setSize(s); setNeedSize(false); }} />}
-          {needSize && <Notice tone="warn" text={t('chooseSize')} />}
+          {variants.length ? (
+            <View style={{ gap: 8, marginBottom: 6 }}>
+              <T w={600} size={10.5} caps color={colors.navy}>{t('chooseOption')}</T>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {variants.map((v) => <Chip key={v.id} label={`${lang === 'ar' ? v.label_ar : v.label_en}${v.stock <= 0 ? ` · ${t('outOfStock')}` : ''}`} active={variant?.id === v.id}
+                  onPress={() => { setVariant(v); setNeedSize(false); }} />)}
+              </View>
+            </View>
+          ) : hasSizes ? <SizePicker product={product} value={size} onChange={(s) => { setSize(s); setNeedSize(false); }} /> : null}
+          {needSize && <Notice tone="warn" text={t(variants.length ? 'chooseOption' : 'chooseSize')} />}
           {wide ? (
             <View style={{ marginTop: 14, gap: 12 }}>
               <View style={{ flexDirection: 'row', gap: 12, alignItems: 'stretch' }}>

@@ -2,12 +2,13 @@
 // Card details are never collected here: payment happens on Moyasar's hosted page.
 import * as WebBrowser from 'expo-web-browser';
 import { Link, router } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
 import { Button, Card, Divider, Field, H1, Notice, OptionCard, Row, Serif, T, useWide } from '@/components/ui';
 import { useCart } from '@/lib/cart';
+import { MARKET_LIVE } from '@/lib/flags';
 import { getSettings } from '@/lib/catalogue';
 import { useI18n } from '@/lib/i18n';
 import { convertFromSar, formatMoney } from '@/lib/money';
@@ -21,13 +22,15 @@ import { AskAssistant } from '@/components/assistant';
 import { useAssistantFill } from '@/lib/assistant';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+type Parcel = { name: { en: string; ar: string }; amountSar: number; free?: boolean; daysMin?: number; daysMax?: number; handlingDays: number; productionDays?: number; dutiesMode?: string; dutiesSar?: number };
+const newKey = () => `co_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
 
 export default function Checkout() {
   const wide = useWide();
   const { t, pick, currency, lang } = useI18n();
   const { session } = useSession();
   const { destination } = usePrefs();
-  const { lines, subtotalSar, clear, giftMessage } = useCart();
+  const { lines, subtotalSar, clear, giftMessage, setQty } = useCart();
   const initial = useMemo<ShipTo>(() => {
     if (destination === 'madinah-hotel') return { kind: 'hotel', recipient_name: '', phone: '', country: 'SA', city: 'Madinah', line1: '' };
     if (destination === 'makkah-hotel') return { kind: 'hotel', recipient_name: '', phone: '', country: 'SA', city: 'Makkah', line1: '' };
@@ -40,7 +43,11 @@ export default function Checkout() {
   const [partner, setPartner] = useState('');
   const [quotes, setQuotes] = useState<ShippingQuote[] | null>(null);
   const [chosen, setChosen] = useState<ShippingQuote | null>(null);
-  const [sellerShip, setSellerShip] = useState<{ name: string; amountSar: number; handlingDays: number }[]>([]);
+  const [sellerShip, setSellerShip] = useState<Parcel[]>([]);
+  const [blocked, setBlocked] = useState<{ index: number; en: string; ar: string }[]>([]);
+  const [houseDap, setHouseDap] = useState(false);
+  // one key per checkout: pressing Pay twice (or a retried request) never creates a second order
+  const idem = useRef(newKey());
   const [needsZone, setNeedsZone] = useState(true);
   const [busy, setBusy] = useState<'rates' | 'pay' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,9 +71,11 @@ export default function Checkout() {
     setShipTo((s) => ({ ...s, [k]: v }));
     setQuotes(null);
     setChosen(null);
+    idem.current = newKey();
   };
+  useEffect(() => { setQuotes(null); setChosen(null); setBlocked([]); idem.current = newKey(); }, [lines.length]);
   const money = (sar: number) => formatMoney(convertFromSar(sar, currency), currency, lang);
-  const items = lines.map((l) => ({ productId: l.productId, quantity: l.quantity, custom: l.custom }));
+  const items = lines.map((l) => ({ productId: l.productId, variantId: l.variantId ?? null, quantity: l.quantity, custom: l.custom }));
   const emailOk = EMAIL.test(email.trim());
   const ready = emailOk && !!shipTo.recipient_name && !!shipTo.phone && !!shipTo.city && shipTo.country.length === 2 && (shipTo.kind === 'hotel' ? !!shipTo.hotel_name : !!shipTo.line1);
 
@@ -74,10 +83,22 @@ export default function Checkout() {
     setError(null);
     setBusy('rates');
     try {
+      if (MARKET_LIVE) {
+        // the rulebook decides each line: what can come here, each seller's parcel, duties, our own delivery zones
+        const res = await callFunction<{ zones: ShippingQuote[]; needsZone: boolean; reason: string | null; parcels: Parcel[]; blocked: { index: number; en: string; ar: string }[]; house: { dutiesMode: string } | null }>('shipping-quote', { shipTo, items });
+        setQuotes(res.zones);
+        setChosen(res.zones[0] ?? null);
+        setSellerShip(res.parcels);
+        setBlocked(res.blocked);
+        setHouseDap(res.house?.dutiesMode === 'dap');
+        setNeedsZone(res.needsZone);
+        if (res.needsZone && !res.zones.length) setError(t(res.reason === 'perfume_spray' ? 'noDeliveryPerfume' : 'noDeliveryHere'));
+        return;
+      }
       const res = await callFunction<{ quotes: ShippingQuote[]; needsZone?: boolean; sellerShipping?: { name: string; amountSar: number; handlingDays: number }[]; reason?: string | null }>('shipping-rates', { shipTo, items });
       setQuotes(res.quotes);
       setChosen(res.quotes[0] ?? null);
-      setSellerShip(res.sellerShipping ?? []);
+      setSellerShip((res.sellerShipping ?? []).map((x) => ({ ...x, name: { en: x.name, ar: x.name } })));
       setNeedsZone(res.needsZone !== false);
       if (res.needsZone !== false && !res.quotes.length) setError(t(res.reason === 'perfume_spray' ? 'noDeliveryPerfume' : 'noDeliveryHere'));
     } catch (e) {
@@ -87,14 +108,14 @@ export default function Checkout() {
     }
   }
 
-  const ratesReady = !!quotes && (needsZone ? !!chosen : true);
+  const ratesReady = !!quotes && (needsZone ? !!chosen : true) && !blocked.length;
   async function pay() {
     if (!ratesReady) return;
     setError(null);
     setBusy('pay');
     try {
       const res = await callFunction<{ paymentUrl: string; orderId: string }>('create-payment', {
-        items, shipTo, email: email.trim(), currency, zoneId: chosen?.zoneId, giftMessage: giftMessage || null, partnerCode: partner || null, lang,
+        items, shipTo, email: email.trim(), currency, zoneId: chosen?.zoneId, giftMessage: giftMessage || null, partnerCode: partner || null, lang, idempotencyKey: idem.current,
       });
       if (Platform.OS === 'web') {
         window.location.href = res.paymentUrl;
@@ -122,7 +143,9 @@ export default function Checkout() {
 
   const sellerShipSar = sellerShip.reduce((s, x) => s + x.amountSar, 0);
   const shippingSar = (needsZone ? chosen?.amountSar ?? 0 : 0) + sellerShipSar;
-  const total = subtotalSar + shippingSar;
+  const dutiesSar = sellerShip.reduce((s, x) => s + (x.dutiesMode === 'ddp' ? x.dutiesSar ?? 0 : 0), 0);
+  const total = subtotalSar + shippingSar + dutiesSar;
+  const dap = houseDap || sellerShip.some((x) => x.dutiesMode === 'dap');
   const section = (title: string, children: React.ReactNode, right?: React.ReactNode) => (
     <Card pad={wide ? 24 : 16} style={{ borderRadius: 6, gap: 14 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
@@ -191,15 +214,29 @@ export default function Checkout() {
                 <OptionCard key={q.zoneId} selected={chosen?.zoneId === q.zoneId} onPress={() => setChosen(q)} title={`${q.carrier} · ${q.service}`}
                   body={`${money(q.amountSar)} · ${q.daysMin}–${q.daysMax} ${t('days')}`} />
               ))}
-              {sellerShip.map((s) => (
-                <View key={s.name} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, borderWidth: 1, borderColor: colors.line, borderRadius: 14, padding: 14 }}>
-                  <View style={{ flex: 1 }}>
-                    <T w={700} size={14.5} color={colors.navy}>{t('shippedBy')} {s.name}</T>
-                    <T size={13} color={colors.muted}>{t('dispatchWithin')} {s.handlingDays} {t('businessDays')} · {t('withTracking')}</T>
+              {blocked.length ? (
+                <View style={{ gap: 8, borderWidth: 1, borderColor: colors.danger, padding: 14, backgroundColor: colors.dangerBg }}>
+                  <T w={700} size={14.5} color={colors.danger}>{t('coBlockedTitle')}</T>
+                  {blocked.map((b) => (
+                    <View key={b.index} style={{ flexDirection: 'row', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <T size={13.5} style={{ flex: 1 }}>{lang === 'ar' ? b.ar : b.en}</T>
+                      {lines[b.index] ? <Button label={t('remove')} kind="text" size="sm" onPress={() => setQty(lines[b.index].key ?? lines[b.index].productId, 0)} /> : null}
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+              {sellerShip.map((s, i) => (
+                <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, borderWidth: 1, borderColor: colors.line, borderRadius: 14, padding: 14 }}>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <T w={700} size={14.5} color={colors.navy}>{t('shippedBy')} {lang === 'ar' ? s.name.ar : s.name.en}</T>
+                    {s.productionDays ? <T size={13} color={colors.brassText}>{t('coMadeFirst').replace('{n}', String(s.productionDays))}</T> : null}
+                    <T size={13} color={colors.muted}>{s.daysMin && s.daysMax ? `${t('coArrives').replace('{a}', String(s.daysMin)).replace('{b}', String(s.daysMax))} · ` : `${t('dispatchWithin')} ${s.handlingDays} ${t('businessDays')} · `}{t('withTracking')}</T>
+                    {s.dutiesMode === 'ddp' && s.dutiesSar ? <T size={13} color={colors.body}>{t('coDutiesPaid')} {money(s.dutiesSar)}</T> : null}
                   </View>
                   <T w={700} size={14.5}>{s.amountSar ? money(s.amountSar) : t('free')}</T>
                 </View>
               ))}
+              {dap ? <Notice text={t('coDutiesOnDelivery')} /> : null}
             </View>
           ))}
 
@@ -223,6 +260,7 @@ export default function Checkout() {
             <T w={700} size={17} color={colors.navy}>{t('yourOrder')}</T>
             {lines.map((l) => <Row key={l.key ?? l.productId} label={`${pick(l, 'name')}${l.quantity > 1 ? ` × ${l.quantity}` : ''}`} value={money(l.unitPriceSar * l.quantity)} />)}
             <Row label={t('shipping')} value={ratesReady ? money(shippingSar) : t('deliveryNext')} color={ratesReady ? undefined : colors.muted} />
+            {dutiesSar ? <Row label={t('coDuties')} value={money(dutiesSar)} /> : null}
             <Divider />
             <Row label={t('total')} value={money(total)} bold />
             <T size={12} color={colors.muted}>{t('vatIncluded')}</T>
