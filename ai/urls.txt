@@ -1,2 +1,4 @@
 plate-fast-1.mp4 https://media.weavy.ai/video/upload/v1793346664/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/c9c6grex0zcg09atsj88.mp4
 
+corner-1.png https://media.weavy.ai/image/upload/v1793346771/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/b6doy8ntgi2bgxp3gyy7.png
+corner-2.png https://media.weavy.ai/image/upload/v1793346761/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/ja6tzljtweys3kvtpdcl.png
