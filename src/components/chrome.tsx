@@ -21,8 +21,8 @@ import { Container, Notice, OptionCard, Serif, Sheet, styles as ui, T, useWide }
 const LOGO = require('../../assets/logo-ink.png'); // ink, for light backgrounds
 const LOGO_GOLD = require('../../assets/logo-gold.png'); // satin antique gold (kept for the apps' dark splash)
 const LOGO_RATIO = 917 / 264;
-/** Where 'Sell with us' goes: an email to the team until the seller sign-up pages are live. */
-export const SELL_HREF = 'mailto:hello@almukarramah.com?subject=Selling%20on%20Al%20Mukarramah';
+/** Where 'Sell with us' goes: the seller application and guidelines (app/sell). */
+export const SELL_HREF = '/sell';
 
 export const destIcon = (d: Destination): IconName => (d === 'saudi' ? 'house' : d === 'international' ? 'globe' : 'bed');
 
@@ -284,7 +284,7 @@ function MenuPanel({ open, nav, onClose, onSheet }: { open: boolean; nav: NavIte
   const go = (href: Href, external?: boolean) => { onClose(); if (external) openExternal(String(href)); else router.push(href); };
   const small: NavItem[] = [
     { label: t('concierge'), href: '/concierge' }, { label: t('membership'), href: '/membership' },
-    { label: t('account'), href: '/account' }, { label: t('sellWithUs'), href: SELL_HREF as Href, external: true },
+    { label: t('account'), href: '/account' }, { label: t('sellWithUs'), href: SELL_HREF as Href },
   ];
   return (
     <Panel open={open} onClose={onClose}>
@@ -432,6 +432,7 @@ export function SiteFooter() {
           { label: t('navPerfumes'), href: { pathname: '/collections/[slug]', params: { slug: 'perfumes' } } },
           { label: t('fragTabOils'), href: { pathname: '/collections/[slug]', params: { slug: 'oud-oils' } } },
           { label: t('navPrayer'), href: { pathname: '/collections/[slug]', params: { slug: 'prayer-mats' } } },
+          { label: t('navFashion'), href: '/fashion' },
           { label: t('hajjTitle'), href: { pathname: '/shop', params: { tag: 'hajj' } } },
           { label: t('ramadanTitle'), href: { pathname: '/shop', params: { tag: 'ramadan' } } },
         ])}
@@ -440,6 +441,8 @@ export function SiteFooter() {
         ])}
         {col(t('footerCompany'), [
           { label: t('sellWithUs'), href: SELL_HREF as Href },
+          { label: t('sellerGuidelines'), href: '/sell/guidelines' },
+          { label: t('ourSellers'), href: '/sellers' },
           { label: t('membership'), href: '/membership' },
           { label: t('ourApps'), href: '/apps' },
           { label: t('navQuran'), href: { pathname: '/apps/[slug]', params: { slug: 'recite-with-me' } } },

@@ -14,6 +14,8 @@ const LINKS: { href: Href; label: string; group?: string }[] = [
   { href: '/admin/orders', label: 'Orders & refunds', group: 'Customers' },
   { href: '/admin/products', label: 'Products & stock', group: 'Catalogue' },
   { href: '/admin/drafts', label: 'Drafts to approve' },
+  { href: '/admin/listings', label: 'Seller listings to approve', group: 'Marketplace' },
+  { href: '/admin/sellers', label: 'Sellers and partners' },
   { href: '/admin/audit', label: 'Audit history', group: 'System' },
   { href: '/', label: '← Back to the shop', group: ' ' },
 ];

@@ -324,7 +324,8 @@ export const NOT_STUDIO = ['kaaba-clock-tower-woven-rug-gold', 'kids-rawdah-wove
 export function ProductTile({ product, compact }: { product: Product; compact?: boolean }) {
   const { pick, t, isRTL } = useI18n();
   const tag = product.categories ?? product.product_tags?.[0]?.tags;
-  const soldOut = product.stock <= 0;
+  const seller = product.sellers?.kind === 'marketplace' ? product.sellers : null;
+  const soldOut = product.stock <= 0 && !product.made_to_measure;
   const img = product.images[0];
   const nameSize = compact ? 17 : 20;
   return (
@@ -332,11 +333,15 @@ export function ProductTile({ product, compact }: { product: Product; compact?: 
       <Pressable accessibilityRole="link" {...data({ hover: 'tile' })} style={styles.tile}>
         <Photo uri={img} tone={img ? colors.sand : toneFor(product.slug)} fit="cover" motif={compact ? 54 : 80} style={soldOut ? { opacity: 0.55 } : undefined} />
         <View style={{ alignItems: 'center', gap: compact ? 5 : 7, paddingHorizontal: compact ? 4 : 10, paddingTop: compact ? 12 : 18 }}>
-          {product.brand || tag ? <Eyebrow size={compact ? 9.5 : 10} center>{product.brand ? brandName(product.brand, isRTL) : pick(tag!, 'name')}</Eyebrow> : null}
+          {/* the maker above the name: a marketplace seller, the brand we resell, or the collection */}
+          {seller || product.brand || tag ? (
+            <Eyebrow size={compact ? 9.5 : 10} center>{seller ? (isRTL && seller.name_ar ? seller.name_ar : seller.name_en) : product.brand ? brandName(product.brand, isRTL) : pick(tag!, 'name')}</Eyebrow>
+          ) : null}
           <Serif size={nameSize} center color={colors.navy} numberOfLines={2} style={!isRTL && { lineHeight: Math.round(nameSize * 1.2) }}>{shortName(pick(product, 'name'), product.brand)}</Serif>
           {/* fine gold hairline under the name, drawn in from the centre on hover (web) */}
           <View {...data({ hairline: 'c' })} style={{ height: 1, width: compact ? 22 : 30, backgroundColor: colors.gold }} />
           <Price product={product} size={compact ? 13.5 : 14.5} />
+          {product.made_to_measure ? <T w={500} size={10.5} caps color={colors.brassText}>{t('tailorMade')}</T> : null}
           {soldOut ? <T w={500} size={10.5} caps color={colors.sampleText}>{t('outOfStock')}</T> : null}
         </View>
       </Pressable>

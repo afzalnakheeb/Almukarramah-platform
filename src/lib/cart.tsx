@@ -1,13 +1,28 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import type { CartLine, Product } from './types';
+import type { CartLine, LineCustom, Product } from './types';
+
+/** One line per product and set of choices. */
+export const lineKey = (productId: string, custom?: LineCustom) => (custom ? `${productId}|${JSON.stringify(custom)}` : productId);
+const keyOf = (l: CartLine) => l.key ?? l.productId;
+
+/** Price of one item including any tailoring add-ons (display only: the server recalculates every total). */
+export function unitPriceWith(p: Product, custom?: LineCustom): number {
+  let extra = 0;
+  for (const o of p.tailoring?.options ?? []) {
+    const pick = custom?.options?.[o.key];
+    extra += o.choices.find((c) => c.id === pick)?.price_minor ?? 0;
+  }
+  return p.base_price_sar + extra;
+}
 
 type Cart = {
   lines: CartLine[];
   count: number;
   subtotalSar: number;
-  add: (p: Product, qty?: number) => void;
-  setQty: (productId: string, qty: number) => void;
+  add: (p: Product, qty?: number, custom?: LineCustom) => void;
+  /** key: the line's key (the product id for plain products). */
+  setQty: (key: string, qty: number) => void;
   clear: () => void;
   /** Printed on the gift card; prices never appear on what the recipient sees. */
   giftMessage: string;
@@ -38,14 +53,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     lines,
     count: lines.reduce((n, l) => n + l.quantity, 0),
     subtotalSar: lines.reduce((s, l) => s + l.unitPriceSar * l.quantity, 0),
-    add: (p, qty = 1) =>
+    add: (p, qty = 1, custom) =>
       setLines((prev) => {
-        const found = prev.find((l) => l.productId === p.id);
-        if (found) return prev.map((l) => (l.productId === p.id ? { ...l, quantity: l.quantity + qty } : l));
-        return [...prev, { productId: p.id, slug: p.slug, name_en: p.name_en, name_ar: p.name_ar, unitPriceSar: p.base_price_sar, quantity: qty, image: p.images[0] ?? null }];
+        const key = lineKey(p.id, custom);
+        const found = prev.find((l) => keyOf(l) === key);
+        if (found) return prev.map((l) => (keyOf(l) === key ? { ...l, quantity: l.quantity + qty } : l));
+        const seller = p.sellers?.kind === 'marketplace' ? p.sellers.name_en : null;
+        return [...prev, { key, productId: p.id, slug: p.slug, name_en: p.name_en, name_ar: p.name_ar, unitPriceSar: unitPriceWith(p, custom), quantity: qty, image: p.images[0] ?? null, custom, sellerName: seller }];
       }),
-    setQty: (productId, qty) =>
-      setLines((prev) => (qty <= 0 ? prev.filter((l) => l.productId !== productId) : prev.map((l) => (l.productId === productId ? { ...l, quantity: qty } : l)))),
+    setQty: (key, qty) =>
+      setLines((prev) => (qty <= 0 ? prev.filter((l) => keyOf(l) !== key) : prev.map((l) => (keyOf(l) === key ? { ...l, quantity: qty } : l)))),
     clear: () => {
       setLines([]);
       setGiftMessage('');

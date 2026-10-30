@@ -5,6 +5,8 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { DestinationSheet, destIcon, Screen } from '@/components/chrome';
 import { Corners } from '@/components/decor';
+import { countryName } from '@/components/country';
+import { SizePicker, TailorConfigurator } from '@/components/tailoring';
 import { Icon } from '@/components/icons';
 import { brandName, NOT_STUDIO, Breadcrumb, Button, CapsLink, Divider, EmptyState, Eyebrow, Grid, KiswahRule, Loading, Notice, Photo, Price, SectionHead, Serif, shortName, Stepper, T, useWide } from '@/components/ui';
 import { useCart } from '@/lib/cart';
@@ -48,6 +50,8 @@ export default function ProductScreen() {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState<string | null>(null);
   const [destOpen, setDestOpen] = useState(false);
+  const [size, setSize] = useState<string | undefined>(undefined);
+  const [needSize, setNeedSize] = useState(false);
 
   useEffect(() => {
     setProduct((cur) => (cur?.slug === slug ? cur : snapshotProduct(slug) ?? undefined));
@@ -98,8 +102,12 @@ export default function ProductScreen() {
   const unit = priceIn(product, currency);
   const total = formatMoney(unit * qty, currency, lang);
   const tag = product.product_tags?.[0]?.tags;
+  const tailored = !!product.made_to_measure && !!product.tailoring;
+  const hasSizes = !tailored && (product.sizes?.length ?? 0) > 0;
+  const seller = product.sellers?.kind === 'marketplace' ? product.sellers : null;
   const addToBag = () => {
-    add(product, qty);
+    if (hasSizes && !size) return setNeedSize(true);
+    add(product, qty, hasSizes ? { size } : undefined);
     router.push('/cart');
   };
   const addLabel = soldOut ? t('outOfStock') : `${t('addToBag')} · ${total}`;
@@ -135,12 +143,23 @@ export default function ProductScreen() {
   const details = (
     <View style={{ gap: 0 }}>
       <View style={{ gap: wide ? 14 : 10 }}>
-        <Eyebrow>{product.brand ? brandName(product.brand, lang === 'ar') : tag ? pick(tag, 'name') : t('appName')}</Eyebrow>
+        <Eyebrow>{seller ? pick(seller as unknown as Record<string, unknown>, 'name') || seller.name_en : product.brand ? brandName(product.brand, lang === 'ar') : tag ? pick(tag, 'name') : t('appName')}</Eyebrow>
         <Serif role="h1" size={wide ? 46 : 30}>{shortName(pick(product, 'name'), product.brand)}</Serif>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-          <Icon name="shield" size={14} stroke={1.3} color={colors.emerald} />
-          <T size={13} color={colors.body} style={{ flexShrink: 1 }}>{product.brand ? t('soldByReseller') : t('preparedLine')}</T>
-        </View>
+        {seller ? (
+          // marketplace listing: the maker's shop, and the country it ships from
+          <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/sellers/[slug]', params: { slug: seller.slug } })} {...data({ foot: 1 })}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+            <Icon name="shield" size={14} stroke={1.3} color={colors.emerald} />
+            <T size={13} color={colors.body} style={{ flexShrink: 1 }}>
+              {t('soldBy')} <T w={500} size={13} color={colors.navy} style={{ textDecorationLine: 'underline', textDecorationColor: colors.goldLine } as never}>{seller.name_en}</T> · {t('shipsFrom')} {countryName(seller.country, lang)}
+            </T>
+          </Pressable>
+        ) : (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+            <Icon name="shield" size={14} stroke={1.3} color={colors.emerald} />
+            <T size={13} color={colors.body} style={{ flexShrink: 1 }}>{product.brand ? t('soldByReseller') : t('preparedLine')}</T>
+          </View>
+        )}
         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 12, marginTop: wide ? 12 : 6 }}>
           <Price product={product} size={wide ? 21 : 19} />
           <T size={12.5} color={colors.muted}>{t('vatIncluded')}</T>
@@ -153,19 +172,28 @@ export default function ProductScreen() {
       {product.ship_class === 'perfume_spray' && <Notice text={t('noDeliveryPerfume')} />}
       {product.restricted_countries.length > 0 && <Notice text={`${t('notToCountry')}: ${product.restricted_countries.join(', ')}`} />}
 
-      {wide ? (
-        <View style={{ marginTop: 14, gap: 12 }}>
-          <View style={{ flexDirection: 'row', gap: 12, alignItems: 'stretch' }}>
-            <View accessibilityLabel={t('quantity')}><Stepper value={qty} min={1} onChange={setQty} tall /></View>
-            <View style={{ flex: 1 }}><Button size="lg" label={addLabel} disabled={soldOut} onPress={addToBag} full /></View>
-          </View>
-          <T size={12} color={colors.muted}>{t('includesVatDelivery')}</T>
-        </View>
+      {/* tailor-made garments open the designer (it adds to the bag itself); sized garments ask for a size first */}
+      {tailored ? (
+        <TailorConfigurator product={product} onAdd={(custom) => { add(product, 1, custom); router.push('/cart'); }} />
       ) : (
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
-          <T w={600} size={10.5} caps color={colors.navy}>{t('quantity')}</T>
-          <Stepper value={qty} min={1} onChange={setQty} />
-        </View>
+        <>
+          {hasSizes && <SizePicker product={product} value={size} onChange={(s) => { setSize(s); setNeedSize(false); }} />}
+          {needSize && <Notice tone="warn" text={t('chooseSize')} />}
+          {wide ? (
+            <View style={{ marginTop: 14, gap: 12 }}>
+              <View style={{ flexDirection: 'row', gap: 12, alignItems: 'stretch' }}>
+                <View accessibilityLabel={t('quantity')}><Stepper value={qty} min={1} onChange={setQty} tall /></View>
+                <View style={{ flex: 1 }}><Button size="lg" label={addLabel} disabled={soldOut} onPress={addToBag} full /></View>
+              </View>
+              <T size={12} color={colors.muted}>{t('includesVatDelivery')}</T>
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+              <T w={600} size={10.5} caps color={colors.navy}>{t('quantity')}</T>
+              <Stepper value={qty} min={1} onChange={setQty} />
+            </View>
+          )}
+        </>
       )}
 
       {/* delivery: one quiet line between hairlines, not a box */}
@@ -282,7 +310,7 @@ export default function ProductScreen() {
         )}
       </Screen>
 
-      {!wide && (
+      {!wide && !tailored && (
         <View style={{ backgroundColor: colors.porcelain, borderTopWidth: 1, borderColor: colors.goldLine, paddingTop: 12, paddingBottom: 24, paddingHorizontal: 20, flexDirection: 'row', gap: 16, alignItems: 'center' }}>
           <View>
             <T w={500} size={17} num color={colors.navy}>{total}</T>

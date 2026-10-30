@@ -89,7 +89,7 @@ export default function CartScreen() {
         <View style={{ flex: 1, alignSelf: 'stretch' }}>
           <View style={{ borderTopWidth: 1, borderColor: colors.goldLine }}>
             {lines.map((l) => (
-              <View key={l.productId} style={{ flexDirection: 'row', gap: wide ? 24 : 16, paddingVertical: wide ? 24 : 18, borderBottomWidth: 1, borderColor: colors.line }}>
+              <View key={l.key ?? l.productId} style={{ flexDirection: 'row', gap: wide ? 24 : 16, paddingVertical: wide ? 24 : 18, borderBottomWidth: 1, borderColor: colors.line }}>
                 <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/product/[slug]', params: { slug: l.slug } })} style={{ width: wide ? 112 : 84 }}>
                   <Photo uri={l.image} ratio={4 / 5} tone={l.image ? colors.sand : toneFor(l.slug)} fit="cover" />
                 </Pressable>
@@ -101,13 +101,20 @@ export default function CartScreen() {
                     </View>
                     <T w={500} size={wide ? 15 : 14} num color={colors.navy}>{money(l.unitPriceSar * l.quantity)}</T>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <View style={{ width: 5, height: 5, borderRadius: 999, backgroundColor: colors.emerald }} />
-                    <T size={12.5} color={colors.body}>{t('inStock')}</T>
-                  </View>
+                  {/* marketplace lines: who sells it, the size, or the made-to-measure choices */}
+                  {l.sellerName ? <T size={12} color={colors.brassText}>{t('soldBy')} {l.sellerName}</T> : null}
+                  {l.custom?.size ? <T size={12.5} color={colors.body}>{t('size')}: {l.custom.size}</T> : null}
+                  {l.custom?.measurements ? <T size={12.5} color={colors.body}>{t('madeToMeasure')}{l.custom.profileName ? ` · ${l.custom.profileName}` : ''}</T> : null}
+                  {l.custom?.options ? <T size={12} color={colors.muted} numberOfLines={2}>{Object.values(l.custom.options).length} {t('designChoices')}</T> : null}
+                  {!l.custom ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <View style={{ width: 5, height: 5, borderRadius: 999, backgroundColor: colors.emerald }} />
+                      <T size={12.5} color={colors.body}>{t('inStock')}</T>
+                    </View>
+                  ) : null}
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 'auto', paddingTop: 6, flexWrap: 'wrap' }}>
-                    <Stepper value={l.quantity} min={1} onChange={(n) => setQty(l.productId, n)} />
-                    <Pressable accessibilityRole="button" onPress={() => setQty(l.productId, 0)} {...data({ foot: 1 })}>
+                    <Stepper value={l.quantity} min={1} onChange={(n) => setQty(l.key ?? l.productId, n)} />
+                    <Pressable accessibilityRole="button" onPress={() => setQty(l.key ?? l.productId, 0)} {...data({ foot: 1 })}>
                       <T w={500} size={10.5} caps color={colors.muted} style={{ textDecorationLine: 'underline' }}>{t('remove')}</T>
                     </Pressable>
                   </View>
