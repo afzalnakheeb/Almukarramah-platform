@@ -6,9 +6,9 @@ const base = (process.argv[2] || 'http://localhost:3000').replace(/\/$/, '');
 const out = process.argv[3] || 'rec';
 mkdirSync(out, { recursive: true });
 const runs = [
-  { name: 'desktop-en', width: 1440, height: 900, locale: 'en-GB', path: '/' },
-  { name: 'desktop-ar', width: 1440, height: 900, locale: 'ar-SA', path: '/' },
-  { name: 'phone-en', width: 390, height: 844, locale: 'en-GB', path: '/', mobile: true },
+  { name: 'desktop-en', width: 1440, height: 900, locale: 'en-GB', path: '/?intro=play' },
+  { name: 'desktop-ar', width: 1440, height: 900, locale: 'ar-SA', path: '/?intro=play' },
+  { name: 'phone-en', width: 390, height: 844, locale: 'en-GB', path: '/?intro=play', mobile: true },
 ];
 const browser = await chromium.launch();
 for (const r of runs) {
