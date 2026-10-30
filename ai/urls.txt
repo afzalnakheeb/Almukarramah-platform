@@ -312,3 +312,5 @@ private/vo-v4/14-close-b.mp3 https://storage.googleapis.com/xi-backend/database/
 private/pitch-v3/shot1-start.png https://media.weavy.ai/image/upload/v1793403653/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/fg6cjjtfvjbfuu3c1bpq.png
 private/pitch-v3/shot2-start.png https://media.weavy.ai/image/upload/v1793403661/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/jbi0hslgso4cxib1sicl.png
 private/pitch-v3/shot3-start.png https://media.weavy.ai/image/upload/v1793403660/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/inu0ig0rthtnwvr1usbp.png
+private/pitch-v3/shot2-veo.mp4 https://media.weavy.ai/video/upload/v1793403916/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/zgnc0gpx3wherjlff6e6.mp4
+private/pitch-v3/shot1-veo.mp4 https://media.weavy.ai/video/upload/v1793404179/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/eqmewxvepc1cpc8jcfti.mp4
