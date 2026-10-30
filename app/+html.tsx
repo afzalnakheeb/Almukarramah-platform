@@ -15,8 +15,8 @@ a,[role="button"],[role="link"],[role="tab"],[role="checkbox"],[role="radio"],[d
 ::selection{background:${colors.champagne};color:${colors.ink}}
 html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
 /* typesetting: headings balanced (no lone word on a last line), running text without orphans */
-h1,h2,h3,[role="heading"],[data-eyebrow]{text-wrap:balance}
 [dir="auto"]{text-wrap:pretty}
+h1,h2,h3,[role="heading"],[data-eyebrow]{text-wrap:balance}
 
 /* focus: a fine Madinah-green ring for keyboard users, never for mouse clicks */
 :focus{outline:none}
