@@ -1,8 +1,9 @@
-// Screens one photo a seller has just uploaded to <seller id>/incoming/ (listing photo, shop logo or banner, or an
-// application portfolio photo). The file is checked from its own bytes (type, size, pixels), its hidden metadata is
-// removed, it is hashed (the same photo is not screened twice; a photo already found prohibited is blocked at once),
-// stored privately under <seller id>/media/ and screened by the AI (fast pass, escalated when borderline).
-// Rejected files are deleted; prohibited ones are quarantined (staff only) and count as a strike.
+// Screens one photo just uploaded: by a seller to seller-uploads/<seller id>/incoming/ (listing photo, shop logo or
+// banner, or an application portfolio photo), or by a customer to customer-uploads/<user id>/incoming/ (a review photo,
+// or a photo of a problem with an order). The file is checked from its own bytes (type, size, pixels), its hidden
+// metadata is removed, it is hashed (the same photo is not screened twice; a photo already found prohibited is blocked
+// at once), stored privately under .../media/ and screened by the AI (fast pass, escalated when borderline).
+// Rejected files are deleted; prohibited ones are quarantined (staff only) and count as a strike for a seller.
 // The incoming file is always removed. Nothing here is ever public.
 import { intakeImage } from '../_shared/images.ts';
 import { screenAsset } from '../_shared/media.ts';
@@ -11,10 +12,53 @@ import { admin, caller, handle, isSellerMember, json, UUID, withinLimit } from '
 const KINDS = ['listing_photo', 'seller_logo', 'seller_banner', 'portfolio'] as const;
 const FIELDS = 'id, kind, path, status, reasons, flags, width, height, mime';
 
+const CUSTOMER_KINDS = ['review_photo', 'return_photo'] as const;
+
+/** A customer's photo: checked, stored under customer-uploads/<user>/media/ and screened (no strikes for customers). */
+async function customerPhoto(userId: string, kind: (typeof CUSTOMER_KINDS)[number], path: string) {
+  const m = /^([0-9a-f-]{36})\/incoming\/[A-Za-z0-9._-]{1,100}$/.exec(path);
+  if (!m || m[1] !== userId) return json({ error: 'Invalid upload' }, 400);
+  const db = admin();
+  if (!(await withinLimit(db, `upload:user:${userId}`, 3600, 30))) {
+    return json({ error: 'Too many photos in the last hour. Please try again later.', error_ar: 'رفعت صورًا كثيرة خلال الساعة الأخيرة. حاول لاحقًا.' }, 429);
+  }
+  const store = db.storage.from('customer-uploads');
+  const { data: blob, error } = await store.download(path);
+  if (error || !blob) return json({ error: 'Upload not found' }, 404);
+  const intake = await intakeImage(new Uint8Array(await blob.arrayBuffer()), blob.type || null);
+  await store.remove([path]);
+  if (!intake.ok) return json({ asset: null, status: 'rejected', reasons: [{ code: intake.code, en: intake.en, ar: intake.ar }] });
+  const { data: same } = await db.from('media_assets').select(FIELDS).is('seller_id', null).eq('user_id', userId).eq('kind', kind).eq('sha256', intake.sha256)
+    .in('status', ['pending', 'passed', 'review']).is('deleted_at', null).limit(1).maybeSingle();
+  if (same) return json({ asset: same, duplicate: true });
+  const id = crypto.randomUUID();
+  const known = (await db.from('blocked_hashes').select('policy_code').eq('sha256', intake.sha256).maybeSingle()).data;
+  const target = known ? { bucket: 'quarantine', path: `customers/${id}.${intake.ext}` } : { bucket: 'customer-uploads', path: `${userId}/media/${id}.${intake.ext}` };
+  const { error: upErr } = await db.storage.from(target.bucket).upload(target.path, intake.bytes, { contentType: intake.mime, upsert: false });
+  if (upErr) throw upErr;
+  const row = { id, seller_id: null, user_id: userId, kind, bucket: target.bucket, path: target.path, mime: intake.mime, bytes: intake.bytes.length,
+    width: intake.width, height: intake.height, sha256: intake.sha256, status: 'pending' };
+  const { error: insErr } = await db.from('media_assets').insert(row);
+  if (insErr) throw insErr;
+  if (known) {
+    const reasons = [{ code: 'known_prohibited', en: 'This photo cannot be used on Al Mukarramah.', ar: 'لا يمكن استخدام هذه الصورة في المكرمة.' }];
+    await db.rpc('mp_record_image_screening', {
+      p_asset: id, p_runs: [{ stage: 'rules', verdict: 'block', reasons }, { stage: 'final', verdict: 'block', reasons }],
+      p_outcome: { status: 'blocked', reasons, policy_code: known.policy_code },
+    });
+  } else {
+    await screenAsset(db, { ...row, attempts: 0 }, {});
+  }
+  const { data: fresh } = await db.from('media_assets').select(FIELDS).eq('id', id).single();
+  return json({ asset: fresh });
+}
+
 Deno.serve(handle(async (req) => {
   const user = await caller(req);
   if (!user) return json({ error: 'Please sign in' }, 401);
   const body = (await req.json()) as { path?: string; kind?: string; productId?: string; categoryId?: string };
+  const customerKind = CUSTOMER_KINDS.find((k) => k === body.kind);
+  if (customerKind) return customerPhoto(user.id, customerKind, String(body.path ?? ''));
   const kind = KINDS.find((k) => k === body.kind);
   const path = String(body.path ?? '');
   const m = /^([0-9a-f-]{36})\/incoming\/[A-Za-z0-9._-]{1,100}$/.exec(path);

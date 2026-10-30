@@ -8,7 +8,7 @@ import { Pressable, TextInput, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { Icon } from '@/components/icons';
 import { Seo } from '@/components/seo';
-import { Button, Chip, Container, EmptyState, Eyebrow, Field, FilterOption, Grid, Loading, ProductTile, Serif, Sheet, T, useWide } from '@/components/ui';
+import { Button, Chip, Container, EmptyState, Eyebrow, Field, FilterOption, Grid, Loading, ProductTile, Serif, Sheet, T, useHydrated, useWide } from '@/components/ui';
 import { useI18n } from '@/lib/i18n';
 import { departments, useGuidance } from '@/lib/market';
 import { convertFromSar, formatWhole } from '@/lib/money';
@@ -31,7 +31,10 @@ export default function Search() {
   const wide = useWide();
   const { t, lang, currency, isRTL } = useI18n();
   const g = useGuidance();
-  const params = useLocalSearchParams<{ q?: string; cat?: string; seller?: string; min?: string; max?: string; sort?: string; rating?: string; mtm?: string }>();
+  const url = useLocalSearchParams<{ q?: string; cat?: string; seller?: string; min?: string; max?: string; sort?: string; rating?: string; mtm?: string }>();
+  // the page is pre-rendered without a query: read it only once the page is live, so the first render matches
+  const hydrated = useHydrated();
+  const params: typeof url = hydrated ? url : {};
   const [text, setText] = useState(params.q ?? '');
   const [attrs, setAttrs] = useState<Record<string, unknown>>({});
   const [result, setResult] = useState<SearchResult | null>(null);

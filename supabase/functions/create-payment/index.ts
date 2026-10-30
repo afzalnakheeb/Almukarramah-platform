@@ -77,6 +77,7 @@ Deno.serve(handle(async (req) => {
     user_id: user?.id ?? null, email: body.email, currency, subtotal_minor: t.items, shipping_minor: t.shipping, duties_minor: t.duties,
     total_minor: t.total, vat_minor: t.vat, ship_to: body.shipTo, gift_message: body.giftMessage, partner_code: body.partnerCode?.toUpperCase() ?? null,
     shipping_carrier: zone ? `${zone.carrier} ${zone.service}` : null, idempotency_key: key,
+    fx_per_sar: perSar,   // the rate these prices were converted at: sellers' statements are in SAR at this rate
   }).select('id, number').single();
   if (oErr) {
     if (key && /duplicate|unique/i.test(oErr.message)) {

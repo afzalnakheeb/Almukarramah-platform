@@ -42,7 +42,7 @@ const ruleLines = (rules: Rule[]) => rules.map((r) => `- ${r.code} [${r.level}${
 
 // ================================================================ images
 export type ImageContext = {
-  kind: 'listing_photo' | 'seller_logo' | 'seller_banner' | 'portfolio' | 'review_photo';
+  kind: 'listing_photo' | 'seller_logo' | 'seller_banner' | 'portfolio' | 'review_photo' | 'return_photo';
   fashion?: boolean;
   listing?: { name_en?: string; category?: string } | null;
 };
@@ -81,7 +81,9 @@ Use "block" only for a prohibited rule hit; "review" when unsure or for a restri
   const intro = ctx.kind === 'listing_photo'
     ? `A listing photo.${ctx.listing?.name_en ? ` Listing: "${ctx.listing.name_en}"${ctx.listing.category ? ` in ${ctx.listing.category}` : ''}.` : ''}`
     : ctx.kind === 'seller_logo' ? 'A seller\'s shop logo.' : ctx.kind === 'seller_banner' ? 'A seller\'s shop banner.'
-    : ctx.kind === 'portfolio' ? 'A portfolio photo from a seller application.' : 'A customer\'s review photo.';
+    : ctx.kind === 'portfolio' ? 'A portfolio photo from a seller application.'
+    : ctx.kind === 'return_photo' ? 'A customer\'s photo of a problem with an item they received (damage, a fault or a wrong item). A home background is normal.'
+    : 'A customer\'s review photo of an item they bought. A home background is normal.';
   return { system, version, intro };
 }
 
@@ -159,7 +161,8 @@ const FLAG_REASON: Record<string, [string, string]> = {
 const reason = (code: string, en: string, ar: string, extra: Partial<Reason> = {}): Reason => ({ code, en, ar, ...extra });
 
 /** What a screened image's final result means for the seller. */
-export function decideImage(r: ImageResult, rules: Rule[], ctx: { allowModels: boolean; fashion: boolean }): ImageOutcome {
+export function decideImage(r: ImageResult, rules: Rule[], ctx: { allowModels: boolean; fashion: boolean; kind?: ImageContext['kind'] }): ImageOutcome {
+  const customer = ctx.kind === 'review_photo' || ctx.kind === 'return_photo';
   const byCode = new Map(rules.map((x) => [x.code, x]));
   const flags = r.flags;
   const strong = r.rule_hits.filter((h) => h.level === 'prohibited' && h.confidence >= PROHIBITED_CONFIDENCE);
@@ -181,13 +184,20 @@ export function decideImage(r: ImageResult, rules: Rule[], ctx: { allowModels: b
     if (ctx.allowModels && ctx.fashion && r.modest === true) {
       return { status: 'review', flags: [...flags, 'person'], reasons: [reason('model_review', 'Our team will check the model in this photo.', 'سيتحقق فريقنا من العارض في هذه الصورة.')] };
     }
+    if (customer) {
+      // customers' photos are seen by others: for everyone's privacy, the item only
+      return {
+        status: 'rejected', flags: [...flags, 'person'],
+        reasons: [reason('person', 'For privacy, photos show the item only, without people. Please take one of the item on its own.', 'حفاظًا على الخصوصية، تُظهر الصور المنتج وحده من دون أشخاص. يرجى تصوير المنتج وحده.')],
+      };
+    }
     return {
       status: 'rejected', flags: [...flags, 'person'],
       reasons: [reason('person', 'The photo shows a person. We do not use models: show the product flat, on a hanger or on a mannequin.', 'تظهر في الصورة شخص. لا نستخدم العارضين: اعرض المنتج مسطّحًا أو على علّاقة أو على مجسّم.')],
     };
   }
-  const refused = flags.filter((f) => REFUSE_FLAGS.includes(f) && (f !== 'mismatch' || r.matches_listing === false));
-  if (r.matches_listing === false && !refused.includes('mismatch')) refused.push('mismatch');
+  const refused = flags.filter((f) => REFUSE_FLAGS.includes(f) && (f !== 'mismatch' || r.matches_listing === false) && !(customer && f === 'mismatch'));
+  if (!customer && r.matches_listing === false && !refused.includes('mismatch')) refused.push('mismatch');
   if (refused.length) {
     return { status: 'rejected', flags, reasons: refused.map((f) => reason(f, FLAG_REASON[f][0], FLAG_REASON[f][1])) };
   }
@@ -239,7 +249,7 @@ export async function screenImage(p: {
     runs.push({ stage: 'final', verdict: 'error', prompt_version: version, reasons: PENDING.reasons });
     return { runs, outcome: PENDING };
   }
-  const outcome = decideImage(final, p.rules, { allowModels: p.settings.allow_modest_models_in_fashion, fashion: !!p.ctx.fashion });
+  const outcome = decideImage(final, p.rules, { allowModels: p.settings.allow_modest_models_in_fashion, fashion: !!p.ctx.fashion, kind: p.ctx.kind });
   const v: Verdict = outcome.status === 'passed' ? 'pass' : outcome.status === 'review' ? 'review' : 'block';
   runs.push({ stage: 'final', verdict: v, prompt_version: version, flags: outcome.flags, reasons: outcome.reasons, confidence: final.confidence,
     rule_hits: final.rule_hits });
