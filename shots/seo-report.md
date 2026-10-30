@@ -164,7 +164,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Privacy policy
 json-ld: NONE
-visible text without JS: 4329 chars: "Privacy policy | Al Mukarramah Delivering to Saudi address SAR Privacy policy Last updated 30 October 2026 Al Mukarramah is a gift house in Madinah, Saudi Arabi…"
+visible text without JS: 4329 chars: "Privacy policy | Al Mukarramah Delivering to Saudi address SAR Privacy policy Last updated 29 October 2026 Al Mukarramah is a gift house in Madinah, Saudi Arabi…"
 
 ## /terms  (HTTP 200)
 title: Terms of service | Al Mukarramah
@@ -178,7 +178,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Terms of service
 json-ld: NONE
-visible text without JS: 3556 chars: "Terms of service | Al Mukarramah Delivering to Saudi address SAR Terms of service Last updated 30 October 2026 These terms apply when you shop at almukarramah.c…"
+visible text without JS: 3556 chars: "Terms of service | Al Mukarramah Delivering to Saudi address SAR Terms of service Last updated 29 October 2026 These terms apply when you shop at almukarramah.c…"
 
 /robots.txt: HTTP 200, 760 bytes
 /sitemap.xml: HTTP 200, 74440 bytes, 148 URLs
