@@ -41,6 +41,9 @@ jobs:
           npx serve dist -l 3000 >/dev/null 2>&1 &
           sleep 3
           rm -rf shots && node scripts/shots.mjs http://localhost:3000 shots && cp typecheck.txt shots/
+      - name: Store screenshots (raw app screens, only when the commit message asks with [store-shots])
+        if: contains(github.event.head_commit.message, '[store-shots]')
+        run: node scripts/store-shots.mjs http://localhost:3000 shots/store
       - name: SEO report (live site)
         run: SEO_ONLY=1 node scripts/shots.mjs https://almukarramah.com shots/live && mv shots/live/seo-report.md shots/seo-live.md && rm -rf shots/live
       - name: Commit results
