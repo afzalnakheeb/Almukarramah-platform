@@ -138,3 +138,16 @@ The standard is store policy reviewed by a qualified scholar, not a fatwa. Every
 38. **Delivery prices abroad** must be set for each of those routes before it opens (the catch-all price today is
     the Gulf price).
 
+## Listings and search (M5)
+
+39. **Options.** A listing can have options (sizes, volumes, colours), each with its own stock and, if different, its
+    own price. Adding an option to a live listing, or renaming one, sends it back to draft for checking; stock changes
+    never do.
+40. **Price changes.** Up to 30% at once on a live listing (setting `price_change_review_bps`); a bigger change takes it
+    off sale until our team approves it, with a note of the old and new price.
+41. **What the public can read.** Listing text, photos, prices, stock and details; never the automatic check's notes,
+    our team's notes or who reviewed it.
+42. **Search.** English and Arabic together; diacritics, tatweel and letter variants (أ/إ/آ/ا, ى/ي, ة/ه) do not matter;
+    each word matches the start of a word; attribute values are searched, attribute names are not. Our own products
+    and every approved seller's live listings appear together; sellers' shops can be searched on their own.
+

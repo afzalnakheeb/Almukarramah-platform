@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCart } from '@/lib/cart';
 import { getSettings } from '@/lib/catalogue';
 import { useI18n, type Key } from '@/lib/i18n';
+import { MARKET_LIVE } from '@/lib/flags';
 import { CURRENCIES } from '@/lib/money';
 import { openExternal } from '@/lib/links';
 import { DESTINATIONS, usePrefs, type Destination } from '@/lib/prefs';
@@ -328,7 +329,7 @@ function MenuPanel({ open, nav, onClose, onSheet }: { open: boolean; nav: NavIte
 function SearchPanel({ open, nav, onClose }: { open: boolean; nav: NavItem[]; onClose: () => void }) {
   const { t, isRTL } = useI18n();
   const [q, setQ] = useState('');
-  const go = () => { if (!q.trim()) return; onClose(); router.push({ pathname: '/shop', params: { q: q.trim() } }); };
+  const go = () => { if (!q.trim()) return; onClose(); router.push({ pathname: MARKET_LIVE ? '/search' : '/shop', params: { q: q.trim() } }); };
   return (
     <Panel open={open} onClose={onClose}>
       <View {...data({ search: 1 })} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderColor: colors.navy, marginTop: 20 }}>
@@ -351,7 +352,7 @@ function SearchPanel({ open, nav, onClose }: { open: boolean; nav: NavItem[]; on
 function SearchBox() {
   const { t, isRTL } = useI18n();
   const [q, setQ] = useState('');
-  const go = () => q.trim() && router.push({ pathname: '/shop', params: { q: q.trim() } });
+  const go = () => q.trim() && router.push({ pathname: MARKET_LIVE ? '/search' : '/shop', params: { q: q.trim() } });
   return (
     <View accessibilityRole="search" {...data({ search: 1 })} style={styles.search}>
       <Pressable accessibilityRole="button" accessibilityLabel={t('searchPlaceholder')} onPress={go}><Icon name="search" size={17} color={colors.navy} stroke={1.3} /></Pressable>

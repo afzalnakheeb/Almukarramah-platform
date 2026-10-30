@@ -46,7 +46,17 @@ export type Listing = {
   made_to_measure: boolean; garment: 'thobe' | 'abaya' | 'other' | null; sizes: string[] | null; size_chart: SizeChart | null; tailoring: Tailoring | null;
 };
 
-const LISTING_COLUMNS = 'id, slug, seller_id, category_id, name_en, name_ar, description_en, description_ar, base_price_sar, stock, weight_g, is_active, ship_class, images, listing_status, review_note, ai_check, ai_checked_at, submitted_at, updated_at, made_to_measure, garment, sizes, size_chart, tailoring, attributes';
+// The review fields (AI notes, our team's note, dates) are not readable through the API; they come from
+// mp_listing_private() for the seller's own listings and are merged in.
+const LISTING_COLUMNS = 'id, slug, seller_id, category_id, name_en, name_ar, description_en, description_ar, base_price_sar, stock, weight_g, is_active, ship_class, images, listing_status, updated_at, made_to_measure, garment, garment_style, sizes, size_chart, tailoring, attributes, hs_code, origin_country';
+type PrivateFields = Pick<Listing, 'id' | 'ai_check' | 'ai_checked_at' | 'review_note' | 'submitted_at'>;
+async function withPrivate<T extends { id: string }>(rows: T[]): Promise<(T & Omit<PrivateFields, 'id'>)[]> {
+  if (!rows.length) return [];
+  const { data } = await supabase.rpc('mp_listing_private', { p_ids: rows.map((r) => r.id) });
+  const byId = new Map(((data as PrivateFields[] | null) ?? []).map((x) => [x.id, x]));
+  return rows.map((r) => ({ ai_check: null, ai_checked_at: null, review_note: null, submitted_at: null, ...r, ...(byId.get(r.id) ?? {}) }));
+}
+export { withPrivate as withListingPrivate };
 
 /** The signed-in user's seller account, if any. */
 export function useMySeller() {
@@ -87,14 +97,14 @@ export async function myListings(sellerId: string): Promise<Listing[]> {
   if (MARKET_DEMO) return DEMO_LISTINGS.map((l) => demoListing(l.id, demoCat)!);
   const { data, error } = await supabase.from('products').select(LISTING_COLUMNS).eq('seller_id', sellerId).order('updated_at', { ascending: false });
   if (error) throw new Error(error.message);
-  return data as unknown as Listing[];
+  return (await withPrivate(data as unknown as Listing[])) as Listing[];
 }
 
 export async function getListing(id: string): Promise<Listing | null> {
   if (MARKET_DEMO) return demoListing(id, demoCat);
   const { data, error } = await supabase.from('products').select(LISTING_COLUMNS).eq('id', id).maybeSingle();
   if (error) throw new Error(error.message);
-  return data as unknown as Listing | null;
+  return data ? ((await withPrivate([data as unknown as Listing]))[0] as Listing) : null;
 }
 
 export const slugify = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
@@ -309,5 +319,31 @@ export async function saveLocation(sellerId: string, loc: Partial<SellerLocation
 export async function removeLocation(id: string) {
   const { error } = await supabase.from('seller_locations').update({ active: false, is_default: false }).eq('id', id);
   if (error) throw new Error(error.message);
+}
+
+// ---------------------------------------------------------------- variants (sizes, volumes, colours)
+export type Variant = { id?: string; label_en: string; label_ar: string; options: Record<string, unknown>; sku: string | null; price_minor: number | null; stock: number; is_active: boolean; sort: number };
+
+export async function listingVariants(productId: string): Promise<Variant[]> {
+  if (MARKET_DEMO) return [];
+  const { data, error } = await supabase.from('product_variants').select('id, label_en, label_ar, options, sku, price_minor, stock, is_active, sort').eq('product_id', productId).order('sort');
+  if (error) throw new Error(error.message);
+  return (data as Variant[]) ?? [];
+}
+
+/** Saves the options of a listing: new ones are added, changed ones updated, removed ones switched off (orders keep them). */
+export async function saveVariants(productId: string, next: Variant[], before: Variant[]) {
+  for (const [i, v] of next.entries()) {
+    const row = { product_id: productId, label_en: v.label_en.trim(), label_ar: v.label_ar.trim(), options: v.options, sku: v.sku?.trim() || null,
+      price_minor: v.price_minor, stock: Math.max(0, Math.floor(v.stock || 0)), is_active: v.is_active, sort: i };
+    const old = v.id ? before.find((x) => x.id === v.id) : undefined;
+    if (old && JSON.stringify({ ...old, sort: 0 }) === JSON.stringify({ ...row, id: old.id, product_id: undefined, sort: 0 })) continue;
+    const { error } = v.id ? await supabase.from('product_variants').update(row).eq('id', v.id) : await supabase.from('product_variants').insert(row);
+    if (error) throw new Error(error.message);
+  }
+  for (const gone of before.filter((b) => b.id && !next.some((n) => n.id === b.id))) {
+    const { error } = await supabase.from('product_variants').update({ is_active: false }).eq('id', gone.id!);
+    if (error) throw new Error(error.message);
+  }
 }
 

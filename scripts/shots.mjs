@@ -10,11 +10,11 @@ const base = (process.argv[2] || 'http://localhost:3000').replace(/\/$/, '');
 const out = process.argv[3] || 'shots';
 mkdirSync(out, { recursive: true });
 
-const pages = (process.env.SHOT_PAGES || '/,/collections/perfumes,/product/aam-zumar-60-ml,/product/kaaba-door-prayer-mat,/cart,/checkout,/sell,/sell/guidelines,/sell/categories,/sell/islamic-standard,/sell/premium-standard,/sell/photos,/sell/prohibited,/seller/application,/seller/shop,/seller/product?id=demo-blocked,/seller/product?id=demo-queue-oud,/admin/listings,/admin/sellers,/sellers,/fashion,/tailoring/measure').split(',');
+const pages = (process.env.SHOT_PAGES || '/,/collections/perfumes,/product/aam-zumar-60-ml,/product/kaaba-door-prayer-mat,/cart,/checkout,/sell,/sell/guidelines,/sell/categories,/sell/islamic-standard,/sell/premium-standard,/sell/photos,/sell/prohibited,/seller/application,/seller/shop,/seller/product?id=demo-blocked,/seller/product?id=demo-queue-oud,/admin/listings,/admin/sellers,/search?q=oud,/search?cat=fragrance-oud,/sellers/dar-al-oud-madinah,/sellers,/fashion,/tailoring/measure').split(',');
 const views = [
   { name: 'd', width: 1440, height: 900, dsf: 1, chunk: 1100, locale: 'en-GB' },
   { name: 'm', width: 390, height: 844, dsf: 2, chunk: 1300, locale: 'en-GB' },
-  { name: 'ar', width: 1440, height: 900, dsf: 1, chunk: 1100, locale: 'ar-SA', only: ['/', '/collections/perfumes', '/product/aam-zumar-60-ml', '/cart', '/account', '/sell/categories', '/sell/islamic-standard'] },
+  { name: 'ar', width: 1440, height: 900, dsf: 1, chunk: 1100, locale: 'ar-SA', only: ['/', '/collections/perfumes', '/product/aam-zumar-60-ml', '/cart', '/account', '/sell/categories', '/sell/islamic-standard', '/search?q=oud', '/sellers/dar-al-oud-madinah'] },
   { name: 'arm', width: 390, height: 844, dsf: 2, chunk: 1300, locale: 'ar-SA', only: ['/', '/product/aam-zumar-60-ml', '/sell', '/sell/photos', '/seller/application', '/seller/product?id=demo-blocked'] },
 ];
 const slug = (p) => (p === '/' ? 'home' : p.replace(/^\//, '').replace(/[^a-z0-9]+/gi, '-'));

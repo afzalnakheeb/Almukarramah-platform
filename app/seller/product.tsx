@@ -18,8 +18,8 @@ import {
   type CategoryAttribute, type CategoryNode,
 } from '@/lib/market';
 import {
-  categoryRequirements, deleteListing, draftTranslation, getListing, mediaFor, photoUrls, productDocuments, saveListing, submitListing,
-  uploadMedia, uploadProductDocument, type AiCheck, type ListingDecision, type Listing, type MediaAsset, type ProductDocument, type Reason,
+  categoryRequirements, deleteListing, draftTranslation, getListing, listingVariants, mediaFor, photoUrls, productDocuments, saveListing, saveVariants, submitListing,
+  uploadMedia, uploadProductDocument, type AiCheck, type ListingDecision, type Listing, type MediaAsset, type ProductDocument, type Reason, type Variant,
 } from '@/lib/seller';
 import { LISTING_TONE, useSeller } from '@/lib/seller-context';
 import { slugify } from '@/lib/seller';
@@ -75,6 +75,8 @@ export default function SellerProduct() {
   const [draft, setDraft] = useState<{ to: 'ar' | 'en'; name: string; description: string; quran: boolean } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [dept, setDept] = useState<string | null>(null);
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [variantsBefore, setVariantsBefore] = useState<Variant[]>([]);
 
   async function load(pid: string) {
     const l = (await getListing(pid)) as Extra | null;
@@ -85,8 +87,8 @@ export default function SellerProduct() {
     setSaved(JSON.stringify(form));
     setDecision(l.ai_check);
     const paths = [...form.images, ...(form.tailoring?.options ?? []).flatMap((o) => o.choices.map((c) => c.image).filter(Boolean) as string[])];
-    const [m, u, d] = await Promise.all([mediaFor(form.images), photoUrls(paths), productDocuments(pid)]);
-    setMedia(m); setUrls(u); setDocs(d);
+    const [m, u, d, v] = await Promise.all([mediaFor(form.images), photoUrls(paths), productDocuments(pid), listingVariants(pid)]);
+    setMedia(m); setUrls(u); setDocs(d); setVariants(v); setVariantsBefore(v);
   }
   useEffect(() => { if (id) load(id).catch((e) => setMsg({ tone: 'warn', text: String(e.message ?? e) })); }, [id]);
 
@@ -97,7 +99,7 @@ export default function SellerProduct() {
   const attrs = live?.attributes ?? (cat ? attributesOf(g, cat) : []);
   const policy = cat?.policy ?? null;
   const fashion = cat?.department === 'fashion';
-  const dirty = JSON.stringify(f) !== saved;
+  const dirty = JSON.stringify(f) !== saved || JSON.stringify(variants) !== JSON.stringify(variantsBefore);
   const status = listing?.listing_status ?? 'draft';
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((x) => ({ ...x, [k]: v }));
   const setAttr = (k: string, v: unknown) => setF((x) => ({ ...x, attributes: { ...x.attributes, [k]: v } }));
@@ -136,6 +138,8 @@ export default function SellerProduct() {
         ...({ garment_style: fashion && f.made_to_measure ? f.garment_style : null, hs_code: f.hs_code.replace(/\D/g, '') || null, origin_country: f.origin_country || null } as object),
         is_active: true,
       } as Partial<Listing> & { seller_id: string });
+      if (variants.some((v) => !v.label_en.trim() || !v.label_ar.trim())) throw new Error(t('lfVariantNames'));
+      await saveVariants(pid, variants, variantsBefore);
       if (!id) { setId(pid); router.setParams({ id: pid }); } else await load(pid);
       setMsg({ tone: 'ok', text: t('pfSaved') });
       return pid;
@@ -284,7 +288,7 @@ export default function SellerProduct() {
   const reasonList = (list: Reason[], tone: 'err' | 'info') => list.map((x, i) => (
     <View key={i} style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
       <Icon name={tone === 'err' ? 'close' : 'help'} size={15} color={tone === 'err' ? colors.danger : colors.brass} stroke={2} />
-      <T size={13.5} lh={1.5} color={colors.ink} style={{ flex: 1 }}>{x.photo ? `${t('pfPhoto')} ${x.photo}: ` : ''}{lang === 'ar' ? x.ar : x.en}</T>
+      <T size={13.5} lh={1.5} color={colors.ink} style={{ flex: 1 }}>{x.photo && !/^(Photo|الصورة)/.test(lang === 'ar' ? x.ar : x.en) ? `${t('pfPhoto')} ${x.photo}: ` : ''}{lang === 'ar' ? x.ar : x.en}</T>
     </View>
   ));
   const panel = (
@@ -365,10 +369,28 @@ export default function SellerProduct() {
         {row(<>{col(<Field label={`${t('pfNameEn')} *`} value={f.name_en} onChangeText={(v) => set('name_en', v)} maxLength={120} editable={editable} />)}
           {col(<Field label={`${t('pfNameAr')} *`} value={f.name_ar} onChangeText={(v) => set('name_ar', v)} maxLength={120} style={rtl} editable={editable} />)}</>)}
         {row(<>{col(<Field label={`${t('pfPrice')} *`} value={f.price} onChangeText={(v) => set('price', v.replace(/[^\d.,]/g, ''))} keyboardType="decimal-pad" hint={t('pfPriceHint')} dirLtr editable={editable} />)}
-          {col(<Field label={t('sdStock')} value={f.stock} onChangeText={(v) => set('stock', v.replace(/\D/g, ''))} keyboardType="number-pad" dirLtr editable={editable} />)}
+          {col(<Field label={t('sdStock')} value={variants.length ? String(variants.filter((v) => v.is_active).reduce((n, v) => n + (v.stock || 0), 0)) : f.stock} onChangeText={(v) => set('stock', v.replace(/\D/g, ''))} keyboardType="number-pad" dirLtr editable={editable && !variants.length} hint={variants.length ? t('lfStockFromOptions') : undefined} />)}
           {col(<Field label={t('pfWeight')} value={f.weight_g} onChangeText={(v) => set('weight_g', v.replace(/\D/g, ''))} keyboardType="number-pad" hint={t('pfWeightHint')} dirLtr editable={editable} />)}</>)}
         {cat ? <T size={13} color={colors.muted}>{t('pfShipClass')}: {t(`ship_${shipClassFor(path)}` as Key)}</T> : null}
+        {status === 'approved' ? <T size={12.5} lh={1.5} color={colors.brassText}>{t('lfPriceGuard').replace('{n}', String(Math.round((g.settings.price_change_review_bps ?? 3000) / 100)))}</T> : null}
       </>)}
+
+      {cat ? section(t('lfVariants'), <>
+        {variants.map((v, i) => (
+          <View key={v.id ?? `n${i}`} style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 8 : 0, alignItems: wide ? 'flex-end' : 'stretch', borderTopWidth: i ? 1 : 0, borderColor: colors.lineSoft, paddingTop: i ? 8 : 0 }}>
+            <View style={{ flex: 2 }}><Field label={`${t('lfVariantEn')} *`} value={v.label_en} onChangeText={(x) => setVariants(variants.map((y, j) => (j === i ? { ...y, label_en: x } : y)))} maxLength={80} editable={editable} /></View>
+            <View style={{ flex: 2 }}><Field label={`${t('lfVariantAr')} *`} value={v.label_ar} onChangeText={(x) => setVariants(variants.map((y, j) => (j === i ? { ...y, label_ar: x } : y)))} maxLength={80} style={rtl} editable={editable} /></View>
+            <View style={{ flex: 1.2 }}><Field label={t('lfVariantPrice')} value={v.price_minor ? (v.price_minor / 100).toString() : ''} placeholder={f.price || '0'} keyboardType="decimal-pad" dirLtr editable={editable}
+              onChangeText={(x) => setVariants(variants.map((y, j) => (j === i ? { ...y, price_minor: x.trim() ? Math.round((Number(x.replace(',', '.').replace(/[^\d.]/g, '')) || 0) * 100) || null : null } : y)))} /></View>
+            <View style={{ flex: 1 }}><Field label={t('sdStock')} value={String(v.stock)} keyboardType="number-pad" dirLtr editable={editable}
+              onChangeText={(x) => setVariants(variants.map((y, j) => (j === i ? { ...y, stock: Number(x.replace(/\D/g, '')) || 0 } : y)))} /></View>
+            <View style={{ flex: 1.2 }}><Field label="SKU" value={v.sku ?? ''} onChangeText={(x) => setVariants(variants.map((y, j) => (j === i ? { ...y, sku: x } : y)))} maxLength={64} dirLtr editable={editable} /></View>
+            {editable ? <Button label={t('remove')} kind="text" size="sm" onPress={() => setVariants(variants.filter((_, j) => j !== i))} style={{ marginBottom: 18 }} /> : null}
+          </View>
+        ))}
+        {editable ? <Button label={t('lfVariantAdd')} kind="secondary" size="sm" style={{ alignSelf: 'flex-start' }}
+          onPress={() => setVariants([...variants, { label_en: '', label_ar: '', options: {}, sku: null, price_minor: null, stock: 0, is_active: true, sort: variants.length }])} /> : null}
+      </>, t('lfVariantsHint')) : null}
 
       {cat && attrs.length ? section(t('lfDetails'), <>{attrs.map(attrInput)}</>, t('lfDetailsHint')) : null}
 

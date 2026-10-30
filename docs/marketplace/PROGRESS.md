@@ -11,8 +11,8 @@ database or deployed. Read this first if you are picking the work up.
 | M2 | Categories, Islamic and premium standards, guidance pages | done |
 | M3 | AI screening (images at upload, full listing at submission) | done |
 | M4 | Onboarding, KYC and admin review | done |
-| M5 | Listings with variants, storefronts, search | next |
-| M6 | Checkout, rulebook, sub-orders, sandbox shipping, order flows | |
+| M5 | Listings with variants, storefronts, search | done |
+| M6 | Checkout, rulebook, sub-orders, sandbox shipping, order flows | next |
 | M7 | Statements, returns/disputes, reviews, messages, notifications, performance | |
 | M8 | Dashboards, polish, screenshots, docs | |
 
@@ -23,9 +23,12 @@ database or deployed. Read this first if you are picking the work up.
   - 0012 sellers, listings, made-to-measure seam, photos · 0013 rulebook tables, KYC, permits, pickup addresses,
     carriers · 0014 category tree and policies, attributes, the Islamic standard, settings, document types, styles
     · 0015 AI screening: media assets, verdict records, strikes, quarantine, rate limits, product documents
-    · 0016 onboarding: the vetting application, checklist, categories per seller, review history, seller review.
+    · 0016 onboarding: the vetting application, checklist, categories per seller, review history, seller review
+    · 0017 listings and search: variants and stock, the price guard, public columns only, mp_search, storefronts.
 - Shared pure modules (no imports; the app imports them too): `supabase/functions/_shared/quality.ts`,
-  `contact.ts`. Server modules: `images.ts` (type sniffing, metadata stripping), `screening.ts` (prompts, parsing,
+  `contact.ts`, `search.ts` (Arabic normalisation and the in-memory search the site uses before switch-on).
+- Products: anon and authenticated read every column except the review fields (0017). A new products column the
+  website needs must be granted: `grant select (col) on products to anon, authenticated`. Server modules: `images.ts` (type sniffing, metadata stripping), `screening.ts` (prompts, parsing,
   decisions; no I/O), `claude.ts` (the Messages API call), `media.ts` (storage + database flows).
 - Server functions (M3): `screen-image`, `listing-check`, `screening-retry` (cron), `review-screening` (staff
   overrides), `review-listing` (approval publishes photos), `translate-draft`. M4: `review-seller` (approval through
@@ -91,4 +94,14 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
   destination import VAT/GST regimes and collection flags on countries and corridors; GB, US, CA, AU, NZ and ten EU
   states seeded as closed destinations for Saudi sellers' goods (values to confirm with the adviser); India stays
   closed, data only. Tests: 14 new SQL tests (104 in all).
+- M5: 0017. Variants (label en/ar, options, SKU, own price, own stock; the product's stock is their sum) with the
+  same guards as listings; the price guard (a live listing's price may move up to 30% at once; more sends it back to
+  our team, off sale until approved; any other content change goes back to draft as before; the limit is read through
+  `mp_public_settings()` because sellers cannot read `mp_settings`). AI notes and review notes are no longer readable
+  through the API; sellers and staff get them from `mp_listing_private()`. `mp_search` (one English/Arabic index,
+  Arabic normalised, word prefixes; category with everything under it, seller, price, rating, made to measure, the
+  category's filterable attributes; facets with counts; six sorts; pages) and `mp_storefront`. Pages: `/search`
+  (filters and facets, phone sheet), storefront with logo/banner, rating, categories and shop search; options and
+  stock in the listing form. The header search moves to `/search` once `EXPO_PUBLIC_MARKET_LIVE` is set.
+  Tests: 10 SQL tests and 4 unit tests (118 in all).
 

@@ -125,7 +125,9 @@ describe('listing transitions', () => {
     const { pid, updated } = submitted();
     const r = record(pid, updated, { verdict: 'block', summary_en: 'Please remove the phone number.', summary_ar: 'احذف رقم الهاتف.', reasons: [{ code: 'contact', en: 'x', ar: 'س' }] });
     assert.deepEqual(r, { applied: true, status: 'rejected' });
-    const p = db.one<{ listing_status: string; review_note: string; ai_check: { verdict: string; reasons: unknown[] } }>(`select listing_status, review_note, ai_check from products where id = '${pid}'`, user('sellerA'));
+    // the seller reads the review fields through mp_listing_private (0017), never directly
+    const p = { ...db.one<{ listing_status: string }>(`select listing_status from products where id = '${pid}'`, user('sellerA')),
+                ...db.val<{ review_note: string; ai_check: { verdict: string; reasons: unknown[] } }[]>(`select mp_listing_private(array['${pid}']::uuid[])`, user('sellerA'))[0] };
     assert.equal(p.listing_status, 'rejected');
     assert.equal(p.review_note, 'Please remove the phone number.');
     assert.equal(p.ai_check.verdict, 'block');

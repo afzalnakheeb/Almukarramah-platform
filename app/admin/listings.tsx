@@ -10,7 +10,7 @@ import { Button, Card, Chip, Field, H1, Notice, Photo, T, Tag, useWide } from '@
 import { MARKET_DEMO, guidanceSnapshot } from '@/lib/market';
 import { DEMO_MEDIA, demoQueue } from '@/lib/market-demo';
 import { formatMoney } from '@/lib/money';
-import { mediaFor, photoUrls, type AiCheck, type MediaAsset, type ProductDocument, type Reason } from '@/lib/seller';
+import { mediaFor, photoUrls, withListingPrivate, type AiCheck, type MediaAsset, type ProductDocument, type Reason } from '@/lib/seller';
 import { callFunction, supabase } from '@/lib/supabase';
 import type { SizeChart, Tailoring } from '@/lib/types';
 import { colors } from '@/theme';
@@ -35,7 +35,8 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'approved', label: 'Live' },
   { key: 'suspended', label: 'Suspended' },
 ];
-const COLUMNS = 'id, slug, seller_id, name_en, name_ar, description_en, description_ar, base_price_sar, stock, weight_g, ship_class, images, listing_status, submitted_at, review_note, ai_check, attributes, made_to_measure, garment, garment_style, sizes, size_chart, tailoring, hs_code, origin_country, categories(name_en), sellers(name_en, country, kind, status)';
+// review fields (AI notes, notes, dates) come from mp_listing_private()
+const COLUMNS = 'id, slug, seller_id, name_en, name_ar, description_en, description_ar, base_price_sar, stock, weight_g, ship_class, images, listing_status, updated_at, attributes, made_to_measure, garment, garment_style, sizes, size_chart, tailoring, hs_code, origin_country, categories(name_en), sellers(name_en, country, kind, status)';
 const VERDICT: Record<string, { label: string; tone: 'ok' | 'warn' | 'err' | 'info' }> = {
   pass: { label: 'AI: no concerns', tone: 'ok' }, review: { label: 'AI: notes for you', tone: 'warn' },
   block: { label: 'AI: rejected', tone: 'err' }, error: { label: 'AI: not checked yet', tone: 'info' },
@@ -105,7 +106,7 @@ function ListingCard({ r, urls, media, strikes, onDone }: { r: Row; urls: Record
           <T w={700} size={13.5} color={auto ? colors.danger : colors.goldBright}>{auto ? 'Rejected by the automatic check' : 'Notes from the automatic check'}: {ai.summary_en}</T>
           {(ai.reasons ?? []).map((x, i) => (
             <View key={i} style={{ gap: 2 }}>
-              <T size={13} color={auto ? colors.ink : colors.white} lh={1.5}>{x.photo ? `Photo ${x.photo}: ` : ''}{x.en}</T>
+              <T size={13} color={auto ? colors.ink : colors.white} lh={1.5}>{x.photo && !/^Photo/.test(x.en) ? `Photo ${x.photo}: ` : ''}{x.en}</T>
               <T size={12} color={auto ? colors.muted : colors.onNight} style={{ writingDirection: 'rtl', textAlign: 'right' }}>{x.ar}</T>
             </View>
           ))}
@@ -242,9 +243,11 @@ export default function AdminListings() {
     }
     const status = tab === 'auto' ? 'rejected' : tab;
     const { data, error } = await supabase.from('products').select(COLUMNS).not('seller_id', 'is', null).eq('listing_status', status)
-      .order('submitted_at', { ascending: tab === 'pending_review' }).limit(100);
+      .order('updated_at', { ascending: false }).limit(100);
     if (error) return setErr(error.message);
-    let list = (data as unknown as Row[]) ?? [];
+    let list = (await withListingPrivate((data as unknown as Row[]) ?? [])) as Row[];
+    // the queue oldest first, everything else newest first
+    list.sort((a, b) => (tab === 'pending_review' ? 1 : -1) * String(a.submitted_at ?? '').localeCompare(String(b.submitted_at ?? '')));
     if (tab === 'auto') list = list.filter(isAuto);
     if (tab === 'rejected') list = list.filter((r) => !isAuto(r));
     setRows(list);

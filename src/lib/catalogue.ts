@@ -103,3 +103,16 @@ export async function getSellerProducts(sellerId: string): Promise<Product[]> {
   if (error) throw error;
   return data as unknown as Product[];
 }
+
+/** A seller's public shop: profile, number of products, categories and rating (the database's view once live). */
+export type Storefront = {
+  seller: PublicSeller & { since?: string | null }; listings: number; rating_avg: number | null; rating_count: number;
+  categories: { slug: string; name_en: string; name_ar: string; count: number }[];
+};
+export async function getStorefront(slug: string): Promise<Storefront | null> {
+  if (!isConfigured || !MARKET_LIVE) return null;
+  const { data, error } = await supabase.rpc('mp_storefront', { p_slug: slug });
+  if (error) throw error;
+  return (data as Storefront | null) ?? null;
+}
+
