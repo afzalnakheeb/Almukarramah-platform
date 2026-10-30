@@ -16,7 +16,7 @@ jobs:
           while read -r name url; do
             [ -z "$name" ] && continue
             [ -f "ai/out/$name" ] && continue
-            curl -fsSL --retry 3 -o "ai/out/$name" "$url" && echo "got $name"
+            mkdir -p "$(dirname "ai/out/$name")"; curl -fsSL --retry 3 -o "ai/out/$name" "$url" && echo "got $name"
           done < ai/urls.txt
       - name: Commit
         run: |
