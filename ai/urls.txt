@@ -2,3 +2,5 @@ plate-fast-1.mp4 https://media.weavy.ai/video/upload/v1793346664/uploads/Mq6Zbrl
 
 corner-1.png https://media.weavy.ai/image/upload/v1793346771/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/b6doy8ntgi2bgxp3gyy7.png
 corner-2.png https://media.weavy.ai/image/upload/v1793346761/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/ja6tzljtweys3kvtpdcl.png
+logo-kling-1.mp4 https://media.weavy.ai/video/upload/v1793347170/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/qfyltavzksrvq1tikzfk.mp4
+plate-loop-test.mp4 https://media.weavy.ai/video/upload/v1793347169/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/eugsnvmwzdsows1gklg6.mp4
