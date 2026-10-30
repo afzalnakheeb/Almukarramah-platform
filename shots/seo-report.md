@@ -24,7 +24,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Perfumes
 json-ld: CollectionPage, ItemList, BreadcrumbList, FAQPage
-visible text without JS: 6113 chars: "Perfumes | Al Mukarramah Delivering to Saudi address SAR Home Shop Perfumes Ahmed Al Maghribi · Official Saudi prices Perfumes Ahmed Al Maghribi eau de parfum, …"
+visible text without JS: 6012 chars: "Perfumes | Al Mukarramah Delivering to Saudi address SAR Home Shop Perfumes Ahmed Al Maghribi · Official Saudi prices Perfumes Ahmed Al Maghribi eau de parfum, …"
 
 ## /collections/oud-oils  (HTTP 200)
 title: Oud and Perfume Oils | Al Mukarramah
@@ -38,7 +38,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Oud and Perfume Oils
 json-ld: CollectionPage, ItemList, BreadcrumbList, FAQPage
-visible text without JS: 2500 chars: "Oud and Perfume Oils | Al Mukarramah Delivering to Saudi address SAR Home Shop Oud and Perfume Oils Ahmed Al Maghribi · Official Saudi prices Oud and Perfume Oi…"
+visible text without JS: 2399 chars: "Oud and Perfume Oils | Al Mukarramah Delivering to Saudi address SAR Home Shop Oud and Perfume Oils Ahmed Al Maghribi · Official Saudi prices Oud and Perfume Oi…"
 
 ## /product/aam-zumar-60-ml  (HTTP 200)
 title: Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml | Al Mukarramah
@@ -52,7 +52,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Zumar Eau de Parfum, 60 ml
 json-ld: Product, BreadcrumbList, FAQPage
-visible text without JS: 2811 chars: "Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml | Al Mukarramah Delivering to Saudi address SAR Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml Genuine product, sold …"
+visible text without JS: 2806 chars: "Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml | Al Mukarramah Delivering to Saudi address SAR Ahmed Al Maghribi Zumar Eau de Parfum, 60 ml Genuine product, sold …"
 
 ## /product/kaaba-door-prayer-mat  (HTTP 200)
 title: Kaaba Door Prayer Mat, Black and Gold | Al Mukarramah
@@ -80,7 +80,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: All gifts
 json-ld: CollectionPage, ItemList, BreadcrumbList
-visible text without JS: 9087 chars: "All gifts | Al Mukarramah — Islamic gifts from Madinah Delivering to Saudi address SAR Home Shop The marketplace All gifts Prepared and packed in Madinah, prese…"
+visible text without JS: 8986 chars: "All gifts | Al Mukarramah — Islamic gifts from Madinah Delivering to Saudi address SAR Home Shop The marketplace All gifts Prepared and packed in Madinah, prese…"
 
 ## /membership  (HTTP 200)
 title: Membership | Al Mukarramah
@@ -122,7 +122,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Your bag is empty
 json-ld: NONE
-visible text without JS: 218 chars: "Your bag | Al Mukarramah Secure checkout Your bag is empty Find something meaningful to send. Explore the marketplace Help me choose a gift Perfumes &amp; Oud P…"
+visible text without JS: 215 chars: "Your bag | Al Mukarramah Secure checkout Your bag is empty Find something meaningful to send. Explore the marketplace Help me choose a gift Begin with Perfumes …"
 
 ## /concierge  (HTTP 200)
 title: Gift assistant | Al Mukarramah
@@ -136,7 +136,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Gift assistant
 json-ld: NONE
-visible text without JS: 1069 chars: "Gift assistant | Al Mukarramah Delivering to Saudi address SAR At your service Gift assistant Suggests from our current catalogue Al Mukarramah assistant Answer…"
+visible text without JS: 1080 chars: "Gift assistant | Al Mukarramah Delivering to Saudi address SAR At your service Gift assistant Suggests from our current catalogue Al Mukarramah assistant Answer…"
 
 ## /collections/prayer-mats  (HTTP 200)
 title: Prayer Mats | Al Mukarramah
@@ -150,7 +150,7 @@ twitter:card: summary_large_image
 html lang/dir: lang="en"
 h1: Prayer Mats
 json-ld: CollectionPage, ItemList, BreadcrumbList, FAQPage
-visible text without JS: 2169 chars: "Prayer Mats | Al Mukarramah Delivering to Saudi address SAR Home Shop Prayer Mats The marketplace Prayer Mats Embroidered calligraphy and Haramain designs, prep…"
+visible text without JS: 2068 chars: "Prayer Mats | Al Mukarramah Delivering to Saudi address SAR Home Shop Prayer Mats The marketplace Prayer Mats Embroidered calligraphy and Haramain designs, prep…"
 
 ## /privacy  (HTTP 200)
 title: Privacy policy | Al Mukarramah
