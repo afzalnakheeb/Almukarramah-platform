@@ -15,11 +15,11 @@ CUT, OUT = sys.argv[1].rstrip("/") + "/products/", sys.argv[2]
 RTL = len(sys.argv) > 3 and sys.argv[3] == "rtl"
 W, H = 2400, 1200
 LEDGE = int(H * 0.80)
-WALL = [("kaaba-door-prayer-mat-1.webp", 860, 0.735, 60)]  # name, height, centre x (share of width), top
+WALL = [("kaaba-door-prayer-mat-1.webp", 860, 0.875, 60)]  # name, height, centre x (share of width), top
 LEDGE_ITEMS = [  # name, height, centre x, drop below the ledge line
-    ("aam/pearl-oud-75-ml-1.webp", 330, 0.585, 40),
-    ("aam/oud-maattar-maliki-3-tola-1.webp", 370, 0.735, 52),
-    ("aam/zumar-60-ml-1.webp", 440, 0.89, 40),
+    ("aam/pearl-oud-75-ml-1.webp", 330, 0.515, 40),
+    ("aam/oud-maattar-maliki-3-tola-1.webp", 370, 0.622, 52),
+    ("aam/zumar-60-ml-1.webp", 440, 0.727, 40),
 ]
 
 y, x = np.mgrid[0:H, 0:W].astype(float)
