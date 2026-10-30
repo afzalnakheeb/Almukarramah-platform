@@ -58,9 +58,9 @@ export default function Trail() {
         <View style={{ maxWidth: 820, width: '100%', alignSelf: 'center' }}>
           <Eyebrow size={12}>{t('learning')}</Eyebrow>
           <H1 size={wide ? 52 : 36}>{title}</H1>
-          <View style={{ backgroundColor: colors.navy, borderRadius: 6, padding: wide ? 32 : 20, gap: 12, marginTop: 10 }}>
-            <Serif size={wide ? 32 : 24} color={colors.white}>{t('seerahExternal')}</Serif>
-            <Button label={t('openSeerah')} kind="light" onPress={() => openExternal(SEERAH_TRAIL_URL)} style={{ alignSelf: 'flex-start', marginTop: 6 }} />
+          <View style={{ backgroundColor: colors.porcelain, borderWidth: 1, borderColor: colors.line, borderTopColor: colors.gold, padding: wide ? 36 : 22, gap: 12, marginTop: 10 }}>
+            <Serif size={wide ? 32 : 24}>{t('seerahExternal')}</Serif>
+            <Button label={t('openSeerah')} onPress={() => openExternal(SEERAH_TRAIL_URL)} style={{ alignSelf: 'flex-start', marginTop: 6 }} />
           </View>
         </View>
       </Screen>
@@ -108,10 +108,10 @@ export default function Trail() {
         <Eyebrow size={12}>{t('learning')}</Eyebrow>
         <H1 size={wide ? 52 : 36}>{title}</H1>
         {lessons.length === 0 ? (
-          <View style={{ backgroundColor: colors.navy, borderRadius: 6, padding: wide ? 32 : 20, gap: 10, marginTop: 10 }}>
-            <Eyebrow size={11} color={colors.champagne}>{t('membersOnly')}</Eyebrow>
-            <Serif size={wide ? 34 : 26} color={colors.white}>{t('membersOnlyBody')}</Serif>
-            <Button label={t('circleCta')} kind="light" href="/membership" style={{ alignSelf: 'flex-start', marginTop: 6 }} />
+          <View style={{ backgroundColor: colors.porcelain, borderWidth: 1, borderColor: colors.line, borderTopColor: colors.gold, padding: wide ? 36 : 22, gap: 10, marginTop: 10 }}>
+            <Eyebrow size={11} color={colors.emerald}>{t('membersOnly')}</Eyebrow>
+            <Serif size={wide ? 34 : 26}>{t('membersOnlyBody')}</Serif>
+            <Button label={t('circleCta')} href="/membership" style={{ alignSelf: 'flex-start', marginTop: 6 }} />
           </View>
         ) : (
           <Card pad={0} style={{ overflow: 'hidden', marginTop: 10 }}>

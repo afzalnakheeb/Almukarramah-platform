@@ -37,24 +37,25 @@ export default function AppPage() {
         jsonLd={[appLd(a, SITE_URL), breadcrumbLd([{ name: 'Home', path: '/' }, { name: 'Our apps', path: '/apps' }, { name: a.name_en, path: `/apps/${a.slug}` }])]}
       />
 
-      {/* Hero in the app's own colour */}
-      <View style={{ backgroundColor: a.accent }}>
-        <Container style={{ paddingVertical: wide ? 64 : 36, flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: wide ? 40 : 22 }}>
-          <View style={{ width: wide ? 168 : 112, height: wide ? 168 : 112, borderRadius: wide ? 40 : 8, overflow: 'hidden', borderWidth: 3, borderColor: 'rgba(255,255,255,0.25)' }}>
+      {/* Hero on stone: the app's own colour lives in its icon and one fine rule */}
+      <View style={{ backgroundColor: colors.stone, borderBottomWidth: 1, borderColor: colors.goldLine }}>
+        <Container style={{ paddingVertical: wide ? 72 : 36, flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: wide ? 48 : 22 }}>
+          <View style={{ width: wide ? 160 : 104, height: wide ? 160 : 104, borderRadius: wide ? 36 : 24, overflow: 'hidden', backgroundColor: a.accent }}>
             <Image source={{ uri: a.icon }} style={{ width: '100%', height: '100%' }} accessibilityLabel={a.name_en} />
           </View>
           <View style={{ flex: 1, gap: 10 }}>
             <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-              <Eyebrow size={12} color={colors.champagne}>{t('ourApps')}</Eyebrow>
+              <Eyebrow rule>{t('ourApps')}</Eyebrow>
               <Tag label={t(statusLabel)} tone={tone} />
             </View>
-            <Serif role="h1" size={wide ? 60 : 40} color={colors.white}>{ar ? a.name_ar : a.name_en}</Serif>
-            <T size={wide ? 20 : 17} color={colors.onNight}>{ar ? a.name_en : a.name_ar}</T>
-            <T size={wide ? 19 : 16.5} lh={1.5} color={colors.white} w={600} style={{ maxWidth: 640 }}>{ar ? a.tagline_ar : a.tagline_en}</T>
+            <Serif role="h1" size={wide ? 60 : 40}>{ar ? a.name_ar : a.name_en}</Serif>
+            <T size={wide ? 18 : 16} color={colors.muted}>{ar ? a.name_en : a.name_ar}</T>
+            <View style={{ width: 40, height: 2, backgroundColor: a.accent, marginVertical: 4 }} />
+            <T size={wide ? 18 : 16} lh={1.55} color={colors.navy} w={500} style={{ maxWidth: 640 }}>{ar ? a.tagline_ar : a.tagline_en}</T>
             {a.url && (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 10, alignItems: 'center' }}>
-                <Button label={t('openApp')} kind="light" size="lg" onPress={() => openExternal(a.url!)} icon={<Icon name="arrowRight" size={18} />} />
-                <T size={13} color={colors.onNightSoft}>{a.url.replace('https://', '')} · {t('appOpensNew')}</T>
+                <Button label={t('openApp')} size="lg" onPress={() => openExternal(a.url!)} icon={<Icon name={ar ? 'arrowLeft' : 'arrowRight'} size={16} stroke={1.4} color={colors.ivory} />} />
+                <T size={13} color={colors.muted}>{a.url.replace('https://', '')} · {t('appOpensNew')}</T>
               </View>
             )}
           </View>
@@ -68,20 +69,18 @@ export default function AppPage() {
             <T size={14} color={colors.muted}>{t('appFor')}: {ar ? a.audience_ar : a.audience_en}</T>
           </View>
           <Card pad={wide ? 24 : 18} style={{ flex: 1, gap: 12, alignSelf: 'stretch' }}>
-            <T w={700} size={16} color={colors.navy}>{t('appFeatures')}</T>
+            <Serif size={24}>{t('appFeatures')}</Serif>
             {(ar ? a.features_ar : a.features_en).map((f) => (
               <View key={f} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
-                <View style={{ width: 24, height: 24, borderRadius: 999, backgroundColor: colors.successBg, alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="check" size={14} color={colors.success} />
-                </View>
-                <T size={15} lh={1.5} style={{ flex: 1 }}>{f}</T>
+                <Icon name="check" size={15} stroke={1.6} color={colors.emerald} />
+                <T size={14.5} lh={1.55} color={colors.body} style={{ flex: 1 }}>{f}</T>
               </View>
             ))}
           </Card>
         </View>
 
         <Card pad={wide ? 24 : 18} style={{ gap: 10, borderTopColor: colors.gold }}>
-          <T w={700} size={16} color={colors.navy}>{t('installTitle')}</T>
+          <Serif size={24}>{t('installTitle')}</Serif>
           <T size={14.5} lh={1.6} color={colors.body}>{t('installIphone')}</T>
           <T size={14.5} lh={1.6} color={colors.body}>{t('installAndroid')}</T>
           <T size={13} color={colors.muted}>{t('appStoresSoon')}</T>

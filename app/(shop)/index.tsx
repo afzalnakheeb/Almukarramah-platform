@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { Image } from 'expo-image';
 import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { DestinationSheet, destIcon, Logo, Screen, SELL_HREF } from '@/components/chrome';
-import { CinematicPhoto, Corners, DoubleFrame } from '@/components/decor';
+import { CinematicPhoto, Corners, DoubleFrame, HeroFilm } from '@/components/decor';
 import { data, prefersReducedMotion, reveal } from '@/components/motion';
 import { Icon, type IconName } from '@/components/icons';
 import { Button, CapsLink, Container, Eyebrow, Grid, Loading, ProductTile, SectionHead, Serif, T, useWide } from '@/components/ui';
@@ -19,6 +19,11 @@ import { imageUrl } from '@/lib/images';
 import { usePrefs } from '@/lib/prefs';
 import type { Product } from '@/lib/types';
 import { colors } from '@/theme';
+
+/** The Art Director's hero films (website). Set the two paths once the films are approved and copied to public/images;
+ *  the stills stay as posters. The films are composed left to right, so Arabic keeps its own recomposed still
+ *  (a film is never mirrored: that would reverse the product labels). */
+const HERO_FILM = null as { desktop: string; phone: string } | null;
 
 type FragTab = 'perfumes' | 'oud-oils';
 const premiumFirst = (rows: Product[]) => [...rows].sort((a, b) => b.base_price_sar - a.base_price_sar);
@@ -162,13 +167,17 @@ export default function Home() {
       {/* 1 · Hero: the Art Director's still (mirrored for Arabic), the headline on the quiet wall */}
       {wide ? (
         <View style={{ height: heroH, overflow: 'hidden', backgroundColor: colors.sand }}>
-          <CinematicPhoto uri={isRTL ? '/images/hero-light-rtl.jpg' : '/images/hero-light.jpg'} position={isRTL ? 'left' : 'right'} label={t('heroImageAlt')} sweep={false} />
+          {HERO_FILM && !isRTL
+            ? <HeroFilm desktop={HERO_FILM.desktop} phone={HERO_FILM.phone} poster="/images/hero-light.jpg" posterPhone="/images/hero-phone.jpg" label={t('heroImageAlt')} wide />
+            : <CinematicPhoto uri={isRTL ? '/images/hero-light-rtl.jpg' : '/images/hero-light.jpg'} position={isRTL ? 'left' : 'right'} label={t('heroImageAlt')} sweep={false} />}
           <Container style={{ flex: 1, justifyContent: 'center', paddingBottom: Math.round(heroH * 0.12) }}>{heroText}</Container>
         </View>
       ) : (
         <>
           <View style={{ aspectRatio: 1170 / 1080, backgroundColor: colors.sand, overflow: 'hidden' }}>
-            <CinematicPhoto uri={isRTL ? '/images/hero-phone-rtl.jpg' : '/images/hero-phone.jpg'} label={t('heroImageAlt')} sweep={false} />
+            {HERO_FILM && !isRTL
+              ? <HeroFilm desktop={HERO_FILM.desktop} phone={HERO_FILM.phone} poster="/images/hero-light.jpg" posterPhone="/images/hero-phone.jpg" label={t('heroImageAlt')} wide={false} />
+              : <CinematicPhoto uri={isRTL ? '/images/hero-phone-rtl.jpg' : '/images/hero-phone.jpg'} label={t('heroImageAlt')} sweep={false} />}
           </View>
           <Container style={{ paddingTop: 36, paddingBottom: 8 }}>{heroText}</Container>
         </>
