@@ -180,6 +180,48 @@ h1: Prohibited and restricted items
 json-ld: BreadcrumbList
 visible text without JS: 6281 chars: "Prohibited and restricted items | Al Mukarramah seller handbook Delivering to Saudi address SAR Home Sell on Al Mukarramah Seller handbook Prohibited and restri…"
 
+## /seller/product?id=demo-blocked  (HTTP 200)
+title: 
+description: undefined
+robots: -
+canonical: undefined
+hreflang: -
+og:title: undefined
+og:image: undefined
+twitter:card: undefined
+html lang/dir: lang="en"
+h1: NONE
+json-ld: NONE
+visible text without JS: 0 chars: "…"
+
+## /seller/product?id=demo-queue-oud  (HTTP 200)
+title: 
+description: undefined
+robots: -
+canonical: undefined
+hreflang: -
+og:title: undefined
+og:image: undefined
+twitter:card: undefined
+html lang/dir: lang="en"
+h1: NONE
+json-ld: NONE
+visible text without JS: 0 chars: "…"
+
+## /admin/listings  (HTTP 200)
+title: 
+description: undefined
+robots: -
+canonical: undefined
+hreflang: -
+og:title: undefined
+og:image: undefined
+twitter:card: undefined
+html lang/dir: lang="en"
+h1: NONE
+json-ld: NONE
+visible text without JS: 0 chars: "…"
+
 ## /sellers  (HTTP 200)
 title: Our sellers | Al Mukarramah marketplace
 description: Independent Islamic and modest brands from around the world, each approved by Al Mukarramah.
