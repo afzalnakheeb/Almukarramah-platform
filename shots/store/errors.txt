@@ -1,5 +1,5 @@
-iphone en 4-product: hidden: Prepared and packed in Madinah
-iphone ar 4-product: hidden: يُجهَّز ويُغلَّف في المدينة المنورة
+iphone en 4-product: blanked: Prepared and packed in Madinah
+iphone ar 4-product: blanked: يُجهَّز ويُغلَّف في المدينة المنورة
 ipad en 1-home: hidden: Hotel delivery in Madinah and Makkah
 ipad en 4-product: hidden: Prepared and packed in Madinah
 ipad en 4-product: hidden: Madinah, Saudi Arabia
@@ -8,5 +8,5 @@ ipad ar 1-home: hidden: توصيل إلى فنادق المدينة ومكة
 ipad ar 4-product: hidden: يُجهَّز ويُغلَّف في المدينة المنورة
 ipad ar 4-product: hidden: المدينة المنورة، السعودية
 ipad ar 4-product: hidden: فنادق المدينة ومكة، جميع أنحاء السعودية، دولي
-android en 4-product: hidden: Prepared and packed in Madinah
-android ar 4-product: hidden: يُجهَّز ويُغلَّف في المدينة المنورة
+android en 4-product: blanked: Prepared and packed in Madinah
+android ar 4-product: blanked: يُجهَّز ويُغلَّف في المدينة المنورة
