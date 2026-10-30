@@ -77,9 +77,11 @@ describe('sellers', () => {
     assert.match(db.error(`update sellers set commission_bps = 2000 where id = '${B}'`, user('manager')) ?? '', /check constraint/);
   });
 
-  test('approvals are audited with the actor', () => {
-    const row = db.one<{ actor: string; action: string }>(`select actor, action from audit_log where table_name = 'sellers' and row_id = '${A}' and action = 'UPDATE' order by id limit 1`);
-    assert.equal(row.actor, ids.manager);
+  test('seller decisions are audited with the actor', () => {
+    db.exec(`select mp_review_seller('${B}', 'suspend', 'Checking the audit trail')`, user('manager'));
+    db.exec(`select mp_review_seller('${B}', 'reinstate', 'Checked')`, user('owner'));
+    const rows = db.rows<{ actor: string }>(`select actor from audit_log where table_name = 'sellers' and row_id = '${B}' and action = 'UPDATE' order by id desc limit 2`);
+    assert.deepEqual(rows.map((r) => r.actor), [ids.owner, ids.manager]);
   });
 });
 
@@ -132,7 +134,7 @@ describe('listings', () => {
     assert.equal(db.rows(`select id from products where id = '${draft}'`, user('marketing')).length, 1);
     db.exec(`update sellers set status = 'suspended' where id = '${A}'`, user('owner'));
     assert.equal(db.rows(`select id from products where id = '${live}'`, 'anon').length, 0, 'a suspended seller is hidden');
-    db.exec(`update sellers set status = 'approved' where id = '${A}'`, user('owner'));
+    db.exec(`select mp_review_seller('${A}', 'reinstate', 'Reviewed with the seller')`, user('owner'));
     assert.equal(db.count(`delete from products where id = '${live}'`, user('sellerA')), 0);
     assert.equal(db.count(`delete from products where id = '${draft}'`, user('sellerA')), 1);
   });
@@ -175,10 +177,10 @@ describe('rulebook tables', () => {
 
 describe('KYC, permits and pickup addresses', () => {
   test('documents: own folder only, always pending until staff review, accepted ones stay', () => {
-    const doc = db.val<string>(`insert into seller_documents (seller_id, doc_type, path, status) values ('${A}', 'commercial_registration', '${A}/cr.pdf', 'accepted') returning id`, user('sellerA'));
+    const doc = db.val<string>(`insert into seller_documents (seller_id, doc_type, path, status) values ('${A}', 'commercial_registration', '${A}/kyc/cr.pdf', 'accepted') returning id`, user('sellerA'));
     assert.equal(db.val(`select status from seller_documents where id = '${doc}'`), 'pending');
-    assert.match(db.error(`insert into seller_documents (seller_id, doc_type, path) values ('${B}', 'commercial_registration', '${B}/x.pdf')`, user('sellerA')) ?? '', /row-level security/);
-    assert.match(db.error(`insert into seller_documents (seller_id, doc_type, path) values ('${A}', 'commercial_registration', '${B}/x.pdf')`, user('sellerA')) ?? '', /row-level security/);
+    assert.match(db.error(`insert into seller_documents (seller_id, doc_type, path) values ('${B}', 'commercial_registration', '${B}/kyc/x.pdf')`, user('sellerA')) ?? '', /row-level security/);
+    assert.match(db.error(`insert into seller_documents (seller_id, doc_type, path) values ('${A}', 'commercial_registration', '${B}/kyc/x.pdf')`, user('sellerA')) ?? '', /row-level security/);
     assert.equal(db.count(`update seller_documents set status = 'accepted' where id = '${doc}'`, user('sellerA')), 0);
     assert.equal(db.count(`update seller_documents set status = 'accepted' where id = '${doc}'`, user('manager')), 1);
     assert.equal(db.val(`select reviewed_by from seller_documents where id = '${doc}'`), ids.manager);
@@ -244,8 +246,8 @@ describe('storage', () => {
   test('KYC files: own folder; accepted documents cannot be removed', () => {
     assert.equal(db.error(put('seller-kyc', `${A}/vat.pdf`), user('sellerA')), null);
     assert.match(db.error(put('seller-kyc', `${B}/vat.pdf`), user('sellerA')) ?? '', /row-level security/);
-    db.exec(put('seller-kyc', `${A}/cr.pdf`), 'service');
-    assert.equal(db.count(`delete from storage.objects where bucket_id = 'seller-kyc' and name = '${A}/cr.pdf'`, user('sellerA')), 0, 'cr.pdf was accepted');
+    db.exec(put('seller-kyc', `${A}/kyc/cr.pdf`), 'service');
+    assert.equal(db.count(`delete from storage.objects where bucket_id = 'seller-kyc' and name = '${A}/kyc/cr.pdf'`, user('sellerA')), 0, 'cr.pdf was accepted');
     assert.equal(db.rows(`select 1 from storage.objects where bucket_id = 'seller-kyc'`, user('marketing')).length, 0);
   });
 });

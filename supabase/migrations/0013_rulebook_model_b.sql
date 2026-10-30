@@ -8,8 +8,13 @@
 --
 -- Corridors (from -> to) open in phases, toggled by owner/manager only (audited), each only after a tax adviser signs off:
 --   Phase 1 (open):   SA sellers -> SA customers, and Al Mukarramah's own products worldwide (existing house shipping)
---   Phase 2 (closed): AE, KW, QA sellers domestically and into SA
---   Phase 3 (closed): India -> GCC
+--   Phase 2 (closed): AE, KW, QA sellers domestically and into SA; SA sellers' goods to the focus markets abroad
+--                     (UK, the main EU states, the US, Canada, Australia, New Zealand)
+--   Phase 3 (closed, low priority, data only): India -> GCC
+--
+-- Destinations abroad: each country records how import VAT/GST on low-value parcels works there (import_tax_regime)
+-- and whether we are registered to collect it at checkout; each corridor records whether that route collects it.
+-- The seeded tax values for the countries abroad are placeholders TO CONFIRM WITH THE ADVISER in the legal phase.
 --
 -- Shipping (model B): sellers pack and ship their own parcels, but ONLY through carriers Al Mukarramah selects and
 -- contracts (through shipping aggregators). The seller prints our label from the seller dashboard, the carrier picks
@@ -31,9 +36,21 @@ create table countries (
   einvoicing text not null default 'none' check (einvoicing in ('zatca', 'planned', 'none')),
   import_duty_bp int not null default 500 check (import_duty_bp between 0 and 10000),   -- default customs duty
   de_minimis_sar int not null default 0 check (de_minimis_sar >= 0),   -- halalas: consignments below pay no duty
-  customs_union text check (customs_union is null or customs_union in ('GCC')),   -- GCC-origin goods move duty-free between members
+  customs_union text check (customs_union is null or customs_union in ('GCC', 'EU')),   -- goods from a member move duty-free between members
+  -- Import VAT/GST on low-value parcels arriving here:
+  --   border:       paid on import (by the customer, or the carrier for them)     none: no import VAT (e.g. no VAT at all)
+  --   uk_low_value: UK VAT charged at checkout on consignments up to the UK threshold (the marketplace as deemed supplier)
+  --   eu_ioss:      EU VAT charged at checkout through the Import One-Stop Shop (consignments up to the IOSS threshold)
+  --   au_low_value, nz_low_value: GST charged at checkout on low-value imported goods (the marketplace responsible)
+  --   ca_low_value: GST/HST charged at checkout on low-value imports under Canada's rules
+  import_tax_regime text not null default 'border'
+    check (import_tax_regime in ('none', 'border', 'uk_low_value', 'eu_ioss', 'au_low_value', 'nz_low_value', 'ca_low_value')),
+  import_tax_threshold_minor int check (import_tax_threshold_minor is null or import_tax_threshold_minor >= 0),   -- in this country's currency
+  -- we are registered for the regime (number in our_tax_registration) and collect it at checkout
+  platform_collects_import_tax boolean not null default false,
   notes text,
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  check (not platform_collects_import_tax or (import_tax_regime not in ('none', 'border') and our_tax_registration is not null))
 );
 
 insert into countries (code, name_en, name_ar, currency, vat_rate_bp, tax_name, einvoicing, import_duty_bp, de_minimis_sar, customs_union, notes) values
@@ -47,6 +64,27 @@ insert into countries (code, name_en, name_ar, currency, vat_rate_bp, tax_name, 
   ('BH', 'Bahrain', 'البحرين', 'BHD', 1000, 'VAT', 'none', 500, 0, 'GCC', 'De minimis to confirm.'),
   ('IN', 'India', 'الهند', 'INR', 0, 'GST', 'none', 0, 0, null,
    'Ship-from only for now. Exports from India are zero-rated for GST (under a LUT); GST rates are product-specific.');
+
+-- The focus markets abroad, as destinations (customers there buy our own products today; seller goods come later).
+-- Every tax value below is a placeholder TO CONFIRM WITH THE ADVISER; thresholds are left empty until then.
+insert into countries (code, name_en, name_ar, currency, vat_rate_bp, tax_name, einvoicing, customs_union, import_tax_regime, notes) values
+  ('GB', 'United Kingdom', 'المملكة المتحدة', 'GBP', 2000, 'VAT', 'none', null, 'uk_low_value', 'To confirm with adviser: rate, low-value threshold, registration.'),
+  ('US', 'United States', 'الولايات المتحدة', 'USD', 0, 'none', 'none', null, 'border', 'To confirm with adviser: no federal VAT; duties and de minimis rules; state sales tax for marketplaces.'),
+  ('CA', 'Canada', 'كندا', 'CAD', 500, 'GST', 'none', null, 'ca_low_value', 'To confirm with adviser: GST/HST by province, low-value rules, registration.'),
+  ('AU', 'Australia', 'أستراليا', 'AUD', 1000, 'GST', 'none', null, 'au_low_value', 'To confirm with adviser: rate, low-value threshold, registration.'),
+  ('NZ', 'New Zealand', 'نيوزيلندا', 'NZD', 1500, 'GST', 'none', null, 'nz_low_value', 'To confirm with adviser: rate, low-value threshold, registration.'),
+  ('DE', 'Germany', 'ألمانيا', 'EUR', 1900, 'VAT', 'none', 'EU', 'eu_ioss', 'To confirm with adviser: rate, IOSS threshold and registration.'),
+  ('FR', 'France', 'فرنسا', 'EUR', 2000, 'VAT', 'none', 'EU', 'eu_ioss', 'To confirm with adviser: rate, IOSS threshold and registration.'),
+  ('IT', 'Italy', 'إيطاليا', 'EUR', 2200, 'VAT', 'none', 'EU', 'eu_ioss', 'To confirm with adviser: rate, IOSS threshold and registration.'),
+  ('ES', 'Spain', 'إسبانيا', 'EUR', 2100, 'VAT', 'none', 'EU', 'eu_ioss', 'To confirm with adviser: rate, IOSS threshold and registration.'),
+  ('NL', 'Netherlands', 'هولندا', 'EUR', 2100, 'VAT', 'none', 'EU', 'eu_ioss', 'To confirm with adviser: rate, IOSS threshold and registration.'),
+  ('BE', 'Belgium', 'بلجيكا', 'EUR', 2100, 'VAT', 'none', 'EU', 'eu_ioss', 'To confirm with adviser: rate, IOSS threshold and registration.'),
+  ('IE', 'Ireland', 'أيرلندا', 'EUR', 2300, 'VAT', 'none', 'EU', 'eu_ioss', 'To confirm with adviser: rate, IOSS threshold and registration.'),
+  ('AT', 'Austria', 'النمسا', 'EUR', 2000, 'VAT', 'none', 'EU', 'eu_ioss', 'To confirm with adviser: rate, IOSS threshold and registration.'),
+  ('SE', 'Sweden', 'السويد', 'SEK', 2500, 'VAT', 'none', 'EU', 'eu_ioss', 'To confirm with adviser: rate, IOSS threshold and registration.'),
+  ('DK', 'Denmark', 'الدنمارك', 'DKK', 2500, 'VAT', 'none', 'EU', 'eu_ioss', 'To confirm with adviser: rate, IOSS threshold and registration.');
+-- GCC members charge their own import VAT at the border today
+update countries set import_tax_regime = 'border' where customs_union = 'GCC';
 
 -- Customs duty by HS code prefix, where it differs from the country default (longest prefix wins).
 create table duty_rates (
@@ -71,6 +109,8 @@ create table corridors (
   vat_mode text not null check (vat_mode in ('origin', 'destination', 'zero')),
   -- duties and import taxes: none (domestic), ddp (quoted and collected at checkout), dap (paid by the customer on delivery)
   duties_mode text not null default 'none' check (duties_mode in ('none', 'ddp', 'dap')),
+  -- this route charges the destination's import VAT/GST at checkout (countries.import_tax_regime says how)
+  platform_collects_import_tax boolean not null default false,
   pilot_seller_ids uuid[] not null default '{}',    -- while 'pilot': only these sellers
   adviser_name text,
   adviser_signed_off_at timestamptz,
@@ -79,7 +119,8 @@ create table corridors (
   updated_by uuid references auth.users,
   unique (scope, from_country, to_country),
   check (scope = 'marketplace' or invoicer = 'platform'),
-  check (to_country = '*' or to_country <> from_country or duties_mode = 'none')
+  check (to_country = '*' or to_country <> from_country or duties_mode = 'none'),
+  check (not platform_collects_import_tax or (invoicer = 'platform' and vat_mode = 'destination' and to_country <> '*'))
 );
 
 -- A corridor opens (pilot or open) only with a tax adviser's sign-off on record, and its tax terms cannot change
@@ -89,6 +130,11 @@ create or replace function corridors_guard() returns trigger language plpgsql se
 begin
   new.updated_at := now();
   new.updated_by := auth.uid();
+  -- collecting import VAT/GST at checkout needs our registration in that country first
+  if new.status <> 'closed' and new.platform_collects_import_tax
+     and not exists (select 1 from countries c where c.code = new.to_country and c.platform_collects_import_tax) then
+    raise exception 'Register for % import VAT/GST (and record it on the country) before opening this corridor', new.to_country;
+  end if;
   if tg_op = 'INSERT' then
     if new.status <> 'closed' and new.adviser_signed_off_at is null and auth.role() is not null then
       raise exception 'A corridor can only open after a tax adviser signs off: record the adviser and the date first';
@@ -99,7 +145,8 @@ begin
     raise exception 'A corridor can only open after a tax adviser signs off: record the adviser and the date first';
   end if;
   if new.status <> 'closed'
-     and (new.invoicer, new.vat_mode, new.duties_mode) is distinct from (old.invoicer, old.vat_mode, old.duties_mode)
+     and (new.invoicer, new.vat_mode, new.duties_mode, new.platform_collects_import_tax)
+         is distinct from (old.invoicer, old.vat_mode, old.duties_mode, old.platform_collects_import_tax)
      and new.adviser_signed_off_at is not distinct from old.adviser_signed_off_at then
     raise exception 'Changing who invoices, the VAT or the duties of an open corridor needs a new adviser sign-off';
   end if;
@@ -121,13 +168,22 @@ insert into corridors (scope, from_country, to_country, phase, status, invoicer,
   ('marketplace', 'AE', 'SA', 2, 'closed', 'platform', 'destination', 'ddp', 'UAE sellers into Saudi Arabia: platform as deemed supplier, Saudi VAT, duties paid.'),
   ('marketplace', 'KW', 'SA', 2, 'closed', 'platform', 'destination', 'ddp', 'Kuwaiti sellers into Saudi Arabia.'),
   ('marketplace', 'QA', 'SA', 2, 'closed', 'platform', 'destination', 'ddp', 'Qatari sellers into Saudi Arabia.'),
-  -- Phase 3: closed
+  -- Phase 3: closed, low priority (data only)
   ('marketplace', 'IN', 'SA', 3, 'closed', 'platform', 'destination', 'ddp', 'Indian sellers into Saudi Arabia (IEC and GSTIN required).'),
   ('marketplace', 'IN', 'AE', 3, 'closed', 'seller', 'zero', 'ddp', 'Indian sellers into the UAE: export invoice by the seller; import VAT and duty collected at checkout.'),
   ('marketplace', 'IN', 'KW', 3, 'closed', 'seller', 'zero', 'ddp', null),
   ('marketplace', 'IN', 'QA', 3, 'closed', 'seller', 'zero', 'ddp', null),
   ('marketplace', 'IN', 'OM', 3, 'closed', 'seller', 'zero', 'ddp', null),
   ('marketplace', 'IN', 'BH', 3, 'closed', 'seller', 'zero', 'ddp', null);
+
+-- Phase 2 abroad: Saudi sellers' goods to the focus markets, closed. Where the destination has a low-value regime the
+-- platform (as deemed supplier) charges its import VAT/GST at checkout; duties are quoted and collected (DDP).
+-- To confirm with adviser before any of them opens.
+insert into corridors (scope, from_country, to_country, phase, status, invoicer, vat_mode, duties_mode, platform_collects_import_tax, notes)
+select 'marketplace', 'SA', c.code, 2, 'closed', 'platform', case when c.import_tax_regime in ('none', 'border') then 'zero' else 'destination' end, 'ddp',
+       c.import_tax_regime not in ('none', 'border'),
+       format('Saudi sellers to %s (%s). To confirm with adviser.', c.name_en, c.import_tax_regime)
+from countries c where c.code in ('GB', 'US', 'CA', 'AU', 'NZ', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'IE', 'AT', 'SE', 'DK');
 
 -- Public, non-sensitive view of which corridors trade (the sell page and seller dashboard show it).
 create or replace function open_corridors() returns jsonb

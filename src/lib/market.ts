@@ -7,10 +7,8 @@ import { isConfigured, supabase } from './supabase';
 import type { Bi } from './guidelines';
 
 /** Demo data for marketplace screens (screenshots before the marketplace tables exist). Set only in the screenshot build. */
-export const MARKET_DEMO = process.env.EXPO_PUBLIC_MARKET_DEMO === '1';
-/** Set once the marketplace migrations are applied (see docs/marketplace/SWITCH-ON.md). Until then the handbook
- *  reads the snapshot built into the site and makes no marketplace calls. */
-export const MARKET_LIVE = process.env.EXPO_PUBLIC_MARKET_LIVE === '1' && !MARKET_DEMO;
+import { MARKET_DEMO, MARKET_LIVE } from './flags';
+export { MARKET_DEMO, MARKET_LIVE };
 
 export type ReturnPolicy = 'standard' | 'unopened_only' | 'faulty_only' | 'none';
 export type CategoryPolicy = {
@@ -40,6 +38,7 @@ export type PublicSettings = {
   allow_modest_models_in_fashion: boolean; min_quality_score: number; quality_weights: Record<string, number>; default_min_photos: number;
   default_min_long_side_px: number; price_change_review_bps: number; strike_limit: number; strike_window_days: number;
   perf_window_days: number; perf_thresholds: PerfThresholds; max_upload_bytes: number; upload_types: string[];
+  require_sample?: boolean; min_portfolio_photos?: number; min_story_chars?: number;
 };
 export type PerfThresholds = {
   late_shipment_bps: { warn: number; suspend: number }; cancellation_bps: { warn: number; suspend: number };
@@ -47,7 +46,12 @@ export type PerfThresholds = {
 };
 export type PermitRule = { to_country: string; permit_key: string; label_en: string; label_ar: string; category_slugs: string[] };
 export type GarmentStyle = { code: string; garment: string; label_en: string; label_ar: string; countries: string[]; default_measurements: { key: string; min_cm?: number; max_cm?: number }[] };
-export type Guidance = { categories: CategoryNode[]; rules: PolicyRule[]; documents: DocumentType[]; permits: PermitRule[]; styles: GarmentStyle[]; settings: PublicSettings };
+export type KycRequirement = { country: string; doc_type: string; label_en: string; label_ar: string; required: boolean };
+export type SellerCountry = { code: string; name_en: string; name_ar: string; open: boolean; phase: number | null };
+export type Guidance = {
+  categories: CategoryNode[]; rules: PolicyRule[]; documents: DocumentType[]; permits: PermitRule[]; styles: GarmentStyle[]; settings: PublicSettings;
+  kyc?: KycRequirement[]; seller_countries?: SellerCountry[];
+};
 
 export const guidanceSnapshot = snapshot as unknown as Guidance;
 

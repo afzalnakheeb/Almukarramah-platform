@@ -7,11 +7,11 @@ import { countryName } from '@/components/country';
 import { Glow, Ornament, StarLattice } from '@/components/decor';
 import { breadcrumbLd, itemListLd, Seo } from '@/components/seo';
 import { Card, Container, Eyebrow, Grid, Notice, ProductTile, Serif, T, useWide } from '@/components/ui';
-import { getSellerBySlug, getSellerProducts } from '@/lib/catalogue';
+import { getSellerBySlug, getSellerProducts, type PublicSeller } from '@/lib/catalogue';
 import { useI18n } from '@/lib/i18n';
 import { SITE_URL } from '@/lib/images';
 import { snapshotBySeller, snapshotSeller, snapshotSellers } from '@/lib/snapshot';
-import type { Product, Seller } from '@/lib/types';
+import type { Product } from '@/lib/types';
 import { colors } from '@/theme';
 
 export function generateStaticParams() {
@@ -22,7 +22,7 @@ export default function SellerShop() {
   const wide = useWide();
   const { t, lang } = useI18n();
   const { slug } = useLocalSearchParams<{ slug: string }>();
-  const [s, setS] = useState<Seller | null | undefined>(() => snapshotSeller(slug) ?? undefined);
+  const [s, setS] = useState<PublicSeller | null | undefined>(() => snapshotSeller(slug) ?? undefined);
   const [items, setItems] = useState<Product[]>(() => { const x = snapshotSeller(slug); return x ? snapshotBySeller(x.id) : []; });
   useEffect(() => {
     getSellerBySlug(slug).then((r) => {

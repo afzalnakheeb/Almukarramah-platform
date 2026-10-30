@@ -3,12 +3,13 @@
 // quality score shows what to fix; on submission the server checks the premium standard and runs the AI screening:
 // listings that need changes come straight back here with reasons in English and Arabic; the rest go to our team.
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { CountryPicker } from '@/components/country';
 import { Examples } from '@/components/guidelines';
 import { Icon } from '@/components/icons';
+import { PickFiles } from '@/components/pick-files';
 import { Seo } from '@/components/seo';
 import { Button, Card, Chip, Field, Notice, Photo, Serif, T, Tag, useWide } from '@/components/ui';
 import { useI18n, type Key } from '@/lib/i18n';
@@ -50,21 +51,6 @@ const toForm = (l: Extra): Form => ({
 });
 /** The parcel type follows the category: alcohol-based sprays are dangerous goods; oils and everything else are not. */
 const shipClassFor = (path: CategoryNode[]) => (path.some((c) => c.slug === 'perfumes') ? 'perfume_spray' : path.some((c) => ['attar', 'oud-oils'].includes(c.slug)) ? 'perfume_oil' : 'standard');
-
-/** Web file picker. */
-function PickFiles({ onFiles, label, disabled, accept = 'image/jpeg,image/png,image/webp', multiple = true }: { onFiles: (f: File[]) => void; label: string; disabled?: boolean; accept?: string; multiple?: boolean }) {
-  const ref = useRef<HTMLInputElement | null>(null);
-  if (Platform.OS !== 'web') return null;
-  return (
-    <View>
-      {React.createElement('input', {
-        ref, type: 'file', accept, multiple, style: { display: 'none' },
-        onChange: (e: { target: HTMLInputElement }) => { const fl = Array.from(e.target.files ?? []); e.target.value = ''; if (fl.length) onFiles(fl); },
-      })}
-      <Button label={label} kind="secondary" size="sm" disabled={disabled} onPress={() => ref.current?.click()} icon={<Icon name="plus" size={16} />} />
-    </View>
-  );
-}
 
 const STATUS_TONE = { pending: 'info', passed: 'ok', review: 'warn', rejected: 'err', blocked: 'err' } as const;
 

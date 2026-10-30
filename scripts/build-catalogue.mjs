@@ -13,6 +13,9 @@ const PUBLIC = join(root, 'public');
 const SITE = (process.env.EXPO_PUBLIC_SITE_URL || 'https://almukarramah.com').replace(/\/$/, '');
 const URL_ = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+// Set once the marketplace migrations are applied (docs/marketplace/SWITCH-ON.md). Until then the live database has
+// no marketplace columns or tables, so the snapshot reads only what it has.
+const MARKET_LIVE = process.env.EXPO_PUBLIC_MARKET_LIVE === '1';
 
 async function fetchJson(path) {
   const res = await fetch(`${URL_}/rest/v1/${path}`, { headers: { apikey: KEY, Authorization: `Bearer ${KEY}` } });
@@ -22,14 +25,16 @@ async function fetchJson(path) {
 
 async function snapshot() {
   if (!URL_ || !KEY) throw new Error('Supabase env not set');
-  const categories = await fetchJson('categories?select=id,slug,name_en,name_ar,sort,image,blurb_en,blurb_ar,department&is_active=eq.true&order=sort');
+  const categories = await fetchJson(`categories?select=id,slug,name_en,name_ar,sort,image,blurb_en,blurb_ar${MARKET_LIVE ? ',department' : ''}&is_active=eq.true&order=sort`);
   const products = await fetchJson(
     'products?select=id,slug,sku,brand,ship_class,name_en,name_ar,description_en,description_ar,base_price_sar,stock,images,is_featured,restricted_countries,' +
-      'seo_title_en,seo_title_ar,seo_description_en,seo_description_ar,updated_at,category_id,categories(slug,name_en,name_ar),' +
-      'product_tags(tags(id,kind,slug,name_en,name_ar,icon)),seller_id,made_to_measure,garment,sizes,size_chart,tailoring,sellers(slug,name_en,name_ar,country,kind)' +
-      '&is_active=eq.true&listing_status=eq.approved&order=is_featured.desc,created_at',
+      'seo_title_en,seo_title_ar,seo_description_en,seo_description_ar,updated_at,category_id,categories(slug,name_en,name_ar),product_tags(tags(id,kind,slug,name_en,name_ar,icon))' +
+      (MARKET_LIVE ? ',seller_id,made_to_measure,garment,garment_style,sizes,size_chart,tailoring,attributes,sellers(slug,name_en,name_ar,country,kind)&listing_status=eq.approved' : '') +
+      '&is_active=eq.true&order=is_featured.desc,created_at',
   );
-  const sellers = await fetchJson('sellers?select=id,slug,name_en,name_ar,tagline_en,tagline_ar,about_en,about_ar,country,city,logo,banner,website,ships_to,handling_days,returns_en,returns_ar,kind,status,created_at&status=eq.approved&kind=eq.marketplace&order=name_en');
+  const sellers = MARKET_LIVE
+    ? await fetchJson('sellers?select=id,slug,name_en,name_ar,tagline_en,tagline_ar,about_en,about_ar,country,city,logo,banner,website,handling_days,returns_en,returns_ar,kind,status,created_at&status=eq.approved&kind=eq.marketplace&order=name_en')
+    : [];
   // A suspended seller's products are hidden by the database; keep the snapshot consistent with that.
   const live = products.filter((p) => !p.seller_id || p.sellers);
   return { categories, products: live, sellers, generated_at: new Date().toISOString() };
@@ -50,6 +55,7 @@ try {
 // marketplace is switched on; until then the committed snapshot (exported from the migrations) is used.
 try {
   if (!URL_ || !KEY) throw new Error('Supabase env not set');
+  if (!MARKET_LIVE) throw new Error('marketplace not switched on');
   const res = await fetch(`${URL_}/rest/v1/rpc/mp_guidance`, { method: 'POST', headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' }, body: '{}' });
   if (!res.ok) throw new Error(String(res.status));
   const g = await res.json();

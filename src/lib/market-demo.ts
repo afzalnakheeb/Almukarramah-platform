@@ -1,7 +1,7 @@
 // Demo data for the marketplace screens, used ONLY in the screenshot build (EXPO_PUBLIC_MARKET_DEMO=1) while the live
 // database has no marketplace tables. Nothing here is real: no customer, seller or order. Photos are our own public
 // product photos. In every other build these values are never read.
-import type { AiCheck, Listing, MediaAsset, MySeller } from './seller';
+import type { AiCheck, Listing, MediaAsset, MySeller, SellerFile } from './seller';
 
 export const DEMO_SELLER_ID = '6f1d2c3b-4a5e-4f60-8a7b-9c0d1e2f3a4b';
 
@@ -121,3 +121,90 @@ export function demoQueue(categoryIdOf: (slug: string) => string | null, nameOf:
     };
   });
 }
+
+// ---------------------------------------------------------------- onboarding (application page and staff review)
+export const DEMO_APPLICANT_ID = '7a2e3d4c-5b6f-4a70-9b8c-0d1e2f3a4b5c';
+export const DEMO_APPLICANT: MySeller = {
+  role: 'owner',
+  seller: {
+    id: DEMO_APPLICANT_ID, slug: 'bayt-al-bakhoor', name_en: 'Bayt Al Bakhoor', name_ar: 'بيت البخور', country: 'SA', kind: 'marketplace',
+    tagline_en: 'Hand-pressed bakhoor from Jeddah', tagline_ar: 'بخور مكبوس يدويًا من جدة', about_en: null, about_ar: null,
+    city: 'Jeddah', logo: null, banner: null, website: 'https://example.com', handling_days: 2, returns_en: null, returns_ar: null,
+    status: 'info_requested', commission_bps: null, created_at: '2026-10-21T10:00:00Z', agreed_guidelines_at: '2026-10-21T10:00:00Z',
+    review_note: 'Thank you. Please add photos of your workshop and of the bakhoor tins with their labels, then send the file again.',
+  },
+  private: {
+    seller_id: DEMO_APPLICANT_ID, contact_name: 'Demo applicant', contact_email: 'applicant@example.com', contact_phone: null, legal_name: 'Demo Bakhoor Est.',
+    registration_no: '4030000000', tax_registration_no: '300000000000003', product_summary: 'Bakhoor and oud chips', legal_entity_type: 'sole_proprietorship',
+    iban: 'SA0380000000608010167519', bank_name: 'Demo Bank', account_holder: 'Demo Bakhoor Est.', kyc_status: 'submitted', kyc_note: null,
+  },
+};
+
+/** The applicant on the application page; the approved shop everywhere else. */
+export function demoSeller(): MySeller {
+  const onApplication = typeof window !== 'undefined' && /^\/seller\/application/.test(window.location.pathname);
+  return onApplication ? DEMO_APPLICANT : DEMO_SELLER;
+}
+
+const item = (key: string, done: boolean, en: string, ar: string) => ({ key, done, en, ar });
+export function demoFile(sellerId: string): SellerFile {
+  const applicant = sellerId === DEMO_APPLICANT_ID;
+  return {
+    application: {
+      seller_id: sellerId, relationship: 'maker', years_in_business: 9, links: ['https://instagram.com/example'], monthly_orders_estimate: 120,
+      brand_story: 'Three generations of our family have pressed bakhoor in Jeddah. We blend oud chips, musk and rose by hand, rest every batch for forty days and pack it in tins we print ourselves.',
+      portfolio: [p('bakhoor-ahmed-10-tabs-1.jpg'), p('bakhoor-ahmed-20-tabs-1.jpg'), p('bakhoor-ahmed-10-tabs-2.jpg')], submitted_at: '2026-10-24T09:00:00Z',
+      sample_status: applicant ? 'requested' : 'passed', sample_updated_at: '2026-10-26T12:00:00Z',
+      sample_note: applicant ? 'Please send two tins of each blend to our Madinah office; we will confirm the address by email.' : 'Received and checked.',
+    },
+    categories: [
+      { category_id: 'c1', status: applicant ? 'requested' : 'approved', note: null, name_en: 'Bakhoor & incense', name_ar: 'البخور', kind: 'category' },
+      { category_id: 'c2', status: applicant ? 'requested' : 'approved', note: null, name_en: 'Fragrance gift sets', name_ar: 'أطقم العطور', kind: 'category' },
+    ],
+    documents: [
+      { id: 'd1', doc_type: 'commercial_registration', status: 'accepted', note: null, file_name: 'cr.pdf', subject: null, expires_on: '2027-08-01', uploaded_at: '2026-10-21T10:30:00Z' },
+      { id: 'd2', doc_type: 'vat_certificate', status: applicant ? 'pending' : 'accepted', note: null, file_name: 'vat.pdf', subject: null, expires_on: null, uploaded_at: '2026-10-21T10:31:00Z' },
+    ],
+    requirements: [
+      { doc_type: 'commercial_registration', label_en: 'Commercial registration (CR)', label_ar: 'السجل التجاري', required: true },
+      { doc_type: 'vat_certificate', label_en: 'VAT registration certificate', label_ar: 'شهادة التسجيل في ضريبة القيمة المضافة', required: true },
+    ],
+    locations: [{ id: 'l1', seller_id: sellerId, label: 'Workshop', contact_name: 'Store keeper', phone: '+966 50 000 0000', country: 'SA', city: 'Jeddah', district: 'Al Balad',
+      line1: 'King Abdulaziz Street 10', line2: null, postal_code: '22233', short_address: 'JDBA1234', pickup_from: '10:00', pickup_to: '18:00', is_default: true, active: true }],
+    messages: applicant ? [
+      { kind: 'info_requested', message: DEMO_APPLICANT.seller.review_note, at: '2026-10-27T11:00:00Z' },
+      { kind: 'submitted', message: 'Our CR was renewed in August.', at: '2026-10-24T09:00:00Z' },
+      { kind: 'applied', message: null, at: '2026-10-21T10:00:00Z' },
+    ] : [{ kind: 'approved', message: 'Welcome to Al Mukarramah.', at: '2026-09-05T09:00:00Z' }],
+    checklist: {
+      complete: true, status: applicant ? 'info_requested' : 'approved', submitted_at: '2026-10-24T09:00:00Z', sample_status: applicant ? 'requested' : 'passed',
+      items: [
+        item('story', true, 'Your story: who you are, how long you have been trading and your relationship to the brands you sell.', 'قصتك: من أنت، ومنذ متى تمارس التجارة، وما علاقتك بالعلامات التجارية التي تبيعها.'),
+        item('categories', true, 'The categories you want to sell in.', 'الفئات التي تريد البيع فيها.'),
+        item('portfolio', true, 'At least 3 photos of your products (they stay private).', '3 صور على الأقل لمنتجاتك (تبقى خاصة).'),
+        item('business', true, 'Your legal entity: its name, type and registration number.', 'كيانك النظامي: اسمه ونوعه ورقم سجله.'),
+        item('tax', true, 'Your tax registration number.', 'رقم تسجيلك الضريبي.'),
+        item('bank', true, 'Your bank account: IBAN, bank and account holder (the holder must be your legal entity).', 'حسابك البنكي: الآيبان واسم البنك وصاحب الحساب (يجب أن يكون صاحب الحساب كيانك النظامي).'),
+        item('documents', true, 'The documents your country requires.', 'المستندات المطلوبة في بلدك.'),
+        item('pickup', true, 'The address our couriers collect your parcels from.', 'العنوان الذي يستلم منه المندوب شحناتك.'),
+        item('guidelines', true, 'You accepted the seller guidelines.', 'وافقت على إرشادات البائعين.'),
+      ],
+    },
+  };
+}
+
+/** The staff seller list in the screenshot build: the applicant waiting for review and the approved shop. */
+export function demoAdminSellers() {
+  const row = (m: MySeller, live: number, waiting: number) => {
+    const f = demoFile(m.seller.id);
+    return {
+      seller: m.seller, private: { ...m.private, internal_notes: null }, application: f.application, live, waiting,
+      documents: f.documents.map((d) => ({ ...d, path: `${m.seller.id}/kyc/${d.file_name}` })), required: f.requirements.map((r) => ({ ...r, country: 'SA' })),
+      categories: f.categories, locations: f.locations.length, strikes: 0,
+      events: f.messages.map((x) => ({ ...x, visible: true })).concat(m.seller.id === DEMO_APPLICANT_ID ? [{ kind: 'note', message: 'Known in Jeddah; sample to check the rose blend.', at: '2026-10-26T12:00:00Z', visible: false }] : []),
+      checklist: f.checklist,
+    };
+  };
+  return [row({ ...DEMO_APPLICANT, seller: { ...DEMO_APPLICANT.seller, status: 'pending' } }, 0, 0), row(DEMO_SELLER, 3, 2)];
+}
+

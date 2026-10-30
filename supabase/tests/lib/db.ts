@@ -156,13 +156,17 @@ export function seedPeople(db: Db) {
 
 /**
  * Two approved Saudi marketplace sellers (A and B) created the way the website does it (apply_as_seller as the
- * person, then approval by a manager). Returns their seller ids.
+ * person), then approved with the fragrance and prayer departments. Returns their seller ids.
  */
 export function seedSellers(db: Db): { A: string; B: string } {
   const apply = (who: 'sellerA' | 'sellerB', name: string) =>
     db.val<string>(`select apply_as_seller('{"agree": true, "name_en": "${name}", "country": "SA", "city": "Madinah", "contact_name": "${name} owner", "product_summary": "Oud and attar"}'::jsonb)`, user(who));
   const A = apply('sellerA', 'Oud House A');
   const B = apply('sellerB', 'Prayer House B');
-  db.exec(`update sellers set status = 'approved' where id in ('${A}', '${B}');`, user('manager'));
+  // approved as the review would (the full review with KYC, sample and corridor checks is tested in m4), with the
+  // fragrance and prayer departments approved for both
+  db.exec(`update sellers set status = 'approved' where id in ('${A}', '${B}');
+    insert into seller_categories (seller_id, category_id, status)
+    select s.id, c.id, 'approved' from (values ('${A}'::uuid), ('${B}'::uuid)) s(id), categories c where c.slug in ('fragrance-oud', 'prayer-worship');`, 'service');
   return { A, B };
 }

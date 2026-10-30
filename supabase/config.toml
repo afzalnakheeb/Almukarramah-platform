@@ -21,3 +21,8 @@ verify_jwt = false
 # Returns Moyasar form settings for an unpaid subscription order (opened in a browser from the apps, no sign-in there).
 [functions.payment-form]
 verify_jwt = false
+
+# Marketplace: finishes photo and listing checks that could not complete and deletes old quarantined files.
+# Scheduled every 5 minutes with the x-cron-secret header (see docs/marketplace/SWITCH-ON.md).
+[functions.screening-retry]
+verify_jwt = false

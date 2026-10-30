@@ -7,16 +7,15 @@ import { countryName } from '@/components/country';
 import { Ornament } from '@/components/decor';
 import { breadcrumbLd, Seo } from '@/components/seo';
 import { Button, Card, Eyebrow, Grid, Photo, Serif, T, useWide } from '@/components/ui';
-import { getSellers } from '@/lib/catalogue';
+import { getSellers, type PublicSeller } from '@/lib/catalogue';
 import { useI18n } from '@/lib/i18n';
 import { snapshotSellers } from '@/lib/snapshot';
-import type { Seller } from '@/lib/types';
 import { colors } from '@/theme';
 
 export default function Sellers() {
   const wide = useWide();
   const { t, lang } = useI18n();
-  const [rows, setRows] = useState<Seller[]>(() => snapshotSellers());
+  const [rows, setRows] = useState<PublicSeller[]>(() => snapshotSellers());
   useEffect(() => { getSellers().then((r) => setRows(r)).catch(() => undefined); }, []);
   return (
     <Screen>

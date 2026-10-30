@@ -3,13 +3,13 @@ import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Screen } from '@/components/chrome';
-import { CountryPicker } from '@/components/country';
 import { Glow, Ornament, StarLattice } from '@/components/decor';
 import { Icon, type IconName } from '@/components/icons';
 import { Seo } from '@/components/seo';
-import { Button, Card, Container, Eyebrow, Field, Notice, Serif, T, useWide } from '@/components/ui';
+import { Button, Card, Chip, Container, Eyebrow, Field, Notice, Serif, T, useWide } from '@/components/ui';
 import { useI18n, type Key } from '@/lib/i18n';
-import { applyAsSeller, useMySeller } from '@/lib/seller';
+import { MARKET_DEMO, departments, useGuidance } from '@/lib/market';
+import { RELATIONSHIPS, applyAsSeller, useMySeller } from '@/lib/seller';
 import { colors } from '@/theme';
 
 const STEPS: [IconName, Key, Key][] = [
@@ -26,9 +26,17 @@ const WHY: [IconName, Key, Key][] = [
 
 export default function Sell() {
   const wide = useWide();
-  const { t } = useI18n();
-  const { me, loading, session } = useMySeller();
-  const [f, setF] = useState({ name_en: '', name_ar: '', tagline_en: '', country: '', city: '', website: '', contact_name: '', contact_email: '', contact_phone: '', legal_name: '', registration_no: '', product_summary: '' });
+  const { t, lang } = useI18n();
+  const g = useGuidance();
+  const live = useMySeller();
+  // the screenshot build shows the form as a signed-in visitor without a seller account would see it
+  const { me, loading, session } = MARKET_DEMO ? { me: null, loading: false, session: { user: { email: 'you@example.com' } } } : live;
+  const [f, setF] = useState({ name_en: '', name_ar: '', tagline_en: '', country: 'SA', city: '', website: '', contact_name: '', contact_email: '', contact_phone: '', legal_name: '', registration_no: '', product_summary: '', relationship: '', years_in_business: '', social: '', brand_story: '' });
+  const [cats, setCats] = useState<string[]>([]);
+  // countries we take sellers from: open ones first, then by phase
+  const countries = [...(g.seller_countries ?? [{ code: 'SA', name_en: 'Saudi Arabia', name_ar: 'المملكة العربية السعودية', open: true, phase: 1 }])]
+    .sort((a, b) => Number(b.open) - Number(a.open) || (a.phase ?? 9) - (b.phase ?? 9) || a.code.localeCompare(b.code));
+  const chosen = countries.find((c) => c.code === f.country);
   const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,11 +44,14 @@ export default function Sell() {
 
   async function submit() {
     setError(null);
-    if (!f.name_en.trim() || !f.country || !f.contact_name.trim() || !f.product_summary.trim()) return setError(t('sellRequired'));
+    if (!f.name_en.trim() || !f.country || !f.contact_name.trim() || !f.product_summary.trim() || !f.relationship || !cats.length) return setError(t('sellRequired'));
+    if ([f.website, f.social].some((x) => x.trim() && !/^https:\/\/\S{3,}$/i.test(x.trim()))) return setError(t('sellHttps'));
     if (!agree) return setError(t('sellAgreeFirst'));
+    if (MARKET_DEMO) return setError(t('lfDemo'));
     setBusy(true);
     try {
-      await applyAsSeller({ ...f, agree: true });
+      const { social, ...rest } = f;
+      await applyAsSeller({ ...rest, links: [f.website, social].map((x) => x.trim()).filter(Boolean), categories: cats, agree: true });
       router.replace('/seller');
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -69,11 +80,25 @@ export default function Sell() {
         <View style={{ flex: 1 }}><Field label={t('shopNameAr')} value={f.name_ar} onChangeText={set('name_ar')} maxLength={80} style={{ writingDirection: 'rtl', textAlign: 'right' }} /></View>
       </View>
       <Field label={t('shopTagline')} value={f.tagline_en} onChangeText={set('tagline_en')} maxLength={140} hint={t('shopTaglineHint')} />
+      <T w={500} size={12.5} color={colors.body}>{t('shipsFromCountry')} *</T>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+        {countries.map((c) => <Chip key={c.code} size="sm" label={lang === 'ar' ? c.name_ar : c.name_en} active={f.country === c.code} onPress={() => set('country')(c.code)} />)}
+      </View>
+      {chosen && !chosen.open ? <T size={13} lh={1.5} color={colors.brassText} style={{ marginBottom: 8 }}>{t('sellCountryClosed').replace('{country}', lang === 'ar' ? chosen.name_ar : chosen.name_en)}</T> : null}
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 16 : 0 }}>
-        <View style={{ flex: 1 }}><CountryPicker label={`${t('shipsFromCountry')} *`} value={f.country} onChange={set('country')} /></View>
         <View style={{ flex: 1 }}><Field label={t('city')} value={f.city} onChangeText={set('city')} /></View>
+        <View style={{ flex: 1 }}><Field label={`${t('apYears')} *`} value={f.years_in_business} onChangeText={(v) => set('years_in_business')(v.replace(/\D/g, '').slice(0, 3))} keyboardType="number-pad" dirLtr /></View>
+      </View>
+      <T w={500} size={12.5} color={colors.body}>{t('apRelationship')} *</T>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+        {RELATIONSHIPS.map((r) => <Chip key={r} size="sm" label={t(`apRel_${r}` as Key)} active={f.relationship === r} onPress={() => set('relationship')(r)} />)}
+      </View>
+      <T w={500} size={12.5} color={colors.body}>{t('sellCategories')} *</T>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+        {departments(g).map((d) => <Chip key={d.id} size="sm" label={lang === 'ar' ? d.name_ar : d.name_en} active={cats.includes(d.id)} onPress={() => setCats(cats.includes(d.id) ? cats.filter((x) => x !== d.id) : [...cats, d.id])} />)}
       </View>
       <Field label={`${t('whatYouSell')} *`} value={f.product_summary} onChangeText={set('product_summary')} multiline maxLength={2000} hint={t('whatYouSellHint')} />
+      <Field label={t('sellStoryOptional')} value={f.brand_story} onChangeText={set('brand_story')} multiline maxLength={3000} />
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 16 : 0 }}>
         <View style={{ flex: 1 }}><Field label={`${t('contactName')} *`} value={f.contact_name} onChangeText={set('contact_name')} /></View>
         <View style={{ flex: 1 }}><Field label={t('contactEmail')} value={f.contact_email} onChangeText={set('contact_email')} keyboardType="email-address" autoCapitalize="none" placeholder={session.user.email ?? ''} dirLtr /></View>
@@ -82,8 +107,9 @@ export default function Sell() {
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 16 : 0 }}>
         <View style={{ flex: 1 }}><Field label={t('legalName')} value={f.legal_name} onChangeText={set('legal_name')} /></View>
         <View style={{ flex: 1 }}><Field label={t('registrationNo')} value={f.registration_no} onChangeText={set('registration_no')} dirLtr /></View>
-        <View style={{ flex: 1 }}><Field label={t('website')} value={f.website} onChangeText={set('website')} autoCapitalize="none" keyboardType="url" dirLtr /></View>
+        <View style={{ flex: 1 }}><Field label={t('website')} value={f.website} onChangeText={set('website')} autoCapitalize="none" keyboardType="url" placeholder="https://" dirLtr /></View>
       </View>
+      <Field label={t('sellSocial')} value={f.social} onChangeText={set('social')} autoCapitalize="none" keyboardType="url" placeholder="https://" dirLtr />
       <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: agree }} onPress={() => setAgree(!agree)} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginVertical: 8 }}>
         <View style={{ width: 22, height: 22, borderRadius: 5, borderWidth: 1.5, borderColor: colors.navy, backgroundColor: agree ? colors.navy : colors.white, alignItems: 'center', justifyContent: 'center', marginTop: 1 }}>
           {agree && <Icon name="check" size={16} color={colors.white} stroke={2.4} />}

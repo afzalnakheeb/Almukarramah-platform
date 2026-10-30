@@ -10,8 +10,8 @@ database or deployed. Read this first if you are picking the work up.
 | M1 | Finish and test the base marketplace and rulebook migrations | done |
 | M2 | Categories, Islamic and premium standards, guidance pages | done |
 | M3 | AI screening (images at upload, full listing at submission) | done |
-| M4 | Onboarding, KYC and admin review | next |
-| M5 | Listings with variants, storefronts, search | |
+| M4 | Onboarding, KYC and admin review | done |
+| M5 | Listings with variants, storefronts, search | next |
 | M6 | Checkout, rulebook, sub-orders, sandbox shipping, order flows | |
 | M7 | Statements, returns/disputes, reviews, messages, notifications, performance | |
 | M8 | Dashboards, polish, screenshots, docs | |
@@ -22,12 +22,16 @@ database or deployed. Read this first if you are picking the work up.
   The earlier drafts `0009_marketplace.sql` and `0010_rulebook_model_b.sql` were renamed to 0012 and 0013.
   - 0012 sellers, listings, made-to-measure seam, photos · 0013 rulebook tables, KYC, permits, pickup addresses,
     carriers · 0014 category tree and policies, attributes, the Islamic standard, settings, document types, styles
-    · 0015 AI screening: media assets, verdict records, strikes, quarantine, rate limits, product documents.
+    · 0015 AI screening: media assets, verdict records, strikes, quarantine, rate limits, product documents
+    · 0016 onboarding: the vetting application, checklist, categories per seller, review history, seller review.
 - Shared pure modules (no imports; the app imports them too): `supabase/functions/_shared/quality.ts`,
   `contact.ts`. Server modules: `images.ts` (type sniffing, metadata stripping), `screening.ts` (prompts, parsing,
   decisions; no I/O), `claude.ts` (the Messages API call), `media.ts` (storage + database flows).
 - Server functions (M3): `screen-image`, `listing-check`, `screening-retry` (cron), `review-screening` (staff
-  overrides), `review-listing` (approval publishes photos), `translate-draft`.
+  overrides), `review-listing` (approval publishes photos), `translate-draft`. M4: `review-seller` (approval through
+  the database checks, then publishes the shop's logo and banner).
+- Build flags: `src/lib/flags.ts`. `EXPO_PUBLIC_MARKET_LIVE=1` is set at switch-on; until then the catalogue and the
+  build script read only the columns the live database has (the earlier preview's marketplace columns caused 400s).
 - Demo mode: `EXPO_PUBLIC_MARKET_DEMO=1` (set only in `.github/workflows/shots.yml`) shows the seller and admin
   marketplace screens with the example data in `src/lib/market-demo.ts`; the admin shell skips sign-in only in that
   build and only on localhost. `EXPO_PUBLIC_MARKET_LIVE=1` (set at switch-on) lets the site call the marketplace
@@ -76,4 +80,15 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
   text, made-to-measure style/measurements/options/fabrics by season) and the staff listing page (photos with
   screening results, AI notes, documents, screening record, overrides). Tests: 21 screening unit tests (mocked
   model), 6 image tests, 18 SQL tests; 90 in all.
+- M4: 0016 onboarding. Applying opens the seller's file (story, relationship, years, links, categories requested);
+  the seller completes it in the dashboard (`/seller/application`: portfolio photos screened at upload, legal entity,
+  tax and bank details, the documents their country requires, brand papers per brand, pickup addresses in shop
+  settings) and sends it when the server's checklist is complete. Owner/manager review it (`/admin/sellers`): ask for
+  more information (the seller answers and sends it again), approve, reject, suspend, reinstate; KYC and document
+  decisions; sample status; categories. Approval checks KYC, sample and corridor in the database (direct approval
+  through the API is refused); `review-seller` publishes the screened logo and banner. Sellers list only in approved
+  categories; staff notes on `seller_private` are no longer readable by sellers. Rulebook (coordinator, 31 Oct):
+  destination import VAT/GST regimes and collection flags on countries and corridors; GB, US, CA, AU, NZ and ten EU
+  states seeded as closed destinations for Saudi sellers' goods (values to confirm with the adviser); India stays
+  closed, data only. Tests: 14 new SQL tests (104 in all).
 

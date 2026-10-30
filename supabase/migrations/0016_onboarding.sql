@@ -1,0 +1,598 @@
+-- Marketplace (5 of 9): onboarding. The premium vetting application, KYC by country, the categories a seller may
+-- list in, samples, the request-more-info loop and the review history.
+--
+-- * Applying (apply_as_seller) opens the seller's file: story, relationship to the brands, years trading, links,
+--   categories requested. The seller then completes it in the dashboard (portfolio photos, screened like every
+--   upload; legal entity, tax and bank details; the documents their country requires; a pickup address) and sends it
+--   (submit_seller_application), which only works when every step on the checklist is done.
+-- * Owner/manager review it (mp_review_seller): ask for more information (the seller sees the message, answers and
+--   sends it again), approve, reject, suspend or reinstate. Approval checks the KYC decision, the sample (passed or
+--   not needed), and that a marketplace corridor from the seller's country is open (or a pilot that includes them).
+--   The review-seller function approves through the same check and publishes the shop's logo and banner.
+-- * Every decision and message is kept in seller_review_events (append-only); the audit log records every change.
+-- * A seller lists only in the categories approved for them (a department or group approval covers what is under it).
+-- * Staff notes on seller_private stay with staff (members read every other column).
+
+-- ================================================================ settings
+alter table mp_settings
+  add column require_kyc_before_approval boolean not null default true,
+  add column require_sample boolean not null default true,
+  add column min_portfolio_photos int not null default 3 check (min_portfolio_photos between 0 and 12),
+  add column min_story_chars int not null default 100 check (min_story_chars between 0 and 2000);
+
+create or replace function mp_public_settings() returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'allow_modest_models_in_fashion', allow_modest_models_in_fashion, 'min_quality_score', min_quality_score,
+    'quality_weights', quality_weights, 'default_min_photos', default_min_photos, 'default_min_long_side_px', default_min_long_side_px,
+    'price_change_review_bps', price_change_review_bps, 'strike_limit', strike_limit, 'strike_window_days', strike_window_days,
+    'perf_window_days', perf_window_days, 'perf_thresholds', perf_thresholds,
+    'require_sample', require_sample, 'min_portfolio_photos', min_portfolio_photos, 'min_story_chars', min_story_chars,
+    'max_upload_bytes', 10485760, 'upload_types', jsonb_build_array('image/jpeg', 'image/png', 'image/webp'))
+  from mp_settings where id = 1;
+$$;
+grant execute on function mp_public_settings() to anon, authenticated;
+
+-- ================================================================ staff notes stay with staff
+revoke select on seller_private from anon, authenticated;
+grant select (seller_id, contact_name, contact_email, contact_phone, legal_name, registration_no, tax_registration_no, product_summary,
+  legal_entity_type, export_code, iban, bank_name, account_holder, kyc_status, kyc_note, kyc_reviewed_at, kyc_reviewed_by)
+  on seller_private to authenticated;
+
+-- ================================================================ guards: definer functions are trusted
+-- Functions that change a seller on someone's behalf (submitting, reviewing) run as their owner and do their own
+-- checks; the guard limits what people change directly through the API. Staff cannot approve directly either:
+-- approval goes through mp_review_seller, which checks KYC, the sample and the corridor.
+create or replace function sellers_guard() returns trigger language plpgsql set search_path = public as $$
+begin
+  new.updated_at := now();
+  if current_user = 'authenticated' and private.is_staff() and new.status is distinct from old.status and new.status = 'approved' then
+    raise exception 'Approve sellers from the seller review (it checks KYC, the sample and the corridor)';
+  end if;
+  if not private.is_end_user() or current_user not in ('authenticated', 'anon') then
+    if new.status = 'approved' and old.status is distinct from 'approved' then
+      new.approved_at := coalesce(old.approved_at, now());
+      new.suspended_reason := null;
+    end if;
+    return new;
+  end if;
+  new.status := old.status;
+  new.kind := old.kind;
+  new.commission_bps := old.commission_bps;
+  new.review_note := old.review_note;
+  new.approved_at := old.approved_at;
+  new.agreed_guidelines_at := old.agreed_guidelines_at;
+  new.country := old.country;
+  new.created_at := old.created_at;
+  new.flagged_at := old.flagged_at;
+  new.flag_reason := old.flag_reason;
+  new.suspended_reason := old.suspended_reason;
+  if new.logo is distinct from old.logo and new.logo is not null and new.logo not like new.id::text || '/media/%'
+     and new.logo not like '%/storage/v1/object/public/catalogue/' || new.id::text || '/%' then
+    raise exception 'Upload your logo through the seller dashboard';
+  end if;
+  if new.banner is distinct from old.banner and new.banner is not null and new.banner not like new.id::text || '/media/%'
+     and new.banner not like '%/storage/v1/object/public/catalogue/' || new.id::text || '/%' then
+    raise exception 'Upload your banner through the seller dashboard';
+  end if;
+  if old.status = 'approved' then new.slug := old.slug; end if;
+  return new;
+end $$;
+
+-- ================================================================ the application
+create table seller_applications (
+  seller_id uuid primary key references sellers on delete cascade,
+  relationship text check (relationship in ('own_brand', 'maker', 'authorised_distributor', 'retailer')),
+  years_in_business int check (years_in_business between 0 and 300),
+  brand_story text check (char_length(brand_story) <= 3000),
+  links text[] not null default '{}' check (cardinality(links) <= 6),          -- website and social pages (https)
+  portfolio text[] not null default '{}' check (cardinality(portfolio) <= 12),  -- screened media (kind 'portfolio'), private
+  monthly_orders_estimate int check (monthly_orders_estimate between 0 and 1000000),
+  submitted_at timestamptz,
+  -- our team: the product sample
+  sample_status text not null default 'not_requested'
+    check (sample_status in ('not_requested', 'requested', 'received', 'passed', 'failed', 'not_needed')),
+  sample_note text check (char_length(sample_note) <= 2000),                   -- shown to the seller (where to send it, what we found)
+  sample_updated_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table seller_applications enable row level security;
+create policy "members and staff read applications" on seller_applications for select
+  using (private.is_seller_member(seller_id) or private.is_staff(array['owner', 'manager', 'marketing', 'finance']::staff_role[]));
+create policy "members and managers edit applications" on seller_applications for update
+  using (private.is_seller_member(seller_id) or private.is_staff(array['owner', 'manager']::staff_role[]))
+  with check (private.is_seller_member(seller_id) or private.is_staff(array['owner', 'manager']::staff_role[]));
+-- rows are created with the seller (apply_as_seller, staff_create_seller)
+
+create or replace function seller_applications_guard() returns trigger language plpgsql set search_path = public as $$
+declare st seller_status;
+begin
+  new.updated_at := now();
+  if tg_op = 'UPDATE' then
+    new.seller_id := old.seller_id;
+    new.created_at := old.created_at;
+  end if;
+  if exists (select 1 from unnest(new.links) l where l !~* '^https://[^\s]{3,250}$') then
+    raise exception 'Links must start with https://';
+  end if;
+  if exists (select 1 from unnest(new.portfolio) img where img not like new.seller_id::text || '/media/%') then
+    raise exception 'Upload portfolio photos through the seller dashboard';
+  end if;
+  if tg_op = 'INSERT' or not private.is_end_user() or current_user not in ('authenticated', 'anon') then
+    if tg_op = 'UPDATE' and new.sample_status is distinct from old.sample_status then new.sample_updated_at := now(); end if;
+    return new;
+  end if;
+  -- sellers never set the sample decision or the submission time, and a decided application is fixed
+  new.sample_status := old.sample_status;
+  new.sample_note := old.sample_note;
+  new.sample_updated_at := old.sample_updated_at;
+  new.submitted_at := old.submitted_at;
+  select status into st from sellers where id = new.seller_id;
+  if st in ('approved', 'suspended', 'rejected') and (to_jsonb(new) - 'updated_at') is distinct from (to_jsonb(old) - 'updated_at') then
+    raise exception 'Your application has been decided: please contact Al Mukarramah to change it';
+  end if;
+  return new;
+end $$;
+create trigger seller_applications_guard before insert or update on seller_applications for each row execute function seller_applications_guard();
+create trigger audit_seller_applications after insert or update or delete on seller_applications for each row execute function audit_keyed('seller_id');
+
+-- ================================================================ categories a seller may list in
+create table seller_categories (
+  seller_id uuid not null references sellers on delete cascade,
+  category_id uuid not null references categories on delete cascade,
+  status text not null default 'requested' check (status in ('requested', 'approved', 'declined')),
+  note text check (char_length(note) <= 1000),          -- our team's reason, shown to the seller
+  requested_at timestamptz not null default now(),
+  decided_at timestamptz,
+  decided_by uuid references auth.users,
+  primary key (seller_id, category_id)
+);
+alter table seller_categories enable row level security;
+create policy "members and staff read seller categories" on seller_categories for select
+  using (private.is_seller_member(seller_id) or private.is_staff());
+create policy "members request categories" on seller_categories for insert
+  with check (private.is_seller_member(seller_id) or private.is_staff(array['owner', 'manager']::staff_role[]));
+create policy "members withdraw requests" on seller_categories for delete
+  using ((private.is_seller_member(seller_id) and status = 'requested') or private.is_staff(array['owner', 'manager']::staff_role[]));
+create policy "managers decide categories" on seller_categories for update
+  using (private.is_staff(array['owner', 'manager']::staff_role[])) with check (private.is_staff(array['owner', 'manager']::staff_role[]));
+
+create or replace function seller_categories_guard() returns trigger language plpgsql set search_path = public as $$
+begin
+  if not private.is_end_user() or current_user not in ('authenticated', 'anon') then
+    if tg_op = 'UPDATE' and new.status is distinct from old.status then
+      new.decided_at := now();
+      new.decided_by := auth.uid();
+    end if;
+    return new;
+  end if;
+  -- sellers only ask
+  new.status := 'requested';
+  new.note := null;
+  new.decided_at := null;
+  new.decided_by := null;
+  new.requested_at := now();
+  return new;
+end $$;
+create trigger seller_categories_guard before insert or update on seller_categories for each row execute function seller_categories_guard();
+create trigger audit_seller_categories after insert or update or delete on seller_categories for each row execute function audit_keyed('seller_id', 'category_id');
+
+-- May this seller list in this category? An approval of the category or of a department or group above it counts.
+-- Partners (our own private-label and fulfilment partners) list wherever our team puts them.
+create or replace function private.seller_may_list(p_seller uuid, p_category uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from sellers s where s.id = p_seller and s.kind = 'partner')
+      or exists (select 1 from seller_categories sc join mp_category_chain(p_category) ch on ch.id = sc.category_id
+                 where sc.seller_id = p_seller and sc.status = 'approved');
+$$;
+
+-- ================================================================ review history (append-only)
+create table seller_review_events (
+  id bigint generated always as identity primary key,
+  seller_id uuid not null references sellers on delete cascade,
+  actor uuid references auth.users,
+  kind text not null check (kind in ('applied', 'submitted', 'resubmitted', 'info_requested', 'approved', 'rejected',
+                                      'suspended', 'reinstated', 'note')),
+  message text check (char_length(message) <= 4000),
+  visible_to_seller boolean not null default true,      -- staff notes are not
+  created_at timestamptz not null default now()
+);
+create index seller_review_events_seller on seller_review_events (seller_id, id desc);
+alter table seller_review_events enable row level security;
+create policy "staff read review events" on seller_review_events for select using (private.is_staff());
+create policy "members read messages" on seller_review_events for select using (visible_to_seller and private.is_seller_member(seller_id));
+-- written only by the functions below
+create or replace function seller_review_events_immutable() returns trigger language plpgsql set search_path = public as $$
+begin
+  raise exception 'The review history is never edited or deleted';
+end $$;
+create trigger seller_review_events_immutable before update or delete on seller_review_events for each row execute function seller_review_events_immutable();
+create trigger audit_seller_review_events after insert on seller_review_events for each row execute function audit_trigger();
+
+-- ================================================================ documents: KYC and brand papers
+-- KYC files go in <seller>/kyc/, brand papers (authorised-distributor letters, trademark registrations) in
+-- <seller>/brand/ with the brand they cover. Listing reviewers (marketing) see the brand papers, not the KYC files.
+alter table seller_documents add column subject text check (char_length(subject) <= 120);   -- brand documents: which brand
+drop policy "members add documents" on seller_documents;
+create policy "members add documents" on seller_documents for insert with check (
+  private.is_seller_member(seller_id)
+  and exists (select 1 from document_types t where t.code = doc_type and t.scope in ('kyc', 'brand')
+              and path like seller_id::text || '/' || t.scope || '/%'));
+create policy "listing reviewers read brand documents" on seller_documents for select using (
+  private.is_staff(array['marketing']::staff_role[]) and exists (select 1 from document_types t where t.code = doc_type and t.scope = 'brand'));
+create policy "listing reviewers decide brand documents" on seller_documents for update
+  using (private.is_staff(array['marketing']::staff_role[]) and exists (select 1 from document_types t where t.code = doc_type and t.scope = 'brand'))
+  with check (private.is_staff(array['marketing']::staff_role[]) and exists (select 1 from document_types t where t.code = doc_type and t.scope = 'brand'));
+create policy "listing reviewers read brand document files" on storage.objects for select to authenticated
+  using (bucket_id = 'seller-kyc' and (storage.foldername(name))[2] = 'brand'
+         and private.is_staff(array['owner', 'manager', 'marketing']::staff_role[]));
+
+-- ================================================================ the checklist
+-- What is still missing before the seller can send the application (the same list the dashboard shows).
+create or replace function mp_application_checklist(p_seller uuid) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare
+  s sellers; p seller_private; a seller_applications; st mp_settings;
+  gcc boolean; tax_needed boolean;
+  photos int; missing jsonb; items jsonb;
+begin
+  if not (private.is_seller_member(p_seller) or private.is_staff() or coalesce(auth.role(), '') = 'service_role') then raise exception 'Not allowed'; end if;
+  select * into s from sellers where id = p_seller;
+  if s.id is null then raise exception 'Seller not found'; end if;
+  select * into p from seller_private where seller_id = p_seller;
+  select * into a from seller_applications where seller_id = p_seller;
+  select * into st from mp_settings where id = 1;
+  gcc := s.country in ('SA', 'AE', 'KW', 'QA', 'BH', 'OM');
+  tax_needed := exists (select 1 from kyc_requirements r where r.country = s.country and r.required
+                        and r.doc_type in ('vat_certificate', 'trn_certificate', 'gstin_certificate'));
+  select count(*) into photos from unnest(coalesce(a.portfolio, '{}')) img
+    join media_assets m on m.id = private.asset_of(img, p_seller) and m.seller_id = p_seller and m.status in ('passed', 'review');
+  select coalesce(jsonb_agg(jsonb_build_object('code', r.doc_type, 'en', r.label_en, 'ar', r.label_ar) order by r.sort), '[]'::jsonb) into missing
+  from (select doc_type, label_en, label_ar, sort from kyc_requirements where country = s.country and required
+        union all
+        select code, label_en, label_ar, 90 from document_types where code = 'bank_letter' and not gcc) r
+  where not exists (select 1 from seller_documents d where d.seller_id = p_seller and d.doc_type = r.doc_type and d.status <> 'rejected');
+
+  items := jsonb_build_array(
+    jsonb_build_object('key', 'story', 'done', char_length(coalesce(a.brand_story, '')) >= st.min_story_chars and a.relationship is not null and a.years_in_business is not null,
+      'en', 'Your story: who you are, how long you have been trading and your relationship to the brands you sell.',
+      'ar', 'قصتك: من أنت، ومنذ متى تمارس التجارة، وما علاقتك بالعلامات التجارية التي تبيعها.'),
+    jsonb_build_object('key', 'categories', 'done', exists (select 1 from seller_categories c where c.seller_id = p_seller and c.status in ('requested', 'approved')),
+      'en', 'The categories you want to sell in.', 'ar', 'الفئات التي تريد البيع فيها.'),
+    jsonb_build_object('key', 'portfolio', 'done', photos >= st.min_portfolio_photos,
+      'en', format('At least %s photos of your products (they stay private).', st.min_portfolio_photos),
+      'ar', format('%s صور على الأقل لمنتجاتك (تبقى خاصة).', st.min_portfolio_photos)),
+    jsonb_build_object('key', 'business', 'done', coalesce(p.legal_name, '') <> '' and p.legal_entity_type is not null and coalesce(p.registration_no, '') <> '',
+      'en', 'Your legal entity: its name, type and registration number.', 'ar', 'كيانك النظامي: اسمه ونوعه ورقم سجله.'));
+  if tax_needed then
+    items := items || jsonb_build_object('key', 'tax', 'done', coalesce(p.tax_registration_no, '') <> '',
+      'en', 'Your tax registration number.', 'ar', 'رقم تسجيلك الضريبي.');
+  end if;
+  items := items || jsonb_build_array(
+    jsonb_build_object('key', 'bank', 'done', coalesce(p.account_holder, '') <> '' and coalesce(p.bank_name, '') <> '' and (not gcc or private.iban_valid(p.iban)),
+      'en', case when gcc then 'Your bank account: IBAN, bank and account holder (the holder must be your legal entity).'
+                 else 'Your bank account: bank and account holder (the holder must be your legal entity).' end,
+      'ar', case when gcc then 'حسابك البنكي: الآيبان واسم البنك وصاحب الحساب (يجب أن يكون صاحب الحساب كيانك النظامي).'
+                 else 'حسابك البنكي: اسم البنك وصاحب الحساب (يجب أن يكون صاحب الحساب كيانك النظامي).' end),
+    jsonb_build_object('key', 'documents', 'done', jsonb_array_length(missing) = 0, 'missing', missing,
+      'en', 'The documents your country requires.', 'ar', 'المستندات المطلوبة في بلدك.'),
+    jsonb_build_object('key', 'pickup', 'done', exists (select 1 from seller_locations l where l.seller_id = p_seller and l.active),
+      'en', 'The address our couriers collect your parcels from.', 'ar', 'العنوان الذي يستلم منه المندوب شحناتك.'),
+    jsonb_build_object('key', 'guidelines', 'done', s.agreed_guidelines_at is not null,
+      'en', 'You accepted the seller guidelines.', 'ar', 'وافقت على إرشادات البائعين.'));
+  return jsonb_build_object('items', items, 'complete', not exists (select 1 from jsonb_array_elements(items) x where not (x ->> 'done')::boolean),
+    'status', s.status, 'submitted_at', a.submitted_at, 'sample_status', a.sample_status);
+end $$;
+revoke all on function mp_application_checklist(uuid) from public, anon;
+grant execute on function mp_application_checklist(uuid) to authenticated;
+
+-- ================================================================ applying and sending the file
+create or replace function apply_as_seller(p jsonb) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  base text; s text; n int := 1; sid uuid; mail text; cat uuid;
+begin
+  if uid is null then raise exception 'Please sign in first'; end if;
+  if exists (select 1 from seller_members where user_id = uid) then raise exception 'You already have a seller account'; end if;
+  if coalesce((p ->> 'agree')::boolean, false) is not true then raise exception 'Please accept the seller guidelines'; end if;
+  if coalesce(trim(p ->> 'name_en'), '') = '' or coalesce(trim(p ->> 'country'), '') = '' or coalesce(trim(p ->> 'contact_name'), '') = '' then
+    raise exception 'Shop name, country and contact name are required';
+  end if;
+  if not exists (select 1 from corridors where scope = 'marketplace' and from_country = upper(trim(p ->> 'country'))) then
+    raise exception 'We do not take sellers from that country yet';
+  end if;
+  select email into mail from auth.users where id = uid;
+
+  base := trim(both '-' from regexp_replace(lower(p ->> 'name_en'), '[^a-z0-9]+', '-', 'g'));
+  if base = '' or char_length(base) < 2 then base := 'shop'; end if;
+  base := left(base, 50);
+  s := base;
+  while exists (select 1 from sellers where slug = s) loop
+    n := n + 1;
+    s := base || '-' || n;
+  end loop;
+
+  insert into sellers (slug, name_en, name_ar, tagline_en, tagline_ar, country, city, website, status, agreed_guidelines_at)
+  values (s, trim(p ->> 'name_en'), nullif(trim(p ->> 'name_ar'), ''), nullif(trim(p ->> 'tagline_en'), ''), nullif(trim(p ->> 'tagline_ar'), ''),
+          upper(trim(p ->> 'country')), nullif(trim(p ->> 'city'), ''), nullif(trim(p ->> 'website'), ''), 'pending', now())
+  returning id into sid;
+
+  insert into seller_private (seller_id, contact_name, contact_email, contact_phone, legal_name, registration_no, product_summary)
+  values (sid, trim(p ->> 'contact_name'), coalesce(nullif(trim(p ->> 'contact_email'), ''), mail), nullif(trim(p ->> 'contact_phone'), ''),
+          nullif(trim(p ->> 'legal_name'), ''), nullif(trim(p ->> 'registration_no'), ''), left(p ->> 'product_summary', 2000));
+
+  insert into seller_applications (seller_id, relationship, years_in_business, brand_story, links, monthly_orders_estimate)
+  values (sid, nullif(p ->> 'relationship', ''), nullif(p ->> 'years_in_business', '')::int, nullif(left(trim(p ->> 'brand_story'), 3000), ''),
+          coalesce(array(select trim(x) from jsonb_array_elements_text(coalesce(p -> 'links', '[]')) x where trim(x) <> '' limit 6), '{}'),
+          nullif(p ->> 'monthly_orders_estimate', '')::int);
+
+  for cat in select (x)::uuid from jsonb_array_elements_text(coalesce(p -> 'categories', '[]')) x limit 20 loop
+    if exists (select 1 from categories c where c.id = cat) then
+      insert into seller_categories (seller_id, category_id) values (sid, cat) on conflict do nothing;
+    end if;
+  end loop;
+
+  insert into seller_members (seller_id, user_id, role) values (sid, uid, 'owner');
+  insert into seller_review_events (seller_id, actor, kind, message) values (sid, uid, 'applied', null);
+  return sid;
+end $$;
+revoke all on function apply_as_seller(jsonb) from public, anon;
+grant execute on function apply_as_seller(jsonb) to authenticated;
+
+-- Our own partners are opened by owner/manager: approved, no sample, listing wherever our team puts them.
+create or replace function staff_create_seller(p jsonb) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  base text; s text; n int := 1; sid uuid;
+begin
+  if not private.is_staff(array['owner', 'manager']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if coalesce(trim(p ->> 'name_en'), '') = '' or coalesce(trim(p ->> 'country'), '') !~ '^[A-Za-z]{2}$' then
+    raise exception 'Name and country are required';
+  end if;
+  base := left(trim(both '-' from regexp_replace(lower(p ->> 'name_en'), '[^a-z0-9]+', '-', 'g')), 50);
+  if coalesce(base, '') = '' then base := 'partner'; end if;
+  s := base;
+  while exists (select 1 from sellers where slug = s) loop n := n + 1; s := base || '-' || n; end loop;
+  insert into sellers (slug, name_en, name_ar, country, city, kind, status, commission_bps, agreed_guidelines_at)
+  values (s, trim(p ->> 'name_en'), nullif(trim(p ->> 'name_ar'), ''), upper(trim(p ->> 'country')), nullif(trim(p ->> 'city'), ''),
+          case when p ->> 'kind' = 'marketplace' then 'marketplace' else 'partner' end,
+          case when p ->> 'kind' = 'marketplace' then 'pending'::seller_status else 'approved'::seller_status end,
+          nullif(p ->> 'commission_bps', '')::int, now())
+  returning id into sid;
+  insert into seller_private (seller_id, contact_name, contact_email, contact_phone)
+  values (sid, coalesce(nullif(trim(p ->> 'contact_name'), ''), trim(p ->> 'name_en')), coalesce(trim(p ->> 'contact_email'), ''), nullif(trim(p ->> 'contact_phone'), ''));
+  insert into seller_applications (seller_id, sample_status) values (sid, case when p ->> 'kind' = 'marketplace' then 'not_requested' else 'not_needed' end);
+  insert into seller_review_events (seller_id, actor, kind, message, visible_to_seller) values (sid, auth.uid(), 'note', 'Opened by our team', false);
+  return sid;
+end $$;
+revoke all on function staff_create_seller(jsonb) from public, anon;
+grant execute on function staff_create_seller(jsonb) to authenticated;
+
+-- The seller sends the completed file (or answers a request for more information). Every checklist step must be done.
+create or replace function submit_seller_application(p_seller uuid, p_message text default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  s sellers;
+  c jsonb;
+  again boolean;
+begin
+  if not exists (select 1 from seller_members m where m.seller_id = p_seller and m.user_id = auth.uid()) then raise exception 'Not allowed'; end if;
+  select * into s from sellers where id = p_seller for update;
+  if s.status not in ('pending', 'info_requested') then raise exception 'Your application is already %', s.status; end if;
+  c := mp_application_checklist(p_seller);
+  if not (c ->> 'complete')::boolean then raise exception 'Please complete every step first'; end if;
+  again := s.status = 'info_requested' or exists (select 1 from seller_applications where seller_id = p_seller and submitted_at is not null);
+  update seller_applications set submitted_at = now() where seller_id = p_seller;
+  update seller_private set kyc_status = 'submitted' where seller_id = p_seller and kyc_status in ('not_started', 'info_requested', 'rejected', 'expired');
+  update sellers set status = 'pending' where id = p_seller;
+  insert into seller_review_events (seller_id, actor, kind, message)
+  values (p_seller, auth.uid(), case when again then 'resubmitted' else 'submitted' end, nullif(left(trim(coalesce(p_message, '')), 4000), ''));
+  return jsonb_build_object('status', 'pending', 'submitted_at', now());
+end $$;
+revoke all on function submit_seller_application(uuid, text) from public, anon;
+grant execute on function submit_seller_application(uuid, text) to authenticated;
+
+-- ================================================================ the review (owner and manager)
+--   request_info: pending -> info_requested (the message tells the seller what to add)
+--   approve:      pending / info_requested / rejected -> approved (KYC approved, sample passed or not needed,
+--                 a marketplace corridor from their country open or piloting them; approves the chosen categories)
+--   reject:       pending / info_requested -> rejected     suspend: approved -> suspended
+--   reinstate:    suspended -> approved                      note: a staff-only note
+create or replace function mp_review_seller(p_seller uuid, p_action text, p_message text default null, p_categories uuid[] default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  s sellers; p seller_private; a seller_applications; st mp_settings;
+  msg text := nullif(left(trim(coalesce(p_message, '')), 2000), '');
+begin
+  if p_action = 'note' then
+    if not private.is_staff() then raise exception 'Not allowed'; end if;
+    if msg is null then raise exception 'Write the note'; end if;
+    insert into seller_review_events (seller_id, actor, kind, message, visible_to_seller) values (p_seller, uid, 'note', msg, false);
+    return jsonb_build_object('ok', true);
+  end if;
+  if not private.is_staff(array['owner', 'manager']::staff_role[]) then raise exception 'Not allowed'; end if;
+  select * into s from sellers where id = p_seller for update;
+  if s.id is null then raise exception 'Seller not found'; end if;
+  select * into p from seller_private where seller_id = p_seller;
+  select * into a from seller_applications where seller_id = p_seller;
+  select * into st from mp_settings where id = 1;
+
+  if p_action = 'request_info' then
+    if s.status not in ('pending', 'info_requested') then raise exception 'This seller is %', s.status; end if;
+    if msg is null then raise exception 'Tell the seller what to add'; end if;
+    update sellers set status = 'info_requested', review_note = msg where id = s.id;
+    insert into seller_review_events (seller_id, actor, kind, message) values (s.id, uid, 'info_requested', msg);
+  elsif p_action = 'approve' then
+    if s.status not in ('pending', 'info_requested', 'rejected') then raise exception 'This seller is %', s.status; end if;
+    if s.kind = 'marketplace' then
+      if a.submitted_at is null then raise exception 'The seller has not sent the application yet'; end if;
+      if st.require_kyc_before_approval and coalesce(p.kyc_status, '') <> 'approved' then raise exception 'Approve the KYC first'; end if;
+      if st.require_sample and coalesce(a.sample_status, '') not in ('passed', 'not_needed') then
+        raise exception 'Record the sample as passed (or not needed) first';
+      end if;
+      if not exists (select 1 from corridors c where c.scope = 'marketplace' and c.from_country = s.country
+                     and (c.status = 'open' or (c.status = 'pilot' and s.id = any(c.pilot_seller_ids)))) then
+        raise exception 'No marketplace corridor from % is open: add the seller to a pilot corridor first', s.country;
+      end if;
+    end if;
+    update seller_categories set status = 'approved'
+    where seller_id = s.id and status = 'requested' and (p_categories is null or category_id = any(p_categories));
+    if s.kind = 'marketplace' and not exists (select 1 from seller_categories where seller_id = s.id and status = 'approved') then
+      raise exception 'Approve at least one category';
+    end if;
+    update sellers set status = 'approved', review_note = msg where id = s.id;
+    insert into seller_review_events (seller_id, actor, kind, message) values (s.id, uid, 'approved', msg);
+  elsif p_action = 'reject' then
+    if s.status not in ('pending', 'info_requested') then raise exception 'This seller is %', s.status; end if;
+    if msg is null then raise exception 'Write the reason for the seller'; end if;
+    update sellers set status = 'rejected', review_note = msg where id = s.id;
+    insert into seller_review_events (seller_id, actor, kind, message) values (s.id, uid, 'rejected', msg);
+  elsif p_action = 'suspend' then
+    if s.status <> 'approved' then raise exception 'This seller is %', s.status; end if;
+    if msg is null then raise exception 'Write the reason for the seller'; end if;
+    update sellers set status = 'suspended', suspended_reason = 'staff', review_note = msg where id = s.id;
+    insert into seller_review_events (seller_id, actor, kind, message) values (s.id, uid, 'suspended', msg);
+  elsif p_action = 'reinstate' then
+    if s.status <> 'suspended' or s.approved_at is null then raise exception 'Only a suspended seller who was approved before can be reinstated'; end if;
+    if msg is null then raise exception 'Write what was reviewed'; end if;
+    update sellers set status = 'approved', review_note = msg where id = s.id;
+    insert into seller_review_events (seller_id, actor, kind, message) values (s.id, uid, 'reinstated', msg);
+  else
+    raise exception 'Unknown action %', p_action;
+  end if;
+  return jsonb_build_object('ok', true, 'status', (select status from sellers where id = s.id));
+end $$;
+revoke all on function mp_review_seller(uuid, text, text, uuid[]) from public, anon;
+grant execute on function mp_review_seller(uuid, text, text, uuid[]) to authenticated;
+
+-- ================================================================ submission needs an approved category
+create or replace function mp_begin_listing_check(p_product uuid, p_user uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  p products;
+  bad int;
+begin
+  select * into p from products where id = p_product for update;
+  if p.id is null or p.seller_id is null then raise exception 'Listing not found'; end if;
+  if not exists (select 1 from seller_members m where m.seller_id = p.seller_id and m.user_id = p_user) then raise exception 'Not allowed'; end if;
+  if not private.seller_approved(p.seller_id) then raise exception 'Your seller account is not approved'; end if;
+  if p.listing_status not in ('draft', 'rejected', 'check_pending') then raise exception 'This listing is already %', p.listing_status; end if;
+  if p.category_id is null then raise exception 'Choose a category first'; end if;
+  if not private.seller_may_list(p.seller_id, p.category_id) then
+    raise exception 'Your shop is not approved for this category yet: request it from your application page';
+  end if;
+  select count(*) into bad from unnest(coalesce(p.images, '{}')) img
+  where not exists (select 1 from media_assets a where a.id = private.asset_of(img, p.seller_id) and a.seller_id = p.seller_id and a.status in ('passed', 'review'));
+  if bad > 0 then raise exception 'Every photo must pass the photo check before you submit'; end if;
+  update products set listing_status = 'check_pending', submitted_at = now() where id = p.id;
+  return jsonb_build_object('product_id', p.id, 'updated_at', (select updated_at from products where id = p.id));
+end $$;
+revoke all on function mp_begin_listing_check(uuid, uuid) from public, anon, authenticated;
+
+-- Brand papers on file count for the listing check: an authorised-distributor letter covers listings of that brand.
+create or replace function mp_listing_check_context(p_product uuid) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare p products;
+begin
+  select * into p from products where id = p_product;
+  if p.id is null then return null; end if;
+  return jsonb_build_object(
+    'product', to_jsonb(p),
+    'seller', (select jsonb_build_object('id', s.id, 'name_en', s.name_en, 'country', s.country, 'kind', s.kind, 'status', s.status) from sellers s where s.id = p.seller_id),
+    'requirements', case when p.category_id is null then null else mp_category_requirements(p.category_id) end,
+    'photos', (select coalesce(jsonb_agg(jsonb_build_object('path', img, 'position', ord, 'asset', (
+                 select jsonb_build_object('id', a.id, 'status', a.status, 'flags', a.flags, 'width', a.width, 'height', a.height, 'mime', a.mime, 'bucket', a.bucket, 'path', a.path)
+                 from media_assets a where a.id = private.asset_of(img, p.seller_id) and a.seller_id = p.seller_id)) order by ord), '[]'::jsonb)
+               from unnest(coalesce(p.images, '{}')) with ordinality as x(img, ord)),
+    'permits', (select coalesce(jsonb_agg(jsonb_build_object('permit_key', permit_key, 'status', status)), '[]'::jsonb) from product_permits where product_id = p.id),
+    'documents', (select coalesce(jsonb_agg(x), '[]'::jsonb) from (
+                    select jsonb_build_object('doc_type', doc_type, 'status', status) x from product_documents where product_id = p.id and status <> 'rejected'
+                    union all
+                    select jsonb_build_object('doc_type', d.doc_type, 'status', d.status, 'subject', d.subject) from seller_documents d
+                    join document_types t on t.code = d.doc_type and t.scope = 'brand'
+                    where d.seller_id = p.seller_id and d.status <> 'rejected'
+                      and (d.subject is null or lower(trim(d.subject)) = lower(trim(coalesce(p.attributes ->> 'brand', ''))))) q),
+    'categories', (select coalesce(jsonb_agg(jsonb_build_object('slug', slug, 'name_en', name_en, 'name_ar', name_ar) order by sort), '[]'::jsonb)
+                   from categories where kind = 'category' and listable and parent_id is not null),
+    'rules', (select coalesce(jsonb_agg(to_jsonb(r) - 'updated_by' order by r.level, r.sort), '[]'::jsonb) from policy_rules r where r.active),
+    'settings', (select to_jsonb(s) from mp_settings s where id = 1));
+end $$;
+revoke all on function mp_listing_check_context(uuid) from public, anon, authenticated;
+
+-- ================================================================ what the seller and staff read
+-- The seller's whole file for the dashboard: application, categories, documents, requirements, pickup addresses,
+-- messages from our team and the checklist.
+create or replace function my_seller_file(p_seller uuid) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not private.is_seller_member(p_seller) then raise exception 'Not allowed'; end if;
+  return jsonb_build_object(
+    'application', (select to_jsonb(a) from seller_applications a where a.seller_id = p_seller),
+    'categories', (select coalesce(jsonb_agg(jsonb_build_object('category_id', c.category_id, 'status', c.status, 'note', c.note, 'name_en', k.name_en, 'name_ar', k.name_ar, 'kind', k.kind)
+                     order by k.sort), '[]'::jsonb) from seller_categories c join categories k on k.id = c.category_id where c.seller_id = p_seller),
+    'documents', (select coalesce(jsonb_agg(jsonb_build_object('id', d.id, 'doc_type', d.doc_type, 'status', d.status, 'note', d.note, 'file_name', d.file_name,
+                    'subject', d.subject, 'expires_on', d.expires_on, 'uploaded_at', d.uploaded_at) order by d.uploaded_at desc), '[]'::jsonb)
+                  from seller_documents d where d.seller_id = p_seller),
+    'requirements', (select coalesce(jsonb_agg(jsonb_build_object('doc_type', r.doc_type, 'label_en', r.label_en, 'label_ar', r.label_ar, 'required', r.required) order by r.sort), '[]'::jsonb)
+                     from kyc_requirements r join sellers s on s.country = r.country where s.id = p_seller),
+    'locations', (select coalesce(jsonb_agg(to_jsonb(l) - 'provider_refs' order by l.is_default desc, l.created_at), '[]'::jsonb) from seller_locations l where l.seller_id = p_seller and l.active),
+    'messages', (select coalesce(jsonb_agg(jsonb_build_object('kind', e.kind, 'message', e.message, 'at', e.created_at) order by e.id desc), '[]'::jsonb)
+                 from (select * from seller_review_events where seller_id = p_seller and visible_to_seller order by id desc limit 30) e),
+    'checklist', mp_application_checklist(p_seller));
+end $$;
+revoke all on function my_seller_file(uuid) from public, anon;
+grant execute on function my_seller_file(uuid) to authenticated;
+
+-- Staff: every seller with the application, KYC, documents, categories, checklist, strikes and recent history.
+create or replace function admin_sellers() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not private.is_staff() then raise exception 'Not allowed'; end if;
+  return coalesce((
+    select jsonb_agg(jsonb_build_object(
+      'seller', to_jsonb(s), 'private', to_jsonb(p), 'application', to_jsonb(a),
+      'live', (select count(*) from products x where x.seller_id = s.id and x.listing_status = 'approved' and x.is_active),
+      'waiting', (select count(*) from products x where x.seller_id = s.id and x.listing_status = 'pending_review'),
+      'documents', (select coalesce(jsonb_agg(to_jsonb(d) order by d.uploaded_at desc), '[]'::jsonb) from seller_documents d where d.seller_id = s.id),
+      'required', (select coalesce(jsonb_agg(to_jsonb(r) order by r.sort), '[]'::jsonb) from kyc_requirements r where r.country = s.country),
+      'categories', (select coalesce(jsonb_agg(jsonb_build_object('category_id', c.category_id, 'status', c.status, 'note', c.note, 'name_en', k.name_en, 'kind', k.kind) order by k.sort), '[]'::jsonb)
+                     from seller_categories c join categories k on k.id = c.category_id where c.seller_id = s.id),
+      'locations', (select count(*) from seller_locations l where l.seller_id = s.id and l.active),
+      'strikes', (select count(*) from seller_strikes k, mp_settings st where k.seller_id = s.id and k.voided_at is null
+                  and st.id = 1 and k.created_at > now() - make_interval(days => st.strike_window_days)),
+      'events', (select coalesce(jsonb_agg(jsonb_build_object('kind', e.kind, 'message', e.message, 'at', e.created_at, 'visible', e.visible_to_seller) order by e.id desc), '[]'::jsonb)
+                 from (select * from seller_review_events where seller_id = s.id order by id desc limit 20) e),
+      'checklist', mp_application_checklist(s.id)
+    ) order by (s.status in ('pending', 'info_requested') and a.submitted_at is not null) desc, (p.kyc_status = 'submitted') desc, s.created_at desc)
+    from sellers s left join seller_private p on p.seller_id = s.id left join seller_applications a on a.seller_id = s.id
+  ), '[]'::jsonb);
+end $$;
+revoke all on function admin_sellers() from public, anon;
+grant execute on function admin_sellers() to authenticated;
+
+-- The handbook and the application page know which countries we take sellers from and what each requires.
+create or replace function mp_guidance() returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'categories', mp_category_tree(),
+    'rules', (select coalesce(jsonb_agg(jsonb_build_object('code', code, 'level', level, 'severity', severity, 'title_en', title_en, 'title_ar', title_ar,
+               'guidance_en', guidance_en, 'guidance_ar', guidance_ar, 'rejected_examples', rejected_examples, 'accepted_examples', accepted_examples,
+               'needs_scholar_confirmation', needs_scholar_confirmation and scholar_confirmed_at is null) order by level, sort), '[]'::jsonb)
+              from policy_rules where active),
+    'documents', (select coalesce(jsonb_agg(to_jsonb(d) order by d.sort), '[]'::jsonb) from document_types d),
+    'styles', (select coalesce(jsonb_agg(jsonb_build_object('code', code, 'garment', garment, 'label_en', label_en, 'label_ar', label_ar,
+                'countries', countries, 'default_measurements', default_measurements) order by sort), '[]'::jsonb) from garment_styles where active),
+    'permits', (select coalesce(jsonb_agg(jsonb_build_object('to_country', to_country, 'permit_key', permit_key, 'label_en', label_en,
+                'label_ar', label_ar, 'category_slugs', category_slugs) order by to_country, permit_key), '[]'::jsonb) from permit_rules where active),
+    'kyc', (select coalesce(jsonb_agg(jsonb_build_object('country', country, 'doc_type', doc_type, 'label_en', label_en, 'label_ar', label_ar, 'required', required)
+             order by country, sort), '[]'::jsonb) from kyc_requirements),
+    'seller_countries', (select coalesce(jsonb_agg(jsonb_build_object('code', c.code, 'name_en', c.name_en, 'name_ar', c.name_ar,
+             'open', exists (select 1 from corridors k where k.scope = 'marketplace' and k.from_country = c.code and k.status = 'open'),
+             'phase', (select min(k.phase) from corridors k where k.scope = 'marketplace' and k.from_country = c.code)) order by c.code), '[]'::jsonb)
+             from countries c where exists (select 1 from corridors k where k.scope = 'marketplace' and k.from_country = c.code)),
+    'settings', mp_public_settings());
+$$;
+grant execute on function mp_guidance() to anon, authenticated;

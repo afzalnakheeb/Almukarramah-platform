@@ -6,7 +6,7 @@ import { Ornament } from '@/components/decor';
 import { Seo } from '@/components/seo';
 import { Button, Card, Notice, Serif, T, useWide } from '@/components/ui';
 import { useI18n, type Key } from '@/lib/i18n';
-import { myListings, type Listing } from '@/lib/seller';
+import { myListings, mySellerFile, type Checklist, type Listing } from '@/lib/seller';
 import { useSeller } from '@/lib/seller-context';
 import { colors } from '@/theme';
 
@@ -16,10 +16,12 @@ export default function SellerHome() {
   const { me } = useSeller();
   const s = me.seller;
   const [rows, setRows] = useState<Listing[] | null>(null);
+  const [check, setCheck] = useState<Checklist | null>(null);
   useEffect(() => { myListings(s.id).then(setRows).catch(() => setRows([])); }, [s.id]);
+  useEffect(() => { if (s.status !== 'approved') mySellerFile(s.id).then((f) => setCheck(f.checklist)).catch(() => setCheck(null)); }, [s.id, s.status]);
   const count = (st: Listing['listing_status']) => (rows ?? []).filter((r) => r.listing_status === st).length;
 
-  const statusText: Record<string, Key> = { pending: 'sdPendingBody', approved: 'sdApprovedBody', rejected: 'sdRejectedBody', suspended: 'sdSuspendedBody' };
+  const statusText: Record<string, Key> = { pending: 'sdPendingBody', info_requested: 'sdInfoRequestedBody', approved: 'sdApprovedBody', rejected: 'sdRejectedBody', suspended: 'sdSuspendedBody' };
 
   return (
     <Screen chrome="none" style={{ maxWidth: 1100 }}>
@@ -31,6 +33,15 @@ export default function SellerHome() {
         <T w={700} size={16} color={colors.navy}>{t(`sellerStatus_${s.status}` as Key)}</T>
         <T size={14} lh={1.6} color={colors.body}>{t(statusText[s.status])}</T>
         {s.review_note ? <Notice text={s.review_note} tone={s.status === 'approved' ? 'ok' : 'warn'} /> : null}
+        {check && (s.status === 'pending' || s.status === 'info_requested') ? (
+          <View style={{ gap: 8, marginTop: 4 }}>
+            <View style={{ height: 4, backgroundColor: colors.lineSoft }}>
+              <View style={{ height: 4, width: `${Math.round((100 * check.items.filter((x) => x.done).length) / Math.max(1, check.items.length))}%`, backgroundColor: colors.emerald }} />
+            </View>
+            <T size={13} color={colors.muted}>{t('sdFileProgress').replace('{done}', String(check.items.filter((x) => x.done).length)).replace('{total}', String(check.items.length))}</T>
+            <Button label={t(check.submitted_at && s.status === 'pending' ? 'sdApplication' : 'sdCompleteFile')} href="/seller/application" style={{ alignSelf: 'flex-start' }} />
+          </View>
+        ) : null}
       </Card>
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 16 }}>

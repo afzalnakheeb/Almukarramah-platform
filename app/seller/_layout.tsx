@@ -15,6 +15,7 @@ const LINKS: { href: Href; label: Key }[] = [
   { href: '/seller/products', label: 'sdProducts' },
   { href: '/seller/orders', label: 'sdOrders' },
   { href: '/seller/shop', label: 'sdShop' },
+  { href: '/seller/application', label: 'sdApplication' },
   { href: '/sell/guidelines', label: 'sellerGuidelines' },
   { href: '/', label: 'backToShop' },
 ];

@@ -19,8 +19,9 @@ function asset(seller: string, status = 'pending', kind = 'listing_photo'): { id
            values ('${id}', '${seller}', '${kind}', '${path}', 'image/jpeg', 1000, 2400, 1800, '${hash(assetN)}', '${status}')`, 'service');
   return { id, path };
 }
-const listingSql = (seller: string, images: string[] = []) => `insert into products (slug, name_en, name_ar, base_price_sar, seller_id, images) values
-    ('l-' || substr(md5(random()::text), 1, 8), 'Oud oil', 'دهن عود', 25000, '${seller}', array[${images.map((i) => `'${i}'`).join(',')}]::text[]) returning id`;
+const listingSql = (seller: string, images: string[] = []) => `insert into products (slug, name_en, name_ar, base_price_sar, seller_id, images, category_id) values
+    ('l-' || substr(md5(random()::text), 1, 8), 'Oud oil', 'دهن عود', 25000, '${seller}', array[${images.map((i) => `'${i}'`).join(',')}]::text[],
+     (select id from categories where slug = 'oud-oils')) returning id`;
 const listing = (seller: string, images: string[], who: 'sellerA' | 'sellerB' = 'sellerA') => db.val<string>(listingSql(seller, images), user(who));
 const run = (verdict: string, stage = 'final') => `[{"stage": "${stage}", "model": "claude-test", "prompt_version": "img-test", "verdict": "${verdict}", "confidence": 0.9, "reasons": [{"code": "x", "en": "x", "ar": "س"}]}]`;
 
@@ -80,7 +81,8 @@ describe('strikes', () => {
     add();
     assert.deepEqual(db.one(`select status, suspended_reason from sellers where id = '${B}'`), { status: 'suspended', suspended_reason: 'strikes' });
     assert.equal(db.rows(`select 1 from products where seller_id = '${B}'`, 'anon').length, 0);
-    db.exec(`update sellers set status = 'approved' where id = '${B}'`, user('owner'));
+    assert.match(db.error(`update sellers set status = 'approved' where id = '${B}'`, user('owner')) ?? '', /seller review/, 'not directly');
+    db.exec(`select mp_review_seller('${B}', 'reinstate', 'Reviewed the strikes with the seller')`, user('owner'));
     assert.equal(db.val(`select suspended_reason from sellers where id = '${B}'`), null, 'reinstated by staff after review');
     db.exec(`update seller_strikes set voided_at = now(), voided_by = '${ids.owner}', void_reason = 'reinstated after review' where seller_id = '${B}' and voided_at is null`, 'service');
   });
@@ -143,7 +145,7 @@ describe('listing transitions', () => {
     for (const id of db.rows<{ id: string }>(`select id from seller_strikes where seller_id = '${A}' and voided_at is null`)) {
       db.exec(`select mp_void_strike('${id.id}', 'reviewed with the seller')`, user('manager'));
     }
-    db.exec(`update sellers set status = 'approved' where id = '${A}'`, user('owner'));
+    db.exec(`select mp_review_seller('${A}', 'reinstate', 'Reviewed with the seller')`, user('owner'));
   });
 
   test('review and pass go to the staff queue; an error stays check pending', () => {

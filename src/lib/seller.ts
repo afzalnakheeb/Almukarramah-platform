@@ -5,13 +5,20 @@ import { callFunction, supabase } from './supabase';
 import type { Seller, SizeChart, Tailoring } from './types';
 import { useSession } from './session';
 import { MARKET_DEMO, guidanceSnapshot } from './market';
-import { DEMO_LISTINGS, DEMO_MEDIA, DEMO_SELLER, demoListing } from './market-demo';
+import { DEMO_LISTINGS, DEMO_MEDIA, demoFile, demoListing, demoSeller } from './market-demo';
 import type { QualityResult } from '../../supabase/functions/_shared/quality';
 
 export type SellerPrivate = {
   seller_id: string; contact_name: string; contact_email: string; contact_phone: string | null;
   legal_name: string | null; registration_no: string | null; tax_registration_no: string | null; product_summary: string | null;
+  legal_entity_type?: LegalEntity | null; iban?: string | null; bank_name?: string | null; account_holder?: string | null;
+  kyc_status?: 'not_started' | 'submitted' | 'info_requested' | 'approved' | 'rejected' | 'expired'; kyc_note?: string | null;
 };
+export type LegalEntity = 'sole_proprietorship' | 'llc' | 'partnership' | 'joint_stock' | 'branch' | 'freelancer' | 'other';
+export const LEGAL_ENTITIES: LegalEntity[] = ['sole_proprietorship', 'llc', 'partnership', 'joint_stock', 'branch', 'freelancer', 'other'];
+export type Relationship = 'own_brand' | 'maker' | 'authorised_distributor' | 'retailer';
+export const RELATIONSHIPS: Relationship[] = ['own_brand', 'maker', 'authorised_distributor', 'retailer'];
+export type SampleStatus = 'not_requested' | 'requested' | 'received' | 'passed' | 'failed' | 'not_needed';
 export type MySeller = { seller: Seller & { agreed_guidelines_at: string | null }; private: SellerPrivate | null; role: 'owner' | 'staff' };
 
 export type Reason = { code: string; en: string; ar: string; field?: string; photo?: number };
@@ -47,7 +54,7 @@ export function useMySeller() {
   const [data, setData] = useState<MySeller | null>(null);
   const [loading, setLoading] = useState(true);
   const reload = useCallback(async () => {
-    if (MARKET_DEMO) { setData(DEMO_SELLER); setLoading(false); return; }
+    if (MARKET_DEMO) { setData(demoSeller()); setLoading(false); return; }
     if (!session) { setData(null); setLoading(false); return; }
     setLoading(true);
     const { data: rows } = await supabase.rpc('my_sellers');
@@ -225,3 +232,82 @@ export async function categoryRequirements(categoryId: string): Promise<{ attrib
   if (error || !data) return null;
   return data as never;
 }
+
+// ---------------------------------------------------------------- the seller's file (application, KYC, documents)
+export type SellerApplication = {
+  seller_id: string; relationship: Relationship | null; years_in_business: number | null; brand_story: string | null; links: string[];
+  portfolio: string[]; monthly_orders_estimate: number | null; submitted_at: string | null;
+  sample_status: SampleStatus; sample_note: string | null; sample_updated_at: string | null;
+};
+export type ChecklistItem = { key: string; done: boolean; en: string; ar: string; missing?: { code: string; en: string; ar: string }[] };
+export type Checklist = { items: ChecklistItem[]; complete: boolean; status: string; submitted_at: string | null; sample_status: SampleStatus };
+export type SellerDocument = { id: string; doc_type: string; status: 'pending' | 'accepted' | 'rejected'; note: string | null; file_name: string | null; subject: string | null; expires_on: string | null; uploaded_at: string };
+export type SellerCategory = { category_id: string; status: 'requested' | 'approved' | 'declined'; note: string | null; name_en: string; name_ar: string; kind: string };
+export type SellerLocation = {
+  id: string; seller_id: string; label: string; contact_name: string; phone: string; country: string; city: string; district: string | null;
+  line1: string; line2: string | null; postal_code: string | null; short_address: string | null; pickup_from: string; pickup_to: string; is_default: boolean; active: boolean;
+};
+export type SellerFile = {
+  application: SellerApplication | null; categories: SellerCategory[]; documents: SellerDocument[];
+  requirements: { doc_type: string; label_en: string; label_ar: string; required: boolean }[]; locations: SellerLocation[];
+  messages: { kind: string; message: string | null; at: string }[]; checklist: Checklist;
+};
+
+export async function mySellerFile(sellerId: string): Promise<SellerFile> {
+  if (MARKET_DEMO) return demoFile(sellerId);
+  const { data, error } = await supabase.rpc('my_seller_file', { p_seller: sellerId });
+  if (error) throw new Error(error.message);
+  return data as SellerFile;
+}
+
+export async function updateApplication(sellerId: string, patch: Partial<SellerApplication>) {
+  const { error } = await supabase.from('seller_applications').update(patch).eq('seller_id', sellerId);
+  if (error) throw new Error(error.message);
+}
+
+export async function requestCategory(sellerId: string, categoryId: string) {
+  const { error } = await supabase.from('seller_categories').insert({ seller_id: sellerId, category_id: categoryId });
+  if (error && !/duplicate/i.test(error.message)) throw new Error(error.message);
+}
+
+export async function withdrawCategory(sellerId: string, categoryId: string) {
+  const { error } = await supabase.from('seller_categories').delete().eq('seller_id', sellerId).eq('category_id', categoryId);
+  if (error) throw new Error(error.message);
+}
+
+/** A KYC document (kyc/) or a brand paper (brand/, with the brand it covers) into the private documents bucket. */
+export async function uploadSellerDocument(sellerId: string, docType: string, scope: 'kyc' | 'brand', file: File, subject?: string) {
+  if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) throw new Error('PDF, JPEG or PNG only');
+  if (file.size > MAX_UPLOAD_BYTES) throw new Error('Up to 10 MB');
+  const ext = file.type === 'application/pdf' ? 'pdf' : file.type === 'image/png' ? 'png' : 'jpg';
+  const path = `${sellerId}/${scope}/${docType}-${Date.now().toString(36)}.${ext}`;
+  const { error } = await supabase.storage.from('seller-kyc').upload(path, file, { contentType: file.type, upsert: false });
+  if (error) throw new Error(error.message);
+  const { error: e2 } = await supabase.from('seller_documents').insert({ seller_id: sellerId, doc_type: docType, path, file_name: file.name.slice(0, 200), subject: subject?.trim() || null });
+  if (e2) throw new Error(e2.message);
+}
+
+export async function removeSellerDocument(id: string) {
+  const { error } = await supabase.from('seller_documents').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+}
+
+/** Sends the completed file to our team (or the answer to a request for more information). */
+export async function submitApplication(sellerId: string, message: string) {
+  const { error } = await supabase.rpc('submit_seller_application', { p_seller: sellerId, p_message: message || null });
+  if (error) throw new Error(error.message);
+}
+
+export async function saveLocation(sellerId: string, loc: Partial<SellerLocation>) {
+  const { id, ...fields } = loc;
+  const row = { ...fields, seller_id: sellerId };
+  const { error } = id ? await supabase.from('seller_locations').update(row).eq('id', id) : await supabase.from('seller_locations').insert(row);
+  if (error) throw new Error(error.message);
+}
+
+/** Pickup addresses are never deleted (shipments refer to them); they are switched off. */
+export async function removeLocation(id: string) {
+  const { error } = await supabase.from('seller_locations').update({ active: false, is_default: false }).eq('id', id);
+  if (error) throw new Error(error.message);
+}
+
