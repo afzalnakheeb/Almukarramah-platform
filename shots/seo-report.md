@@ -264,6 +264,48 @@ h1: NONE
 json-ld: NONE
 visible text without JS: 0 chars: "…"
 
+## /search?q=oud  (HTTP 200)
+title: Search | Al Mukarramah
+description: Search Islamic gifts, fragrance, prayer essentials and modest fashion from Al Mukarramah and approved sellers.
+robots: index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1
+canonical: https://almukarramah.com/search
+hreflang: -
+og:title: Search | Al Mukarramah
+og:image: https://almukarramah.com/images/hero.jpg
+twitter:card: summary_large_image
+html lang/dir: lang="en"
+h1: Search
+json-ld: NONE
+visible text without JS: 677 chars: "Search | Al Mukarramah Delivering to Saudi address SAR Search Search Search Filter and sort For every Muslim home A curated marketplace of premium products for …"
+
+## /search?cat=fragrance-oud  (HTTP 200)
+title: Search | Al Mukarramah
+description: Search Islamic gifts, fragrance, prayer essentials and modest fashion from Al Mukarramah and approved sellers.
+robots: index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1
+canonical: https://almukarramah.com/search
+hreflang: -
+og:title: Search | Al Mukarramah
+og:image: https://almukarramah.com/images/hero.jpg
+twitter:card: summary_large_image
+html lang/dir: lang="en"
+h1: Search
+json-ld: NONE
+visible text without JS: 677 chars: "Search | Al Mukarramah Delivering to Saudi address SAR Search Search Search Filter and sort For every Muslim home A curated marketplace of premium products for …"
+
+## /sellers/dar-al-oud-madinah  (HTTP 200)
+title: 
+description: undefined
+robots: -
+canonical: undefined
+hreflang: -
+og:title: undefined
+og:image: undefined
+twitter:card: undefined
+html lang/dir: lang="en"
+h1: NONE
+json-ld: NONE
+visible text without JS: 619 chars: "Delivering to Saudi address SAR … For every Muslim home A curated marketplace of premium products for every Muslim home. Shop All gifts Perfumes Oud and perfume…"
+
 ## /sellers  (HTTP 200)
 title: Our sellers | Al Mukarramah marketplace
 description: Independent Islamic and modest brands from around the world, each approved by Al Mukarramah.
