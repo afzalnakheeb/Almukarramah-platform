@@ -22,6 +22,14 @@ does today until Afzal switches the marketplace on (step 7). The decisions behin
 3. Decide the open items in `DECISIONS.md`, and record the tax adviser's sign-off for each corridor that will open
    (decision 2). The items in "Waiting for the legal and accounts phase" below can follow, as long as no real seller
    or customer uses the marketplace before they are done.
+4. Close the code items left by the independent review (REVIEW-8, 31 October; nothing there blocks on code grounds):
+   - Keep `parcel_goodwill_deducted` (Z) on. With it off, goodwill recorded on a seller's parcel can be counted
+     against a refund of our own parcel and cut our credit note below the goods that came back (R8-1, Low). Fix that
+     before Z is ever turned off.
+   - Before ZATCA direct mode, add a credit note with a reduced multi-unit line (a unit price that does not multiply
+     exactly to the line, such as 208.70 × 2 against 417.38) to the SDK check.
+   - For each real carrier: run its contract test against the carrier's sandbox, and confirm that a retried label
+     request never creates a second label.
 
 ## 1. The database: migrations 0012 to 0020, in order
 
@@ -192,7 +200,7 @@ update mp_settings set marketplace_open = true where id = 1;   -- A: sellers' li
 update mp_settings set payouts_enabled = true where id = 1;    -- C: only after the adviser's ruling on VAT in payouts
 update mp_settings set support_refund_limit_minor = 50000 where id = 1;   -- D: an example, 500 SAR (Afzal, 31 Oct: stays 0)
 update mp_settings set return_autoclose_days = 30 where id = 1;          -- L: already 30 (Afzal, 31 Oct); owner only
-update mp_settings set parcel_goodwill_deducted = false where id = 1;     -- Z: on since Afzal's yes; this turns it off; owner only
+update mp_settings set parcel_goodwill_deducted = false where id = 1;     -- Z: on since Afzal's yes; this turns it off; owner only; not until R8-1 is fixed (step 0)
 ```
 
 Switching `marketplace_open` back to false closes it again at once, in the database: sellers' listings and shops
