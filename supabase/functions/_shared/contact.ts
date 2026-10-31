@@ -209,6 +209,18 @@ export function phoneShaped(digits: string, plus = false): boolean {
 }
 /** How no list of sizes or prices starts: a trunk 0, 00, or a Gulf country code. */
 const ANCHORED = /^(?:0|96[5-8]|97[134])/;
+/** A whole Gulf mobile number: a part reaching one is not extended to the next group ("0501234567 (2 bottles)"). */
+const COMPLETE = /^(?:05\d{8}|(?:00)?9665\d{8}|(?:00)?9715\d{8})$/;
+/** Eight digits that are a date written without separators (ddmmyyyy). */
+const DATE8 = /^(?:0[1-9]|[12]\d|3[01])(?:0[1-9]|1[0-2])(?:19|20)\d\d$/;
+/**
+ * Words that introduce a phone number: after them a run of digits is one however it is written (in groups like a
+ * list, around a time or an amount, eight digits for Kuwait, Qatar, Bahrain or Oman: review R4-2, R4-4).
+ */
+const CONTACT_WORDS = 'call|phone|mobile|mob|cell|tel|telephone|whats\\s?app|wa|sms|text\\s+me|contact\\s+me|reach\\s+me|ring\\s+me'
+  + '|my\\s+(?:number|no|phone|mobile|cell|whats\\s?app)'
+  + '|رقمي|جوالي|جوال|الجوال|موبايلي|موبايل|هاتفي|هاتف|تلفوني|تلفون|واتسابي|واتساب|واتس|اتصل|اتصلي|اتصلوا|كلمني|كلموني|تواصل|راسلني';
+const CONTACT_BEFORE = new RegExp(`(?:^|[^a-z\\u0621-\\u064a])[وف]?(?:${CONTACT_WORDS})(?:[\\s:#.\\-(]*(?:me|us|on|at|is|via|by|to|number|no|هو|على|ع|رقم|رقمي)(?![a-z\\u0621-\\u064a]))*[\\s:#.\\-(+]*$`, 'i');
 /** What separates the numbers of a list. */
 const LIST_SEP = /^[\s,،/\-–—+|;]+$/;
 /** Words that say what a number is (not a phone): codes, orders, tracking, bookings, sizes, prices; and carriers. */
@@ -275,8 +287,11 @@ export function classifyNumber(r: { groups: string[]; seps: string[]; plus: bool
   const d = r.groups.join('');
   const n = d.length;
   if (r.words >= 7 && n >= 7) return 'phone';                       // a number spelled out
-  if (n < 9 || (r.real < 6 && r.words < 7)) return null;
   const bank = BANK_WORDS.test(r.before.slice(-20));
+  // a mobile number of Kuwait, Qatar, Bahrain or Oman: eight digits from 3, 5, 6, 7 or 9, in one run or 4+4 (R4-4)
+  if (n === 8 && /^[35679]/.test(d) && r.real >= 6 && (r.groups.length === 1 || (r.groups.length === 2 && r.groups[0].length === 4))
+      && !r.glued && !CODE_BEFORE.test(r.before) && !DATE8.test(d)) return bank ? 'bank' : 'phone';
+  if (n < 9 || (r.real < 6 && r.words < 7)) return null;
   if (n > 15) {
     // an account number, two phone numbers run together, or a card number
     if (bank) return 'bank';
@@ -304,6 +319,101 @@ export function classifyNumber(r: { groups: string[]; seps: string[]; plus: bool
   if (n === 13 && ean13(d)) return null;
   return bank ? 'bank' : 'phone';
 }
+/** A group of digits in a run, as phoneParts reads it: where it is, a + before it, a digit outside any date, time or amount. */
+type Group = { a: number; b: number; digits: string; plus: boolean; free: boolean };
+
+/**
+ * Runs of digit groups as a phone number may be written: the groups joined by up to four separators, or by one short
+ * word ("050x123x4567", "٠٥٠ ثم ١٢٣ ثم ٤٥٦٧"); a comma and a space join only groups of three digits or more. Dates,
+ * times and amounts are read as digits here (work tells which digits are in one).
+ */
+function phoneRuns(norm: string, work: string): Group[][] {
+  const isDigit = (k: number) => isAsciiDigit(norm, k);
+  const letterAt = (k: number) => k < norm.length && !isDigit(k) && isLetter(norm.codePointAt(k) ?? 0);
+  const sepAt = (k: number) => k < norm.length && !isDigit(k) && !letterAt(k);
+  const runs: Group[][] = [];
+  let k = 0;
+  while (k < norm.length) {
+    if (!isDigit(k)) { k++; continue; }
+    const groups: Group[] = [];
+    let a = k;
+    for (;;) {
+      let b = a;
+      while (isDigit(b)) b++;
+      let free = false;
+      for (let x = a; x < b; x++) if (isAsciiDigit(work, x)) free = true;
+      groups.push({ a, b, digits: norm.slice(a, b), plus: a > 0 && norm[a - 1] === '+', free });
+      let s = b;
+      while (s - b < 4 && sepAt(s)) s++;
+      let next = -1;
+      if (s > b && isDigit(s)) {
+        // a comma and a space (a list) join only groups of three digits or more
+        const sep = norm.slice(b, s);
+        let nx = 0;
+        while (isDigit(s + nx)) nx++;
+        if (!(/[,،]/.test(sep) && /\s/.test(sep) && (b - a < 3 || nx < 3))) next = s;
+      } else {
+        let p = b;
+        while (p - b < 3 && sepAt(p)) p++;
+        let w = p;
+        while (w - p < 5 && letterAt(w)) w++;
+        if (w - p >= 1 && w - p <= 4 && !letterAt(w)) {
+          let q = w;
+          while (q - w < 3 && sepAt(q)) q++;
+          if (isDigit(q)) next = q;
+        }
+      }
+      if (next < 0) break;
+      a = next;
+    }
+    runs.push(groups);
+    k = groups[groups.length - 1].b;
+  }
+  return runs;
+}
+
+/**
+ * Phone numbers inside runs of digits, before any list, code or context exclusion (review R4-2): a part that starts
+ * at a group boundary like a phone number (a trunk 0, 00, + or a Gulf country code) and has a phone number's length,
+ * with at least one digit outside a date, time or amount: "Order 104912, •••", "Room 1204 •••", "0501234567 / 123456".
+ * After a contact word ("call", "my number", رقمي, واتس...) a whole run of 9 to 15 digits, or 8 from 3, 5, 6, 7 or 9,
+ * is one however it is grouped. An account number (after IBAN or account) is left to numberSpans.
+ */
+function phoneParts(norm: string, work: string): Span[] {
+  const out: Span[] = [];
+  for (const g of phoneRuns(norm, work)) {
+    const start = g[0].plus ? g[0].a - 1 : g[0].a;
+    const before = norm.slice(Math.max(0, start - 40), start).toLowerCase();
+    if (BANK_WORDS.test(before.slice(-20))) continue;
+    const parts: { i: number; span: Span }[] = [];
+    for (let i = 0; i < g.length;) {
+      let d = '';
+      let best = -1;
+      let free = false;
+      for (let j = i; j < g.length; j++) {
+        d += g[j].digits;
+        free = free || g[j].free;
+        if (d.length > 15) break;
+        if ((g[i].plus || ANCHORED.test(d)) && phoneShaped(d, g[i].plus) && free) {
+          best = j;
+          if (COMPLETE.test(d)) break;          // a whole mobile number: the next group is something else ("(2 bottles)")
+        }
+      }
+      if (best >= 0) {
+        parts.push({ i, span: { kind: 'phone', a: g[i].plus ? g[i].a - 1 : g[i].a, b: g[best].b } });
+        i = best + 1;
+      } else i++;
+    }
+    // after a contact word the whole run, unless a phone number starts it (then what follows it stays: "x2")
+    const all = g.map((x) => x.digits).join('');
+    const contact = g.some((x) => x.free) && CONTACT_BEFORE.test(before)
+      && ((all.length >= 9 && all.length <= 15) || (all.length === 8 && /^[35679]/.test(all) && !DATE8.test(all)));
+    if (contact && (parts.length === 0 || parts[0].i > 0)) out.push({ kind: 'phone', a: start, b: g[g.length - 1].b });
+    else out.push(...parts.map((x) => x.span));
+  }
+  return out;
+}
+
 /** An IBAN: two letters, two check digits, then the account, with spaces or dashes allowed between groups. */
 const IBAN_RE = /\b(?:SA|AE|KW|QA|OM|BH|GB|DE|FR|NL|BE|IE|ES|IT|IN|PK|EG|TR|JO|LB)[0-9]{2}(?:[ -]?[A-Z0-9]){10,30}\b/gi;
 
@@ -333,8 +443,11 @@ function regexSpans(norm: string, re: RegExp, kind: ContactKind, group = 0): Spa
  * ordinary number (a list of sizes, an order number, a date) to leave alone.
  */
 function numberSpans(norm: string, units: Unit[]): Span[] {
-  const out: Span[] = [];
-  const work = protectTokens(norm);
+  const protectedWork = protectTokens(norm);
+  // phone numbers inside runs first (phoneParts); what is left of each run is classified on its own
+  const out = phoneParts(norm, protectedWork);
+  let work = protectedWork;
+  for (const s of out) work = work.slice(0, s.a) + 'q'.repeat(s.b - s.a) + work.slice(s.b);
   const rtl = /[\u0621-\u064a]/.test(norm);   // Arabic letters: the line may be shown right to left
   const isDigit = (k: number) => isAsciiDigit(work, k);
   const isSep = (k: number) => !isDigit(k) && !isLetter(work.codePointAt(k) ?? 0x41);

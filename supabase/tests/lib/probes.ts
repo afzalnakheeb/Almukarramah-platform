@@ -84,6 +84,43 @@ export const EXTRA_PROBES: [string, RegExp][] = [
 ];
 
 /**
+ * The fourth review's disguises (REVIEW-4, R4-2 and R4-4: js/new_bypass.mts): a phone number next to another number,
+ * through a date, time or amount, grouped like a list, an 8-digit Gulf mobile, and more. Each must be caught.
+ */
+export const R4_PROBES: string[] = [
+  'My number 0501234567 / 123456', 'Order 104912 / 0501234567', 'Order 104912 0501234567 thanks', '123456 0501234567',
+  'call 0501234567 #123456', '0501234567 / 0551234567 / 12', 'my number 050 1,234 567', 'call 05:01 23:45 67', 'call 050 12:34 567',
+  'call 0501 234.56 7', 'call 05/01/2023 4567', 'my number 50 12 34 567', 'my number 55 123 45 67', 'my number 501 234 567',
+  'my number 5 0 1 2 3 4 5 6 7', 'my number 99123456', 'my number 9912 3456', 'my number 965 9912 3456', 'my number +965 9912 3456',
+  'my number 00965 99123456', 'whatsapp me 3312 3456', 'رقمي 3612 3456', 'رقمي ٩١٢٣٤٥٦٧', 'call me 98765 43210', 'call me 9876543210',
+  'call (555) 123-4567', 'order 0501234567', 'size 501234567', 'tracking 966501234567', 'رقمي ٦٧ ٤٥ ٢٣ ٠١ ٠٥', 'tel0501234567ok',
+  'my card 4111 1111 1111 1111', '05😀01😀23😀45😀67', 'رقمي ٠٥٠ ثم ١٢٣ ثم ٤٥٦٧', 'price 0501234567 SAR', 'call 050x123x4567',
+  'IBAN 03 8000 0000 6080 1016 7519',
+  // the 8-digit Gulf mobiles without a contact word, and in Arabic digits; "501 234 567" after a contact word
+  '9912 3456', '33123456', '٩٩١٢ ٣٤٥٦', '٣٣١٢٣٤٥٦', 'جوالي ٦٦١٢ ٣٤٥٦', 'رقمي ٥٠١ ٢٣٤ ٥٦٧', 'واتس ٥٥ ١٢٣ ٤٥ ٦٧',
+];
+
+/** Natural messages with a phone number next to another number (js/natural.mts): only the phone number is masked. */
+export const R4_NATURAL: [string, string][] = [
+  ['Order 104912, 0501234567', 'Order 104912, •••'],
+  ['طلبي ١٠٤٩١٢ رقمي ٠٥٠١٢٣٤٥٦٧', 'طلبي ١٠٤٩١٢ رقمي •••'],
+  ['طلبي ١٠٤٩١٢ - ٠٥٠١٢٣٤٥٦٧', 'طلبي ١٠٤٩١٢ - •••'],
+  ['My order 104912 / mobile 0501234567', 'My order 104912 / mobile •••'],
+  ['AM-104912 0501234567', 'AM-104912 •••'],
+  ['Tracking 290012345678 call 0501234567', 'Tracking 290012345678 call •••'],
+  ['Room 1204 0501234567', 'Room 1204 •••'],
+  ['Room 1204, 0501234567', 'Room 1204, •••'],
+  ['Hotel booking 4567890 0501234567', 'Hotel booking 4567890 •••'],
+  ['0501234567 (2 bottles)', '••• (2 bottles)'],
+  ['my number 050 123 4567 x2', 'my number ••• x2'],
+  ['+966 50 123 4567 / 123456', '••• / 123456'],
+];
+
+/** Numbers that look like an 8-digit Gulf mobile but are not one: after a code word, a date, glued to letters. */
+export const R4_ORDINARY = ['Order 99123456 arrived', 'Model 77889900', 'Tracking: 51234567', 'Invoice 30000003', 'Delivered 31102026', 'SKU77889900',
+  'طلب رقم ٩٩١٢٣٤٥٦ وصل', 'Gift card 5678 1234'];
+
+/**
  * The re-review's everyday texts (REVIEW-3, R3-1: js/ordinary.mts): messages, return details and cancellation
  * reasons that must reach the other person untouched and unflagged, and that a shop page may say.
  */

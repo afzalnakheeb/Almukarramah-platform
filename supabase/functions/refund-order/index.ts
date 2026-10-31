@@ -55,10 +55,12 @@ Deno.serve(handle(async (req) => {
     const f = st as { id: string; status: string; payment_id: string | null; amount_minor: number; order_refunded_minor: number; order_id: string };
     // what Moyasar shows decides what may be recorded: a refund is succeeded only if Moyasar holds it
     let extra: number | null = null;
+    let moyasarRefunded: number | null = null;
     if (f.payment_id) {
       try {
         const refunded = Number((await getPayment(f.payment_id)).refunded ?? 0);
         await db.rpc('mp_note_moyasar_refunded', { p_order: f.order_id, p_refunded: refunded });
+        moyasarRefunded = refunded;
         extra = refunded - f.order_refunded_minor;
       } catch (e) {
         return fail(503, `Moyasar could not be reached: ${(e as Error).message}`, 'تعذّر الوصول إلى ميسر، حاول بعد قليل.', 'moyasar_unreachable');
@@ -70,7 +72,8 @@ Deno.serve(handle(async (req) => {
     if (body.outcome === 'failed' && extra !== null && extra >= f.amount_minor) {
       return fail(409, 'Moyasar shows this refund was made: record it as succeeded', 'تُظهر ميسر أن هذا الاسترداد تم: سجّله ناجحًا.', 'at_moyasar');
     }
-    const { data, error } = await db.rpc('mp_resolve_refund', { p_refund: f.id, p_user: user.id, p_outcome: body.outcome, p_reason: reason });
+    // Moyasar's total goes to the database, which checks it again with the order locked (two people at once: R4-1)
+    const { data, error } = await db.rpc('mp_resolve_refund', { p_refund: f.id, p_user: user.id, p_outcome: body.outcome, p_reason: reason, p_moyasar_refunded: moyasarRefunded });
     if (error) return dbError(error, 409);
     const done = data as { id: string; status: string; recorded_late_as?: string };
     let creditNote: string | null = null;
@@ -121,7 +124,8 @@ Deno.serve(handle(async (req) => {
       p.duties = (body.duties ?? []).filter((x) => UUID.test(x));
       p.order_shipping = body.orderShipping === true;
     }
-    const { data, error } = await db.rpc('mp_record_moyasar_refund', { p_order: body.orderId, p, p_user: user.id, p_unrecorded: refunded - Number(ord.refunded_minor ?? 0) });
+    // Moyasar's total goes to the database, which compares it with what is recorded with the order locked (R4-1)
+    const { data, error } = await db.rpc('mp_record_moyasar_refund', { p_order: body.orderId, p, p_user: user.id, p_moyasar_refunded: refunded });
     if (error) return dbError(error, 409);
     const rec = data as Prepared;
     let creditNote: string | null = rec.credit_note ?? null;

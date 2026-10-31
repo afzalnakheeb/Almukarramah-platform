@@ -54,9 +54,15 @@ export class CarrierError extends Error {
     this.status = status;
   }
 }
-/** Whether a carrier failure is a definite refusal (nothing bought): CarrierError, NotConnected, or an object that says so. */
+/** Whether a carrier failure is a definite refusal (nothing bought): only a CarrierError that says so, or NotConnected. */
 export function definiteRefusal(e: unknown): boolean {
-  return e instanceof NotConnected || (typeof e === 'object' && e !== null && (e as { definite?: unknown }).definite === true);
+  return e instanceof NotConnected || (e instanceof CarrierError && e.definite);
+}
+/** Any failure as a CarrierError: unknown unless the adapter refused definitely (or the provider is not connected). */
+export function asCarrierError(e: unknown): CarrierError {
+  if (e instanceof CarrierError) return e;
+  if (e instanceof NotConnected) return new CarrierError(e.message, true, null);
+  return new CarrierError(e instanceof Error ? e.message : String(e), false, null);
 }
 
 export class NotConnected extends Error {

@@ -36,6 +36,13 @@ The re-review (REVIEW-2) led to these choices. Each is the conservative one; say
 | V | **A renewal paid after the customer cancelled**: the paid month runs, then the subscription ends; nothing more is charged and nothing is refunded automatically. | The customer paid for that month. | Say if such a renewal should be refunded instead. |
 | W | **Card numbers typed into messages** are masked, like phone numbers. | Card data never touches our database (rule 2). | Nothing to decide. |
 
+## Chosen in the fourth fix pass (please confirm)
+
+| # | Choice | Why | To change it |
+|---|---|---|---|
+| X | **8-digit Gulf mobiles** (Kuwait, Qatar, Bahrain, Oman: eight digits from 3, 5, 6, 7 or 9) are masked even without a country code, unless after a word like "order", "model" or "tracking". | Customers there rarely write the code, and any visitor can message a seller (review R4-4). | Say if an 8-digit number should be masked only after "call", "my number" and the like. |
+| Y | **Goodwill on an order with parcels the sellers invoice, or with duties**, must name its parcel; its part on our credit note is never more than is left on our invoice. | A credit note can only reduce what we invoiced (review R4-3). | Nothing to decide. |
+
 | # | Decision | Default now | To change it |
 |---|---|---|---|
 | A | **Open the marketplace** to the public: sellers' listings and shop pages, marketplace checkout, online returns, reviews and messages. | Off (`marketplace_open = false`). The public sees only our own products, as today. | After the steps in SWITCH-ON.md: `update mp_settings set marketplace_open = true where id = 1;` |

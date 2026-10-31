@@ -2,7 +2,7 @@
 // It answers like a real provider: a label and a tracking number, the same label again for the same key (a provider
 // deduplicates by the key, so a key never buys two labels), or a failure the way a real API fails: a timeout before
 // anything was bought, a timeout after the label was sold (the answer lost), a 5xx, or a definite refusal (a 4xx).
-import { registerAdapter } from '../../functions/_shared/carriers/index.ts';
+import { CarrierError, registerAdapter } from '../../functions/_shared/carriers/index.ts';
 import { labelPdf } from '../../functions/_shared/carriers/sandbox.ts';
 
 type Label = { provider_ref: string; tracking_number: string; tracking_url: string };
@@ -26,7 +26,7 @@ registerAdapter('mockcarrier', () => ({
     const fail = mockCarrier.next.shift();
     if (fail === 'timeout') throw new DOMException('The operation was aborted due to timeout', 'TimeoutError');
     if (fail === '5xx') throw new Error('mockcarrier 503: Service Unavailable');
-    if (fail === 'refuse') throw Object.assign(new Error('mockcarrier 422: the address was refused'), { name: 'CarrierError', definite: true, status: 422 });
+    if (fail === 'refuse') throw new CarrierError('mockcarrier 422: the address was refused', true, 422);
     let label = mockCarrier.bought.get(req.idempotency_key);
     if (!label) {
       const n = `MCK${req.idempotency_key.replace(/[^0-9a-z]/gi, '').slice(-10).toUpperCase()}`;

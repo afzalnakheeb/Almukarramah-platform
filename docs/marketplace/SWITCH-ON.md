@@ -99,7 +99,7 @@ sets which ones skip the sign-in check (`verify_jwt = false`): cron jobs and web
 | `translate-draft` | new | the second language, drafted |
 | `review-seller` | new | approval, logo and banner |
 | `shipping-quote` | new | the checkout's quote |
-| `create-shipment` | new | labels; the parcel is claimed before a label is bought, a lost answer keeps the claim and the next press asks the carrier with the same key, and a label that cannot be recorded is cancelled at the carrier. A real carrier's adapter must throw `CarrierError` (definite) for its refusals, so only those free the parcel |
+| `create-shipment` | new | labels; the parcel is claimed before a label is bought, a lost answer keeps the claim and the next press asks the carrier with the same key, and a label that cannot be recorded is cancelled at the carrier. A real carrier's adapter must call its API through `carrierCall` (`carriers/http.ts`), which tells a refusal from an unknown outcome, and must answer a second request with the same idempotency key with the label it already sold (or look our reference up at the carrier before buying again): the contract test in `review4.test.ts` runs every registered adapter |
 | `carrier-webhook` | new | `verify_jwt = false`, HMAC signature |
 | `shipment-sync` | new | cron, `verify_jwt = false` |
 | `after-sale` | new | messages, returns, reviews, replies, moderation, a seller's cancellation of a parcel |

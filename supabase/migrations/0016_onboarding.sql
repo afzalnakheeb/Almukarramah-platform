@@ -118,10 +118,18 @@ declare
     || '|measurements?|prices?|total|sar|sr|riyals?|ml|cm|kg'
     || '|باركود|الباركود|الدفعة|دفعة|الطلب|طلب|طلبي|الطلبية|طلبية|الطلبات|طلبات|طلباتي|الطلبان|الطلبين|الفاتورة|فاتورة|الشحنة|شحنة|الشحنات|التتبع|تتبع'
     || '|الحجز|حجز|الكود|كود|الرمز|رمز|الخصم|خصم|الكوبون|كوبون|المقاس|مقاس|المقاسات|مقاسات|القياس|قياس|القياسات|قياسات|السعر|سعر|الاسعار|اسعار|ريال|الغرفة|غرفة|القسيمة|قسيمة|البطاقة|بطاقة';
+  code_ctx boolean;
 begin
   if p_words >= 7 and n >= 7 then return 'phone'; end if;                       -- a number spelled out
-  if n < 9 or (p_real < 6 and p_words < 7) then return null; end if;
   bank := right(p_before, 20) ~* '(iban|account|acct|a/c|ايبان|حساب|الحساب)[^0-9]{0,14}$';
+  code_ctx := p_before ~* ('(^|[^a-z\u0621-\u064a])(' || code_words || '|' || carriers || ')([\s:#.-]*(number|num|no|nos|is|are|رقم|رقمه|رقمها|هو|هي)(?![a-z\u0621-\u064a]))*'
+                           || '[\s:#.-]*((' || carriers || ')[\s:#.-]*)?$');
+  -- a mobile number of Kuwait, Qatar, Bahrain or Oman: eight digits from 3, 5, 6, 7 or 9, in one run or 4+4 (R4-4)
+  if n = 8 and d ~ '^[35679]' and p_real >= 6 and (ng = 1 or (ng = 2 and length(g[1]) = 4)) and not glued and not code_ctx
+     and d !~ '^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19|20)[0-9]{2}$' then
+    return case when bank then 'bank' else 'phone' end;
+  end if;
+  if n < 9 or (p_real < 6 and p_words < 7) then return null; end if;
   if n > 15 then
     -- an account number, two phone numbers run together, or a card number
     if bank then return 'bank'; end if;
@@ -149,8 +157,7 @@ begin
   end if;
   if lst then return null; end if;                                               -- sizes, measurements, prices
   if ng >= 2 and length(g[1]) >= 5 and not exists (select 1 from unnest(g) x where length(x) <> length(g[1])) then return null; end if;   -- codes
-  if glued or p_before ~* ('(^|[^a-zء-ي])(' || code_words || '|' || carriers || ')([\s:#.-]*(number|num|no|nos|is|are|رقم|رقمه|رقمها|هو|هي)(?![a-zء-ي]))*'
-                         || '[\s:#.-]*((' || carriers || ')[\s:#.-]*)?$') then
+  if glued or code_ctx then
     return null;                                                                 -- a tracking number, a code
   end if;
   kinds := array(select coalesce(nullif(regexp_replace(x, '\s+', '', 'g'), ''), ' ') from unnest(seps) x);
@@ -160,20 +167,34 @@ begin
 end $$;
 
 -- The numbers of a normalised text (digits 0-9; digits written as words are ٠-٩ here, so they can be counted):
--- the first that is a phone, a bank account or a card number, or null.
+-- the first that is a phone, a bank account or a card number, or null. As contact.ts (numberSpans): first the phone
+-- numbers inside runs, before any exclusion (phoneParts: a part starting at a group boundary like a phone number, with
+-- a digit outside a date, time or amount; after a contact word the whole run: review R4-2, R4-4), then each run
+-- classified (number_kind) with dates, times and amounts kept out of it.
 create or replace function private.number_hint(p text) returns text
 language plpgsql immutable as $$
 declare
   t text := p;
+  tp text;
   letter constant text := 'a-zÀ-ɏͰ-ԯ֐-׿ؠ-يٮ-ۓەۺ-ۿ';
   dg constant text := '0-9٠-٩';
+  da constant text := '0-9٠-٩०-९';
   after_ constant text := '(?![0-9])(?![.,٫:/][0-9])';
   before_ constant text := '(?<![0-9])(?<![0-9][.,٫:/])';
+  anchor constant text := '^(0|96[5-8]|97[134])';
+  contact_before constant text := '(^|[^a-z\u0621-\u064a])[وف]?(call|phone|mobile|mob|cell|tel|telephone|whats\s?app|wa|sms|text\s+me|contact\s+me|reach\s+me|ring\s+me'
+    || '|my\s+(number|no|phone|mobile|cell|whats\s?app)'
+    || '|رقمي|جوالي|جوال|الجوال|موبايلي|موبايل|هاتفي|هاتف|تلفوني|تلفون|واتسابي|واتساب|واتس|اتصل|اتصلي|اتصلوا|كلمني|كلموني|تواصل|راسلني)'
+    || '([\s:#.(-]*(me|us|on|at|is|via|by|to|number|no|هو|على|ع|رقم|رقمي)(?![a-z\u0621-\u064a]))*[\s:#.(+-]*$';
   m text;
   core text;
   g text[];
   seps text[];
   plus boolean;
+  plusi boolean;
+  anyfree boolean;
+  d text;
+  ng int;
   off int := 1;
   st int;
   en int;
@@ -181,14 +202,48 @@ declare
   ctx text;
   glued boolean;
 begin
-  -- dates (a four-digit year), times and amounts (decimals or thousands) never join a number
-  t := regexp_replace(t, before_ || '(?:(?:19|20)[0-9]{2}([-/.])(?:0?[1-9]|1[0-2])\1(?:0?[1-9]|[12][0-9]|3[01])|(?:0?[1-9]|[12][0-9]|3[01])([-/.])'
-                         || '(?:0?[1-9]|1[0-2])\2(?:19|20)[0-9]{2}|(?:0?[1-9]|1[0-2])([-/.])(?:0?[1-9]|[12][0-9]|3[01])\3(?:19|20)[0-9]{2})' || after_, 'q', 'g');
-  t := regexp_replace(t, before_ || '(?:[01]?[0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?' || after_, 'q', 'g');
-  t := regexp_replace(t, before_ || '(?:[1-9][0-9]{0,2},[0-9]{3}(?:[.٫][0-9]{1,2})?|(?:[1-9][0-9]{0,5}|0)[.٫][0-9]{1,2})' || after_, 'q', 'g');
   -- a comma and a space (a list: "sizes 50, 52, 54", "size 56, 12 ml") join only groups of three digits or more
-  t := regexp_replace(t, '(?<![' || dg || '])([' || dg || ']{1,2})\s*[,،]\s+(?=[' || dg || '])', '\1 x ', 'g');
-  t := regexp_replace(t, '([' || dg || '])\s*[,،]\s+(?=[' || dg || ']{1,2}(?![' || dg || ']))', '\1 x ', 'g');
+  t := regexp_replace(t, '(?<![' || dg || '])([' || dg || ']{1,2})\s*[,،]\s+(?=[' || dg || '])', '\1 qqqqq ', 'g');
+  t := regexp_replace(t, '([' || dg || '])\s*[,،]\s+(?=[' || dg || ']{1,2}(?![' || dg || ']))', '\1 qqqqq ', 'g');
+  -- dates (a four-digit year), times and amounts (decimals or thousands): their digits marked ०-९
+  tp := regexp_replace(t, before_ || '(?:(?:19|20)[0-9]{2}([-/.])(?:0?[1-9]|1[0-2])\1(?:0?[1-9]|[12][0-9]|3[01])|(?:0?[1-9]|[12][0-9]|3[01])([-/.])'
+                          || '(?:0?[1-9]|1[0-2])\2(?:19|20)[0-9]{2}|(?:0?[1-9]|1[0-2])([-/.])(?:0?[1-9]|[12][0-9]|3[01])\3(?:19|20)[0-9]{2})' || after_, '«\&»', 'g');
+  tp := regexp_replace(tp, before_ || '(?:[01]?[0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?' || after_, '«\&»', 'g');
+  tp := regexp_replace(tp, before_ || '(?:[1-9][0-9]{0,2},[0-9]{3}(?:[.٫][0-9]{1,2})?|(?:[1-9][0-9]{0,5}|0)[.٫][0-9]{1,2})' || after_, '«\&»', 'g');
+  tp := (select string_agg(case when x.n % 2 = 0 then translate(x.s, '0123456789', '०१२३४५६७८९') else x.s end, '' order by x.n)
+         from regexp_split_to_table(tp, '[«»]') with ordinality x(s, n));
+  -- phone numbers inside runs: the groups joined by up to four separators or by one short word ("050x123", "٠٥٠ ثم ١٢٣")
+  for m in select x[1] from regexp_matches(tp, '(\+?[' || da || ']+(?:(?:[^' || letter || da || ']{1,4}|[^' || letter || da || ']{0,3}[' || letter || ']{1,4}[^'
+                                              || letter || da || ']{0,3})[' || da || ']+)*)', 'g') as x loop
+    st := strpos(substr(tp, off), m) + off - 1;
+    off := st + length(m);
+    ctx := translate(lower(substr(tp, greatest(1, st - 40), st - greatest(1, st - 40))), '٠١٢٣٤٥٦٧٨٩०१२३४५६७८९', '01234567890123456789');
+    continue when right(ctx, 20) ~* '(iban|account|acct|a/c|ايبان|حساب|الحساب)[^0-9]{0,14}$';   -- an account number: below, as a whole
+    plus := left(m, 1) = '+';
+    core := case when plus then substr(m, 2) else m end;
+    g := regexp_split_to_array(core, '[^' || da || ']+');
+    seps := coalesce(array(select y[1] from regexp_matches(core, '([^' || da || ']+)', 'g') y), '{}');
+    ng := array_length(g, 1);
+    for i in 1 .. ng loop
+      d := '';
+      anyfree := false;
+      plusi := (i = 1 and plus) or (i > 1 and right(seps[i - 1], 1) = '+');
+      for j in i .. ng loop
+        d := d || translate(g[j], '٠١٢٣٤٥٦٧٨٩०१२३४५६७८९', '01234567890123456789');
+        anyfree := anyfree or g[j] ~ '[0-9٠-٩]';
+        exit when length(d) > 15;
+        if (plusi or d ~ anchor) and private.phone_shaped(d, plusi) and anyfree then return 'phone'; end if;
+      end loop;
+    end loop;
+    d := translate(array_to_string(g, ''), '٠١٢٣٤٥٦٧٨٩०१२३४५६७८९', '01234567890123456789');
+    if core ~ '[0-9٠-٩]' and ctx ~* contact_before
+       and (length(d) between 9 and 15 or (length(d) = 8 and d ~ '^[35679]' and d !~ '^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19|20)[0-9]{2}$')) then
+      return 'phone';
+    end if;
+  end loop;
+  -- then each run of what is left: dates, times and amounts never part of a number
+  t := translate(tp, '०१२३४५६७८९', 'qqqqqqqqqq');
+  off := 1;
   -- digits with up to four non-letters between them
   for m in select x[1] from regexp_matches(t, '(\+?[' || dg || '](?:[^' || letter || dg || ']{0,4}[' || dg || '])*)', 'g') as x loop
     st := strpos(substr(t, off), m) + off - 1;

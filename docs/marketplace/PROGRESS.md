@@ -190,3 +190,8 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
   recorded" on `/admin/returns`; attaching a payment reads Moyasar first; a payment whose order is gone is kept; a
   label claim survives a lost carrier answer; a renewal completed by the webhook follows the paid period and keeps
   the card and the customer's cancellation; direction marks stay in messages. Tests: 370 (350 before).
+- Fourth fix pass (re-review REVIEW-4; table in `REVIEW-FIXES.md`), each finding shown by a failing test first:
+  recording or settling the same Moyasar money at the same moment records it once (checked under the order lock);
+  a phone number next to an order, room or booking number, or through a time or amount, is masked again (only the
+  phone number), in the server and the database; 8-digit Gulf mobiles caught; credit notes never past our invoice;
+  one classifier for carrier answers with a contract test per adapter. Tests: 383 (370 before).

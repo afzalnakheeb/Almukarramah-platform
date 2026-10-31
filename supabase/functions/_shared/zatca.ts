@@ -173,6 +173,15 @@ export async function issueCreditNote(db: Db, refundId: string): Promise<{ id: s
   if (f.status !== 'succeeded' || f.credit_note_status !== 'pending' || f.platform_minor <= 0) return null;
   if (!c.original) throw new Error(`Order ${f.order.number} has no tax invoice yet: issue it first`);
   const ours = f.lines.filter((l) => l.platform_invoiced);
+  // the credit note is never more than is left on our invoice (review R4-3): when the refund's part on it was cut to
+  // that, the note is one line for that amount, a reduction of the price
+  if (ours.reduce((n, l) => n + l.amount_minor, 0) !== f.platform_minor) {
+    return issueInvoice(db, {
+      id: f.order.id, number: f.order.number, currency: f.order.currency, ship_to: f.order.ship_to, total_minor: f.platform_minor, shipping_minor: 0,
+      order_items: [{ name_en: 'Price reduction (refund)', name_ar: 'تخفيض في السعر (استرداد)', unit_price_minor: f.platform_minor, quantity: 1, line_total_minor: f.platform_minor, vat_rate_bp: null }],
+      fx_per_sar: c.order_fx_per_sar,
+    }, { doc: 'credit_note', original: c.original, refundId: f.id, reason: f.reason || 'Refund' });
+  }
   const forNote: OrderForInvoice = {
     id: f.order.id, number: f.order.number, currency: f.order.currency, ship_to: f.order.ship_to, total_minor: f.platform_minor,
     shipping_minor: ours.filter((l) => l.kind === 'shipping').reduce((n, l) => n + l.amount_minor, 0),

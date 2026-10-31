@@ -992,6 +992,15 @@ revoke all on function private.item_refunded(uuid) from public, anon, authentica
 revoke all on function private.return_refunded(uuid, uuid) from public, anon, authenticated;
 revoke all on function private.open_return_on(uuid) from public, anon, authenticated;
 
+-- What is left to credit on an order's tax invoice: its total less the part of every refund on it that is on our
+-- credit notes (issued or still to issue). A refund's credit note never goes past it (review R4-3, REVIEW-4).
+create or replace function private.invoice_left(p_order uuid) returns int
+language sql stable security definer set search_path = public as $$
+  select coalesce((select total_incl_vat_minor from invoices where order_id = p_order and doc = 'invoice'), 0)
+       - coalesce((select sum(platform_minor) from refunds where order_id = p_order and status in ('processing', 'succeeded')), 0)::int;
+$$;
+revoke all on function private.invoice_left(uuid) from public, anon, authenticated;
+
 -- Works out a refund and reserves it (status "processing") before Moyasar is asked. p: {key, reason, and one of
 --   return_id (an approved return: its lines; the delivery too when the whole parcel comes back),
 --   sub_order_id (a parcel: everything left on it, delivery and duties included; a seller's cancellation),
@@ -1171,6 +1180,7 @@ begin
   if t_platform > 0 and not exists (select 1 from invoices where order_id = o.id and doc = 'invoice') then
     raise exception 'The tax invoice for this order has not been issued yet: run "Finish pending work" (or wait for it), so the refund can have its credit note';
   end if;
+  t_platform := least(t_platform, greatest(private.invoice_left(o.id), 0));   -- never past our invoice (R4-3)
   -- support refunds only up to its limit; above it, finance, a manager or the owner (decision 54; Needs Afzal)
   if v_role = 'support' then
     select support_refund_limit_minor into v_limit from mp_settings where id = 1;
@@ -1291,8 +1301,15 @@ begin
       return (select jsonb_build_object('id', i.id, 'number', i.number, 'duplicate', true) from invoices i where i.id = f.credit_note_id);
     end if;
     if f.status <> 'succeeded' or f.credit_note_status <> 'pending' then raise exception 'This refund needs no credit note'; end if;
-    if not exists (select 1 from invoices i where i.id = nullif(p ->> 'original_invoice_id', '')::uuid and i.order_id = v_order and i.doc = 'invoice') then
+    select * into existing from invoices i where i.id = nullif(p ->> 'original_invoice_id', '')::uuid and i.order_id = v_order and i.doc = 'invoice' for update;
+    if existing.id is null then
       raise exception 'A credit note refers to the order''s tax invoice';
+    end if;
+    -- the credits on an invoice never add up to more than its total (review R4-3, REVIEW-4); the invoice row is locked,
+    -- so two credit notes at the same moment are counted one after the other
+    if (p ->> 'total_incl_vat_minor')::int + coalesce((select sum(total_incl_vat_minor) from invoices where original_invoice_id = existing.id and doc = 'credit_note'), 0)
+       > existing.total_incl_vat_minor then
+      raise exception 'This credit note would take the credits on invoice % past its total', existing.number;
     end if;
   else
     raise exception 'Unknown document %', v_doc;
@@ -1411,8 +1428,10 @@ revoke all on function mp_complete_refund(uuid, boolean, text, text) from public
 -- A late completion is recorded once (review R3-2, REVIEW-3). Its lines that can still be refunded are recorded as
 -- they were; what was refunded again meanwhile (the same unit, the same delivery) is recorded as money given back
 -- without items (goodwill), so no line is ever refunded beyond what was bought, and the order shows exactly what
--- Moyasar paid back.
-create or replace function mp_resolve_refund(p_refund uuid, p_user uuid, p_outcome text, p_reason text) returns jsonb
+-- Moyasar paid back. p_moyasar_refunded is Moyasar's refunded total as refund-order read it: with the order locked,
+-- the late refund must fit in what Moyasar shows less what is recorded NOW, so two people settling at the same moment
+-- record the money once (review R4-1, REVIEW-4).
+create or replace function mp_resolve_refund(p_refund uuid, p_user uuid, p_outcome text, p_reason text, p_moyasar_refunded int default null) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
   f refunds;
@@ -1447,6 +1466,11 @@ begin
     end if;
     if f.amount_minor > o.total_minor - coalesce((select sum(amount_minor) from refunds where order_id = o.id and status in ('processing', 'succeeded')), 0) then
       raise exception 'The refund is more than what is left of the payment';
+    end if;
+    if p_moyasar_refunded is null or f.amount_minor > p_moyasar_refunded - o.refunded_minor then
+      raise exception 'Moyasar shows % refunded that we have not recorded: not enough for this refund (it may have just been recorded)',
+        to_char(greatest(coalesce(p_moyasar_refunded, 0) - o.refunded_minor, 0) / 100.0, 'FM999,990.00')
+        using detail = 'لا تُظهر ميسر مبلغًا مستردًا غير مسجل يكفي لهذا الاسترداد';
     end if;
     for l in select rl.*, s.shipping_minor as s_ship, s.duties_minor as s_duty from refund_lines rl left join sub_orders s on s.id = rl.sub_order_id
              where rl.refund_id = f.id order by rl.id loop
@@ -1489,6 +1513,7 @@ begin
         if l.kind <> 'duties' and l.platform_invoiced then t_platform := t_platform + l.amount_minor - amt; end if;
       end if;
     end loop;
+    t_platform := least(t_platform, greatest(private.invoice_left(o.id), 0));   -- never past our invoice (R4-3)
     insert into refunds (order_id, return_id, currency, amount_minor, items_minor, shipping_minor, duties_minor, goodwill_minor, platform_minor, reason,
                          restock, idempotency_key, created_by)
     values (f.order_id, case when t_good = 0 then f.return_id end, f.currency, f.amount_minor, t_items, t_ship, t_duty, t_good, t_platform,
@@ -1504,12 +1529,13 @@ begin
   end if;
   raise exception 'Unknown outcome';
 end $$;
-revoke all on function mp_resolve_refund(uuid, uuid, text, text) from public, anon, authenticated;
+revoke all on function mp_resolve_refund(uuid, uuid, text, text, int) from public, anon, authenticated;
 
+-- Moyasar's refunded total only grows: a reading that finishes after a newer one never takes it back (review R4-6).
 create or replace function mp_note_moyasar_refunded(p_order uuid, p_refunded int) returns void
 language sql security definer set search_path = public as $$
   insert into moyasar_refund_checks (order_id, refunded_minor, checked_at) values (p_order, greatest(coalesce(p_refunded, 0), 0), now())
-  on conflict (order_id) do update set refunded_minor = excluded.refunded_minor, checked_at = now();
+  on conflict (order_id) do update set refunded_minor = greatest(moyasar_refund_checks.refunded_minor, excluded.refunded_minor), checked_at = now();
 $$;
 revoke all on function mp_note_moyasar_refunded(uuid, int) from public, anon, authenticated;
 
@@ -1517,9 +1543,11 @@ revoke all on function mp_note_moyasar_refunded(uuid, int) from public, anon, au
 -- R3-2, REVIEW-3). Finance records it with Moyasar's reference and what it was for: items, a delivery or duties
 -- (worked out like any refund, and their amount must be what Moyasar refunded), or goodwill with no items (on our
 -- credit note when it relates to what we invoiced). refund-order reads the payment from Moyasar first and passes
--- what Moyasar shows that we have not recorded (p_unrecorded): never more than that is recorded, and a key records it
--- once.
-create or replace function mp_record_moyasar_refund(p_order uuid, p jsonb, p_user uuid, p_unrecorded int) returns jsonb
+-- Moyasar's refunded total (p_moyasar_refunded): with the order locked, never more is recorded than that less what is
+-- recorded NOW, so two people recording the same money at the same moment record it once (review R4-1, REVIEW-4); a
+-- key records it once. Goodwill names its parcel when the order has parcels the sellers invoice or duties, and its
+-- part on our credit note is never more than is left on our invoice (review R4-3).
+create or replace function mp_record_moyasar_refund(p_order uuid, p jsonb, p_user uuid, p_moyasar_refunded int) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
   o orders;
@@ -1547,17 +1575,23 @@ begin
   end if;
   if v_reason is null or char_length(v_reason) < 10 then raise exception 'Write what this refund was for' using detail = 'اكتب سبب هذا الاسترداد'; end if;
   if v_amount is null or v_amount <= 0 then raise exception 'Enter the amount Moyasar refunded' using detail = 'أدخل المبلغ الذي أعادته ميسر'; end if;
-  if v_amount > coalesce(p_unrecorded, 0) then
-    raise exception 'Moyasar shows % refunded that we have not recorded: never more than that is recorded', to_char(greatest(coalesce(p_unrecorded, 0), 0) / 100.0, 'FM999,990.00')
-      using detail = 'لا يُسجَّل أكثر مما تُظهره ميسر من مبالغ مستردة غير مسجلة';
-  end if;
   select * into o from orders where id = p_order for update;
   if o.id is null then raise exception 'Order not found' using detail = 'لم يُعثر على الطلب'; end if;
+  -- under the lock: what Moyasar shows refunded, less what is recorded now
+  if v_amount > coalesce(p_moyasar_refunded, 0) - o.refunded_minor then
+    raise exception 'Moyasar shows % refunded that we have not recorded: never more than that is recorded (it may have just been recorded)',
+      to_char(greatest(coalesce(p_moyasar_refunded, 0) - o.refunded_minor, 0) / 100.0, 'FM999,990.00')
+      using detail = 'لا يُسجَّل أكثر مما تُظهره ميسر من مبالغ مستردة غير مسجلة';
+  end if;
   if o.payment_id is null then raise exception 'Order not paid'; end if;
   if exists (select 1 from refunds where order_id = o.id and status = 'processing') then
     raise exception 'A refund on this order is waiting for Moyasar: settle that one first';
   end if;
   if coalesce((p ->> 'goodwill')::boolean, false) then
+    if v_sub is null and exists (select 1 from sub_orders s where s.order_id = o.id and (s.invoicer <> 'platform' or s.duties_minor > 0)) then
+      raise exception 'Choose the parcel this goodwill was for: this order has parcels the sellers invoice, or duties'
+        using detail = 'اختر الطرد الذي يخصه هذا التعويض: في هذا الطلب طرود يفوترها البائعون أو رسوم جمركية';
+    end if;
     if v_sub is not null then
       select s.invoicer = 'platform' into v_platform from sub_orders s where s.id = v_sub and s.order_id = o.id;
       if v_platform is null then raise exception 'That parcel is not in this order'; end if;
@@ -1571,7 +1605,7 @@ begin
       raise exception 'The tax invoice for this order has not been issued yet: run "Finish pending work" (or wait for it), so the refund can have its credit note';
     end if;
     insert into refunds (order_id, currency, amount_minor, goodwill_minor, platform_minor, reason, idempotency_key, created_by)
-    values (o.id, o.currency, v_amount, v_amount, case when v_platform then v_amount else 0 end,
+    values (o.id, o.currency, v_amount, v_amount, case when v_platform then least(v_amount, greatest(private.invoice_left(o.id), 0)) else 0 end,
             left(format('%s (refunded in Moyasar: %s)', v_reason, v_ref), 500), v_key, p_user)
     returning id into rid;
     insert into refund_lines (refund_id, sub_order_id, kind, amount_minor, platform_invoiced) values (rid, v_sub, 'goodwill', v_amount, v_platform);
