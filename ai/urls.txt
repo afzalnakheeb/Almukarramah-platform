@@ -320,3 +320,14 @@ private/pitch-v3/p2.png https://media.weavy.ai/image/upload/v1793427686/uploads/
 private/pitch-v3/p3.png https://media.weavy.ai/image/upload/v1793427690/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/jcyrjvrpypvqgmnrqzpp.png
 private/pitch-v3/p5.png https://media.weavy.ai/image/upload/v1793427694/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/eyhddqymqvh0t5ckb8sc.png
 private/pitch-v3/p4.png https://media.weavy.ai/image/upload/v1793427795/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/ctbnbvic7uv2cvwdsmx6.png
+private/categories/dates.png https://media.weavy.ai/image/upload/v1793428437/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/dpovkpkepowdswskskwb.png
+private/categories/honey.png https://media.weavy.ai/image/upload/v1793428445/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/yuze0mcmkvheivz6yedx.png
+private/categories/coffee.png https://media.weavy.ai/image/upload/v1793428443/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/idqc45wzhdvbwzooxvdr.png
+private/categories/incense.png https://media.weavy.ai/image/upload/v1793428446/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/fsgtwnbkwtikakuiz2m1.png
+private/categories/tasbih.png https://media.weavy.ai/image/upload/v1793428450/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/vnjqbisf3ljl2l2pc2pf.png
+private/categories/lantern.png https://media.weavy.ai/image/upload/v1793428451/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/sqzjsec1w2ijmvp3dw6e.png
+private/categories/abaya.png https://media.weavy.ai/image/upload/v1793428457/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/klo8a6gi5munlqsallra.png
+private/categories/thobe.png https://media.weavy.ai/image/upload/v1793428458/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/rl5h8cpdvhpej0zha2ru.png
+private/categories/umrah.png https://media.weavy.ai/image/upload/v1793428463/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/fwf11ljicnhs2ihz87ss.png
+private/categories/ring.png https://media.weavy.ai/image/upload/v1793428463/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/g9cn3ukt5yt2eh7o2klt.png
+private/categories/blackseed.png https://media.weavy.ai/image/upload/v1793428468/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/l97bgsskchyfja4a50cy.png
