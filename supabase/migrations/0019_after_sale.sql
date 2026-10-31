@@ -156,8 +156,10 @@ create table return_requests (
   unopened boolean not null default false,
   details text check (char_length(details) <= 2000),           -- the customer's words, contact details masked
   photos uuid[] not null default '{}' check (cardinality(photos) <= 4),
+  -- closed: an approved return our team settled another way, with the reason (review R5-2): the goodwill already given
+  -- covered it, the customer kept the item, or it was refunded outside Al Mukarramah
   status text not null default 'requested'
-    check (status in ('requested', 'accepted', 'declined', 'escalated', 'approved', 'refunded', 'rejected', 'withdrawn')),
+    check (status in ('requested', 'accepted', 'declined', 'escalated', 'approved', 'refunded', 'rejected', 'withdrawn', 'closed')),
   seller_note text check (char_length(seller_note) <= 1000),   -- shown to the customer (masked)
   escalation_note text check (char_length(escalation_note) <= 1000),
   staff_note text check (char_length(staff_note) <= 1000),     -- our decision, shown to the customer and the seller
@@ -201,6 +203,10 @@ create table refunds (
   -- money given back without items coming back: goodwill made in the Moyasar dashboard, or a refund Moyasar completed
   -- after the same unit was refunded again (review R3-2, REVIEW-3); on the credit note as a price reduction
   goodwill_minor int not null default 0 check (goodwill_minor >= 0),
+  -- goodwill given earlier on the order that this refund counts as already paid back (review R5-2, REVIEW-5): when its
+  -- lines come to more than is left of the payment, the refund is what is left. The lines keep their full value (the
+  -- item ledger, the parcels, the sellers' statements); the money is the amount
+  goodwill_deducted_minor int not null default 0 check (goodwill_deducted_minor >= 0),
   platform_minor int not null default 0 check (platform_minor >= 0),    -- the part on our tax invoice: the credit note's total
   reason text not null check (char_length(reason) between 3 and 500),
   restock boolean not null default false,
@@ -212,7 +218,7 @@ create table refunds (
   created_by uuid references auth.users,
   created_at timestamptz not null default now(),
   completed_at timestamptz,
-  check (amount_minor = items_minor + shipping_minor + duties_minor + goodwill_minor),
+  check (amount_minor = items_minor + shipping_minor + duties_minor + goodwill_minor - goodwill_deducted_minor),
   check (platform_minor <= items_minor + shipping_minor + goodwill_minor)
 );
 create index refunds_order on refunds (order_id, created_at);
@@ -524,9 +530,9 @@ create or replace function private.refunds_guard() returns trigger language plpg
 begin
   if tg_op = 'DELETE' then raise exception 'Refunds are never deleted'; end if;
   if (new.order_id, new.return_id, new.currency, new.amount_minor, new.items_minor, new.shipping_minor, new.duties_minor, new.goodwill_minor,
-      new.platform_minor, new.reason, new.restock, new.idempotency_key, new.created_by, new.created_at)
+      new.goodwill_deducted_minor, new.platform_minor, new.reason, new.restock, new.idempotency_key, new.created_by, new.created_at)
      is distinct from (old.order_id, old.return_id, old.currency, old.amount_minor, old.items_minor, old.shipping_minor, old.duties_minor,
-      old.goodwill_minor, old.platform_minor, old.reason, old.restock, old.idempotency_key, old.created_by, old.created_at) then
+      old.goodwill_minor, old.goodwill_deducted_minor, old.platform_minor, old.reason, old.restock, old.idempotency_key, old.created_by, old.created_at) then
     raise exception 'A refund''s amounts never change';
   end if;
   if new.status is distinct from old.status and old.status <> 'processing' then raise exception 'This refund is already %', old.status; end if;
@@ -955,7 +961,8 @@ language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'id', f.id, 'order_id', f.order_id, 'order_number', o.number, 'return_id', f.return_id, 'status', f.status, 'currency', f.currency,
     'amount_minor', f.amount_minor, 'items_minor', f.items_minor, 'shipping_minor', f.shipping_minor, 'duties_minor', f.duties_minor,
-    'goodwill_minor', f.goodwill_minor, 'platform_minor', f.platform_minor, 'reason', f.reason, 'restock', f.restock, 'payment_id', o.payment_id, 'error', f.error,
+    'goodwill_minor', f.goodwill_minor, 'goodwill_deducted_minor', f.goodwill_deducted_minor, 'platform_minor', f.platform_minor, 'reason', f.reason,
+    'restock', f.restock, 'payment_id', o.payment_id, 'error', f.error,
     'credit_note_status', f.credit_note_status, 'credit_note', (select i.number from invoices i where i.id = f.credit_note_id),
     'created_at', f.created_at, 'completed_at', f.completed_at, 'age_seconds', extract(epoch from now() - f.created_at)::int,
     'order_refunded_minor', o.refunded_minor, 'provider_ref', f.provider_ref,
@@ -1001,11 +1008,30 @@ language sql stable security definer set search_path = public as $$
 $$;
 revoke all on function private.invoice_left(uuid) from public, anon, authenticated;
 
+-- What is left of an order's payment (refunds made or waiting for Moyasar count), and the goodwill given on it (money
+-- back without items) that no refund has counted yet (review R5-2, REVIEW-5).
+create or replace function private.payment_left(p_order uuid) returns int
+language sql stable security definer set search_path = public as $$
+  select (select total_minor from orders where id = p_order)
+       - coalesce((select sum(amount_minor) from refunds where order_id = p_order and status in ('processing', 'succeeded')), 0)::int;
+$$;
+create or replace function private.goodwill_undeducted(p_order uuid) returns int
+language sql stable security definer set search_path = public as $$
+  select coalesce((select sum(goodwill_minor - goodwill_deducted_minor) from refunds where order_id = p_order and status in ('processing', 'succeeded')), 0)::int;
+$$;
+revoke all on function private.payment_left(uuid) from public, anon, authenticated;
+revoke all on function private.goodwill_undeducted(uuid) from public, anon, authenticated;
+
 -- Works out a refund and reserves it (status "processing") before Moyasar is asked. p: {key, reason, and one of
 --   return_id (an approved return: its lines; the delivery too when the whole parcel comes back),
 --   sub_order_id (a parcel: everything left on it, delivery and duties included; a seller's cancellation),
 --   lines [{order_item_id, quantity}] with shipping [sub-order ids], order_shipping (older orders), duties [sub-order ids],
 --   or nothing: everything left on the order}, restock.
+-- Goodwill given earlier on the order (money back without items) counts when these lines come to more than is left of
+-- the payment: the refund is then what is left, the rest counted as the goodwill already given (review R5-2, REVIEW-5),
+-- so the customer gets back what they paid, never more, and the last refund on an order is never stuck. With
+-- preview: true nothing is reserved: the amount, what the lines come to and the goodwill counted, for staff to see
+-- before refunding (no key or reason needed).
 create or replace function mp_prepare_refund(p_order uuid, p jsonb, p_user uuid) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
@@ -1014,6 +1040,11 @@ declare
   rr return_requests;
   v_key text := p ->> 'key';
   v_reason text := nullif(left(trim(coalesce(p ->> 'reason', '')), 500), '');
+  v_preview boolean := coalesce((p ->> 'preview')::boolean, false);
+  v_left int;
+  v_lines int;
+  v_deduct int := 0;
+  v_open text;
   v_mode text;
   v_sub uuid := nullif(p ->> 'sub_order_id', '')::uuid;
   v_restock boolean := coalesce((p ->> 'restock')::boolean, false);
@@ -1030,17 +1061,22 @@ declare
 begin
   if v_role not in ('owner', 'manager', 'finance', 'support') then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   perform private.act_as(p_user);
-  if v_key is null or v_key !~ '^[A-Za-z0-9_-]{8,80}$' then raise exception 'A refund key is needed'; end if;
-  select * into f from refunds where idempotency_key = v_key;
-  if f.id is not null then
-    if f.order_id <> p_order then raise exception 'Refund key reused for another order'; end if;
-    return private.refund_json(f.id) || jsonb_build_object('duplicate', true);
+  if not v_preview then
+    if v_key is null or v_key !~ '^[A-Za-z0-9_-]{8,80}$' then raise exception 'A refund key is needed'; end if;
+    select * into f from refunds where idempotency_key = v_key;
+    if f.id is not null then
+      if f.order_id <> p_order then raise exception 'Refund key reused for another order'; end if;
+      return private.refund_json(f.id) || jsonb_build_object('duplicate', true);
+    end if;
+    if v_reason is null or char_length(v_reason) < 3 then raise exception 'Give the reason for the refund'; end if;
   end if;
-  if v_reason is null or char_length(v_reason) < 3 then raise exception 'Give the reason for the refund'; end if;
   select * into o from orders where id = p_order for update;          -- one refund at a time on an order
   if o.id is null then raise exception 'Order not found' using detail = 'لم يُعثر على الطلب'; end if;
   if o.payment_id is null or o.status in ('pending_payment', 'cancelled') then raise exception 'Order not paid'; end if;
-  if o.status = 'refunded' then raise exception 'Already refunded'; end if;
+  if o.status = 'refunded' then
+    raise exception 'Already refunded: the whole payment for this order has gone back%',
+      case when nullif(p ->> 'return_id', '') is not null then '. Close the return instead ("Close return", with the reason)' else '' end;
+  end if;
   -- one refund waiting for Moyasar per order: an answer that never came is reconciled first, never retried blind (H2)
   if exists (select 1 from refunds where order_id = o.id and status = 'processing') then
     raise exception 'A refund on this order is still being processed: check it with Moyasar (Reconcile) before starting another';
@@ -1053,6 +1089,7 @@ begin
     if exists (select 1 from refunds where return_id = rr.id and status in ('processing', 'succeeded')) then
       raise exception 'This return has already been refunded (or is being refunded): it is refunded only once';
     end if;
+    if rr.status = 'closed' then raise exception 'This return was closed without a refund through it: refund what is still due by line'; end if;
     if rr.status <> 'approved' then raise exception 'Approve the return before refunding it'; end if;
     v_mode := 'return';
     v_sub := rr.sub_order_id;
@@ -1091,10 +1128,18 @@ begin
       continue when v_want <= 0;
     else
       -- a unit in an open return is refunded from that return, never another way: a refund that touches the line
-      -- while the return waits could pay for a unit that never came back, and the delivery with it
-      if private.open_return_on(l.id) is not null then
-        raise exception 'This item is in return %: refund it from the return (or close the return first)', private.open_return_on(l.id)
-          using detail = format('هذا المنتج ضمن طلب الإرجاع %s: استرده من طلب الإرجاع (أو أغلق الطلب أولًا)', private.open_return_on(l.id));
+      -- while the return waits could pay for a unit that never came back, and the delivery with it; refunded by line
+      -- one by one, an approved return would lose its own rules (the delivery when the whole parcel came back, the
+      -- stock) and stay open with nothing left to refund. The refusal says which return, and what to do (R5-2)
+      v_open := private.open_return_on(l.id);
+      if v_open is not null then
+        if exists (select 1 from return_requests r join orders ro on ro.id = r.order_id
+                   where format('R-%s-%s', ro.number, r.seq) = v_open and r.order_id = o.id and r.status = 'approved') then
+          raise exception 'This item is in return %, approved for a refund: refund it with "Refund this return" on the returns page (the items, and the delivery when the whole parcel came back), or close that return first ("Close return", with the reason) and then refund by line', v_open
+            using detail = format('هذا المنتج ضمن طلب الإرجاع %s الذي تمت الموافقة عليه: استرده بزر «استرداد طلب الإرجاع» في صفحة الإرجاع، أو أغلق طلب الإرجاع أولًا (مع ذكر السبب) ثم استرده بندًا بندًا', v_open);
+        end if;
+        raise exception 'This item is in return %, still open: decide that return first (approve it and use "Refund this return", or reject it)', v_open
+          using detail = format('هذا المنتج ضمن طلب الإرجاع %s الذي لم يُبتّ فيه بعد: ابتّ فيه أولًا (وافق عليه ثم استرده من طلب الإرجاع، أو ارفضه)', v_open);
       end if;
     end if;
     q := coalesce(v_want, l.quantity - rq);
@@ -1173,9 +1218,15 @@ begin
     end if;
   end if;
 
-  if t_items + t_ship + t_duty <= 0 then raise exception 'Nothing left to refund'; end if;
-  if t_items + t_ship + t_duty > o.total_minor - coalesce((select sum(amount_minor) from refunds where order_id = o.id and status in ('processing', 'succeeded')), 0) then
-    raise exception 'The refund is more than what is left of the payment';
+  v_lines := t_items + t_ship + t_duty;
+  if v_lines <= 0 then raise exception 'Nothing left to refund'; end if;
+  v_left := private.payment_left(o.id);
+  if v_lines > v_left then
+    -- goodwill given earlier is money already back: the refund is what is left of the payment, never more (R5-2)
+    v_deduct := v_lines - v_left;
+    if v_left <= 0 or v_deduct > private.goodwill_undeducted(o.id) then
+      raise exception 'The refund is more than what is left of the payment (% left)', to_char(greatest(v_left, 0) / 100.0, 'FM999,990.00');
+    end if;
   end if;
   if t_platform > 0 and not exists (select 1 from invoices where order_id = o.id and doc = 'invoice') then
     raise exception 'The tax invoice for this order has not been issued yet: run "Finish pending work" (or wait for it), so the refund can have its credit note';
@@ -1184,13 +1235,18 @@ begin
   -- support refunds only up to its limit; above it, finance, a manager or the owner (decision 54; Needs Afzal)
   if v_role = 'support' then
     select support_refund_limit_minor into v_limit from mp_settings where id = 1;
-    if private.to_sar(t_items + t_ship + t_duty, private.order_fx(o.id)) > coalesce(v_limit, 0) then
+    if private.to_sar(v_lines - v_deduct, private.order_fx(o.id)) > coalesce(v_limit, 0) then
       raise exception 'Refunds over % SAR are made by finance, a manager or the owner', to_char(coalesce(v_limit, 0) / 100.0, 'FM999,990.00');
     end if;
   end if;
-  insert into refunds (order_id, return_id, currency, amount_minor, items_minor, shipping_minor, duties_minor, platform_minor, reason, restock,
-                       idempotency_key, created_by)
-  values (o.id, rr.id, o.currency, t_items + t_ship + t_duty, t_items, t_ship, t_duty, t_platform, v_reason, v_restock and t_items > 0, v_key, p_user)
+  if v_preview then
+    return jsonb_build_object('preview', true, 'order_id', o.id, 'currency', o.currency, 'amount_minor', v_lines - v_deduct, 'lines_minor', v_lines,
+      'items_minor', t_items, 'shipping_minor', t_ship, 'duties_minor', t_duty, 'goodwill_deducted_minor', v_deduct, 'payment_left_minor', v_left,
+      'platform_minor', t_platform);
+  end if;
+  insert into refunds (order_id, return_id, currency, amount_minor, items_minor, shipping_minor, duties_minor, goodwill_deducted_minor, platform_minor,
+                       reason, restock, idempotency_key, created_by)
+  values (o.id, rr.id, o.currency, v_lines - v_deduct, t_items, t_ship, t_duty, v_deduct, t_platform, v_reason, v_restock and t_items > 0, v_key, p_user)
   returning id into rid;
   insert into refund_lines (refund_id, sub_order_id, order_item_id, kind, quantity, amount_minor, commission_minor, vat_rate_bp, platform_invoiced)
   select rid, (e ->> 'sub_order_id')::uuid, (e ->> 'order_item_id')::uuid, e ->> 'kind', (e ->> 'quantity')::int, (e ->> 'amount_minor')::int,
@@ -1207,6 +1263,7 @@ declare
   o orders;
   l record;
   v_sellers uuid[];
+  v_left int;
 begin
   select * into f from refunds where id = p_refund for update;
   if f.id is null then raise exception 'Refund not found'; end if;
@@ -1230,6 +1287,28 @@ begin
                           needs_refund = case when s.refunded_minor + x.a >= s.items_minor + s.shipping_minor + s.duties_minor then false else s.needs_refund end
   from (select sub_order_id, sum(amount_minor)::int as a from refund_lines where refund_id = f.id and sub_order_id is not null group by sub_order_id) x
   where s.id = x.sub_order_id;
+  -- the goodwill this refund counted as already paid back (R5-2) was counted on the parcel it was given for (or on
+  -- none): it comes off there, so each parcel shows what went back for it. Goodwill on this refund's own parcels first,
+  -- then goodwill on the order, then on other parcels
+  if f.goodwill_deducted_minor > 0 then
+    v_left := f.goodwill_deducted_minor;
+    for l in select g.sub_order_id, sum(g.amount_minor)::int as given
+             from refund_lines g join refunds gf on gf.id = g.refund_id
+             where gf.order_id = f.order_id and gf.id <> f.id and gf.status = 'succeeded' and g.kind = 'goodwill'
+             group by g.sub_order_id
+             order by case when g.sub_order_id in (select x.sub_order_id from refund_lines x where x.refund_id = f.id and x.sub_order_id is not null) then 0
+                           when g.sub_order_id is null then 1 else 2 end, min(gf.created_at) loop
+      exit when v_left <= 0;
+      if l.sub_order_id is not null then
+        update sub_orders set refunded_minor = greatest(refunded_minor - least(v_left, l.given), 0) where id = l.sub_order_id;
+      end if;
+      v_left := v_left - least(v_left, l.given);
+    end loop;
+  end if;
+  -- the whole payment back: nothing is left to refund on any parcel
+  if o.refunded_minor + f.amount_minor >= o.total_minor then
+    update sub_orders set needs_refund = false where order_id = o.id and needs_refund;
+  end if;
   -- stock back when the items came back fit to sell (a parcel the seller cancelled had its stock put back then)
   if f.restock then
     for l in select rl.quantity, i.product_id, i.variant_id, coalesce(p.made_to_measure, false) as mtm
@@ -1467,6 +1546,10 @@ begin
     if f.amount_minor > o.total_minor - coalesce((select sum(amount_minor) from refunds where order_id = o.id and status in ('processing', 'succeeded')), 0) then
       raise exception 'The refund is more than what is left of the payment';
     end if;
+    -- a refund cut by the goodwill already given (R5-2) is recorded with the same cut, while that goodwill is still uncounted
+    if f.goodwill_deducted_minor > private.goodwill_undeducted(o.id) then
+      raise exception 'This refund counted goodwill that a later refund has counted since: record what Moyasar refunded from the refunds page instead';
+    end if;
     if p_moyasar_refunded is null or f.amount_minor > p_moyasar_refunded - o.refunded_minor then
       raise exception 'Moyasar shows % refunded that we have not recorded: not enough for this refund (it may have just been recorded)',
         to_char(greatest(coalesce(p_moyasar_refunded, 0) - o.refunded_minor, 0) / 100.0, 'FM999,990.00')
@@ -1514,10 +1597,10 @@ begin
       end if;
     end loop;
     t_platform := least(t_platform, greatest(private.invoice_left(o.id), 0));   -- never past our invoice (R4-3)
-    insert into refunds (order_id, return_id, currency, amount_minor, items_minor, shipping_minor, duties_minor, goodwill_minor, platform_minor, reason,
-                         restock, idempotency_key, created_by)
-    values (f.order_id, case when t_good = 0 then f.return_id end, f.currency, f.amount_minor, t_items, t_ship, t_duty, t_good, t_platform,
-            left(f.reason || ' (completed late at Moyasar: ' || v_reason || ')', 500), f.restock and t_good = 0, v_key, p_user)
+    insert into refunds (order_id, return_id, currency, amount_minor, items_minor, shipping_minor, duties_minor, goodwill_minor, goodwill_deducted_minor,
+                         platform_minor, reason, restock, idempotency_key, created_by)
+    values (f.order_id, case when t_good = 0 then f.return_id end, f.currency, f.amount_minor, t_items, t_ship, t_duty, t_good, f.goodwill_deducted_minor,
+            t_platform, left(f.reason || ' (completed late at Moyasar: ' || v_reason || ')', 500), f.restock and t_good = 0, v_key, p_user)
     returning id into nid;
     insert into refund_lines (refund_id, sub_order_id, order_item_id, kind, quantity, amount_minor, commission_minor, vat_rate_bp, platform_invoiced)
     select nid, (e ->> 'sub_order_id')::uuid, (e ->> 'order_item_id')::uuid, e ->> 'kind', (e ->> 'quantity')::int, (e ->> 'amount_minor')::int,
@@ -1774,6 +1857,12 @@ begin
       perform private.notify('seller_return_decided', jsonb_build_object('seller_id', r.seller_id), v || jsonb_build_object('decision', private.bi('rejected', 'رفض')),
         'return:' || r.id || ':decided');
     end if;
+  elsif p_event = 'closed' then
+    perform private.notify('return_closed', cust, v, 'return:' || r.id || ':closed');
+    if r.seller_id is not null then
+      perform private.notify('seller_return_decided', jsonb_build_object('seller_id', r.seller_id), v || jsonb_build_object('decision', private.bi('closed', 'إغلاق')),
+        'return:' || r.id || ':closed:seller');
+    end if;
   end if;
 end $$;
 
@@ -1870,7 +1959,10 @@ begin
 end $$;
 
 -- What happens next (server only). Customer: escalate, withdraw. Seller (or our team for them): accept, decline,
--- received. Our team: approve, reject (final). Only our team refunds, through refund-order.
+-- received. Our team: approve, reject (final). Only our team refunds, through refund-order. Our team (the people who
+-- refund: owner, manager, finance, support) closes an approved return that will not be refunded through it, with the
+-- reason the customer and the seller read: the goodwill already given covered it, the customer kept the item, or it
+-- was refunded another way (review R5-2). A closed return holds nothing any more: what is still due is refunded by line.
 create or replace function mp_return_action(p_user uuid, p_return uuid, p_action text, p_note text default null, p_restock boolean default null,
                                             p_flags text[] default '{}') returns jsonb
 language plpgsql security definer set search_path = public as $$
@@ -1897,6 +1989,8 @@ begin
     if not v_seller then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   elsif p_action in ('approve', 'reject') then
     if not v_staff then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  elsif p_action = 'close' then
+    if v_role not in ('owner', 'manager', 'finance', 'support') then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   else
     raise exception 'Unknown action' using detail = 'إجراء غير معروف';
   end if;
@@ -1950,6 +2044,19 @@ begin
     if v_note is null or char_length(v_note) < 5 then raise exception 'Explain the decision to the customer' using detail = 'اشرح القرار للعميل'; end if;
     update return_requests set status = 'rejected', resolved_at = now(), decided_by = 'staff', staff_note = v_note where id = r.id;
     v_event := 'rejected';
+  elsif p_action = 'close' then
+    if r.status <> 'approved' then
+      raise exception 'Only an approved return can be closed: this one is %', r.status
+        using detail = format('لا يُغلق إلا طلب إرجاع تمت الموافقة عليه، وحالة هذا الطلب: %s', private.status_ar(r.status));
+    end if;
+    if v_note is null or char_length(v_note) < 10 then
+      raise exception 'Write the reason for closing it: the customer and the seller read it' using detail = 'اكتب سبب الإغلاق: يطّلع عليه العميل والبائع';
+    end if;
+    if exists (select 1 from refunds where return_id = r.id and status = 'processing') then
+      raise exception 'Its refund is still waiting for Moyasar: check it with Moyasar first' using detail = 'استرداده ما زال بانتظار رد ميسر: تحقق منه مع ميسر أولًا';
+    end if;
+    update return_requests set status = 'closed', resolved_at = now(), staff_note = v_note, flags = flags || coalesce(p_flags, '{}') where id = r.id;
+    v_event := 'closed';
   end if;
   perform private.notify_return(r.id, v_event);
   return private.return_json(r.id, case when r.user_id is not distinct from p_user then 'customer' when v_seller then 'seller' else 'staff' end);
@@ -2890,6 +2997,10 @@ insert into notification_templates (key, audience, channels, subject_en, subject
  'Our decision on your return {{return}}', 'قرارنا بشأن طلب الإرجاع {{return}}',
  'We have looked at your request carefully and cannot approve it. You can read our reasons on your order page.',
  'راجعنا طلبك بعناية ولا يمكننا الموافقة عليه. يمكنك الاطلاع على الأسباب في صفحة طلبك.', '/order?id={{order_id}}'),
+('return_closed', 'customer', '{email,in_app}',
+ 'Your return {{return}} is closed', 'أُغلق طلب الإرجاع {{return}}',
+ 'Our team has closed this return. You can read why on your order page.',
+ 'أغلق فريقنا طلب الإرجاع هذا. يمكنك الاطلاع على السبب في صفحة طلبك.', '/order?id={{order_id}}'),
 ('refund_issued', 'customer', '{email,in_app}',
  'Your refund of {{amount}}', 'استرداد مبلغ {{amount}}',
  'We have refunded {{amount}} for order AM-{{order}} to your original payment method. It may take a few working days to appear, depending on your bank.',

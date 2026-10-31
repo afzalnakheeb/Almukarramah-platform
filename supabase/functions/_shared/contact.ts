@@ -223,6 +223,20 @@ const CONTACT_WORDS = 'call|phone|mobile|mob|cell|tel|telephone|whats\\s?app|wa|
 const CONTACT_BEFORE = new RegExp(`(?:^|[^a-z\\u0621-\\u064a])[وف]?(?:${CONTACT_WORDS})(?:[\\s:#.\\-(]*(?:me|us|on|at|is|via|by|to|number|no|هو|على|ع|رقم|رقمي)(?![a-z\\u0621-\\u064a]))*[\\s:#.\\-(+]*$`, 'i');
 /** What separates the numbers of a list. */
 const LIST_SEP = /^[\s,،/\-–—+|;]+$/;
+/** What joins the two ends of a range: a dash, a slash, "to" or إلى (read الي here). */
+const RANGE_SEP = /^\s*(?:[-–—/]|to|الي)\s*$/i;
+/** A unit right after a number: a weight, a length, a quantity, a price. */
+const UNIT_AFTER = new RegExp('^\\s*(?:g|gm|gms|gr|grams?|kg|kgs|mg|ml|l|ltr|litres?|liters?|cl|cm|mm|m|km|in|inch(?:es)?|ft|knots?|stitch(?:es)?|threads?'
+  + '|pcs?|pieces?|units?|sar|sr|riyals?|rials?|aed|usd|kwd|qar|bhd|omr|ريال|ريالات|ر\\.?س|درهم|دينار|غ|غم|غرام|جرام|جم|كغ|كجم|كيلو|ملغ|مل|لتر|سم|مم|ملم|متر|م'
+  + '|عقدة|عقده|عقد|غرزة|غرزه|حبة|حبه|حبات|قطعة|قطعه|قطع)(?![a-z\\u0621-\\u064a])', 'i');
+/**
+ * Two numbers of four digits written as a range (review R5-1): joined by a dash, a slash, "to" or إلى, and either both
+ * round ("5000 - 7000", "3500/3900") or followed by a unit, the smaller first ("3512 - 3987 knots"). A range of prices
+ * or quantities, never a Gulf mobile written 4+4, even after a contact word.
+ */
+function isRange(a: string, sep: string, b: string, after: string): boolean {
+  return a.length === 4 && b.length === 4 && RANGE_SEP.test(sep) && ((a.endsWith('0') && b.endsWith('0')) || (a < b && UNIT_AFTER.test(after)));
+}
 /** Words that say what a number is (not a phone): codes, orders, tracking, bookings, sizes, prices; and carriers. */
 const CODE_WORDS = 'isbn|ean|gtin|barcode|sku|upc|ref|reference|model|batch|lot|serial|codes?|items?|orders?|invoices?|inv|receipt|tracking|track|awb'
   + '|waybill|shipments?|parcels?|bookings?|reservations?|confirmation|voucher|coupon|discount|promo|gift\\s*card|card|room|sizes?|chest|length|sleeve'
@@ -288,8 +302,10 @@ export function classifyNumber(r: { groups: string[]; seps: string[]; plus: bool
   const n = d.length;
   if (r.words >= 7 && n >= 7) return 'phone';                       // a number spelled out
   const bank = BANK_WORDS.test(r.before.slice(-20));
-  // a mobile number of Kuwait, Qatar, Bahrain or Oman: eight digits from 3, 5, 6, 7 or 9, in one run or 4+4 (R4-4)
-  if (n === 8 && /^[35679]/.test(d) && r.real >= 6 && (r.groups.length === 1 || (r.groups.length === 2 && r.groups[0].length === 4))
+  // a mobile number of Kuwait, Qatar, Bahrain or Oman: eight digits from 3, 5, 6, 7 or 9 in one run (R4-4). Written
+  // 4+4 it is one only after a contact word (phoneParts): two numbers of four digits side by side are far more often a
+  // range or two quantities ("5000 - 7000", "3500 3900 riyals": review R5-1)
+  if (n === 8 && /^[35679]/.test(d) && r.real >= 6 && r.groups.length === 1
       && !r.glued && !CODE_BEFORE.test(r.before) && !DATE8.test(d)) return bank ? 'bank' : 'phone';
   if (n < 9 || (r.real < 6 && r.words < 7)) return null;
   if (n > 15) {
@@ -377,7 +393,8 @@ function phoneRuns(norm: string, work: string): Group[][] {
  * at a group boundary like a phone number (a trunk 0, 00, + or a Gulf country code) and has a phone number's length,
  * with at least one digit outside a date, time or amount: "Order 104912, •••", "Room 1204 •••", "0501234567 / 123456".
  * After a contact word ("call", "my number", رقمي, واتس...) a whole run of 9 to 15 digits, or 8 from 3, 5, 6, 7 or 9,
- * is one however it is grouped. An account number (after IBAN or account) is left to numberSpans.
+ * is one however it is grouped, except a range (isRange). An account number (after IBAN or account) is left to
+ * numberSpans.
  */
 function phoneParts(norm: string, work: string): Span[] {
   const out: Span[] = [];
@@ -404,9 +421,11 @@ function phoneParts(norm: string, work: string): Span[] {
         i = best + 1;
       } else i++;
     }
-    // after a contact word the whole run, unless a phone number starts it (then what follows it stays: "x2")
+    // after a contact word the whole run, unless a phone number starts it (then what follows it stays: "x2"); a range
+    // of round numbers or of quantities is not one ("whatsapp 5000 - 7000 riyals": review R5-1)
     const all = g.map((x) => x.digits).join('');
-    const contact = g.some((x) => x.free) && CONTACT_BEFORE.test(before)
+    const range = g.length === 2 && isRange(g[0].digits, norm.slice(g[0].b, g[1].a), g[1].digits, norm.slice(g[1].b, g[1].b + 16));
+    const contact = !range && g.some((x) => x.free) && CONTACT_BEFORE.test(before)
       && ((all.length >= 9 && all.length <= 15) || (all.length === 8 && /^[35679]/.test(all) && !DATE8.test(all)));
     if (contact && (parts.length === 0 || parts[0].i > 0)) out.push({ kind: 'phone', a: start, b: g[g.length - 1].b });
     else out.push(...parts.map((x) => x.span));

@@ -195,3 +195,9 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
   a phone number next to an order, room or booking number, or through a time or amount, is masked again (only the
   phone number), in the server and the database; 8-digit Gulf mobiles caught; credit notes never past our invoice;
   one classifier for carrier answers with a contract test per adapter. Tests: 383 (370 before).
+- Fifth fix pass (re-review REVIEW-5; table in `REVIEW-FIXES.md`), each finding shown by a failing test first:
+  two numbers of four digits side by side are a Gulf mobile only after a contact word, and never a range ("5000 -
+  7000", "3500 - 3900 knots"), in the server and the database; after goodwill on an order its last refund is what is
+  left of the payment, shown to staff before they refund (`refund-order` preview); the refusal for an item in an
+  open return says what to do; our team can close an approved return with a reason; an unknown `refund-order`
+  action refunds nothing. Tests: 397 (383 before).

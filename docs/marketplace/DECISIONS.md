@@ -40,8 +40,16 @@ The re-review (REVIEW-2) led to these choices. Each is the conservative one; say
 
 | # | Choice | Why | To change it |
 |---|---|---|---|
-| X | **8-digit Gulf mobiles** (Kuwait, Qatar, Bahrain, Oman: eight digits from 3, 5, 6, 7 or 9) are masked even without a country code, unless after a word like "order", "model" or "tracking". | Customers there rarely write the code, and any visitor can message a seller (review R4-4). | Say if an 8-digit number should be masked only after "call", "my number" and the like. |
+| X | **8-digit Gulf mobiles** (Kuwait, Qatar, Bahrain, Oman: eight digits from 3, 5, 6, 7 or 9) are masked even without a country code when written as one run ("99123456"), unless after a word like "order", "model" or "tracking". Written 4+4 ("9912 3456") they are masked only after "call", "my number", رقمي, واتس and the like, and never when they are a range ("5000 - 7000", "3500 to 3900 knots"): changed in the fifth pass (review R5-1). | Customers there rarely write the code; two numbers of four digits side by side are far more often a price or quantity range. | Say if a bare "9912 3456" should be masked again (ranges like "5000 7000" would be masked with it). |
 | Y | **Goodwill on an order with parcels the sellers invoice, or with duties**, must name its parcel; its part on our credit note is never more than is left on our invoice. | A credit note can only reduce what we invoiced (review R4-3). | Nothing to decide. |
+
+## Chosen in the fifth fix pass (please confirm)
+
+| # | Choice | Why | To change it |
+|---|---|---|---|
+| Z | **The last refund on an order after goodwill** refunds what is left of the payment: when its items, delivery and duties come to more, the difference is counted as the goodwill already given, and staff see it before pressing Refund. A refund that fits what is left is never cut, so goodwill given early stays on top of a later partial refund. The seller's statement is charged the full item, as for any return (goodwill stays ours: T). | The customer gets back what they paid, never more (review R5-2). | Say if goodwill on a parcel should also be taken off a later refund of that parcel when the payment has room. |
+| AA | **An approved return can be closed** by the owner, a manager, finance or support, with a reason the customer and the seller read: the goodwill already given covered it, the customer kept the item, or it was refunded another way. Closing refunds nothing; anything still due is then refunded by line. | An approved return could otherwise stay open for good, holding the seller's money (review R5-2). | Name the roles that may close one. |
+| AB | **An item in an open return** is refunded only through that return ("Refund this return"), or by line once the return is closed; the refusal says which. | Refunded by line, the return would lose its own rules (the delivery when the whole parcel came back, the stock) and stay open with nothing left to refund. | Nothing to decide. |
 
 | # | Decision | Default now | To change it |
 |---|---|---|---|

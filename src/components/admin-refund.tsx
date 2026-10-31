@@ -1,25 +1,46 @@
 // Staff: one Refund button (owner, manager, finance, support). A fresh idempotency key per confirmed press, the reason
 // required; the amount is worked out on the server (refund-order), never typed here. When Moyasar's answer does not
 // come back the refund stays "processing" (review H2): the button says so and never offers to refund again; "Check
-// with Moyasar" settles it.
+// with Moyasar" settles it. Before the press it shows what will be refunded (a preview from the server): after goodwill
+// given on the order, the last refund is what is left of the payment, and it says so (review R5-2).
 import React, { useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Chip, Field, Notice, T } from '@/components/ui';
-import { checkWithMoyasar, finishPendingWork, freshKey, recordMoyasarRefund, refund, settlePaymentIssue, settleRefundByHand, type PaymentIssue, type UnrecordedRefund } from '@/lib/aftersale';
+import {
+  checkWithMoyasar, finishPendingWork, freshKey, previewRefund, recordMoyasarRefund, refund, returnAction, settlePaymentIssue, settleRefundByHand, type PaymentIssue,
+  type RefundPreview, type UnrecordedRefund,
+} from '@/lib/aftersale';
 import { MARKET_DEMO } from '@/lib/flags';
 import { formatMoney } from '@/lib/money';
 import { colors } from '@/theme';
 
-/** One Refund button: a fresh key per confirmed press, the reason required, the result shown. */
+/** What the refund will be, in a sentence: the amount, and the goodwill already given when it is counted. */
+export function previewText(p: RefundPreview): string {
+  const amount = formatMoney(p.amount_minor, p.currency);
+  if (!p.goodwill_deducted_minor) return `This refunds ${amount}.`;
+  return `This refunds ${amount}: what is left of the payment. The ${p.items_minor ? 'items' : 'refund'}${p.shipping_minor ? ' and delivery' : ''} come to `
+    + `${formatMoney(p.lines_minor, p.currency)}, less ${formatMoney(p.goodwill_deducted_minor, p.currency)} of goodwill already given on this order.`;
+}
+
+/** One Refund button: what it will refund shown first, a fresh key per confirmed press, the reason required, the result shown. */
 export function RefundButton({ orderId, label, returnId, subOrderId, onDone }: { orderId: string; label: string; returnId?: string; subOrderId?: string; onDone: () => void }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'warn'; text: string } | null>(null);
+  const [preview, setPreview] = useState<{ tone: 'info' | 'warn'; text: string } | null>(null);
   const key = useRef(freshKey('rf'));
-  if (!open) return <Button size="sm" kind="danger" label={label} onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start' }} />;
+  const start = () => {
+    setOpen(true);
+    setPreview(null);
+    previewRefund({ orderId, returnId, subOrderId })
+      .then((p) => setPreview({ tone: 'info', text: previewText(p) }))
+      .catch((e) => setPreview({ tone: 'warn', text: e instanceof Error ? e.message : String(e) }));
+  };
+  if (!open) return <Button size="sm" kind="danger" label={label} onPress={start} style={{ alignSelf: 'flex-start' }} />;
   return (
     <View style={{ gap: 8, alignSelf: 'stretch' }}>
+      {preview ? <Notice tone={preview.tone} text={preview.text} /> : <T size={13} color={colors.muted}>Working out the amount…</T>}
       <Field label="Reason (on the credit note and the seller's statement)" value={reason} onChangeText={setReason} maxLength={500} />
       {msg ? <Notice tone={msg.tone} text={msg.text} /> : null}
       <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -32,7 +53,8 @@ export function RefundButton({ orderId, label, returnId, subOrderId, onDone }: {
             if (r.pending || r.recorded === false) {
               setMsg({ tone: 'warn', text: r.error ?? 'Moyasar did not confirm the refund. It stays processing: do not refund again; use "Check with Moyasar".' });
             } else {
-              setMsg({ tone: 'ok', text: `Refunded ${formatMoney(r.amount ?? 0, r.currency ?? 'SAR')}.${r.creditNote ? ` Credit note ${r.creditNote}.` : r.creditNotePending ? ' The credit note is pending: "Finish pending work" issues it.' : ''}` });
+              const less = r.goodwillDeducted ? ` (less ${formatMoney(r.goodwillDeducted, r.currency ?? 'SAR')} of goodwill already given on this order)` : '';
+              setMsg({ tone: 'ok', text: `Refunded ${formatMoney(r.amount ?? 0, r.currency ?? 'SAR')}${less}.${r.creditNote ? ` Credit note ${r.creditNote}.` : r.creditNotePending ? ' The credit note is pending: "Finish pending work" issues it.' : ''}` });
             }
             onDone();
           } catch (e) { setMsg({ tone: 'warn', text: e instanceof Error ? e.message : String(e) }); } finally { setBusy(false); }
@@ -43,6 +65,33 @@ export function RefundButton({ orderId, label, returnId, subOrderId, onDone }: {
   );
 }
 
+/**
+ * Owner, manager, finance, support: close an approved return that will not be refunded through it, with the reason the
+ * customer and the seller read (the goodwill already given covered it, the customer kept the item, it was refunded
+ * another way). It then holds nothing: anything still due is refunded by line (review R5-2).
+ */
+export function CloseReturn({ returnId, onDone }: { returnId: string; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  if (!open) return <Button size="sm" kind="text" label="Close return" onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start' }} />;
+  return (
+    <View style={{ gap: 8, alignSelf: 'stretch' }}>
+      <T size={13} color={colors.muted}>Closing it refunds nothing through this return. The customer and the seller are told, with your reason.</T>
+      <Field label="Why it is closed (the customer and the seller read this)" value={reason} onChangeText={setReason} multiline maxLength={1000} />
+      {msg ? <Notice tone="warn" text={msg} /> : null}
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <Button size="sm" kind="secondary" label="Close return" busy={busy} disabled={reason.trim().length < 10} onPress={async () => {
+          if (MARKET_DEMO) { setMsg('Example data: nothing is saved here.'); return; }
+          setBusy(true); setMsg(null);
+          try { await returnAction(returnId, 'close', reason.trim()); setOpen(false); onDone(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
+        }} />
+        <Button size="sm" kind="text" label="Cancel" onPress={() => setOpen(false)} />
+      </View>
+    </View>
+  );
+}
 
 const STATE: Record<string, string> = {
   succeeded: 'Moyasar shows the refund: it is recorded.',

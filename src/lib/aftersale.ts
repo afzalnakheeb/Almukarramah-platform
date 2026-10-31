@@ -15,7 +15,8 @@ const demoOnly = () => { throw new AppError({ en: 'Example data: nothing is save
 
 // ---------------------------------------------------------------- returns
 export type ReturnReason = 'changed_mind' | 'not_as_described' | 'faulty' | 'damaged' | 'wrong_item' | 'missing_item' | 'not_received';
-export type ReturnStatus = 'requested' | 'accepted' | 'declined' | 'escalated' | 'approved' | 'refunded' | 'rejected' | 'withdrawn';
+/** closed: an approved return our team settled another way, with the reason (review R5-2) */
+export type ReturnStatus = 'requested' | 'accepted' | 'declined' | 'escalated' | 'approved' | 'refunded' | 'rejected' | 'withdrawn' | 'closed';
 export type ReturnRequest = {
   id: string; number: string; order_id: string; order_number: number; sub_order_id: string; sub_order_number: string; status: ReturnStatus;
   kind: 'return' | 'refund_only'; reason: ReturnReason; unopened: boolean; details: string | null; seller_note: string | null; escalation_note: string | null;
@@ -32,8 +33,9 @@ export async function requestReturn(p: { subOrderId: string; reason: ReturnReaso
   if (MARKET_DEMO) return demoOnly();
   return callFunction<ReturnRequest>('after-sale', { action: 'return_request', ...p });
 }
-/** Customer: escalate, withdraw. Seller: accept, decline, received. Our team: approve, reject (and accept/received for a seller). */
-export async function returnAction(returnId: string, action: 'escalate' | 'withdraw' | 'accept' | 'decline' | 'received' | 'approve' | 'reject', note?: string, restock?: boolean) {
+/** Customer: escalate, withdraw. Seller: accept, decline, received. Our team: approve, reject (and accept/received for a seller),
+ *  and close an approved return with the reason (owner, manager, finance, support: review R5-2). */
+export async function returnAction(returnId: string, action: 'escalate' | 'withdraw' | 'accept' | 'decline' | 'received' | 'approve' | 'reject' | 'close', note?: string, restock?: boolean) {
   if (MARKET_DEMO) return demoOnly();
   return callFunction<ReturnRequest>('after-sale', { action: 'return_action', returnId, do: action, note, restock });
 }
@@ -181,6 +183,8 @@ export type RefundJson = {
   items_minor: number; shipping_minor: number; duties_minor: number; platform_minor: number; reason: string; restock: boolean; error: string | null;
   /** money given back without items (goodwill made in Moyasar's dashboard, a refund Moyasar made twice) */
   goodwill_minor?: number;
+  /** goodwill given earlier that this refund counted as already paid back: its lines less this is the amount (review R5-2) */
+  goodwill_deducted_minor?: number;
   credit_note_status: 'not_needed' | 'pending' | 'issued'; credit_note: string | null; created_at: string; completed_at: string | null;
   lines: { kind: string; quantity: number | null; amount_minor: number; name_en: string | null }[];
 };
@@ -208,6 +212,8 @@ export async function adminRefundQueue(): Promise<RefundQueue> {
 }
 export type RefundResult = {
   ok?: boolean; amount?: number; currency?: string; creditNote?: string | null; creditNotePending?: boolean; reconciled?: boolean; refund?: string;
+  /** the goodwill already given on the order that this refund counted: the amount is that much less than its lines (R5-2) */
+  goodwillDeducted?: number;
   /** Moyasar's answer did not come back: the refund stays processing (never refund it again; check with Moyasar) */
   pending?: boolean; recorded?: boolean; code?: string; error?: string; error_ar?: string;
 };
@@ -215,6 +221,15 @@ export type RefundResult = {
 export async function refund(p: { orderId: string; reason: string; key: string; returnId?: string; subOrderId?: string }): Promise<RefundResult> {
   if (MARKET_DEMO) return demoOnly();
   return callFunction<RefundResult>('refund-order', p);
+}
+/** What a refund would be, before pressing Refund: nothing is reserved and Moyasar is not asked (review R5-2). */
+export type RefundPreview = {
+  currency: string; amount_minor: number; lines_minor: number; items_minor: number; shipping_minor: number; duties_minor: number;
+  goodwill_deducted_minor: number; payment_left_minor: number; platform_minor: number;
+};
+export async function previewRefund(p: { orderId: string; returnId?: string; subOrderId?: string }): Promise<RefundPreview> {
+  if (MARKET_DEMO) return demo.demoRefundPreview();
+  return callFunction<RefundPreview>('refund-order', { action: 'preview', ...p });
 }
 export type Reconciled = { ok: boolean; refund: string; state: 'succeeded' | 'failed' | 'waiting' | 'mismatch' | 'not_processing' | 'unreachable'; detail?: string; creditNote?: string | null };
 /** A refund still waiting for Moyasar's answer: read the payment back from Moyasar and settle it (review H2). */

@@ -17,7 +17,7 @@ const TABS: { key: string; statuses: ReturnStatus[] }[] = [
   { key: 'rtTabOpen', statuses: ['requested', 'escalated'] },
   { key: 'rtTabComing', statuses: ['accepted'] },
   { key: 'rtTabRefund', statuses: ['approved'] },
-  { key: 'rtTabClosed', statuses: ['refunded', 'rejected', 'withdrawn', 'declined'] },
+  { key: 'rtTabClosed', statuses: ['refunded', 'rejected', 'withdrawn', 'declined', 'closed'] },
 ];
 
 export default function SellerReturns() {

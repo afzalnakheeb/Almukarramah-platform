@@ -96,8 +96,10 @@ export const R4_PROBES: string[] = [
   'call (555) 123-4567', 'order 0501234567', 'size 501234567', 'tracking 966501234567', 'رقمي ٦٧ ٤٥ ٢٣ ٠١ ٠٥', 'tel0501234567ok',
   'my card 4111 1111 1111 1111', '05😀01😀23😀45😀67', 'رقمي ٠٥٠ ثم ١٢٣ ثم ٤٥٦٧', 'price 0501234567 SAR', 'call 050x123x4567',
   'IBAN 03 8000 0000 6080 1016 7519',
-  // the 8-digit Gulf mobiles without a contact word, and in Arabic digits; "501 234 567" after a contact word
-  '9912 3456', '33123456', '٩٩١٢ ٣٤٥٦', '٣٣١٢٣٤٥٦', 'جوالي ٦٦١٢ ٣٤٥٦', 'رقمي ٥٠١ ٢٣٤ ٥٦٧', 'واتس ٥٥ ١٢٣ ٤٥ ٦٧',
+  // the 8-digit Gulf mobiles: one run of eight without a contact word, 4+4 after one (review R5-1: two numbers of four
+  // digits side by side are a range or two quantities more often than a phone number), and in Arabic digits; "501 234
+  // 567" after a contact word
+  'mobile 9912 3456', '33123456', 'جوال ٩٩١٢ ٣٤٥٦', '٣٣١٢٣٤٥٦', 'جوالي ٦٦١٢ ٣٤٥٦', 'رقمي ٥٠١ ٢٣٤ ٥٦٧', 'واتس ٥٥ ١٢٣ ٤٥ ٦٧',
 ];
 
 /** Natural messages with a phone number next to another number (js/natural.mts): only the phone number is masked. */
@@ -119,6 +121,33 @@ export const R4_NATURAL: [string, string][] = [
 /** Numbers that look like an 8-digit Gulf mobile but are not one: after a code word, a date, glued to letters. */
 export const R4_ORDINARY = ['Order 99123456 arrived', 'Model 77889900', 'Tracking: 51234567', 'Invoice 30000003', 'Delivered 31102026', 'SKU77889900',
   'طلب رقم ٩٩١٢٣٤٥٦ وصل', 'Gift card 5678 1234'];
+
+/**
+ * The fifth review's ranges (REVIEW-5, R5-1: js/r5_overmask.mts): two numbers of four digits side by side, in messages
+ * and on a shop page, taken for a Gulf mobile written 4+4. Never masked, flagged or refused.
+ */
+export const R5_RANGES = ['my budget is 5000 - 7000', 'between 3500 3900 riyals', 'السعر بين ٥٠٠٠ - ٧٠٠٠', 'ابغى ٥٠٠٠ ٧٠٠٠ حبة',
+  'Prices from 5000 - 9500 riyals', 'Stock: 5000 units, 6000 next week', 'from 5000 to 7000 SAR', 'من ٥٠٠٠ إلى ٧٠٠٠ ريال', 'Budget 3500/3900'];
+/** Listing descriptions with ranges (js/r5_listing2.mts): never blocked. */
+export const R5_LISTINGS = ['Hand-knotted rugs: 3500 - 3900 knots per square decimetre.', 'Made to order in 5000 - 7000 stitches per piece',
+  'سجاد يدوي بكثافة ٣٥٠٠ - ٣٩٠٠ عقدة', 'Weight 6500 / 7500 g depending on size'];
+/**
+ * After a contact word, a range joined by a dash, a slash, "to" or إلى, of round numbers or with a unit after it, is
+ * still not a phone number (an app's name next to it is masked, as always).
+ */
+export const R5_CONTACT_RANGES = ['whatsapp 5000 - 7000 riyals', 'واتس ٥٠٠٠ - ٧٠٠٠ ريال', 'call me 3500 to 3900', 'تواصل ٣٥٠٠ إلى ٣٩٠٠',
+  'Text me 3512 - 3987 knots', 'mobile 6500 / 7500 g'];
+/**
+ * The Gulf mobiles of R4-4 (js/r5_gulf.mts) that must stay masked: one run of eight anywhere, 4+4 after a contact word
+ * however joined (a space, a dash, a slash), in either digits.
+ */
+export const R5_GULF_MASK = ['my number 99123456', 'call 9912 3456', 'رقمي ٣٦١٢٣٤٥٦', 'واتس ٩١٢٣ ٤٥٦٧', 'whatsapp: 55512345', 'Qatar mobile 3312 3456',
+  'my no. 66123456', 'تواصل على ٧١٢٣٤٥٦٧', 'call 9912-3456', 'my number 9912/3456', 'واتس ٩١٢٣-٤٥٦٧', 'mobile 3312 - 3456', '33123456', '٣٣١٢٣٤٥٦',
+  'call 5000-7123', 'whatsapp me 6612 to 7745'];
+/** ...and the numbers next to them that must stay as they are (js/r5_gulf.mts). */
+export const R5_GULF_STAY = ['Delivered on 31102026 to room 1204', 'Order 35001234 arrived', 'رقم الطلب ٥٠٠١٢٣٤٥', 'Invoice INV-50012345', 'Ref 55551234',
+  'Tracking 51234567', 'AWB: 71234567', 'Voucher 71234567', 'Hijri date 1447/05/09', 'تاريخ ٣١١٠٢٠٢٦', 'Gift card 9123 4567', 'Booking 51234567 at the Hilton',
+  'Barcode 62812345', 'Batch 70012345'];
 
 /**
  * The re-review's everyday texts (REVIEW-3, R3-1: js/ordinary.mts): messages, return details and cancellation

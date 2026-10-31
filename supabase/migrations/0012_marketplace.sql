@@ -127,7 +127,7 @@ language sql immutable set search_path = public as $$
     when 'accepted' then 'مقبول' when 'in_production' then 'قيد التجهيز' when 'ready_to_ship' then 'جاهز للشحن' when 'shipped' then 'تم شحنه'
     when 'delivered' then 'تم توصيله' when 'delivery_failed' then 'تعذّر توصيله' when 'cancelled' then 'ملغى' when 'returned' then 'أُعيد'
     when 'requested' then 'بانتظار رد البائع' when 'declined' then 'مرفوض' when 'escalated' then 'لدى فريقنا للبت فيه'
-    when 'refunded' then 'تم الاسترداد' when 'withdrawn' then 'مسحوب'
+    when 'refunded' then 'تم الاسترداد' when 'withdrawn' then 'مسحوب' when 'closed' then 'مُغلق'
     else p end
 $$;
 

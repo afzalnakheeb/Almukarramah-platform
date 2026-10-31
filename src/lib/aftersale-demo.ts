@@ -1,7 +1,7 @@
 // Example data for the after-sale screens, used ONLY in the screenshot build (EXPO_PUBLIC_MARKET_DEMO=1). Nothing here
 // is real: no customer, seller, order, review or payment. In every other build these values are never read.
 import type {
-  AdminReply, AdminReview, Notice, OutboxRow, PayoutRow, Performance, ProductReviews, RefundQueue, ReturnRequest, ReviewItem, SellerReview,
+  AdminReply, AdminReview, Notice, OutboxRow, PayoutRow, Performance, ProductReviews, RefundPreview, RefundQueue, ReturnRequest, ReviewItem, SellerReview,
   Statement, Thread, ThreadFull,
 } from './aftersale';
 
@@ -188,6 +188,12 @@ export function demoRefundQueue(): RefundQueue {
       duties_minor: 0, platform_minor: 38000, reason: 'Return R-104850-1: faulty burner', restock: false, error: null, credit_note_status: 'issued', credit_note: 'CN-2026-000041',
       created_at: '2026-10-14T11:58:00Z', completed_at: '2026-10-14T12:00:00Z', lines: [{ kind: 'item', quantity: 1, amount_minor: 38000, name_en: 'Bakhoor burner, brass' }] }],
   };
+}
+
+/** A refund that comes to more than is left of the payment, after 20 SAR of goodwill (review R5-2). */
+export function demoRefundPreview(): RefundPreview {
+  return { currency: 'SAR', amount_minor: 7000, lines_minor: 9000, items_minor: 6000, shipping_minor: 3000, duties_minor: 0, goodwill_deducted_minor: 2000,
+    payment_left_minor: 7000, platform_minor: 7000 };
 }
 
 export function demoAdminReviews(): { reviews: AdminReview[]; replies: AdminReply[] } {

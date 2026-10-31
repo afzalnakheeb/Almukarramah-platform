@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Image, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { Seo } from '@/components/seo';
-import { CheckWithMoyasar, FinishPendingButton, issueLabel, PaymentIssueRow, RefundButton, SettleByHand, UnrecordedRow } from '@/components/admin-refund';
+import { CheckWithMoyasar, CloseReturn, FinishPendingButton, issueLabel, PaymentIssueRow, RefundButton, SettleByHand, UnrecordedRow } from '@/components/admin-refund';
 import { Button, Card, Chip, Field, H1, Notice, T, Tag, useWide } from '@/components/ui';
 import { adminPaymentIssues, adminRefundQueue, adminReturns, customerPhotoUrls, returnAction, type PaymentIssue, type RefundQueue, type ReturnRequest, type ReturnStatus } from '@/lib/aftersale';
 import { MARKET_DEMO } from '@/lib/flags';
@@ -18,7 +18,7 @@ const REASON: Record<string, string> = {
   missing_item: 'Item missing', not_received: 'Parcel not received',
 };
 const TONE: Record<string, 'ok' | 'warn' | 'info' | 'err' | 'mute'> = {
-  requested: 'warn', accepted: 'info', declined: 'err', escalated: 'warn', approved: 'ok', refunded: 'ok', rejected: 'err', withdrawn: 'mute',
+  requested: 'warn', accepted: 'info', declined: 'err', escalated: 'warn', approved: 'ok', refunded: 'ok', rejected: 'err', withdrawn: 'mute', closed: 'mute',
 };
 const day = (s: string | null) => (s ? new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '');
 
@@ -67,6 +67,7 @@ function ReturnRow({ r, onDone }: { r: ReturnRequest; onDone: () => void }) {
         </View>
       ) : null}
       {r.status === 'approved' ? <RefundButton orderId={r.order_id} returnId={r.id} label="Refund this return" onDone={onDone} /> : null}
+      {r.status === 'approved' && !r.refund ? <CloseReturn returnId={r.id} onDone={onDone} /> : null}
       {r.refund ? <T size={12.5} color={colors.muted}>Refund {r.refund.status}: {formatMoney(r.refund.amount_minor, r.currency)}</T> : null}
     </Card>
   );
@@ -74,7 +75,7 @@ function ReturnRow({ r, onDone }: { r: ReturnRequest; onDone: () => void }) {
 
 const TABS: { key: ReturnStatus | 'queue'; label: string }[] = [
   { key: 'queue', label: 'To refund' }, { key: 'escalated', label: 'Disputes' }, { key: 'requested', label: 'Waiting for an answer' },
-  { key: 'accepted', label: 'On the way back' }, { key: 'refunded', label: 'Refunded' }, { key: 'rejected', label: 'Rejected' },
+  { key: 'accepted', label: 'On the way back' }, { key: 'refunded', label: 'Refunded' }, { key: 'rejected', label: 'Rejected' }, { key: 'closed', label: 'Closed' },
 ];
 
 export default function AdminReturns() {
@@ -162,7 +163,7 @@ export default function AdminReturns() {
           ) : null}
           <T w={700} size={17}>Recent refunds</T>
           {queue.recent.map((f) => (
-            <T key={f.id} size={13} color={colors.body}>{day(f.created_at)} · AM-{f.order_number} · {formatMoney(f.amount_minor, f.currency)} · {f.status}{f.credit_note ? ` · ${f.credit_note}` : ''} · {f.reason}</T>
+            <T key={f.id} size={13} color={colors.body}>{day(f.created_at)} · AM-{f.order_number} · {formatMoney(f.amount_minor, f.currency)}{f.goodwill_deducted_minor ? ` (less ${formatMoney(f.goodwill_deducted_minor, f.currency)} of goodwill already given)` : ''} · {f.status}{f.credit_note ? ` · ${f.credit_note}` : ''} · {f.reason}</T>
           ))}
         </View>
       ) : null}

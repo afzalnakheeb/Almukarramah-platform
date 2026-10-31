@@ -45,7 +45,7 @@ const dateOf = (s: string | null, lang: 'ar' | 'en', withYear = false) =>
 
 // ---------------------------------------------------------------- a return
 const RETURN_TONE: Record<string, 'ok' | 'warn' | 'info' | 'err' | 'mute'> = {
-  requested: 'warn', accepted: 'info', declined: 'err', escalated: 'warn', approved: 'ok', refunded: 'ok', rejected: 'err', withdrawn: 'mute',
+  requested: 'warn', accepted: 'info', declined: 'err', escalated: 'warn', approved: 'ok', refunded: 'ok', rejected: 'err', withdrawn: 'mute', closed: 'mute',
 };
 
 export function ReturnCard({ r, side, onDone, messagesHref }: { r: ReturnRequest; side: 'customer' | 'seller'; onDone: () => void; messagesHref?: Href }) {

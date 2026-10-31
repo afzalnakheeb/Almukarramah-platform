@@ -124,8 +124,10 @@ begin
   bank := right(p_before, 20) ~* '(iban|account|acct|a/c|ايبان|حساب|الحساب)[^0-9]{0,14}$';
   code_ctx := p_before ~* ('(^|[^a-z\u0621-\u064a])(' || code_words || '|' || carriers || ')([\s:#.-]*(number|num|no|nos|is|are|رقم|رقمه|رقمها|هو|هي)(?![a-z\u0621-\u064a]))*'
                            || '[\s:#.-]*((' || carriers || ')[\s:#.-]*)?$');
-  -- a mobile number of Kuwait, Qatar, Bahrain or Oman: eight digits from 3, 5, 6, 7 or 9, in one run or 4+4 (R4-4)
-  if n = 8 and d ~ '^[35679]' and p_real >= 6 and (ng = 1 or (ng = 2 and length(g[1]) = 4)) and not glued and not code_ctx
+  -- a mobile number of Kuwait, Qatar, Bahrain or Oman: eight digits from 3, 5, 6, 7 or 9 in one run (R4-4). Written
+  -- 4+4 it is one only after a contact word (number_hint): two numbers of four digits side by side are far more often
+  -- a range or two quantities ("5000 - 7000", "3500 3900 riyals": review R5-1)
+  if n = 8 and d ~ '^[35679]' and p_real >= 6 and ng = 1 and not glued and not code_ctx
      and d !~ '^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19|20)[0-9]{2}$' then
     return case when bank then 'bank' else 'phone' end;
   end if;
@@ -169,7 +171,8 @@ end $$;
 -- The numbers of a normalised text (digits 0-9; digits written as words are ٠-٩ here, so they can be counted):
 -- the first that is a phone, a bank account or a card number, or null. As contact.ts (numberSpans): first the phone
 -- numbers inside runs, before any exclusion (phoneParts: a part starting at a group boundary like a phone number, with
--- a digit outside a date, time or amount; after a contact word the whole run: review R4-2, R4-4), then each run
+-- a digit outside a date, time or amount; after a contact word the whole run, unless it is a range of round numbers or
+-- of quantities: review R4-2, R4-4, R5-1), then each run
 -- classified (number_kind) with dates, times and amounts kept out of it.
 create or replace function private.number_hint(p text) returns text
 language plpgsql immutable as $$
@@ -186,6 +189,13 @@ declare
     || '|my\s+(number|no|phone|mobile|cell|whats\s?app)'
     || '|رقمي|جوالي|جوال|الجوال|موبايلي|موبايل|هاتفي|هاتف|تلفوني|تلفون|واتسابي|واتساب|واتس|اتصل|اتصلي|اتصلوا|كلمني|كلموني|تواصل|راسلني)'
     || '([\s:#.(-]*(me|us|on|at|is|via|by|to|number|no|هو|على|ع|رقم|رقمي)(?![a-z\u0621-\u064a]))*[\s:#.(+-]*$';
+  -- a range (contact.ts isRange, review R5-1): two numbers of four digits joined by a dash, a slash, "to" or إلى (read
+  -- الي here), both round or with a unit after them, the smaller first
+  range_sep constant text := '^\s*([-–—/]|to|الي)\s*$';
+  unit_after constant text := '^\s*(g|gm|gms|gr|grams?|kg|kgs|mg|ml|l|ltr|litres?|liters?|cl|cm|mm|m|km|in|inch(es)?|ft|knots?|stitch(es)?|threads?'
+    || '|pcs?|pieces?|units?|sar|sr|riyals?|rials?|aed|usd|kwd|qar|bhd|omr|ريال|ريالات|ر\.?س|درهم|دينار|غ|غم|غرام|جرام|جم|كغ|كجم|كيلو|ملغ|مل|لتر|سم|مم|ملم|متر|م'
+    || '|عقدة|عقده|عقد|غرزة|غرزه|حبة|حبه|حبات|قطعة|قطعه|قطع)(?![a-zء-ي])';
+  rng boolean;
   m text;
   core text;
   g text[];
@@ -236,7 +246,9 @@ begin
       end loop;
     end loop;
     d := translate(array_to_string(g, ''), '٠١٢٣٤٥٦٧٨٩०१२३४५६७८९', '01234567890123456789');
-    if core ~ '[0-9٠-٩]' and ctx ~* contact_before
+    rng := ng = 2 and length(g[1]) = 4 and length(g[2]) = 4 and seps[1] ~* range_sep
+           and ((substr(d, 4, 1) = '0' and substr(d, 8, 1) = '0') or (left(d, 4) < right(d, 4) and substr(tp, off, 16) ~* unit_after));
+    if not rng and core ~ '[0-9٠-٩]' and ctx ~* contact_before
        and (length(d) between 9 and 15 or (length(d) = 8 and d ~ '^[35679]' and d !~ '^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19|20)[0-9]{2}$')) then
       return 'phone';
     end if;

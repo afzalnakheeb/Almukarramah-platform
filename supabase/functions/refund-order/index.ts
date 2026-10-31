@@ -18,6 +18,10 @@
 // refund made in the Moyasar dashboard ("record_moyasar": against Moyasar's own figures, review R3-2), and decides on
 // payments taken for orders no longer waiting ("payment_issue": refund it, revive the order with it, or close it;
 // review N2). What Moyasar shows is noted at every read, so the refunds page lists what we have not recorded.
+//
+// After goodwill given on an order (money back without items), the last refund on it is what is left of the payment,
+// the goodwill counted as already paid back ("goodwillDeducted"); "preview" shows staff the amount before they press
+// Refund, with nothing reserved and Moyasar not asked (review R5-2). An action this function does not know is refused.
 import { getPayment, MoyasarError, refundPayment } from '../_shared/moyasar.ts';
 import { graceMinutes, reconcileRefund } from '../_shared/refunds.ts';
 import { admin, caller, dbError, type Db, fail, handle, json, staffRole, UUID } from '../_shared/util.ts';
@@ -25,9 +29,32 @@ import { ensureInvoice, issueCreditNote } from '../_shared/zatca.ts';
 
 type Prepared = {
   id: string; status: 'processing' | 'succeeded' | 'failed'; duplicate: boolean; currency: string; amount_minor: number; platform_minor: number;
-  payment_id: string; reason: string; error: string | null; credit_note: string | null; credit_note_status: string;
+  goodwill_deducted_minor?: number; payment_id: string; reason: string; error: string | null; credit_note: string | null; credit_note_status: string;
   order: { id: string; number: number };
 };
+type Body = {
+  action?: 'refund' | 'preview' | 'reconcile' | 'resolve' | 'payment_issue' | 'record_moyasar'; refundId?: string; outcome?: 'failed' | 'succeeded';
+  issueId?: string; do?: 'refund' | 'attach' | 'dismiss'; amount?: number; reference?: string; goodwill?: boolean;
+  orderId?: string; reason?: string; key?: string; returnId?: string; subOrderId?: string;
+  lines?: { orderItemId: string; quantity: number }[]; shipping?: string[]; duties?: string[]; orderShipping?: boolean; restock?: boolean;
+};
+const ACTIONS = ['refund', 'preview', 'reconcile', 'resolve', 'payment_issue', 'record_moyasar'];
+
+/** What to refund, as mp_prepare_refund reads it: an approved return, a parcel, chosen lines, or the whole order. */
+function whatToRefund(body: Body): Record<string, unknown> {
+  const p: Record<string, unknown> = { reason: (body.reason ?? '').slice(0, 500), restock: body.restock === true };
+  if (body.returnId && UUID.test(body.returnId)) p.return_id = body.returnId;
+  else if (body.subOrderId && UUID.test(body.subOrderId)) p.sub_order_id = body.subOrderId;
+  else if (body.lines || body.shipping || body.duties || body.orderShipping) {
+    p.lines = (body.lines ?? []).filter((l) => UUID.test(l.orderItemId)).map((l) => ({ order_item_id: l.orderItemId, quantity: Math.floor(Number(l.quantity)) }));
+    p.shipping = (body.shipping ?? []).filter((x) => UUID.test(x));
+    p.duties = (body.duties ?? []).filter((x) => UUID.test(x));
+    p.order_shipping = body.orderShipping === true;
+  }
+  return p;
+}
+/** A refusal from mp_prepare_refund: a state to settle first (409), or a request to correct (400). */
+const PREPARE_CONFLICT = /still being processed|already been refunded|Already refunded|is in return|was closed/;
 
 Deno.serve(handle(async (req) => {
   const db = admin();
@@ -36,13 +63,20 @@ Deno.serve(handle(async (req) => {
   if (!user || !role || !['owner', 'manager', 'finance', 'support'].includes(role)) return fail(403, 'Not allowed', 'غير مسموح', 'not_allowed');
   const grace = graceMinutes((k) => Deno.env.get(k));
 
-  const body = (await req.json()) as {
-    action?: 'refund' | 'reconcile' | 'resolve' | 'payment_issue' | 'record_moyasar'; refundId?: string; outcome?: 'failed' | 'succeeded';
-    issueId?: string; do?: 'refund' | 'attach' | 'dismiss'; amount?: number; reference?: string; goodwill?: boolean;
-    orderId?: string; reason?: string; key?: string; returnId?: string; subOrderId?: string;
-    lines?: { orderItemId: string; quantity: number }[]; shipping?: string[]; duties?: string[]; orderShipping?: boolean; restock?: boolean;
-  };
+  const body = (await req.json()) as Body;
+  // an action this function does not know refunds nothing (it used to fall through to a refund of the whole order)
+  if (body.action !== undefined && !ACTIONS.includes(body.action)) return fail(400, 'Unknown action', 'إجراء غير معروف', 'unknown_action');
   const finance = ['owner', 'manager', 'finance'].includes(role ?? '');
+
+  // ------------------------------------------------ what a refund would be, before anyone presses Refund (R5-2)
+  // The same checks as the refund itself, nothing reserved and Moyasar not asked: the amount, what the lines come to,
+  // and the goodwill already given on the order that is counted when the payment has less left than that.
+  if (body.action === 'preview') {
+    if (!body.orderId || !UUID.test(body.orderId)) return fail(400, 'Order not found', 'لم يُعثر على الطلب');
+    const { data, error } = await db.rpc('mp_prepare_refund', { p_order: body.orderId, p: { ...whatToRefund(body), preview: true }, p_user: user.id });
+    if (error) return dbError(error, PREPARE_CONFLICT.test(error.message) ? 409 : 400);
+    return json({ ok: true, ...(data as Record<string, unknown>) });
+  }
 
   // ------------------------------------------------ settle a refund by hand (finance, with a reason: N7)
   if (body.action === 'resolve') {
@@ -138,7 +172,7 @@ Deno.serve(handle(async (req) => {
       await db.from('audit_log').insert({ actor: user.id, actor_label: user.email, table_name: 'refunds', row_id: rec.id, action: 'REFUND_RECORDED_FROM_MOYASAR',
                                           new_data: { order: body.orderId, amount_minor: amount, reference: body.reference, moyasar_refunded: refunded, credit_note: creditNote } });
     }
-    return json({ ok: true, refund: rec.id, amount: rec.amount_minor, currency: rec.currency, creditNote, duplicate: rec.duplicate });
+    return json({ ok: true, refund: rec.id, amount: rec.amount_minor, currency: rec.currency, creditNote, goodwillDeducted: rec.goodwill_deducted_minor ?? 0, duplicate: rec.duplicate });
   }
 
   // ------------------------------------------------ settle a refund still waiting for Moyasar's answer
@@ -153,15 +187,7 @@ Deno.serve(handle(async (req) => {
   // the admin page sends a key per press; an older caller without one gets a fresh key (the database still stops a
   // second refund of the same return and anything beyond what is left)
   const key = body.key && /^[A-Za-z0-9_-]{8,80}$/.test(body.key) ? body.key : `rf_${crypto.randomUUID().replace(/-/g, '')}`;
-  const p: Record<string, unknown> = { key, reason: (body.reason ?? '').slice(0, 500), restock: body.restock === true };
-  if (body.returnId && UUID.test(body.returnId)) p.return_id = body.returnId;
-  else if (body.subOrderId && UUID.test(body.subOrderId)) p.sub_order_id = body.subOrderId;
-  else if (body.lines || body.shipping || body.duties || body.orderShipping) {
-    p.lines = (body.lines ?? []).filter((l) => UUID.test(l.orderItemId)).map((l) => ({ order_item_id: l.orderItemId, quantity: Math.floor(Number(l.quantity)) }));
-    p.shipping = (body.shipping ?? []).filter((x) => UUID.test(x));
-    p.duties = (body.duties ?? []).filter((x) => UUID.test(x));
-    p.order_shipping = body.orderShipping === true;
-  }
+  const p: Record<string, unknown> = { ...whatToRefund(body), key };
 
   // Moyasar first: a refund it holds that we have not recorded (completed late, or made in its dashboard) is settled
   // before anything new is refunded, so nothing is ever refunded twice (N7)
@@ -185,10 +211,14 @@ Deno.serve(handle(async (req) => {
   }
 
   const { data, error } = await db.rpc('mp_prepare_refund', { p_order: body.orderId, p, p_user: user.id });
-  if (error) return dbError(error, /still being processed|already been refunded/.test(error.message) ? 409 : 400);
+  if (error) return dbError(error, PREPARE_CONFLICT.test(error.message) ? 409 : 400);
   const prep = data as Prepared;
+  // the goodwill already given that this refund counts (R5-2): the amount is what is left of the payment
+  const goodwillDeducted = prep.goodwill_deducted_minor ?? 0;
   if (prep.duplicate) {
-    if (prep.status === 'succeeded') return json({ ok: true, refund: prep.id, amount: prep.amount_minor, currency: prep.currency, creditNote: prep.credit_note, duplicate: true });
+    if (prep.status === 'succeeded') {
+      return json({ ok: true, refund: prep.id, amount: prep.amount_minor, currency: prep.currency, creditNote: prep.credit_note, goodwillDeducted, duplicate: true });
+    }
     if (prep.status === 'failed') return fail(409, `This refund failed: ${prep.error ?? 'unknown'}. Start a new one.`, 'لم يتم هذا الاسترداد. ابدأ استردادًا جديدًا.', 'refund_failed');
     return fail(409, 'This refund is still waiting for Moyasar\'s answer: use "Check with Moyasar" before trying again.',
       'هذا الاسترداد ما زال بانتظار رد ميسر: استخدم «التحقق مع ميسر» قبل المحاولة مرة أخرى.', 'refund_processing', { refund: prep.id });
@@ -208,8 +238,9 @@ Deno.serve(handle(async (req) => {
     const r = await reconcileRefund(db, prep.id, grace).catch((x) => ({ refund: prep.id, state: 'unreachable' as const, detail: String(x) }));
     if (r.state === 'succeeded') {
       await db.from('audit_log').insert({ actor: user.id, actor_label: user.email, table_name: 'orders', row_id: prep.order.id, action: 'REFUND',
-        new_data: { refund: prep.id, amount_minor: prep.amount_minor, currency: prep.currency, reason: prep.reason, credit_note: r.creditNote ?? null, reconciled: true } });
-      return json({ ok: true, refund: prep.id, amount: prep.amount_minor, currency: prep.currency, creditNote: r.creditNote ?? null,
+        new_data: { refund: prep.id, amount_minor: prep.amount_minor, goodwill_deducted_minor: goodwillDeducted, currency: prep.currency, reason: prep.reason,
+                    credit_note: r.creditNote ?? null, reconciled: true } });
+      return json({ ok: true, refund: prep.id, amount: prep.amount_minor, currency: prep.currency, creditNote: r.creditNote ?? null, goodwillDeducted,
                     creditNotePending: prep.platform_minor > 0 && !r.creditNote, reconciled: true });
     }
     return fail(202, 'Moyasar did not confirm the refund. It stays "processing": do not refund again. Use "Check with Moyasar" in a few minutes.',
@@ -237,9 +268,10 @@ Deno.serve(handle(async (req) => {
   }
   await db.from('audit_log').insert({
     actor: user.id, actor_label: user.email, table_name: 'orders', row_id: prep.order.id, action: 'REFUND',
-    new_data: { refund: prep.id, amount_minor: prep.amount_minor, currency: prep.currency, reason: prep.reason, credit_note: creditNote },
+    new_data: { refund: prep.id, amount_minor: prep.amount_minor, goodwill_deducted_minor: goodwillDeducted, currency: prep.currency, reason: prep.reason, credit_note: creditNote },
   });
-  return json({ ok: true, refund: prep.id, amount: prep.amount_minor, currency: prep.currency, creditNote, creditNotePending: prep.platform_minor > 0 && !creditNote });
+  return json({ ok: true, refund: prep.id, amount: prep.amount_minor, currency: prep.currency, creditNote, goodwillDeducted,
+                creditNotePending: prep.platform_minor > 0 && !creditNote });
 }));
 
 type Issue = { id: string; payment_id: string; order_id: string | null; kind: string; amount_minor: number; currency: string; status: string; age_seconds: number;
