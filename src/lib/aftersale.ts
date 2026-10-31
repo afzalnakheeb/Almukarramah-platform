@@ -3,15 +3,15 @@
 // masked there); the database decides who may do what. Until switch-on (EXPO_PUBLIC_MARKET_LIVE) nothing here is
 // called; the screenshot build (EXPO_PUBLIC_MARKET_DEMO) shows the example data in aftersale-demo.ts.
 import { MARKET_DEMO, MARKET_LIVE } from './flags';
-import { callFunction, supabase } from './supabase';
+import { AppError, callFunction, fromDb, supabase } from './supabase';
 import * as demo from './aftersale-demo';
 
 const rpc = async <T>(name: string, args: Record<string, unknown> = {}): Promise<T> => {
   const { data, error } = await supabase.rpc(name, args);
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   return data as T;
 };
-const demoOnly = () => { throw new Error('Example data: nothing is saved here.'); };
+const demoOnly = () => { throw new AppError({ en: 'Example data: nothing is saved here.', ar: 'بيانات للعرض فقط: لا يُحفظ شيء هنا.' }); };
 
 // ---------------------------------------------------------------- returns
 export type ReturnReason = 'changed_mind' | 'not_as_described' | 'faulty' | 'damaged' | 'wrong_item' | 'missing_item' | 'not_received';
@@ -57,11 +57,11 @@ export async function uploadCustomerPhoto(file: File, kind: 'review_photo' | 're
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) return { asset: null, reasons: [{ code: 'type', en: 'Photos must be JPEG, PNG or WebP.', ar: 'يجب أن تكون الصور بصيغة JPEG أو PNG أو WebP.' }] };
   if (file.size > 10 * 1024 * 1024) return { asset: null, reasons: [{ code: 'size', en: 'Each photo must be 10 MB or less.', ar: 'يجب ألا يتجاوز حجم الصورة ١٠ ميغابايت.' }] };
   const { data: s } = await supabase.auth.getUser();
-  if (!s.user) throw new Error('Please sign in');
+  if (!s.user) throw new AppError({ en: 'Please sign in', ar: 'يُرجى تسجيل الدخول' });
   const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
   const path = `${s.user.id}/incoming/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
   const { error } = await supabase.storage.from('customer-uploads').upload(path, file, { contentType: file.type, upsert: false });
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   const r = await callFunction<{ asset: CustomerPhoto | null; reasons?: CustomerPhoto['reasons'] }>('screen-image', { path, kind });
   return { asset: r.asset, reasons: r.asset?.reasons?.length ? r.asset.reasons : r.reasons ?? [] };
 }
@@ -195,10 +195,27 @@ export async function adminRefundQueue(): Promise<RefundQueue> {
   if (MARKET_DEMO) return demo.demoRefundQueue();
   return rpc('admin_refund_queue');
 }
+export type RefundResult = {
+  ok?: boolean; amount?: number; currency?: string; creditNote?: string | null; creditNotePending?: boolean; reconciled?: boolean; refund?: string;
+  /** Moyasar's answer did not come back: the refund stays processing (never refund it again; check with Moyasar) */
+  pending?: boolean; recorded?: boolean; code?: string; error?: string; error_ar?: string;
+};
 /** Staff-only refund through refund-order (the amount is worked out on the server). */
-export async function refund(p: { orderId: string; reason: string; key: string; returnId?: string; subOrderId?: string }) {
+export async function refund(p: { orderId: string; reason: string; key: string; returnId?: string; subOrderId?: string }): Promise<RefundResult> {
   if (MARKET_DEMO) return demoOnly();
-  return callFunction<{ ok: boolean; amount: number; currency: string; creditNote: string | null; creditNotePending?: boolean }>('refund-order', p);
+  return callFunction<RefundResult>('refund-order', p);
+}
+export type Reconciled = { ok: boolean; refund: string; state: 'succeeded' | 'failed' | 'waiting' | 'mismatch' | 'not_processing' | 'unreachable'; detail?: string; creditNote?: string | null };
+/** A refund still waiting for Moyasar's answer: read the payment back from Moyasar and settle it (review H2). */
+export async function checkWithMoyasar(refundId: string): Promise<Reconciled> {
+  if (MARKET_DEMO) return demoOnly();
+  return callFunction<Reconciled>('refund-order', { action: 'reconcile', refundId });
+}
+export type FinishResult = { handed_on: unknown[]; invoices: unknown[]; credit_notes: unknown[]; refunds: unknown[]; left: { step: string; error: string }[] };
+/** Finish what a failure left half done: parcels not handed on, missing tax invoices and credit notes, refunds waiting (review H3). */
+export async function finishPendingWork(): Promise<FinishResult> {
+  if (MARKET_DEMO) return demoOnly();
+  return callFunction<FinishResult>('finish-pending', {});
 }
 export type AdminReview = {
   id: string; status: string; rating: number; title: string | null; body: string; lang: string; author: string; flags: string[]; moderation_note: string | null;
@@ -254,7 +271,7 @@ export async function outbox(filter: { audience?: string; key?: string }): Promi
   if (filter.audience) q = q.eq('audience', filter.audience);
   if (filter.key) q = q.eq('template_key', filter.key);
   const { data, error } = await q;
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   return (data as OutboxRow[]) ?? [];
 }
 
@@ -265,13 +282,18 @@ export const freshKey = (prefix: string) => `${prefix}_${Date.now().toString(36)
 export type Overview = {
   days: number;
   queues: Record<'sellers_to_review' | 'listings_waiting' | 'listings_checking' | 'photos_checking' | 'returns_to_answer' | 'disputes' | 'refunds_to_make'
-    | 'credit_notes_pending' | 'refunds_stuck' | 'reviews_to_publish' | 'conversations_flagged' | 'awaiting_acceptance' | 'late_to_ship' | 'not_collected' | 'delivery_failed', number>;
+    | 'credit_notes_pending' | 'refunds_stuck' | 'reviews_to_publish' | 'conversations_flagged' | 'awaiting_acceptance' | 'late_to_ship' | 'not_collected' | 'delivery_failed'
+    | 'shop_pages_to_approve', number>;
   sales: { orders: number; parcels: number; marketplace_parcels: number; marketplace_sar_minor: number; house_sar_minor: number; delivery_sar_minor: number;
     commission_sar_minor: number; refunded_sar_minor: number; cancelled_by_sellers: number; delivered: number };
   owed_to_sellers: { available_sar_minor: number; held_sar_minor: number; balance_sar_minor: number }; paid_out_sar_minor: number;
   sellers: { approved: number; partners: number; applying: number; suspended: number }; listings: { live: number; waiting: number; drafts: number };
   top_sellers: { id: string; name_en: string; slug: string; parcels: number; sales_sar_minor: number; commission_sar_minor: number; rating_avg: number | null; standard: string }[];
   destinations: { country: string; parcels: number }[]; notifications_queued: number;
+  /** half-done work that finish-pending completes (review H3) */
+  pending_work?: { orders_without_invoice: number; orders_not_handed_on: number; credit_notes_pending: number; refunds_processing: number };
+  /** the switches Afzal decides (DECISIONS.md, Needs Afzal); all off until he switches them on */
+  switches?: { marketplace_open: boolean; sellers_open: boolean; payouts_enabled: boolean; sandbox_carrier: boolean | null; support_refund_limit_minor: number };
 };
 export async function adminOverview(days = 30): Promise<Overview> {
   if (MARKET_DEMO) return demo.demoOverview();

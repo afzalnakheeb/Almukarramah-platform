@@ -4,12 +4,13 @@
 import { priceCart, type CartItem, type PricedLine } from './cart.ts';
 import { plan, vatInside, type Blocked, type SubOrderPlan, type Tables } from './rules.ts';
 import { quotes, type Quote } from './shipping.ts';
+import { UserError } from './errors.ts';
 import type { Db } from './util.ts';
 
 export type ShipTo = { kind: string; recipient_name?: string; phone?: string; country: string; city: string; line1?: string; line2?: string; hotel_name?: string };
 
 export async function loadTables(db: Db): Promise<Tables> {
-  const [countries, corridors, dutyRates, permitRules, services, prices, settings] = await Promise.all([
+  const [countries, corridors, dutyRates, permitRules, services, prices, settings, providers] = await Promise.all([
     db.from('countries').select('code, name_en, name_ar, currency, vat_rate_bp, import_duty_bp, de_minimis_sar, customs_union, import_tax_regime, import_tax_threshold_minor, platform_collects_import_tax'),
     db.from('corridors').select('id, scope, from_country, to_country, phase, status, invoicer, vat_mode, duties_mode, platform_collects_import_tax, pilot_seller_ids'),
     db.from('duty_rates').select('country, hs_prefix, duty_bp'),
@@ -17,11 +18,15 @@ export async function loadTables(db: Db): Promise<Tables> {
     db.from('carrier_services').select('id, provider_id, code, carrier_name, service_name, service_name_ar, from_countries, to_countries, domestic_only, dangerous_goods, ddp, days_min, days_max, active, sort'),
     db.from('delivery_prices').select('id, from_country, to_country, service_id, first_kg_sar, extra_kg_sar, free_over_sar, active'),
     db.from('store_settings').select('zero_rate_exports').eq('id', 1).single(),
+    db.from('carrier_providers').select('id').eq('active', true),
   ]);
-  for (const r of [countries, corridors, dutyRates, permitRules, services, prices]) if (r.error) throw r.error;
+  for (const r of [countries, corridors, dutyRates, permitRules, services, prices, providers]) if (r.error) throw r.error;
+  // only couriers whose provider is switched on (the sandbox is off on a live project: review M6)
+  const on = new Set(((providers.data ?? []) as { id: string }[]).map((x) => x.id));
+  const liveServices = ((services.data ?? []) as (Tables['services'][number] & { provider_id: string })[]).filter((s) => on.has(s.provider_id));
   return {
     countries: countries.data as Tables['countries'], corridors: corridors.data as Tables['corridors'], dutyRates: dutyRates.data as Tables['dutyRates'],
-    permitRules: permitRules.data as Tables['permitRules'], services: services.data as Tables['services'], prices: prices.data as Tables['prices'],
+    permitRules: permitRules.data as Tables['permitRules'], services: liveServices as Tables['services'], prices: prices.data as Tables['prices'],
     zeroRateHouseExports: !!settings.data?.zero_rate_exports, houseCountry: 'SA',
   };
 }
@@ -33,7 +38,7 @@ export type Checkout = {
 };
 
 export async function planCheckout(db: Db, items: CartItem[], shipTo: ShipTo): Promise<Checkout> {
-  if (!shipTo?.country || !/^[A-Za-z]{2}$/.test(shipTo.country)) throw new Error('Choose the country to deliver to');
+  if (!shipTo?.country || !/^[A-Za-z]{2}$/.test(shipTo.country)) throw new UserError('Choose the country to deliver to', 'اختر دولة التوصيل');
   const priced = await priceCart(db, items);
   const tables = await loadTables(db);
   const p = plan(tables, priced.map((l) => l.rule), shipTo.country.toUpperCase());

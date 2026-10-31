@@ -47,7 +47,7 @@ function makeOrder(customer: string | null, f: { invoice?: boolean; currency?: s
   svc(`select mp_order_paid('${o}')`);
   if (f.invoice !== false) {
     svc(`insert into invoices (number, icv, order_id, currency, total_excl_vat_minor, vat_minor, total_incl_vat_minor, total_sar_incl_vat_minor, vat_sar_minor, qr_base64)
-         values ('INV-T-' || substr(md5(random()::text), 1, 8), (select coalesce(max(icv), 0) + 1 from invoices), '${o}', '${currency}', 100000, 15000, 115000, 115000, 15000, 'qr')`);
+         values ('INV-T-' || substr(md5(random()::text), 1, 8), next_invoice_slot(), '${o}', '${currency}', 100000, 15000, 115000, 115000, 15000, 'qr')`);
   }
   return { o, a, b, h, items };
 }
@@ -151,8 +151,8 @@ describe('statements', () => {
     deliver(first.a);
     const rows = db.rows<{ kind: string; amount_sar_minor: number; available_in: number }>(`select kind, amount_sar_minor,
       available_on - (now() at time zone 'Asia/Riyadh')::date as available_in from seller_ledger where sub_order_id = '${first.a}' order by id`);
-    assert.deepEqual(rows, [{ kind: 'sale', amount_sar_minor: 50000, available_in: 10 }, { kind: 'commission', amount_sar_minor: -12500, available_in: 10 }],
-      '7-day window + 3 days hold');
+    assert.deepEqual(rows, [{ kind: 'sale', amount_sar_minor: 50000, available_in: 33 }, { kind: 'commission', amount_sar_minor: -12500, available_in: 33 }],
+      'the 30-day problem window (longer than its 7-day return window) + 3 days hold (review L4)');
     deliver(first.a);
     assert.equal(db.val(`select count(*)::int from seller_ledger where sub_order_id = '${first.a}'`), 2, 'booked once');
     const bal = db.val<{ balance_sar_minor: number; available_sar_minor: number; held_sar_minor: number }>(`select seller_balance('${A}')`, asUser('sellerA'));
@@ -175,7 +175,10 @@ describe('statements', () => {
 
   test('payouts are recorded by finance, never more than is available; adjustments need a reason; a returned transfer is owed again', () => {
     const old = makeOrder(ids.customer2);
-    deliver(old.a, 20);                              // past its window and hold
+    deliver(old.a, 40);                              // past the problem window and the hold
+    // payouts need the switch (Needs Afzal), approved KYC and bank details that have not just changed (review M12)
+    svc(`update mp_settings set payouts_enabled = true where id = 1;
+         update seller_private set kyc_status = 'approved', bank_changed_at = now() - interval '30 days' where seller_id = '${A}'`);
     const before = db.val<{ available_sar_minor: number }>(`select seller_balance('${A}')`, asUser('finance'));
     assert.equal(before.available_sar_minor, 37500);
     assert.match(db.error(`select mp_record_payout('${A}', 40000, 'TRX-1001', current_date)`, asUser('finance')) ?? '', /Only 37500 halalas/);
@@ -225,7 +228,8 @@ describe('refunds (staff only, worked out on the server)', () => {
     assert.equal(r1.duplicate, false);
     assert.equal(prepare(o.o, { key: 'rf-partial-0001', reason: 'One bottle leaked', lines: [{ order_item_id: o.items.a, quantity: 1 }] }).duplicate, true);
     // while it is processing, the bottle cannot be refunded again
-    assert.match(db.error(`select mp_prepare_refund('${o.o}', '{"key": "rf-partial-0002", "reason": "again", "lines": [{"order_item_id": "${o.items.a}", "quantity": 2}]}'::jsonb, '${finance}')`, 'service') ?? '', /Only 1 of that item/);
+    assert.match(db.error(`select mp_prepare_refund('${o.o}', '{"key": "rf-partial-0002", "reason": "again", "lines": [{"order_item_id": "${o.items.a}", "quantity": 2}]}'::jsonb, '${finance}')`, 'service') ?? '', /still being processed/,
+      'one refund waiting for Moyasar per order (review H2)');
     complete(r1.id, false);
     assert.equal(db.val(`select status from refunds where id = '${r1.id}'`), 'failed');
     const r2 = prepare(o.o, { key: 'rf-partial-0003', reason: 'Both bottles leaked', lines: [{ order_item_id: o.items.a, quantity: 2 }] });
@@ -241,17 +245,24 @@ describe('refunds (staff only, worked out on the server)', () => {
     assert.match(db.error(`update refunds set amount_minor = 1 where id = '${r2.id}'`, 'service') ?? '', /never change/);
     assert.match(db.error(`delete from refunds where id = '${r2.id}'`, 'service') ?? '', /never deleted/);
     assert.match(db.error(`update refund_lines set amount_minor = 1 where refund_id = '${r2.id}'`, 'service') ?? '', /never edited/);
-    // the credit note is attached once issued
-    const cn = db.val<string>(`insert into invoices (number, icv, order_id, doc, original_invoice_id, reason, currency, total_excl_vat_minor, vat_minor, total_incl_vat_minor, total_sar_incl_vat_minor, vat_sar_minor, qr_base64)
-      values ('CN-T-1', 9001, '${o.o}', 'credit_note', (select id from invoices where order_id = '${o.o}' and doc = 'invoice'), 'Both bottles leaked', 'SAR', 43478, 6522, 50000, 50000, 6522, 'qr') returning id`, 'service');
-    db.exec(`select mp_attach_credit_note('${r2.id}', '${cn}')`, 'service');
+    // the credit note is issued against our invoice and attached in one transaction, once (review H3, M9)
+    const orig = db.val<string>(`select id from invoices where order_id = '${o.o}' and doc = 'invoice'`);
+    const note = { doc: 'credit_note', order_id: o.o, refund_id: r2.id, original_invoice_id: orig, reason: 'Both bottles leaked', currency: 'SAR',
+      total_excl_vat_minor: 43478, vat_minor: 6522, total_incl_vat_minor: 50000, total_sar_incl_vat_minor: 50000, vat_sar_minor: 6522, qr_base64: 'qr',
+      xml: '<CreditNote>{{NUMBER}} {{ICV}}</CreditNote>', vat_rate_bp: 1500, fx_per_sar: 1 };
+    const issue = () => db.val<{ id: string; number: string; duplicate: boolean }>(`select mp_issue_document('${JSON.stringify(note)}'::jsonb)`, 'service');
+    const cn = issue();
+    assert.equal(cn.duplicate, false);
+    assert.match(cn.number, /^CN-\d{4}-\d{6}$/);
     assert.equal(db.val(`select credit_note_status from refunds where id = '${r2.id}'`), 'issued');
-    assert.match(db.error(`select mp_attach_credit_note('${r2.id}', '${cn}')`, 'service') ?? '', /not attached/);
+    assert.equal(db.val<string>(`select xml from invoices where id = '${cn.id}'`), `<CreditNote>${cn.number} ${Number(cn.number.slice(-6))}</CreditNote>`);
+    assert.equal(issue().duplicate, true, 'a second attempt returns the same credit note');
+    assert.equal(db.val(`select count(*)::int from invoices where doc = 'credit_note' and order_id = '${o.o}'`), 1);
   });
 
   test('a cancelled parcel: everything on it, delivery and duties included; then nothing is left', () => {
     const o = makeOrder(ids.customer2);
-    db.exec(`select seller_cancel_sub_order('${o.b}', 'The tailor is unwell this month, sorry.')`, asUser('sellerB'));
+    db.exec(`select mp_cancel_parcel('${ids.sellerB}', '${o.b}', 'The tailor is unwell this month, sorry.')`, 'service');
     assert.match(outbox(`template_key = 'parcel_cancelled' and order_id = '${o.o}'`)[0].body_en, /could not fulfil AM-\d+-2: The tailor is unwell/);
     assert.equal(db.val<{ cancelled: unknown[] }>(`select admin_refund_queue()`, asUser('finance')).cancelled.length >= 1, true);
     const r = prepare(o.o, { key: 'rf-cancel-0001', reason: 'Seller cancelled', sub_order_id: o.b });

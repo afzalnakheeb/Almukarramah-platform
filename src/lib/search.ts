@@ -6,7 +6,7 @@ import { MARKET_DEMO, MARKET_LIVE } from './flags';
 import { attributesOf, pathOf, type Guidance } from './market';
 import { DEMO_LISTINGS, DEMO_SELLER, demoListing } from './market-demo';
 import { snapshot } from './snapshot';
-import { supabase } from './supabase';
+import { fromDb, supabase } from './supabase';
 
 export type { SearchParams };
 export { normalizeForSearch };
@@ -67,7 +67,7 @@ function localDocs(g: Guidance): { docs: SearchDoc[]; items: Map<string, SearchI
 export async function searchListings(p: SearchParams, g: Guidance): Promise<SearchResult> {
   if (MARKET_LIVE) {
     const { data, error } = await supabase.rpc('mp_search', { p });
-    if (error) throw new Error(error.message);
+    if (error) throw fromDb(error);
     return data as SearchResult;
   }
   const { docs, items } = localDocs(g);

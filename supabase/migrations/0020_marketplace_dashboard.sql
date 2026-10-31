@@ -1,7 +1,9 @@
 -- Marketplace (9 of 9): our team's dashboard, and public parcel tracking.
--- * admin_marketplace_overview: what needs doing now (the queues) and how the marketplace is going over a period (sales
---   by sellers and our own products in SAR, commission, refunds, money owed to sellers, the busiest sellers with their
---   standards, where parcels go). Staff only; read only.
+-- * admin_marketplace_overview: what needs doing now (the queues), what a failure left half done (paid orders without
+--   their tax invoice or not handed on, credit notes and refunds still to finish: finish-pending works through them,
+--   review H3), the switches, and how the marketplace is going over a period (sales by sellers and our own products in
+--   SAR, commission, refunds, money owed to sellers, the busiest sellers with their standards, where parcels go).
+--   Staff only; read only.
 -- * track_parcel: the tracking page (/track?number=...) that labels and emails link to. Anyone with the tracking number
 --   sees the parcel's progress, as on a courier's site: statuses, times and places, never a name or an address.
 create or replace function admin_marketplace_overview(p_days int default 30) returns jsonb
@@ -12,7 +14,7 @@ declare
   today date := private.riyadh_today();
 begin
   -- staff, or Claude's connector and scheduled jobs (no API request); never a customer or a seller
-  if not private.is_staff_or_server() then raise exception 'Not allowed'; end if;
+  if not private.is_staff_or_server() then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return jsonb_build_object(
     'days', v_days,
     'queues', jsonb_build_object(
@@ -31,7 +33,17 @@ begin
       'awaiting_acceptance', (select count(*) from sub_orders where status = 'awaiting_acceptance' and created_at < now() - interval '24 hours'),
       'late_to_ship', (select count(*) from sub_orders where seller_id is not null and status in ('accepted', 'in_production') and ship_by < today),
       'not_collected', (select count(*) from sub_orders where status = 'ready_to_ship' and ready_at < now() - interval '2 days'),
-      'delivery_failed', (select count(*) from sub_orders where status = 'delivery_failed')),
+      'delivery_failed', (select count(*) from sub_orders where status = 'delivery_failed'),
+      'shop_pages_to_approve', (select count(*) from sellers where profile_pending is not null)),
+    'pending_work', (select jsonb_build_object(
+        'orders_without_invoice', jsonb_array_length(w -> 'orders_without_invoice'),
+        'orders_not_handed_on', jsonb_array_length(w -> 'orders_not_handed_on'),
+        'credit_notes_pending', jsonb_array_length(w -> 'credit_notes'),
+        'refunds_processing', jsonb_array_length(w -> 'refunds_processing'))
+      from (select mp_pending_work(1000, 0) as w) x),
+    'switches', (select jsonb_build_object('marketplace_open', marketplace_open, 'sellers_open', sellers_open, 'payouts_enabled', payouts_enabled,
+        'sandbox_carrier', (select active from carrier_providers where id = 'sandbox'), 'support_refund_limit_minor', support_refund_limit_minor)
+      from mp_settings where id = 1),
     'sales', (select jsonb_build_object(
         'orders', count(distinct s.order_id),
         'parcels', count(*),

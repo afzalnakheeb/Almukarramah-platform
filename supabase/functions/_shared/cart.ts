@@ -2,6 +2,7 @@
 // made-to-measure design options (price adjustments added here) and measurements (checked against what that listing
 // asks for: no list of measurements is fixed in this code), and everything the rulebook needs about each line.
 import type { Line } from './rules.ts';
+import { UserError } from './errors.ts';
 import type { Db } from './util.ts';
 
 export type CartItem = {
@@ -30,8 +31,11 @@ export type PricedLine = {
 };
 
 export async function priceCart(db: Db, items: CartItem[]): Promise<PricedLine[]> {
-  if (!items.length) throw new Error('Your bag is empty');
-  if (items.length > 50) throw new Error('Too many items');
+  if (!items.length) throw new UserError('Your bag is empty', 'حقيبتك فارغة');
+  if (items.length > 50) throw new UserError('Too many items', 'عدد المنتجات كبير جدًا');
+  // the marketplace switch (review M6): sellers' items are sold only once it is on
+  const { data: sw } = await db.from('mp_settings').select('marketplace_open').eq('id', 1).maybeSingle();
+  const marketOpen = sw?.marketplace_open === true;
   const ids = [...new Set(items.map((i) => i.productId))];
   const { data: products, error } = await db.from('products')
     .select('id, name_en, name_ar, base_price_sar, stock, is_active, listing_status, weight_g, ship_class, dangerous_goods, restricted_countries, allowed_destinations, hs_code, origin_country, compliance_status, seller_id, category_id, made_to_measure, garment_style, sizes, tailoring, product_prices(currency, amount_minor), product_permits(permit_key, status, expires_on)')
@@ -64,29 +68,35 @@ export async function priceCart(db: Db, items: CartItem[]): Promise<PricedLine[]
   };
 
   const out: PricedLine[] = [];
+  // stock is checked for the whole bag: two lines of the same option count together (review L6)
+  const taken = new Map<string, number>();
   for (const [n, i] of items.entries()) {
     const p = (products as ProductRow[] | null)?.find((x) => x.id === i.productId);
-    if (!p || !p.is_active || p.listing_status !== 'approved') throw new Error('A product is no longer available');
+    if (!p || !p.is_active || p.listing_status !== 'approved') throw new UserError('A product is no longer available', 'لم يعد أحد المنتجات متاحًا');
     const qty = Math.floor(Number(i.quantity));
-    if (!(qty >= 1 && qty <= 99)) throw new Error('Invalid quantity');
+    if (!(qty >= 1 && qty <= 99)) throw new UserError('Invalid quantity', 'الكمية غير صالحة');
     const seller = (sellers as SellerRow[] | null)?.find((s) => s.id === p.seller_id) ?? null;
-    if (p.seller_id && seller?.status !== 'approved') throw new Error(`${p.name_en} is no longer available`);
+    if (p.seller_id && (seller?.status !== 'approved' || !marketOpen)) throw new UserError(`${p.name_en} is no longer available`, `لم يعد «${p.name_ar}» متاحًا`);
 
     // the option (size, volume...) when the listing has options
     let variant: VariantRow | null = null;
     if (withOptions.has(p.id)) {
       variant = (variants as VariantRow[] | null)?.find((v) => v.id === i.variantId && v.product_id === p.id && v.is_active) ?? null;
-      if (!variant) throw new Error(`Please choose an option for ${p.name_en}`);
-      if (variant.stock < qty) throw new Error(`Only ${variant.stock} left of ${p.name_en} (${variant.label_en})`);
-    } else if (!p.made_to_measure && p.stock < qty) {
-      throw new Error(`Only ${p.stock} left of ${p.name_en}`);
+      if (!variant) throw new UserError(`Please choose an option for ${p.name_en}`, `يُرجى اختيار أحد خيارات «${p.name_ar}»`);
+      const want = (taken.get(variant.id) ?? 0) + qty;
+      if (variant.stock < want) throw new UserError(`Only ${variant.stock} left of ${p.name_en} (${variant.label_en})`, `بقي ${variant.stock} فقط من «${p.name_ar}» (${variant.label_ar})`);
+      taken.set(variant.id, want);
+    } else if (!p.made_to_measure) {
+      const want = (taken.get(p.id) ?? 0) + qty;
+      if (p.stock < want) throw new UserError(`Only ${p.stock} left of ${p.name_en}`, `بقي ${p.stock} فقط من «${p.name_ar}»`);
+      taken.set(p.id, want);
     }
 
     let unitSar = variant?.price_minor ?? p.base_price_sar;
     let custom: CartItem['custom'] | null = null;
     const sizes = p.sizes ?? [];
     if (!p.made_to_measure && sizes.length && !variant) {
-      if (!i.custom?.size || !sizes.includes(i.custom.size)) throw new Error(`Please choose a size for ${p.name_en}`);
+      if (!i.custom?.size || !sizes.includes(i.custom.size)) throw new UserError(`Please choose a size for ${p.name_en}`, `يُرجى اختيار المقاس لـ«${p.name_ar}»`);
       custom = { size: i.custom.size };
     }
     if (p.made_to_measure) {
@@ -94,7 +104,7 @@ export async function priceCart(db: Db, items: CartItem[]): Promise<PricedLine[]
       const chosen: Record<string, string> = {};
       for (const o of t.options ?? []) {
         const c = o.choices.find((x) => x.id === i.custom?.options?.[o.key]);
-        if (!c) throw new Error(`Please choose every design option for ${p.name_en}`);
+        if (!c) throw new UserError(`Please choose every design option for ${p.name_en}`, `يُرجى اختيار كل خيارات التصميم لـ«${p.name_ar}»`);
         chosen[o.key] = c.id;
         unitSar += Math.max(0, Math.round(c.price_minor || 0));     // design add-ons are priced here, never by the app
       }
@@ -109,7 +119,7 @@ export async function priceCart(db: Db, items: CartItem[]): Promise<PricedLine[]
           const hi = m.max_cm ?? 300;
           if (!(v >= lo && v <= hi)) {
             if (m.required === false && given[m.key] === undefined) continue;
-            throw new Error(`Measurements for ${p.name_en} are incomplete`);
+            throw new UserError(`Measurements for ${p.name_en} are incomplete`, `قياسات «${p.name_ar}» غير مكتملة`);
           }
           clean[m.key] = Math.round(v * 10) / 10;
         }
@@ -117,7 +127,7 @@ export async function priceCart(db: Db, items: CartItem[]): Promise<PricedLine[]
         for (const [k, v] of Object.entries(given).slice(0, 40)) {
           if (/^[a-z][a-z0-9_]{0,39}$/.test(k) && Number(v) >= 10 && Number(v) <= 300) clean[k] = Math.round(Number(v) * 10) / 10;
         }
-        if (!Object.keys(clean).length) throw new Error(`Measurements for ${p.name_en} are incomplete`);
+        if (!Object.keys(clean).length) throw new UserError(`Measurements for ${p.name_en} are incomplete`, `قياسات «${p.name_ar}» غير مكتملة`);
       }
       custom = { options: chosen, measurements: clean, profileName: i.custom?.profileName?.slice(0, 40) };
     }

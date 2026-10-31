@@ -7,6 +7,12 @@ to undo it. Read it with `DECISIONS.md` (the defaults waiting for a yes) and `PR
 Every step below changes the live service. Under the project's approval rule, show Afzal exactly what will change and
 wait for his yes before each one. The live project is `axpwiixtqkjwjbsqzwqv`.
 
+The marketplace has switches in the database (`mp_settings`), all off after the migrations: `marketplace_open`,
+`sellers_open`, `payouts_enabled`, support's refund limit (0) and the test courier (inactive). Applying the
+migrations and deploying the functions therefore opens nothing to the public by itself: the shop keeps working as it
+does today until Afzal switches the marketplace on (step 7). The decisions behind each switch are at the top of
+`DECISIONS.md` ("Needs Afzal").
+
 ## 0. Before you start
 
 1. Merge `shots/market` into `main` after review. CI builds the site; check that `shots/typecheck.txt` has only the 7
@@ -25,33 +31,57 @@ files one at a time, in order, with the Supabase MCP `apply_migration` (name: th
 `psql -v ON_ERROR_STOP=1 -f <file>`. Do not use `supabase db push`, which would try to reconcile local numbers with
 the live timestamps.
 
-Migrations 0010 and 0011 belong to the apps workstream and are independent of these. If they add a column to
-`products` after 0017 has run, grant it: `grant select (new_column) on products to anon, authenticated` (0017 limits
-what the API can read on products).
+Migrations 0010 and 0011 belong to the apps workstream and are independent of these. Nothing in 0012 to 0020 limits
+what the API can read on `products` (no column grants: every client, including main and the apps branch, reads
+products with `select *` as before; the review fields live in `listing_reviews`), so no grant is needed when the apps
+migrations add columns.
 
 | File | What it adds or changes |
 |---|---|
-| `0012_marketplace.sql` | Sellers, their private details and members; marketplace columns on `products` (`listing_status` defaults to `approved`, so every existing product stays live); measurement profiles; seller and commission columns on order lines; the public read policy on products is replaced (sellers' listings show only when approved); buckets `seller-uploads` (private) and `catalogue` (public). |
-| `0013_rulebook_model_b.sql` | Countries, duties, corridors (phase 1 open, the rest closed), permits, KYC requirements, seller documents, product permits, pickup addresses, carriers (the sandbox, and providers listed but not connected), carrier services, rate cards, delivery prices; compliance columns on products. |
-| `0014_categories_standards.sql` | The category tree (departments and groups around the existing collections), category policies and attributes, document types, the Islamic standard (`policy_rules`: 15 prohibited, 7 restricted awaiting the scholar), `mp_settings`, garment styles. |
+| `0012_marketplace.sql` | Sellers, their private details and members; marketplace columns on `products` (`listing_status` defaults to `approved`, so every existing product stays live); `listing_reviews` (the review notes, AI findings and reviewers, readable by staff and the listing's seller only); measurement profiles; seller and commission columns on order lines; the public read policy on products is replaced (sellers' listings show only when approved and the marketplace is open); buckets `seller-uploads` (private) and `catalogue` (public). |
+| `0013_rulebook_model_b.sql` | Countries, duties, corridors (our own products' routes open; the Saudi marketplace corridor and the rest closed until the adviser signs), permits, KYC requirements, seller documents, product permits, pickup addresses, carriers (the sandbox, inactive; providers listed but not connected), carrier services, rate cards, delivery prices; compliance columns on products. |
+| `0014_categories_standards.sql` | The category tree (departments and groups around the existing collections), category policies and attributes, document types, the Islamic standard (`policy_rules`: 15 prohibited, 7 restricted awaiting the scholar), `mp_settings` with the switches `marketplace_open` and `sellers_open` (both off), garment styles. |
 | `0015_ai_screening.sql` | Screened media, verdict records (append-only), strikes, blocked hashes, rate counters, product documents; the `quarantine` bucket (staff only). |
 | `0016_onboarding.sql` | The seller's application file and checklist, categories per seller, review history; KYC and brand papers; approval through `mp_review_seller` only. |
-| `0017_listings_search.sql` | Product options (`product_variants`), the price guard, search columns and indexes, `mp_search`, storefronts. **Narrows what the API can read on `products`** to every column except the review fields. |
-| `0018_orders_shipping.sql` | Sub-orders, shipments, tracking events, the `labels` bucket (private); new columns on `orders` and `order_items`; the seller's order flow; the customer's tracking. |
-| `0019_after_sale.sql` | Statements (ledger, payouts, monthly view), refunds, returns, reviews and replies, messages, the notifications outbox with 40 templates, seller performance; `orders.fx_per_sar` and refunded amounts; the `customer-uploads` bucket (private); replaces `my_order_tracking` and `mp_public_settings`; widens `media_assets.kind` for return photos. |
-| `0020_marketplace_dashboard.sql` | `admin_marketplace_overview` (read only). |
+| `0017_listings_search.sql` | Product options (`product_variants`), the price guard (against the approved price), search columns and indexes, `mp_search`, storefronts, `mp_approve_listing` / `mp_reject_listing`. No change to what the API can read on `products`. |
+| `0018_orders_shipping.sql` | Sub-orders, shipments, tracking events, the `labels` bucket (private); new columns on `orders` (including `stock_taken_at`) and `order_items`; `mp_payment_received` (payment, parcels and stock in one transaction); the seller's order flow; the customer's tracking. |
+| `0019_after_sale.sql` | Statements (ledger, payouts, monthly view), refunds (one per return, one waiting for Moyasar per order), returns, reviews and replies, messages, the notifications outbox with 40 templates, seller performance; `orders.fx_per_sar` and refunded amounts; `invoices.vat_rate_bp` and `fx_per_sar`, one invoice per order, and `mp_issue_document` (the counter and the document in one transaction); `payouts_enabled`, `support_refund_limit_minor` and `payout_bank_hold_days` (off, 0, 7); the `customer-uploads` bucket (private); replaces `my_order_tracking` and `mp_public_settings`; widens `media_assets.kind` for return photos. |
+| `0020_marketplace_dashboard.sql` | `admin_marketplace_overview` (read only), with the half-done work and the switches. |
 
 Checks after the last file:
 
 ```sql
 select count(*) from products where listing_status <> 'approved';   -- 0: every existing product is still live
 select count(*) from notification_templates;                         -- 40
-select mp_public_settings();                                          -- returns the settings
-select count(*) from corridors where status <> 'closed';             -- the phase 1 corridors only
+select mp_public_settings();                                          -- returns the settings, marketplace_open false
+select marketplace_open, sellers_open, payouts_enabled, support_refund_limit_minor from mp_settings;   -- f, f, f, 0
+select active from carrier_providers where id = 'sandbox';            -- f
+select count(*) from corridors where status <> 'closed';             -- our own products' routes only
+select count(*) from invoices i group by order_id having count(*) filter (where doc = 'invoice') > 1;   -- no rows
 ```
 
 Then run the Supabase security advisors (`get_advisors`) and confirm nothing new about row-level security. Load the
-live website: products and collections still show (it still reads only the columns it read before).
+live website and an installed app build: products and collections still show (they read products with `select *`,
+which works unchanged).
+
+### What changes for the existing shop as soon as the migrations run
+
+Even with every switch off, these apply to Al Mukarramah's own products and orders (review M7):
+
+- **The products read policy is replaced.** Our own products read exactly as before; sellers' listings are public only
+  when approved and the marketplace is open. New triggers run on `products` (the seller guards, the price and
+  compliance guards), `orders` (notifications) and `categories`.
+- **Return windows from the category policies apply to our own products** (dates: only if faulty, 3 days; perfume:
+  unopened, 7 days; everything else 14 days; problems 30 days). Online returns stay closed while the marketplace is
+  off, so in practice nothing changes until it opens, but the windows are what our team will apply. To be confirmed
+  with the legal adviser (DECISIONS.md, Needs Afzal J).
+- **Every paid order queues notification rows** (`notification_outbox`, English and Arabic). Nothing is sent until a
+  provider is connected; they show in the app.
+- **Orders get new columns** (`fx_per_sar`, refunded amounts, `stock_taken_at`, sub-orders for new orders). Stock
+  comes off in the database when a payment is recorded (`mp_order_paid`), for orders with parcels and for orders made
+  by an older `create-payment` without them, once (`orders.stock_taken_at`).
+- **Invoices get `vat_rate_bp` and `fx_per_sar`**, and one tax invoice per order is enforced by a unique index.
+  Existing invoice rows are never edited.
 
 ## 2. Server functions (after the migrations)
 
@@ -71,15 +101,29 @@ sets which ones skip the sign-in check (`verify_jwt = false`): cron jobs and web
 | `create-shipment` | new | labels |
 | `carrier-webhook` | new | `verify_jwt = false`, HMAC signature |
 | `shipment-sync` | new | cron, `verify_jwt = false` |
-| `after-sale` | new | messages, returns, reviews, replies, moderation |
-| `create-payment` | changed | sub-orders, idempotency key, checkout rate |
-| `moyasar-webhook` | changed | `mp_order_paid`; invoices only what we sell |
-| `refund-order` | changed | partial, idempotent refunds and credit notes |
+| `after-sale` | new | messages, returns, reviews, replies, moderation, a seller's cancellation of a parcel |
+| `finish-pending` | new | cron every 15 minutes and staff (owner, manager, finance), `verify_jwt = false`, checks the cron secret or the staff role itself |
+| `create-payment` | changed | sub-orders, idempotency key, checkout rate, the marketplace switch |
+| `moyasar-webhook` | changed | `mp_payment_received` (paid, parcels handed on and stock taken in one transaction); invoices only what we sell, once |
+| `refund-order` | changed | partial, idempotent refunds and credit notes; a timeout stays "processing" and is reconciled (`action: "reconcile"`) |
+| `charge-subscriptions` | changed | the invoice through the same once-only path |
 | `shipping-rates` | changed | the same rulebook for older app builds |
 
 Deploy the changed ones only after the migrations (they call the new database functions). The payment functions are
 not live yet (only `concierge` and `manage-subscription` are deployed): they go live with the Moyasar switch-on, and
 the marketplace needs them.
+
+**Versions that move together.** Deploy every function above from the same commit, and roll back together:
+
+- `create-payment` and `moyasar-webhook`: the new checkout creates parcels that only the new webhook hands on. The new
+  webhook still takes stock once for an order made by an older checkout (no parcels), but an older webhook with the new
+  checkout marks orders paid without handing their parcels to the sellers, and its own stock update then repeats
+  when `finish-pending` hands them on. Never run the old webhook with the new checkout.
+- `refund-order`, `finish-pending` and `after-sale` call database functions added by 0018 and 0019, and
+  `_shared/zatca.ts` stores documents through `mp_issue_document`: an older version of one of them against the new
+  database stops with an error rather than doing anything wrong, but refunds and credit notes stop too.
+- `review-listing`, `review-seller`, `create-shipment`, `carrier-webhook` and `shipment-sync` depend on 0016 to 0018.
+- The app (`EXPO_PUBLIC_MARKET_LIVE`) can be switched off on its own at any time (step 9).
 
 ## 3. Secrets
 
@@ -88,11 +132,17 @@ No new secret is required. The functions use the ones already planned:
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY` (provided by Supabase).
 - `ANTHROPIC_API_KEY`: the AI screening. Without it nothing is passed unchecked: photos and listings wait as
   "checking" until the key is there.
-- `CRON_SECRET`: the scheduled jobs, and the sandbox carrier's webhook signature.
+- `CRON_SECRET`: the scheduled jobs.
 - `MOYASAR_SECRET_KEY`, `MOYASAR_WEBHOOK_SECRET`, `MOYASAR_PUBLISHABLE_KEY`, `PUBLIC_SITE_URL`: payments.
 
+One new secret for the test courier: `SANDBOX_WEBHOOK_SECRET`, a random string (for example `openssl rand -hex 32`).
+The sandbox's webhooks are refused without it; the scheduler's secret is never accepted in its place (review L9).
+
 Optional: `SCREENING_FAST_MODEL` and `SCREENING_STRONG_MODEL` (defaults `claude-haiku-5-5` and `claude-sonnet-5-5`:
-confirm both are available on the account before relying on the defaults), `SANDBOX_WEBHOOK_SECRET`. Real carriers'
+confirm both are available on the account before relying on the defaults); `MOYASAR_TIMEOUT_MS` (default 20000, the
+time limit on each call to Moyasar); `REFUND_RECONCILE_GRACE_MINUTES` (default 15: a refund Moyasar never answered is
+marked failed only if Moyasar still shows no refund this long after it was asked); `FINISH_PENDING_MIN_AGE_SECONDS`
+(default 120: `finish-pending` leaves alone anything younger, which a request may still be finishing). Real carriers'
 keys come with their accounts, under the secret names recorded in `carrier_providers`.
 
 ## 4. Scheduled jobs
@@ -101,6 +151,9 @@ With Supabase Cron (pg_cron) and `pg_net` (already enabled live), each sending t
 
 - `screening-retry` every 5 minutes: finishes checks that could not run, deletes quarantined photos after 30 days.
 - `shipment-sync` every 15 minutes: asks the carrier for tracking when no webhook came.
+- `finish-pending` every 15 minutes: issues missing tax invoices and credit notes, hands on paid orders a failure left
+  behind, and checks refunds still waiting for Moyasar's answer (review H3). The same runs from "Finish pending work
+  now" on `/admin/marketplace`.
 - Optional, weekly: `select mp_performance_review();` warns sellers below the standard (it never suspends while
   `perf_auto_suspend` is off).
 
@@ -119,23 +172,40 @@ AI model through a short-lived signed link instead of a resized copy.
   example data, and on localhost only.
 - The phone apps get the same flag in their next EAS build, when the marketplace is ready on mobile.
 
-## 7. Settings to review with Afzal
+## 7. Switching the marketplace on, and settings to review with Afzal
+
+Each switch is Afzal's decision (DECISIONS.md, "Needs Afzal"); show him the statement and wait for his yes.
+
+```sql
+update mp_settings set sellers_open = true where id = 1;       -- B: sellers can apply at /sell
+update mp_settings set marketplace_open = true where id = 1;   -- A: sellers' listings, shops, checkout, returns, reviews, messages
+update mp_settings set payouts_enabled = true where id = 1;    -- C: only after the adviser's ruling on VAT in payouts
+update mp_settings set support_refund_limit_minor = 50000 where id = 1;   -- D: an example, 500 SAR
+```
+
+Switching `marketplace_open` back to false closes it again at once, in the database: sellers' listings and shops
+disappear from the public, marketplace lines are refused at checkout, and online returns, reviews and messages close.
+Parcels already ordered can still be accepted, shipped and refunded by our team.
 
 - `mp_settings`: commission defaults, photo rules, strike limits, the price guard, return windows, payout hold,
-  review moderation, message limits, performance thresholds (all in `DECISIONS.md`).
+  the bank-change hold, review moderation, message limits, performance thresholds (all in `DECISIONS.md`).
 - Corridors to open, each with the adviser's sign-off, and the delivery price for every open route.
 - The wording of the 40 notification templates (`/admin/notifications` shows what each one looks like).
 - `store_settings.zero_rate_exports` stays as it is.
 
 ## 8. A test run in production (sandbox shipping, Moyasar test mode)
 
+Before it: switch the test courier on (`update carrier_providers set active = true where id = 'sandbox';`), open
+seller applications, and open the marketplace only for the run if Afzal agrees (or keep it closed and use staff
+accounts). Switch the courier off again afterwards.
+
 1. A test seller applies from `/sell`, completes the file and is approved by a manager (KYC, sample).
 2. They list a product. The check rejects a phone number in the description; the corrected listing reaches the queue
    and is approved from `/admin/listings`.
 3. A test customer orders it with Moyasar's test card; the order is confirmed and the seller's new order appears.
-4. The seller accepts and prints the label (it says SAMPLE); `shipment-sync` moves it to delivered within a day and a
-   half.
-5. The sale appears on `/seller/statements`, held until the return window passes.
+4. The seller accepts and prints the label (it says SAMPLE, and the customer's phone is masked); `shipment-sync`
+   moves it to delivered within a day and a half.
+5. The sale appears on `/seller/statements`, held for 33 days (the problem window and the hold).
 6. The customer asks for a return; the seller accepts and confirms it came back; finance refunds it from
    `/admin/returns` (Moyasar test mode), and the credit note appears.
 7. The customer reviews the product; support publishes it from `/admin/reviews`.
@@ -145,13 +215,18 @@ The same journey runs in the test suite (`supabase/tests/e2e_journey.test.ts`) a
 
 ## 9. Undoing it
 
-1. Website: remove `EXPO_PUBLIC_MARKET_LIVE` and redeploy. The site goes back to reading only what it read before.
-   This is immediate and safe, and enough in most cases.
-2. Functions: redeploy the versions noted in step 0. The earlier `create-payment`, `moyasar-webhook`, `refund-order`
-   and `shipping-rates` still work with the new tables (every new column has a default).
-3. Database: leave the marketplace tables in place, with the flag off. They change nothing for the existing shop:
-   every existing product stays live, and orders work as before. Removing them would delete sellers' and customers'
-   data. If a full undo is needed before any marketplace data exists, restore the backup taken in step 0.
+1. **The switch, first.** `update mp_settings set marketplace_open = false where id = 1;` closes the marketplace in
+   the database at once (tested: `review_medium.test.ts`, M6), whatever app build people use. Close `sellers_open`
+   too if needed.
+2. **Website and apps:** remove `EXPO_PUBLIC_MARKET_LIVE` and redeploy. The site stops showing the marketplace pages.
+3. **Functions:** redeploy the versions noted in step 0, all of them together (see "Versions that move together" in
+   step 2). Rolling back only some breaks the flow: the earlier `moyasar-webhook` does not hand parcels to sellers,
+   and the earlier `refund-order` does not know returns or parcels. While orders with parcels exist, keep the new
+   payment and refund functions and use the switch instead.
+4. **Database:** leave the marketplace tables in place, with the switch off. What still applies to the existing shop
+   is listed in step 1 ("What changes for the existing shop"); there are no grants to undo. Removing the tables would
+   delete sellers' and customers' data. If a full undo is needed before any marketplace data exists, restore the
+   backup taken in step 0.
 
 ## Waiting for the legal and accounts phase
 

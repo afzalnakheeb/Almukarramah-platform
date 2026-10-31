@@ -34,3 +34,9 @@ verify_jwt = false
 # Marketplace: pulls tracking for parcels on their way, every 15 minutes (x-cron-secret).
 [functions.shipment-sync]
 verify_jwt = false
+
+# Marketplace: finishes what a failure left half done (invoices, credit notes, parcels not handed on, refunds waiting
+# for Moyasar), every 15 minutes with the x-cron-secret header; staff (owner, manager, finance) run it with their
+# sign-in, which the function checks itself.
+[functions.finish-pending]
+verify_jwt = false

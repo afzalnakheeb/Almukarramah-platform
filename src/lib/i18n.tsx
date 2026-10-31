@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Alert, I18nManager, Platform } from 'react-native';
+import { setErrorLanguage } from './app-error';
 import type { Lang } from './types';
 
 const en = {
@@ -709,6 +710,8 @@ const en = {
   ship_status_cancelled: 'Cancelled',
   ssProfile: 'Public profile',
   ssProfileHint: 'Shown on your shop page on Al Mukarramah.',
+  ssPendingNotice: 'Your changes to the shop page are waiting for our team\'s approval. Until then your shop page shows the text approved before.',
+  ssSavedForApproval: 'Saved. Our team checks the changes before they appear on your shop page.',
   ssAboutEn: 'About your brand (English)',
   ssAboutAr: 'About your brand (Arabic)',
   ssShipping: 'Delivery',
@@ -1971,6 +1974,8 @@ const ar: typeof en = {
   ship_status_cancelled: 'ملغى',
   ssProfile: 'الملف العام',
   ssProfileHint: 'يظهر في صفحة متجرك على المكرمة.',
+  ssPendingNotice: 'تعديلاتك على صفحة المتجر بانتظار موافقة فريقنا. وحتى ذلك الحين تعرض صفحة متجرك النص المعتمد سابقًا.',
+  ssSavedForApproval: 'تم الحفظ. يراجع فريقنا التعديلات قبل ظهورها في صفحة متجرك.',
   ssAboutEn: 'عن علامتك (بالإنجليزية)',
   ssAboutAr: 'عن علامتك (بالعربية)',
   ssShipping: 'التوصيل',
@@ -2585,6 +2590,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    setErrorLanguage(lang);
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
       document.documentElement.lang = lang;

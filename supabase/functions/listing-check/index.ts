@@ -7,31 +7,32 @@
 //   error  -> stays "check pending" (never passed unchecked); screening-retry finishes it.
 import { checkContext, runListingCheck, serverQuality } from '../_shared/media.ts';
 import { textChecks } from '../_shared/screening.ts';
-import { admin, caller, handle, isSellerMember, json, staffRole, UUID, withinLimit } from '../_shared/util.ts';
+import { admin, caller, dbError, fail, handle, isSellerMember, json, staffRole, UUID, withinLimit } from '../_shared/util.ts';
 
 Deno.serve(handle(async (req) => {
   const user = await caller(req);
-  if (!user) return json({ error: 'Please sign in' }, 401);
+  if (!user) return fail(401, 'Please sign in', 'يُرجى تسجيل الدخول');
   const { productId, submit } = (await req.json()) as { productId?: string; submit?: boolean };
-  if (!productId || !UUID.test(productId)) return json({ error: 'Missing listing' }, 400);
+  if (!productId || !UUID.test(productId)) return fail(400, 'Missing listing', 'المنتج غير محدد');
   const db = admin();
   const ctx = await checkContext(db, productId);
-  if (!ctx || !ctx.product.seller_id) return json({ error: 'Listing not found' }, 404);
+  if (!ctx || !ctx.product.seller_id) return fail(404, 'Listing not found', 'لم يُعثر على المنتج');
   const member = await isSellerMember(db, ctx.product.seller_id, user.id);
-  if (!member && !(await staffRole(db, user.id))) return json({ error: 'Not allowed' }, 403);
+  if (!member && !(await staffRole(db, user.id))) return fail(403, 'Not allowed', 'غير مسموح');
 
   const quality = serverQuality(ctx);
   const text = textChecks({ name_en: String(ctx.product.name_en ?? ''), name_ar: String(ctx.product.name_ar ?? ''),
-    description_en: String(ctx.product.description_en ?? ''), description_ar: String(ctx.product.description_ar ?? '') }, []);
+    description_en: String(ctx.product.description_en ?? ''), description_ar: String(ctx.product.description_ar ?? '') }, [],
+    { attributes: (ctx.product.attributes ?? {}) as Record<string, unknown>, variants: ctx.variants ?? [] });
   if (!submit) return json({ status: ctx.product.listing_status, quality, contacts: text.filter((h) => h.kind === 'contact') });
-  if (!member) return json({ error: 'Only the seller can submit a listing' }, 403);
-  if (!['draft', 'rejected'].includes(ctx.product.listing_status)) return json({ error: `This listing is ${ctx.product.listing_status}` }, 409);
+  if (!member) return fail(403, 'Only the seller can submit a listing', 'لا يرسل المنتج للمراجعة إلا البائع');
+  if (!['draft', 'rejected'].includes(ctx.product.listing_status)) return fail(409, `This listing is ${ctx.product.listing_status}`, 'لا يمكن إرسال هذا المنتج في حالته الحالية');
   if (!quality.canSubmit) return json({ submitted: false, status: ctx.product.listing_status, quality });
   if (!(await withinLimit(db, `listing-check:${ctx.product.seller_id}`, 86400, ctx.settings.listing_checks_per_day))) {
     return json({ error: 'Daily limit for listing checks reached. Please try again tomorrow.', error_ar: 'بلغت الحد اليومي لفحص المنتجات. حاول غدًا.' }, 429);
   }
   const { error: beginErr } = await db.rpc('mp_begin_listing_check', { p_product: productId, p_user: user.id });
-  if (beginErr) return json({ error: beginErr.message }, 400);
+  if (beginErr) return dbError(beginErr);
   try {
     const fresh = await checkContext(db, productId);
     const r = await runListingCheck(db, fresh!);

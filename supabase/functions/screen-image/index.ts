@@ -5,9 +5,11 @@
 // at once), stored privately under .../media/ and screened by the AI (fast pass, escalated when borderline).
 // Rejected files are deleted; prohibited ones are quarantined (staff only) and count as a strike for a seller.
 // The incoming file is always removed. Nothing here is ever public.
+// The AI costs money, so only people who need it can use it: a customer only with an order that can have a review or
+// a return photo (review L5); a seller only once Al Mukarramah is open to sellers (review M6); our team always.
 import { intakeImage } from '../_shared/images.ts';
 import { screenAsset } from '../_shared/media.ts';
-import { admin, caller, handle, isSellerMember, json, UUID, withinLimit } from '../_shared/util.ts';
+import { admin, caller, fail, handle, isSellerMember, json, staffRole, UUID, withinLimit } from '../_shared/util.ts';
 
 const KINDS = ['listing_photo', 'seller_logo', 'seller_banner', 'portfolio'] as const;
 const FIELDS = 'id, kind, path, status, reasons, flags, width, height, mime';
@@ -17,14 +19,20 @@ const CUSTOMER_KINDS = ['review_photo', 'return_photo'] as const;
 /** A customer's photo: checked, stored under customer-uploads/<user>/media/ and screened (no strikes for customers). */
 async function customerPhoto(userId: string, kind: (typeof CUSTOMER_KINDS)[number], path: string) {
   const m = /^([0-9a-f-]{36})\/incoming\/[A-Za-z0-9._-]{1,100}$/.exec(path);
-  if (!m || m[1] !== userId) return json({ error: 'Invalid upload' }, 400);
+  if (!m || m[1] !== userId) return fail(400, 'Invalid upload', 'الملف المرفوع غير صالح');
   const db = admin();
+  const { data: may, error: mayErr } = await db.rpc('mp_customer_may_upload', { p_user: userId, p_kind: kind });
+  if (mayErr) throw mayErr;
+  if (may !== true) {
+    await db.storage.from('customer-uploads').remove([path]);
+    return fail(403, 'Photos can be added to a review or a return of an order you received', 'يمكن إضافة الصور إلى تقييم أو طلب إرجاع لطلب استلمته', 'no_eligible_order');
+  }
   if (!(await withinLimit(db, `upload:user:${userId}`, 3600, 30))) {
     return json({ error: 'Too many photos in the last hour. Please try again later.', error_ar: 'رفعت صورًا كثيرة خلال الساعة الأخيرة. حاول لاحقًا.' }, 429);
   }
   const store = db.storage.from('customer-uploads');
   const { data: blob, error } = await store.download(path);
-  if (error || !blob) return json({ error: 'Upload not found' }, 404);
+  if (error || !blob) return fail(404, 'Upload not found', 'لم يُعثر على الملف المرفوع');
   const intake = await intakeImage(new Uint8Array(await blob.arrayBuffer()), blob.type || null);
   await store.remove([path]);
   if (!intake.ok) return json({ asset: null, status: 'rejected', reasons: [{ code: intake.code, en: intake.en, ar: intake.ar }] });
@@ -55,28 +63,31 @@ async function customerPhoto(userId: string, kind: (typeof CUSTOMER_KINDS)[numbe
 
 Deno.serve(handle(async (req) => {
   const user = await caller(req);
-  if (!user) return json({ error: 'Please sign in' }, 401);
+  if (!user) return fail(401, 'Please sign in', 'يُرجى تسجيل الدخول');
   const body = (await req.json()) as { path?: string; kind?: string; productId?: string; categoryId?: string };
   const customerKind = CUSTOMER_KINDS.find((k) => k === body.kind);
   if (customerKind) return customerPhoto(user.id, customerKind, String(body.path ?? ''));
   const kind = KINDS.find((k) => k === body.kind);
   const path = String(body.path ?? '');
   const m = /^([0-9a-f-]{36})\/incoming\/[A-Za-z0-9._-]{1,100}$/.exec(path);
-  if (!kind || !m || !UUID.test(m[1])) return json({ error: 'Invalid upload' }, 400);
+  if (!kind || !m || !UUID.test(m[1])) return fail(400, 'Invalid upload', 'الملف المرفوع غير صالح');
   const sellerId = m[1];
   const db = admin();
-  if (!(await isSellerMember(db, sellerId, user.id))) return json({ error: 'Not allowed' }, 403);
+  if (!(await isSellerMember(db, sellerId, user.id))) return fail(403, 'Not allowed', 'غير مسموح');
   const { data: seller } = await db.from('sellers').select('id, status').eq('id', sellerId).single();
-  if (!seller || seller.status === 'rejected' || seller.status === 'suspended') return json({ error: 'This seller account cannot upload photos' }, 403);
-  if (kind === 'listing_photo' && seller.status !== 'approved') return json({ error: 'Your seller account is not approved yet' }, 403);
-  const { data: settings } = await db.from('mp_settings').select('uploads_per_hour').eq('id', 1).single();
+  if (!seller || seller.status === 'rejected' || seller.status === 'suspended') return fail(403, 'This seller account cannot upload photos', 'لا يمكن لحساب البائع هذا رفع الصور');
+  if (kind === 'listing_photo' && seller.status !== 'approved') return fail(403, 'Your seller account is not approved yet', 'لم تتم الموافقة على حساب البائع بعد');
+  const { data: settings } = await db.from('mp_settings').select('uploads_per_hour, sellers_open').eq('id', 1).single();
+  if (!settings?.sellers_open && !(await staffRole(db, user.id))) {
+    return fail(403, 'Al Mukarramah is not open to sellers yet: photos can be checked once it opens', 'لم تفتح المكرمة للبائعين بعد، وستُفحص الصور عند الافتتاح', 'sellers_closed');
+  }
   if (!(await withinLimit(db, `upload:${sellerId}`, 3600, settings?.uploads_per_hour ?? 120))) {
     return json({ error: 'Too many uploads in the last hour. Please try again later.', error_ar: 'رفعت صورًا كثيرة خلال الساعة الأخيرة. حاول لاحقًا.' }, 429);
   }
 
   const store = db.storage.from('seller-uploads');
   const { data: blob, error } = await store.download(path);
-  if (error || !blob) return json({ error: 'Upload not found' }, 404);
+  if (error || !blob) return fail(404, 'Upload not found', 'لم يُعثر على الملف المرفوع');
   const intake = await intakeImage(new Uint8Array(await blob.arrayBuffer()), blob.type || null);
   await store.remove([path]);
   if (!intake.ok) return json({ asset: null, status: 'rejected', reasons: [{ code: intake.code, en: intake.en, ar: intake.ar }] });

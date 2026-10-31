@@ -1,9 +1,11 @@
 // After the sale: everything people write to each other goes through here so contact details are masked before they
 // are stored (contact.ts), then the database decides (who may, when, how much): messages, return requests and answers,
-// reviews and replies, and our team's moderation (which also publishes approved review photos to the catalogue).
-// The database functions called here are server-only and take the caller's id; nothing is trusted from the browser.
+// a seller's cancellation of a parcel (its reason reaches the customer; review M3), reviews and replies, and our
+// team's moderation (which also publishes approved review photos to the catalogue).
+// The database functions called here are server-only and take the caller's id (the audit log records the person,
+// review M13); nothing is trusted from the browser. Errors come back in English and Arabic (review M8).
 import { cleanText, mergeFlags } from '../_shared/aftersale.ts';
-import { admin, caller, handle, json, staffRole, UUID } from '../_shared/util.ts';
+import { admin, caller, dbError, fail, handle, json, staffRole, UUID } from '../_shared/util.ts';
 
 type Body = Record<string, unknown> & { action?: string };
 const id = (v: unknown) => (typeof v === 'string' && UUID.test(v) ? v : null);
@@ -11,19 +13,26 @@ const ids = (v: unknown, max: number) => (Array.isArray(v) ? v.map(id).filter((x
 
 Deno.serve(handle(async (req) => {
   const user = await caller(req);
-  if (!user) return json({ error: 'Please sign in' }, 401);
+  if (!user) return fail(401, 'Please sign in', 'يُرجى تسجيل الدخول');
   const body = (await req.json()) as Body;
   const db = admin();
   const rpc = async (fn: string, args: Record<string, unknown>) => {
     const { data, error } = await db.rpc(fn, args);
-    if (error) return json({ error: error.message }, 400);
+    if (error) return dbError(error);
     return json(data);
   };
 
   switch (body.action) {
     case 'message': {
-      const text = cleanText(body.body, 2000);
-      if (!text.text) return json({ error: 'Write a message' }, 400);
+      // the sender's last message in the conversation: a number split across two messages is caught in the second
+      let previous: string | null = null;
+      const threadId = id(body.threadId);
+      if (threadId) {
+        const { data: last } = await db.from('messages').select('body').eq('thread_id', threadId).eq('sender_id', user.id).order('id', { ascending: false }).limit(1).maybeSingle();
+        previous = (last?.body as string | undefined) ?? null;
+      }
+      const text = cleanText(body.body, 2000, { previous });
+      if (!text.text) return fail(400, 'Write a message', 'اكتب رسالة');
       const subject = cleanText(body.subject, 140);
       const as = body.as === 'seller' || body.as === 'staff' ? body.as : 'customer';
       return rpc('mp_post_message', {
@@ -57,6 +66,13 @@ Deno.serve(handle(async (req) => {
       });
     }
 
+    case 'cancel_parcel': {
+      // a seller cannot fulfil a parcel: the reason reaches the customer, so contact details are masked first
+      const reason = cleanText(body.reason, 1000);
+      if (!reason.text) return fail(400, 'Tell the customer why', 'أخبر العميل بالسبب');
+      return rpc('mp_cancel_parcel', { p_user: user.id, p_sub: id(body.subOrderId), p_reason: reason.text, p_flags: reason.flags });
+    }
+
     case 'review': {
       const title = cleanText(body.title, 120);
       const text = cleanText(body.body, 2000);
@@ -76,7 +92,7 @@ Deno.serve(handle(async (req) => {
     case 'moderate': {
       // our team (owner, manager, marketing, support): the database checks the role again
       const role = await staffRole(db, user.id);
-      if (!role || !['owner', 'manager', 'marketing', 'support'].includes(role)) return json({ error: 'Not allowed' }, 403);
+      if (!role || !['owner', 'manager', 'marketing', 'support'].includes(role)) return fail(403, 'Not allowed', 'غير مسموح');
       const reviewId = id(body.reviewId);
       const target = body.target === 'reply' ? 'reply' : 'review';
       const action = String(body.do ?? '');
@@ -103,6 +119,6 @@ Deno.serve(handle(async (req) => {
     }
 
     default:
-      return json({ error: 'Unknown action' }, 400);
+      return fail(400, 'Unknown action', 'إجراء غير معروف');
   }
 }));

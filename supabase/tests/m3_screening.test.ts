@@ -171,7 +171,7 @@ describe('listing transitions', () => {
     record(pid, updated, { verdict: 'pass', reasons: [] });
     assert.match(db.error(`update products set listing_status = 'approved' where id = '${pid}'`, user('manager')) ?? '', /listings queue/);
     assert.equal(db.error(`update products set listing_status = 'approved', is_active = true where id = '${pid}'`, 'service'), null);
-    assert.equal(db.error(`update products set listing_status = 'rejected', review_note = 'not premium' where id = '${pid}'`, user('manager')), null);
+    assert.equal(db.error(`update products set listing_status = 'rejected' where id = '${pid}'`, user('manager')), null);
   });
 });
 
@@ -248,6 +248,8 @@ describe('storage, limits and documents', () => {
 
   test('a shop logo must be screened media too', () => {
     assert.match(db.error(`update sellers set logo = 'https://elsewhere.example/logo.png' where id = '${A}'`, user('sellerA')) ?? '', /seller dashboard/);
+    // also when the link copies our storage path (review H5: the earlier check let any host through)
+    assert.match(db.error(`update sellers set logo = 'https://elsewhere.example/storage/v1/object/public/catalogue/${A}/x.png' where id = '${A}'`, user('sellerA')) ?? '', /seller dashboard/);
     assert.equal(db.error(`update sellers set logo = '${A}/media/11111111-2222-4333-8444-555555555555.png' where id = '${A}'`, user('sellerA')), null);
   });
 });

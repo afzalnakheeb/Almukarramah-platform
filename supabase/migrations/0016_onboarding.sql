@@ -28,6 +28,7 @@ language sql stable security definer set search_path = public as $$
     'price_change_review_bps', price_change_review_bps, 'strike_limit', strike_limit, 'strike_window_days', strike_window_days,
     'perf_window_days', perf_window_days, 'perf_thresholds', perf_thresholds,
     'require_sample', require_sample, 'min_portfolio_photos', min_portfolio_photos, 'min_story_chars', min_story_chars,
+    'marketplace_open', marketplace_open, 'sellers_open', sellers_open,
     'max_upload_bytes', 10485760, 'upload_types', jsonb_build_array('image/jpeg', 'image/png', 'image/webp'))
   from mp_settings where id = 1;
 $$;
@@ -42,10 +43,90 @@ grant select (seller_id, contact_name, contact_email, contact_phone, legal_name,
 -- ================================================================ guards: definer functions are trusted
 -- Functions that change a seller on someone's behalf (submitting, reviewing) run as their owner and do their own
 -- checks; the guard limits what people change directly through the API. Staff cannot approve directly either:
--- approval goes through mp_review_seller, which checks KYC, the sample and the corridor.
+-- approval goes through mp_review_seller, which checks KYC, the sample and the corridor. A seller row created straight
+-- through the API (by staff too) always starts pending.
+--
+-- The shop page (review H5): what a seller or an applicant writes on it is checked for contact details (phone numbers
+-- however written, emails, links, handles, messaging apps, bank details, "order directly") and for our own name. Once
+-- the shop is live, every change to its text waits in profile_pending until our team approves it (mp_review_seller
+-- 'approve_profile'), so the public page only ever shows what was approved. A logo or banner can only be the seller's
+-- own upload: our team publishes it (review-seller) after its photo check; a link to anywhere else is refused.
+alter table sellers
+  add column profile_pending jsonb check (profile_pending is null or jsonb_typeof(profile_pending) = 'object'),
+  add column profile_submitted_at timestamptz;
+
+-- The first contact detail in a text ('phone', 'email', 'link', 'handle', 'messaging', 'bank', 'solicit'), or null.
+-- Disguises are undone first: Arabic-Indic, Persian and full-width digits, the letters o and l inside a number,
+-- separators between digits, numbers spelled out (English and Arabic), "name at gmail dot com", spaced-out letters.
+create or replace function private.contact_hint(p text) returns text
+language plpgsql immutable set search_path = public as $$
+declare
+  t text := lower(coalesce(p, ''));
+  squeezed text;
+  m text;
+  word constant text := '(zero|oh|one|two|three|four|five|six|seven|eight|nine|صفر|واحد|اثنان|اثنين|ثلاثة|ثلاث|اربعة|أربعة|اربع|أربع|خمسة|خمس|ستة|ست|سبعة|سبع|ثمانية|ثمان|تسعة|تسع)';
+begin
+  if t = '' then return null; end if;
+  t := translate(t, '٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹０１２３４５６７８９＠．', '012345678901234567890123456789@.');
+  t := regexp_replace(t, '[ً-ٰٟـ]', '', 'g');
+  -- phone numbers: 9 to 15 digits with any separators, where o and l may stand for 0 and 1 (6 real digits at least)
+  for m in select x[1] from regexp_matches(t, '(\+?[0-9ol][0-9ol\s\-/_.()]{6,30}[0-9ol])', 'g') as x loop
+    if length(regexp_replace(m, '[^0-9ol]', '', 'g')) between 9 and 15 and length(regexp_replace(m, '[^0-9]', '', 'g')) >= 6 then return 'phone'; end if;
+  end loop;
+  if t ~ ('(' || word || '[\s,.،-]+){6,}' || word) then return 'phone'; end if;
+  if t ~ '[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}' or t ~ '[a-z0-9._%+-]+\s*(\(at\)|\[at\]|\s+at\s+)\s*[a-z0-9-]+\s*(\(dot\)|\[dot\]|\s+dot\s+)\s*[a-z]{2,}' then return 'email'; end if;
+  if t ~ '(https?://|www\.|wa\.me|t\.me/)' or t ~ '\m[a-z0-9-]{2,}\.(com|net|org|sa|ae|kw|qa|om|bh|in|co|io|me|shop|store|info|biz|ly|gl|link|site|online|app|uk|us)\M' then return 'link'; end if;
+  if t ~ '(^|\s)@[a-z0-9_.]{3,30}' then return 'handle'; end if;
+  squeezed := regexp_replace(t, '[\s._-]', '', 'g');
+  if squeezed ~ '(whatsapp|watsapp|whatsap|telegram|instagram|snapchat|tiktok|facebook|twitter|wechat|viber|واتساب|واتس|وتساب|تلغرام|تلجرام|تليجرام|انستقرام|انستغرام|إنستغرام|سناب|تيكتوك|فيسبوك|تويتر)' then return 'messaging'; end if;
+  if squeezed ~ '(sa|ae|kw|qa|om|bh|gb|de|fr|nl|in|pk|eg|tr)[0-9]{2}[0-9a-z]{10,30}' and squeezed ~ '[0-9]{10}' then return 'bank'; end if;
+  if t ~ '((contact|call|text|message|dm|whatsapp)\s+(me|us)\M|\m(order|buy|pay)\s+(directly|outside)|direct\s+(order|sale|contact)|(bank|wire)\s+transfer|تواصل\s+(معي|معنا)|اتصل\s+(بي|بنا)|راسلني|راسلنا|كلمني|اطلب\s+مباشرة|للطلب\s+(عبر|على)|خارج\s+المنصة|تحويل\s+بنكي|حوالة\s+بنكية)' then
+    return 'solicit';
+  end if;
+  return null;
+end $$;
+
+-- A field of the shop page: no contact details, and not our name.
+create or replace function private.check_shop_text(p_field text, p_value text) returns void
+language plpgsql immutable set search_path = public as $$
+declare hint text;
+begin
+  if coalesce(p_value, '') = '' then return; end if;
+  if p_field = 'website' then return; end if;   -- a link by nature (https only, a check on the table); never shown on the shop page
+  if p_field in ('name_en', 'name_ar') and (lower(p_value) ~ 'mukarram' or regexp_replace(p_value, '[ً-ٰٟـ]', '', 'g') ~ 'مكرم') then
+    raise exception using message = 'Your shop name cannot include "Al Mukarramah": please choose your own name',
+      detail = 'لا يمكن أن يتضمن اسم متجرك «المكرمة»: يُرجى اختيار اسم خاص بمتجرك';
+  end if;
+  hint := private.contact_hint(p_value);
+  if hint is not null then
+    raise exception using message = format('Contact details are not allowed on your shop page (%s found). Customers reach you through Al Mukarramah messages.', hint),
+      detail = 'لا يُسمح ببيانات التواصل في صفحة متجرك، فالعملاء يتواصلون معك عبر رسائل المكرمة.';
+  end if;
+end $$;
+
 create or replace function sellers_guard() returns trigger language plpgsql set search_path = public as $$
+declare
+  fields constant text[] := array['name_en', 'name_ar', 'tagline_en', 'tagline_ar', 'about_en', 'about_ar', 'returns_en', 'returns_ar', 'website'];
+  f text;
+  v_new jsonb;
+  v_old jsonb;
+  pend jsonb;
 begin
   new.updated_at := now();
+  if tg_op = 'INSERT' then
+    -- straight through the API (staff included): a seller always starts pending and is approved by the review (L1)
+    if current_user in ('authenticated', 'anon') then
+      new.status := 'pending';
+      new.approved_at := null;
+      new.profile_pending := null;
+      new.profile_submitted_at := null;
+    end if;
+    if private.is_end_user() then
+      foreach f in array fields loop perform private.check_shop_text(f, to_jsonb(new) ->> f); end loop;
+      if new.logo is not null or new.banner is not null then raise exception 'Upload your logo and banner through the seller dashboard' using detail = 'ارفع الشعار والغلاف من لوحة البائع'; end if;
+    end if;
+    return new;
+  end if;
   if current_user = 'authenticated' and private.is_staff() and new.status is distinct from old.status and new.status = 'approved' then
     raise exception 'Approve sellers from the seller review (it checks KYC, the sample and the corridor)';
   end if;
@@ -67,17 +148,34 @@ begin
   new.flagged_at := old.flagged_at;
   new.flag_reason := old.flag_reason;
   new.suspended_reason := old.suspended_reason;
-  if new.logo is distinct from old.logo and new.logo is not null and new.logo not like new.id::text || '/media/%'
-     and new.logo not like '%/storage/v1/object/public/catalogue/' || new.id::text || '/%' then
-    raise exception 'Upload your logo through the seller dashboard';
+  new.profile_pending := old.profile_pending;
+  new.profile_submitted_at := old.profile_submitted_at;
+  -- the seller's own uploads only (published by our team after the photo check); never a link
+  if new.logo is distinct from old.logo and new.logo is not null and new.logo !~ ('^' || new.id::text || '/media/[0-9a-f-]{36}\.(jpg|jpeg|png|webp)$') then
+    raise exception using message = 'Upload your logo through the seller dashboard', detail = 'ارفع شعارك من لوحة البائع';
   end if;
-  if new.banner is distinct from old.banner and new.banner is not null and new.banner not like new.id::text || '/media/%'
-     and new.banner not like '%/storage/v1/object/public/catalogue/' || new.id::text || '/%' then
-    raise exception 'Upload your banner through the seller dashboard';
+  if new.banner is distinct from old.banner and new.banner is not null and new.banner !~ ('^' || new.id::text || '/media/[0-9a-f-]{36}\.(jpg|jpeg|png|webp)$') then
+    raise exception using message = 'Upload your banner through the seller dashboard', detail = 'ارفع صورة الغلاف من لوحة البائع';
+  end if;
+  -- the text: checked, and on a live shop held for our team
+  v_new := to_jsonb(new);
+  v_old := to_jsonb(old);
+  pend := coalesce(old.profile_pending, '{}'::jsonb);
+  foreach f in array fields loop
+    continue when (v_new -> f) is not distinct from (v_old -> f);
+    perform private.check_shop_text(f, v_new ->> f);
+    if old.status in ('approved', 'suspended') then pend := pend || jsonb_build_object(f, v_new -> f); end if;
+  end loop;
+  if old.status in ('approved', 'suspended') and pend is distinct from coalesce(old.profile_pending, '{}'::jsonb) then
+    new := jsonb_populate_record(new, (select jsonb_object_agg(x, v_old -> x) from unnest(fields) x));
+    new.profile_pending := pend;
+    new.profile_submitted_at := now();
   end if;
   if old.status = 'approved' then new.slug := old.slug; end if;
   return new;
 end $$;
+drop trigger if exists sellers_guard on sellers;
+create trigger sellers_guard before insert or update on sellers for each row execute function sellers_guard();
 
 -- ================================================================ the application
 create table seller_applications (
@@ -114,10 +212,10 @@ begin
     new.created_at := old.created_at;
   end if;
   if exists (select 1 from unnest(new.links) l where l !~* '^https://[^\s]{3,250}$') then
-    raise exception 'Links must start with https://';
+    raise exception 'Links must start with https://' using detail = 'يجب أن تبدأ الروابط بـ https://';
   end if;
   if exists (select 1 from unnest(new.portfolio) img where img not like new.seller_id::text || '/media/%') then
-    raise exception 'Upload portfolio photos through the seller dashboard';
+    raise exception 'Upload portfolio photos through the seller dashboard' using detail = 'ارفع صور أعمالك من لوحة البائع';
   end if;
   if tg_op = 'INSERT' or not private.is_end_user() or current_user not in ('authenticated', 'anon') then
     if tg_op = 'UPDATE' and new.sample_status is distinct from old.sample_status then new.sample_updated_at := now(); end if;
@@ -130,7 +228,7 @@ begin
   new.submitted_at := old.submitted_at;
   select status into st from sellers where id = new.seller_id;
   if st in ('approved', 'suspended', 'rejected') and (to_jsonb(new) - 'updated_at') is distinct from (to_jsonb(old) - 'updated_at') then
-    raise exception 'Your application has been decided: please contact Al Mukarramah to change it';
+    raise exception 'Your application has been decided: please contact Al Mukarramah to change it' using detail = 'تم البت في طلبك: تواصل مع المكرمة لتغييره';
   end if;
   return new;
 end $$;
@@ -193,7 +291,7 @@ create table seller_review_events (
   seller_id uuid not null references sellers on delete cascade,
   actor uuid references auth.users,
   kind text not null check (kind in ('applied', 'submitted', 'resubmitted', 'info_requested', 'approved', 'rejected',
-                                      'suspended', 'reinstated', 'note')),
+                                      'suspended', 'reinstated', 'note', 'profile_approved', 'profile_rejected')),
   message text check (char_length(message) <= 4000),
   visible_to_seller boolean not null default true,      -- staff notes are not
   created_at timestamptz not null default now()
@@ -237,9 +335,9 @@ declare
   gcc boolean; tax_needed boolean;
   photos int; missing jsonb; items jsonb;
 begin
-  if not (private.is_seller_member(p_seller) or private.is_staff() or coalesce(auth.role(), '') = 'service_role') then raise exception 'Not allowed'; end if;
+  if not (private.is_seller_member(p_seller) or private.is_staff() or coalesce(auth.role(), '') = 'service_role') then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   select * into s from sellers where id = p_seller;
-  if s.id is null then raise exception 'Seller not found'; end if;
+  if s.id is null then raise exception 'Seller not found' using detail = 'لم يُعثر على البائع'; end if;
   select * into p from seller_private where seller_id = p_seller;
   select * into a from seller_applications where seller_id = p_seller;
   select * into st from mp_settings where id = 1;
@@ -294,14 +392,18 @@ declare
   uid uuid := auth.uid();
   base text; s text; n int := 1; sid uuid; mail text; cat uuid;
 begin
-  if uid is null then raise exception 'Please sign in first'; end if;
-  if exists (select 1 from seller_members where user_id = uid) then raise exception 'You already have a seller account'; end if;
-  if coalesce((p ->> 'agree')::boolean, false) is not true then raise exception 'Please accept the seller guidelines'; end if;
+  if uid is null then raise exception using message = 'Please sign in first', detail = 'يُرجى تسجيل الدخول أولًا'; end if;
+  if not private.sellers_open() and not private.is_staff() then
+    raise exception using message = 'Al Mukarramah is not open to new sellers yet: we are opening soon',
+      detail = 'لم تفتح المكرمة باب التسجيل للبائعين بعد، وسنفتحه قريبًا';
+  end if;
+  if exists (select 1 from seller_members where user_id = uid) then raise exception using message = 'You already have a seller account', detail = 'لديك حساب بائع بالفعل'; end if;
+  if coalesce((p ->> 'agree')::boolean, false) is not true then raise exception 'Please accept the seller guidelines' using detail = 'يُرجى الموافقة على إرشادات البائعين'; end if;
   if coalesce(trim(p ->> 'name_en'), '') = '' or coalesce(trim(p ->> 'country'), '') = '' or coalesce(trim(p ->> 'contact_name'), '') = '' then
-    raise exception 'Shop name, country and contact name are required';
+    raise exception 'Shop name, country and contact name are required' using detail = 'اسم المتجر والبلد واسم جهة التواصل مطلوبة';
   end if;
   if not exists (select 1 from corridors where scope = 'marketplace' and from_country = upper(trim(p ->> 'country'))) then
-    raise exception 'We do not take sellers from that country yet';
+    raise exception 'We do not take sellers from that country yet' using detail = 'لا نقبل بائعين من هذا البلد بعد';
   end if;
   select email into mail from auth.users where id = uid;
 
@@ -347,7 +449,7 @@ language plpgsql security definer set search_path = public as $$
 declare
   base text; s text; n int := 1; sid uuid;
 begin
-  if not private.is_staff(array['owner', 'manager']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff(array['owner', 'manager']::staff_role[]) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   if coalesce(trim(p ->> 'name_en'), '') = '' or coalesce(trim(p ->> 'country'), '') !~ '^[A-Za-z]{2}$' then
     raise exception 'Name and country are required';
   end if;
@@ -378,11 +480,11 @@ declare
   c jsonb;
   again boolean;
 begin
-  if not exists (select 1 from seller_members m where m.seller_id = p_seller and m.user_id = auth.uid()) then raise exception 'Not allowed'; end if;
+  if not exists (select 1 from seller_members m where m.seller_id = p_seller and m.user_id = auth.uid()) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   select * into s from sellers where id = p_seller for update;
-  if s.status not in ('pending', 'info_requested') then raise exception 'Your application is already %', s.status; end if;
+  if s.status not in ('pending', 'info_requested') then raise exception 'Your application is already %', s.status using detail = format('حالة طلبك: %s', private.status_ar(s.status::text)); end if;
   c := mp_application_checklist(p_seller);
-  if not (c ->> 'complete')::boolean then raise exception 'Please complete every step first'; end if;
+  if not (c ->> 'complete')::boolean then raise exception 'Please complete every step first' using detail = 'يُرجى إكمال كل الخطوات أولًا'; end if;
   again := s.status = 'info_requested' or exists (select 1 from seller_applications where seller_id = p_seller and submitted_at is not null);
   update seller_applications set submitted_at = now() where seller_id = p_seller;
   update seller_private set kyc_status = 'submitted' where seller_id = p_seller and kyc_status in ('not_started', 'info_requested', 'rejected', 'expired');
@@ -408,14 +510,14 @@ declare
   msg text := nullif(left(trim(coalesce(p_message, '')), 2000), '');
 begin
   if p_action = 'note' then
-    if not private.is_staff() then raise exception 'Not allowed'; end if;
+    if not private.is_staff() then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
     if msg is null then raise exception 'Write the note'; end if;
     insert into seller_review_events (seller_id, actor, kind, message, visible_to_seller) values (p_seller, uid, 'note', msg, false);
     return jsonb_build_object('ok', true);
   end if;
-  if not private.is_staff(array['owner', 'manager']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff(array['owner', 'manager']::staff_role[]) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   select * into s from sellers where id = p_seller for update;
-  if s.id is null then raise exception 'Seller not found'; end if;
+  if s.id is null then raise exception 'Seller not found' using detail = 'لم يُعثر على البائع'; end if;
   select * into p from seller_private where seller_id = p_seller;
   select * into a from seller_applications where seller_id = p_seller;
   select * into st from mp_settings where id = 1;
@@ -460,6 +562,28 @@ begin
     if msg is null then raise exception 'Write what was reviewed'; end if;
     update sellers set status = 'approved', review_note = msg where id = s.id;
     insert into seller_review_events (seller_id, actor, kind, message) values (s.id, uid, 'reinstated', msg);
+  elsif p_action = 'approve_profile' then
+    -- the shop page changes the seller made while live go public (checked again here)
+    if s.profile_pending is null then raise exception 'No shop page changes are waiting'; end if;
+    perform private.check_shop_text(k, s.profile_pending ->> k) from jsonb_object_keys(s.profile_pending) k;
+    update sellers set
+      name_en = case when profile_pending ? 'name_en' then profile_pending ->> 'name_en' else name_en end,
+      name_ar = case when profile_pending ? 'name_ar' then profile_pending ->> 'name_ar' else name_ar end,
+      tagline_en = case when profile_pending ? 'tagline_en' then profile_pending ->> 'tagline_en' else tagline_en end,
+      tagline_ar = case when profile_pending ? 'tagline_ar' then profile_pending ->> 'tagline_ar' else tagline_ar end,
+      about_en = case when profile_pending ? 'about_en' then profile_pending ->> 'about_en' else about_en end,
+      about_ar = case when profile_pending ? 'about_ar' then profile_pending ->> 'about_ar' else about_ar end,
+      returns_en = case when profile_pending ? 'returns_en' then profile_pending ->> 'returns_en' else returns_en end,
+      returns_ar = case when profile_pending ? 'returns_ar' then profile_pending ->> 'returns_ar' else returns_ar end,
+      website = case when profile_pending ? 'website' then profile_pending ->> 'website' else website end,
+      profile_pending = null, profile_submitted_at = null
+    where id = s.id;
+    insert into seller_review_events (seller_id, actor, kind, message) values (s.id, uid, 'profile_approved', msg);
+  elsif p_action = 'reject_profile' then
+    if s.profile_pending is null then raise exception 'No shop page changes are waiting'; end if;
+    if msg is null then raise exception 'Write the reason for the seller'; end if;
+    update sellers set profile_pending = null, profile_submitted_at = null where id = s.id;
+    insert into seller_review_events (seller_id, actor, kind, message) values (s.id, uid, 'profile_rejected', msg);
   else
     raise exception 'Unknown action %', p_action;
   end if;
@@ -469,6 +593,14 @@ revoke all on function mp_review_seller(uuid, text, text, uuid[]) from public, a
 grant execute on function mp_review_seller(uuid, text, text, uuid[]) to authenticated;
 
 -- ================================================================ submission needs an approved category
+-- The pictures of a made-to-measure listing's design options (tailoring.options[].choices[].image).
+create or replace function private.option_images(p_tailoring jsonb) returns setof text
+language sql immutable set search_path = public as $$
+  select c ->> 'image'
+  from jsonb_array_elements(case when jsonb_typeof(p_tailoring -> 'options') = 'array' then p_tailoring -> 'options' else '[]'::jsonb end) o,
+       jsonb_array_elements(case when jsonb_typeof(o -> 'choices') = 'array' then o -> 'choices' else '[]'::jsonb end) c
+  where coalesce(c ->> 'image', '') <> '';
+$$;
 create or replace function mp_begin_listing_check(p_product uuid, p_user uuid) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
@@ -476,17 +608,31 @@ declare
   bad int;
 begin
   select * into p from products where id = p_product for update;
-  if p.id is null or p.seller_id is null then raise exception 'Listing not found'; end if;
-  if not exists (select 1 from seller_members m where m.seller_id = p.seller_id and m.user_id = p_user) then raise exception 'Not allowed'; end if;
-  if not private.seller_approved(p.seller_id) then raise exception 'Your seller account is not approved'; end if;
-  if p.listing_status not in ('draft', 'rejected', 'check_pending') then raise exception 'This listing is already %', p.listing_status; end if;
-  if p.category_id is null then raise exception 'Choose a category first'; end if;
+  if p.id is null or p.seller_id is null then raise exception using message = 'Listing not found', detail = 'لم يُعثر على المنتج'; end if;
+  if not exists (select 1 from seller_members m where m.seller_id = p.seller_id and m.user_id = p_user) then raise exception using message = 'Not allowed', detail = 'غير مسموح'; end if;
+  if not private.sellers_open() and not exists (select 1 from staff_members where user_id = p_user) then
+    raise exception using message = 'Listings cannot be sent for review yet: Al Mukarramah opens to sellers soon',
+      detail = 'لا يمكن إرسال المنتجات للمراجعة بعد، وستفتح المكرمة للبائعين قريبًا';
+  end if;
+  if not private.seller_approved(p.seller_id) then raise exception using message = 'Your seller account is not approved', detail = 'حساب البائع لم تتم الموافقة عليه'; end if;
+  if p.listing_status not in ('draft', 'rejected', 'check_pending') then
+    raise exception using message = format('This listing is already %s', p.listing_status), detail = format('حالة هذا المنتج الآن: %s', p.listing_status);
+  end if;
+  if p.category_id is null then raise exception using message = 'Choose a category first', detail = 'اختر الفئة أولًا'; end if;
   if not private.seller_may_list(p.seller_id, p.category_id) then
-    raise exception 'Your shop is not approved for this category yet: request it from your application page';
+    raise exception using message = 'Your shop is not approved for this category yet: request it from your application page',
+      detail = 'متجرك غير معتمد لهذه الفئة بعد: اطلبها من صفحة طلبك';
   end if;
   select count(*) into bad from unnest(coalesce(p.images, '{}')) img
   where not exists (select 1 from media_assets a where a.id = private.asset_of(img, p.seller_id) and a.seller_id = p.seller_id and a.status in ('passed', 'review'));
-  if bad > 0 then raise exception 'Every photo must pass the photo check before you submit'; end if;
+  if bad > 0 then raise exception using message = 'Every photo must pass the photo check before you submit', detail = 'يجب أن تجتاز كل صورة فحص الصور قبل الإرسال'; end if;
+  -- design-option pictures (made to measure) are photos too (review H6)
+  select count(*) into bad from private.option_images(p.tailoring) img
+  where not exists (select 1 from media_assets a where a.id = private.asset_of(img, p.seller_id) and a.seller_id = p.seller_id and a.status in ('passed', 'review'));
+  if bad > 0 then
+    raise exception using message = 'Every design-option picture must pass the photo check before you submit',
+      detail = 'يجب أن تجتاز كل صورة من صور خيارات التصميم فحص الصور قبل الإرسال';
+  end if;
   update products set listing_status = 'check_pending', submitted_at = now() where id = p.id;
   return jsonb_build_object('product_id', p.id, 'updated_at', (select updated_at from products where id = p.id));
 end $$;
@@ -507,6 +653,16 @@ begin
                  select jsonb_build_object('id', a.id, 'status', a.status, 'flags', a.flags, 'width', a.width, 'height', a.height, 'mime', a.mime, 'bucket', a.bucket, 'path', a.path)
                  from media_assets a where a.id = private.asset_of(img, p.seller_id) and a.seller_id = p.seller_id)) order by ord), '[]'::jsonb)
                from unnest(coalesce(p.images, '{}')) with ordinality as x(img, ord)),
+    'variants', (select coalesce(jsonb_agg(jsonb_build_object('id', v.id, 'label_en', v.label_en, 'label_ar', v.label_ar, 'options', v.options, 'sku', v.sku,
+                   'price_minor', v.price_minor, 'stock', v.stock, 'is_active', v.is_active) order by v.sort, v.label_en), '[]'::jsonb)
+                 from product_variants v where v.product_id = p.id),
+    'option_photos', (select coalesce(jsonb_agg(jsonb_build_object('path', img, 'asset', (
+                 select jsonb_build_object('id', a.id, 'status', a.status, 'flags', a.flags)
+                 from media_assets a where a.id = private.asset_of(img, p.seller_id) and a.seller_id = p.seller_id))), '[]'::jsonb)
+               from private.option_images(p.tailoring) img),
+    'new_seller', (select s.approved_at is null or s.approved_at > now() - interval '90 days'
+                          or (select count(*) from products x where x.seller_id = s.id and x.listing_status = 'approved') < 5
+                   from sellers s where s.id = p.seller_id),
     'permits', (select coalesce(jsonb_agg(jsonb_build_object('permit_key', permit_key, 'status', status)), '[]'::jsonb) from product_permits where product_id = p.id),
     'documents', (select coalesce(jsonb_agg(x), '[]'::jsonb) from (
                     select jsonb_build_object('doc_type', doc_type, 'status', status) x from product_documents where product_id = p.id and status <> 'rejected'
@@ -528,7 +684,7 @@ revoke all on function mp_listing_check_context(uuid) from public, anon, authent
 create or replace function my_seller_file(p_seller uuid) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_seller_member(p_seller) then raise exception 'Not allowed'; end if;
+  if not private.is_seller_member(p_seller) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return jsonb_build_object(
     'application', (select to_jsonb(a) from seller_applications a where a.seller_id = p_seller),
     'categories', (select coalesce(jsonb_agg(jsonb_build_object('category_id', c.category_id, 'status', c.status, 'note', c.note, 'name_en', k.name_en, 'name_ar', k.name_ar, 'kind', k.kind)
@@ -550,10 +706,14 @@ grant execute on function my_seller_file(uuid) to authenticated;
 create or replace function admin_sellers() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff() then raise exception 'Not allowed'; end if;
+  if not private.is_staff() then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return coalesce((
     select jsonb_agg(jsonb_build_object(
-      'seller', to_jsonb(s), 'private', to_jsonb(p), 'application', to_jsonb(a),
+      'seller', to_jsonb(s), 'application', to_jsonb(a),
+      -- bank details only for the owner, managers and finance (review M12)
+      'private', case when p.seller_id is null then null
+                      when private.is_staff(array['owner', 'manager', 'finance']::staff_role[]) then to_jsonb(p)
+                      else to_jsonb(p) - 'iban' - 'bank_name' - 'account_holder' end,
       'live', (select count(*) from products x where x.seller_id = s.id and x.listing_status = 'approved' and x.is_active),
       'waiting', (select count(*) from products x where x.seller_id = s.id and x.listing_status = 'pending_review'),
       'documents', (select coalesce(jsonb_agg(to_jsonb(d) order by d.uploaded_at desc), '[]'::jsonb) from seller_documents d where d.seller_id = s.id),

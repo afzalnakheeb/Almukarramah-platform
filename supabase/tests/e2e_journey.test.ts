@@ -145,7 +145,9 @@ describe('the marketplace journey', () => {
     assert.equal(second.applied.status, 'pending_review', 'our team always approves');
     // review-listing: our team approves; the photos become public catalogue copies and the listing goes live
     const urls = (db.val<string[]>(`select images from products where id = '${mat}'`) ?? []).map((x) => `https://example.supabase.co/storage/v1/object/public/catalogue/${S}/${x.split('/').pop()}`);
-    db.exec(`update products set images = array['${urls.join("','")}'], listing_status = 'approved', is_active = true, reviewed_at = now(), reviewed_by = '${ids.marketing}' where id = '${mat}'`, 'service');
+    const updated = db.val<string>(`select updated_at from products where id = '${mat}'`);
+    const ok = db.val<{ applied: boolean }>(`select mp_approve_listing('${mat}', '${ids.marketing}', '${updated}', array['${urls.join("','")}'], null, null)`, 'service');
+    assert.equal(ok.applied, true);
     assert.equal(db.rows(`select id from products where id = '${mat}'`, 'anon').length, 1, 'public');
     assert.equal(db.val<{ total: number }>(`select mp_search('{"q": "محراب"}'::jsonb)`, 'anon').total, 1, 'found in Arabic search');
   });
@@ -181,7 +183,7 @@ describe('the marketplace journey', () => {
     db.exec(`update orders set status = 'paid', payment_id = 'pay_e2e_1', paid_at = now() where id = '${order}'`, 'service');
     assert.deepEqual(db.val(`select mp_order_paid('${order}')`, 'service'), { applied: true, sub_orders: 1 });
     db.exec(`insert into invoices (number, icv, order_id, currency, total_excl_vat_minor, vat_minor, total_incl_vat_minor, total_sar_incl_vat_minor, vat_sar_minor, qr_base64)
-      values ('INV-2026-000001', 1, '${order}', 'SAR', ${items + shipping - vatInside(items + shipping, 1500)}, ${vatInside(items + shipping, 1500)}, ${items + shipping}, ${items + shipping}, ${vatInside(items + shipping, 1500)}, 'qr')`, 'service');
+      values ('INV-2026-000001', next_invoice_slot(), '${order}', 'SAR', ${items + shipping - vatInside(items + shipping, 1500)}, ${vatInside(items + shipping, 1500)}, ${items + shipping}, ${items + shipping}, ${vatInside(items + shipping, 1500)}, 'qr')`, 'service');
     assert.equal(db.val(`select stock from products where id = '${mat}'`), 10);
     assert.equal(db.val(`select count(*)::int from notification_outbox where template_key = 'seller_new_order' and seller_id = '${S}'`), 3);
     assert.equal(db.val(`select count(*)::int from notification_outbox where template_key = 'order_confirmed' and order_id = '${order}'`), 2);
@@ -222,7 +224,12 @@ describe('the marketplace journey', () => {
       `select seller_statement('${S}')`, maker);
     assert.deepEqual([st.totals.sales, st.totals.commission], [90000, -22500]);
     assert.deepEqual([st.balance.balance_sar_minor, st.balance.available_sar_minor], [67500, 0]);
-    assert.equal(db.val(`select '${st.balance.next_available_on}'::date - (now() at time zone 'Asia/Riyadh')::date`), 17, '14 days to return, 3 days\' hold');
+    assert.equal(db.val(`select '${st.balance.next_available_on}'::date - (now() at time zone 'Asia/Riyadh')::date`), 33, '30 days to report a problem (longer than the 14 days to return), 3 days\' hold');
+    // payouts stay off until Afzal switches them on (the VAT treatment of payouts is settled with the adviser first)
+    assert.match(db.error(`select mp_record_payout('${S}', 67500, 'TRX-E2E-1', (now() at time zone 'Asia/Riyadh')::date)`, user('finance')) ?? '', /not switched on/);
+    // once on (and the seller's KYC and bank details approved), nothing is payable before the window and the hold end
+    db.exec(`update mp_settings set payouts_enabled = true where id = 1;
+             update seller_private set kyc_status = 'approved', bank_changed_at = now() - interval '30 days' where seller_id = '${S}'`, 'service');
     assert.match(db.error(`select mp_record_payout('${S}', 67500, 'TRX-E2E-1', (now() at time zone 'Asia/Riyadh')::date)`, user('finance')) ?? '', /Only 0 halalas/);
     const r = db.val<{ status: string; id: string }>(`select mp_submit_review('${ids.customer}', '{"order_item_id": "${item}", "rating": 5, "title": "Beautiful weave", "body": "Soft, dense and the mihrab is perfectly straight.", "lang": "en"}'::jsonb)`, 'service');
     assert.equal(r.status, 'pending');
@@ -233,14 +240,14 @@ describe('the marketplace journey', () => {
   });
 
   test('6. later: an earlier sale is payable and finance records the transfer; the statement shows it', () => {
-    // an earlier order, delivered 20 days ago (past its window and hold)
+    // an earlier order, delivered 40 days ago (past the problem window and the hold)
     const o = db.val<string>(`insert into orders (user_id, email, currency, subtotal_minor, shipping_minor, total_minor, vat_minor, ship_to, fx_per_sar, status, payment_id, paid_at)
       values ('${ids.customer2}', 'b@test.local', 'SAR', 45000, 3000, 48000, 6261, '{"kind": "home", "recipient_name": "Sara", "country": "SA", "city": "Jeddah", "line1": "x"}', 1, 'paid', 'pay_e2e_2', now() - interval '25 days') returning id`, 'service');
     const s = db.val<string>(`insert into sub_orders (order_id, seq, seller_id, kind, status, currency, items_minor, shipping_minor, commission_minor, invoicer, vat_mode, duties_mode, from_country, to_country)
       values ('${o}', 1, '${S}', 'marketplace', 'shipped', 'SAR', 45000, 3000, 11250, 'platform', 'origin', 'none', 'SA', 'SA') returning id`, 'service');
     db.exec(`insert into order_items (order_id, sub_order_id, product_id, name_en, name_ar, unit_price_minor, quantity, line_total_minor, seller_id, commission_minor, return_policy, return_window_days)
       values ('${o}', '${s}', '${mat}', 'Mihrab prayer mat', 'سجادة صلاة محراب', 45000, 1, 45000, '${S}', 11250, 'standard', 14)`, 'service');
-    db.exec(`update sub_orders set status = 'delivered', delivered_at = now() - interval '20 days' where id = '${s}'`, 'service');
+    db.exec(`update sub_orders set status = 'delivered', delivered_at = now() - interval '40 days' where id = '${s}'`, 'service');
     const bal = db.val<{ available_sar_minor: number }>(`select seller_balance('${S}')`, user('finance'));
     assert.equal(bal.available_sar_minor, 33750);
     db.exec(`select mp_record_payout('${S}', 33750, 'TRX-E2E-2', (now() at time zone 'Asia/Riyadh')::date)`, user('finance'));

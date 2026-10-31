@@ -4,6 +4,27 @@ Each item below is a default chosen to be conservative so the build could carry 
 policy rows that staff can change (owner or manager, audited), unless marked otherwise. Please reply yes, or tell us
 what to change.
 
+## Needs Afzal (from the independent review before switch-on)
+
+The review (31 October) asked for these to be decided by you. Each has the safest default now, enforced in the
+database, so nothing happens until you say yes. Every switch is a row in `mp_settings` (owner or manager, audited);
+the dashboard at `/admin/marketplace` shows where each one stands.
+
+| # | Decision | Default now | To change it |
+|---|---|---|---|
+| A | **Open the marketplace** to the public: sellers' listings and shop pages, marketplace checkout, online returns, reviews and messages. | Off (`marketplace_open = false`). The public sees only our own products, as today. | After the steps in SWITCH-ON.md: `update mp_settings set marketplace_open = true where id = 1;` |
+| B | **Take seller applications** at `/sell`. | Off (`sellers_open = false`): no new applications or listing checks from sellers. Staff can still create sellers. | `update mp_settings set sellers_open = true where id = 1;` |
+| C | **Pay sellers** (decision 53). Without VAT invoices from sellers (self-billing), Al Mukarramah owes all the output VAT and keeps about 13.75% of a sale, not 25% (on 115 SAR: keeps 28.75, pays 15 VAT). | Off (`payouts_enabled = false`): no payout can be recorded. Statements still build. | Once the adviser has ruled: `update mp_settings set payouts_enabled = true where id = 1;` |
+| D | **Refunds by support** (decision 54). | Support cannot refund (`support_refund_limit_minor = 0`); finance, managers and the owner can. | A limit in halalas, e.g. 500 SAR: `update mp_settings set support_refund_limit_minor = 50000 where id = 1;` |
+| E | **What partners are owed** (review M5): a fulfilment fee, or a cost price. | Nothing is booked as payable to a partner automatically (it was the full retail price, VAT included). Finance can add an adjustment with a reason. | Tell us the terms; we add them to the partner's account and to `book_sale`. |
+| F | **When a sale becomes payable** (decisions 51 and 56; review L4). | After the longer of the item's return window and the 30-day problem window, plus 3 days' hold: 33 days after delivery for most items (it was the return window plus 3 days, so food was payable on day 6). | `faulty_claim_days` and `payout_hold_days` in `mp_settings`. |
+| G | **Payouts after bank details change** (review M12). | No payout until the KYC is approved again and 7 days have passed since the change (`payout_bank_hold_days`); the seller is told. Only owner, manager and finance see bank details. | `payout_bank_hold_days` (0 to 60). |
+| H | **The Saudi marketplace corridor** (decision 2). | Seeded **closed**, with no adviser recorded. Our own products keep selling as today. | Record the adviser's sign-off on the corridor in the admin panel, then open it. |
+| I | **The test courier** (sandbox). | Switched off (`carrier_providers.active = false` for `sandbox`); its webhooks need their own secret (`SANDBOX_WEBHOOK_SECRET`). | Switch it on only for the production test run in SWITCH-ON.md, then off again. |
+| J | **Return windows on our own products** (decision 7). | The category windows apply to our own products too (dates: only if faulty, 3 days; perfume: unopened, 7 days). Online returns stay closed while the marketplace is off. | Confirm with the legal adviser, or change the category policies. |
+| K | **Category commission rates are public** (review L8): the category tree and policy answer anyone, and the app ships a snapshot. | Left as they are (they are also in the seller handbook). | Say if they should be private; we then strip them from the public calls and the snapshot. |
+| L | **A return left accepted** when the customer never sends the item back holds the seller's money with no end date (review L4). | Left: our team closes these by hand from `/admin/returns`. | Tell us after how many days to close them automatically. |
+
 ## Platform and process
 
 1. **Migration numbers.** The marketplace migrations are `0012` onwards, because the apps workstream already uses
@@ -11,8 +32,9 @@ what to change.
    timestamp versions, so the switch-on applies these files one by one (see SWITCH-ON.md), not `supabase db push`.
 2. **Corridors need an adviser on record.** A corridor can only be opened (pilot or open) after the tax adviser's
    name and sign-off date are recorded, and its VAT/duty terms cannot change while open without a new sign-off.
-   The phase 1 corridors are seeded open because the business already trades on them: please record the adviser's
-   sign-off for them from the admin panel.
+   Our own products' corridors are seeded open because the business already trades on them. The Saudi marketplace
+   corridor (sellers in Saudi Arabia to customers in Saudi Arabia) is seeded **closed** until the adviser's sign-off is
+   recorded (review; Needs Afzal H).
 3. **Commission.** Each category has a commission rate (25% to 50%). A seller can have a negotiated rate set by
    owner/manager, which then applies to all their lines. Recorded per order line.
 4. **Who moves a listing.** A seller can only save drafts and withdraw. Submission goes through the AI screening on
@@ -117,7 +139,10 @@ The standard is store policy reviewed by a qualified scholar, not a fatwa. Every
 31. **Asking for more.** Our team's message appears on the seller's dashboard; the seller updates the file and sends
     it again. Every step is kept in the review history (never edited); staff notes are not shown to the seller.
 32. **Logo and banner.** Screened at upload like every photo, and published by our team: at approval, or later with
-    "Publish logo and banner". Until then the shop page shows none.
+    "Publish logo and banner". Until then the shop page shows none. The shop page only ever shows a logo or banner
+    from our own catalogue storage for that seller. Once a shop is live, changes to its name, tagline, about text,
+    returns text or website wait for our team's approval (`/admin/sellers`, "Shop page changes"); the page keeps the
+    approved text until then. Contact details, links and our own name are refused in shop text (review H5).
 33. **Brand papers.** An authorised-distributor letter names the brand it covers and counts for that brand's
     listings only. Marketing (who review listings) see brand papers; KYC files stay with owner, manager and finance.
 34. **Where sellers come from.** Applications are taken only from countries with a marketplace corridor: Saudi
@@ -141,10 +166,13 @@ The standard is store policy reviewed by a qualified scholar, not a fatwa. Every
 ## Listings and search (M5)
 
 39. **Options.** A listing can have options (sizes, volumes, colours), each with its own stock and, if different, its
-    own price. Adding an option to a live listing, or renaming one, sends it back to draft for checking; stock changes
-    never do.
-40. **Price changes.** Up to 30% at once on a live listing (setting `price_change_review_bps`); a bigger change takes it
-    off sale until our team approves it, with a note of the old and new price.
+    own price. Options are content: adding, renaming or removing one sends the listing back to draft for checking
+    (also while it waits for review), and the checks and our reviewers see them. Stock changes never do. Removing the
+    last option of a live listing leaves no stock behind (review M2).
+40. **Price changes.** A live price can move up to 30% from the price our team last approved (setting
+    `price_change_review_bps`), however many steps it takes; beyond that the listing goes off sale until our team
+    approves it again, with a note of the approved and new price. Option prices are held to their approved price the
+    same way. A price changed while a listing waits for review sends it back through the check (review M1).
 41. **What the public can read.** Listing text, photos, prices, stock and details; never the automatic check's notes,
     our team's notes or who reviewed it.
 42. **Search.** English and Arabic together; diacritics, tatweel and letter variants (أ/إ/آ/ا, ى/ي, ة/ه) do not matter;
@@ -158,20 +186,23 @@ The standard is store policy reviewed by a qualified scholar, not a fatwa. Every
     added on top. Our own exports stay as today (zero-rated only once `store_settings.zero_rate_exports` is on).
 44. **Who accepts.** Our own products are accepted as soon as payment is confirmed; each seller accepts their part.
     The ship-by date is acceptance + production days (made to measure) + the seller's handling days.
-45. **A seller who cannot fulfil** cancels with a reason the customer sees; stock goes back and the part is flagged
-    for our team to refund (refunds stay staff-only, M7). A label must be cancelled before the order can be.
+45. **A seller who cannot fulfil** cancels with a reason the customer sees (through the after-sale function, so contact
+    details are masked first); stock goes back and the part is flagged for our team to refund (refunds stay
+    staff-only, M7). A label must be cancelled before the order can be.
 46. **Labels.** Bought by the seller (or our operations team) through the approved carrier for the route, with an
-    idempotency key (pressing twice never buys two); kept private (the seller of the order and operations staff).
-    Pickup is offered the next working day (Friday skipped) within the address's hours.
-47. **Tracking.** Carriers push events (signed webhooks) or we ask every 15 minutes; events are never edited, never
-    counted twice and never move a parcel backwards (a failure, return or cancellation always shows).
+    idempotency key (pressing twice never buys two, and no second label is bought while the parcel has one: review
+    M11); kept private (the seller of the order and operations staff). The customer's phone number is masked on the
+    label. Pickup is offered the next working day (Friday skipped) within the address's hours.
+47. **Tracking.** Carriers push events (signed webhooks) or we ask every 15 minutes; events are never edited and never
+    counted twice. A failure, return or cancellation always shows, and a delivery after a failed attempt still counts,
+    at the carrier's time (review M4, L7).
 48. **Invoices.** The ZATCA invoice covers what we sell: our own products and the sub-orders where we are the
     supplier. Parts a seller invoices (corridors not open yet) are left out, and so are duties collected for customs
     (to confirm with the adviser). An order whose lines need different VAT rates is never invoiced at one rate: it is
     flagged for our team (it cannot happen on the corridors open today).
 49. **Sandbox until the accounts exist.** All marketplace shipping runs on the sandbox provider (no real parcels);
-    OTO, Shiprocket and DHL Express are listed but not connected. The sandbox signs its webhooks with `CRON_SECRET`
-    unless `SANDBOX_WEBHOOK_SECRET` is set; no new secret is needed.
+    OTO, Shiprocket and DHL Express are listed but not connected. The sandbox is switched off by default and its
+    webhooks need their own secret, `SANDBOX_WEBHOOK_SECRET` (the scheduler's secret is never accepted: review L9).
 
 
 ## After the sale (M7)
@@ -179,19 +210,29 @@ The standard is store policy reviewed by a qualified scholar, not a fatwa. Every
 50. **Statements in SAR.** Every seller's statement is in SAR. A sale in another currency is converted at the rate the
     customer paid at (kept on the order).
 51. **When money becomes payable.** A sale, less our commission, is booked when the parcel is delivered and becomes
-    payable after the item's return window plus 3 days (setting `payout_hold_days`), unless a return is open on that
-    parcel. Refunds, payouts and deductions count at once. A refund after a payout can leave a negative balance, which
-    later sales make up.
+    payable after the longer of the item's return window and the 30-day problem window (`faulty_claim_days`), plus 3
+    days (`payout_hold_days`), unless a return is open on that parcel (review L4; Needs Afzal F). Partners' sales are
+    not booked as payable until their terms are decided (Needs Afzal E). Refunds, payouts and deductions count at once.
+    A refund after a payout can leave a negative balance, which later sales make up.
 52. **Payouts are recorded, not made.** Finance (owner, manager, finance) makes the bank transfer, then records it: the
-    amount (never more than is payable), the bank's reference and the date (within the last 31 days). A transfer that
-    comes back is reversed and owed again. Adjustments always carry a reason the seller sees. Nothing is ever edited.
+    amount (never more than is payable), the bank's reference and the date the bank paid it (within the last 31 days).
+    It is booked on the statement on the day it is recorded, so a closed month never changes (review L10). No payout
+    is recorded while payouts are switched off, before the seller's KYC is approved, or within 7 days of a change to
+    the bank details (review M12; Needs Afzal C, G). A transfer that comes back is reversed and owed again.
+    Adjustments always carry a reason the seller sees. Nothing is ever edited.
 53. **Tax treatment of statements** (VAT on sales we invoice as the supplier, VAT on our commission, self-billing):
-    to confirm with the adviser before the first payout. Until then statements show VAT-inclusive amounts.
-54. **Refunds are staff only.** Owner, manager, finance and support, through refund-order only. The amount is worked
-    out on the server from the lines; partial and repeated refunds are supported; each press has its own key, so
-    nothing is refunded twice. A refund is refused while our tax invoice for the order has not been issued, because its
-    credit note needs it. If the credit note fails after the money has gone back, it is flagged for finance
-    (CREDIT_NOTE_PENDING), never skipped.
+    to confirm with the adviser before the first payout. Until then statements show VAT-inclusive amounts and payouts
+    are switched off (Needs Afzal C).
+54. **Refunds are staff only.** Owner, manager and finance, and support up to its limit (0 by default: Needs Afzal D),
+    through refund-order only. The amount is worked out on the server from the lines; partial and repeated refunds are
+    supported; each press has its own key, a return is refunded only once whatever the key (review H1), and only one
+    refund per order can wait for Moyasar at a time. When Moyasar's answer does not come back (a timeout, a gateway
+    error), the refund is never marked failed on a guess: it stays "processing", is read back from Moyasar at once and
+    later ("Check with Moyasar", and every 15 minutes), and is marked failed only when Moyasar refuses it or shows no
+    refund after 15 minutes (review H2). A refund is refused while our tax invoice for the order has not been issued,
+    because its credit note needs it. A credit note uses the VAT rate and exchange rate of the invoice it corrects
+    (review M9). If the credit note fails after the money has gone back, it stays pending and is issued by the
+    "finish pending work" job, never skipped (review H3).
 55. **Delivery is refunded** when the whole parcel comes back (any reason) or the parcel is cancelled; not for part of
     a parcel. (The UK and EU require the standard delivery to be refunded on a cancellation: adviser to confirm per
     market.) **Duties** are refunded for a cancelled parcel, and otherwise only when our team chooses.
@@ -215,9 +256,13 @@ The standard is store policy reviewed by a qualified scholar, not a fatwa. Every
 61. **Review invitations** appear in the app 3 days after delivery and are never emailed (an email asking for a review
     can count as marketing in some markets).
 62. **Messages** go only through Al Mukarramah. Contact details are masked before a message is stored (the original is
-    not kept), and a message inviting the other person to deal elsewhere flags the conversation for our team. Up to 30
-    messages an hour per person (setting). A seller can write to a customer only about that customer's order; a guest
-    order (no account) cannot be messaged, and our team contacts that customer.
+    not kept): phone numbers however they are written (Arabic or full-width digits, letters for digits, any
+    separators, numbers spelled out in English or Arabic, a number split across two messages), email addresses (also
+    "name at gmail dot com"), links, handles, messaging apps (also spaced out) and bank account numbers. A message
+    inviting the other person to deal or pay elsewhere flags the conversation for our team. The same checks run on
+    sellers' cancellation reasons, shop text, listing details and options (review M3). Up to 30 messages an hour per
+    person (setting). A seller can write to a customer only about that customer's order; a guest order (no account)
+    cannot be messaged, and our team contacts that customer.
 63. **Notifications.** 40 service templates in English and Arabic (owner and manager can change the wording), queued
     with the recipient's language. Nothing is sent until an email or push provider is connected
     (`notifications_send_enabled` is off, and nothing reads it yet); in-app notifications already show. Marketing is
@@ -233,4 +278,14 @@ The standard is store policy reviewed by a qualified scholar, not a fatwa. Every
     as on a courier's own site: never a name, an address or what is inside.
 66. **Claude reads the dashboards.** Our team's read-only queues, figures, statements and standards can also be read
     by Claude through the database connector and by scheduled jobs. Every change (a refund, a payout, a decision on a
-    return or a review) still goes through the staff functions, with Afzal's approval when Claude prepares it.
+    return or a review) still goes through the staff functions, with Afzal's approval when Claude prepares it. A
+    request through the API without a role is never treated as the server (review L3); a dedicated read-only database
+    role for the connector would be better still.
+
+## Finishing half-done work (review H3)
+
+67. **Nothing is left half done silently.** A payment is recorded, its parcels handed on and its stock taken in one
+    database transaction, and the tax invoice is issued once per order. Anything a failure leaves behind (an order
+    without its invoice, a credit note not issued, a refund waiting for Moyasar's answer) is finished by the
+    `finish-pending` job every 15 minutes, or at once with "Finish pending work now" on `/admin/marketplace` and
+    `/admin/returns` (owner, manager, finance). The dashboard counts what is waiting.

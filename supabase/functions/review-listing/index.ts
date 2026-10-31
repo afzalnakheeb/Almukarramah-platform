@@ -1,40 +1,51 @@
-// Staff decision on a seller listing in the queue. Approving copies the seller's screened private photos into the
-// public catalogue (the only way a seller's file ever becomes public) and puts the listing live; it is the only path
-// to "approved" (the database refuses it from anywhere else). Rejecting sends a note to the seller.
-import { admin, caller, env, handle, json, staffRole, UUID } from '../_shared/util.ts';
+// Staff decision on a seller listing in the queue. Approving copies the seller's screened private photos AND the
+// design-option pictures of a made-to-measure listing into the public catalogue (the only way a seller's file ever
+// becomes public) and puts the listing live; it is the only path to "approved" (the database refuses it from anywhere
+// else). Every picture must have passed the photo check, or been cleared by a person (review H6). The approval
+// applies only to the listing as it was read: an edit made meanwhile is never approved unseen (review M15).
+// Rejecting sends a note to the seller.
+import { admin, caller, dbError, env, fail, handle, json, staffRole, UUID } from '../_shared/util.ts';
 
 type Body = { productId?: string; action?: 'approve' | 'reject'; note?: string };
+type Tailoring = { options?: { choices?: { image?: string }[] }[] } | null;
+
+const optionImages = (t: Tailoring) => (t?.options ?? []).flatMap((o) => (o.choices ?? []).map((c) => c.image).filter((x): x is string => !!x));
 
 Deno.serve(handle(async (req) => {
   const user = await caller(req);
-  if (!user) return json({ error: 'Please sign in' }, 401);
+  if (!user) return fail(401, 'Please sign in', 'يُرجى تسجيل الدخول');
   const db = admin();
   const role = await staffRole(db, user.id);
-  if (!role || !['owner', 'manager', 'marketing'].includes(role)) return json({ error: 'Not allowed' }, 403);
+  if (!role || !['owner', 'manager', 'marketing'].includes(role)) return fail(403, 'Not allowed', 'غير مسموح');
 
   const { productId, action, note } = (await req.json()) as Body;
   if (!productId || !UUID.test(productId) || (action !== 'approve' && action !== 'reject')) return json({ error: 'Missing details' }, 400);
-  const { data: p } = await db.from('products').select('id, seller_id, images, tailoring, category_id, listing_status, sellers(status)').eq('id', productId).single();
+  const { data: p } = await db.from('products').select('id, seller_id, images, tailoring, category_id, listing_status, updated_at, sellers(status)').eq('id', productId).single();
   if (!p?.seller_id) return json({ error: 'Listing not found' }, 404);
-  const now = new Date().toISOString();
 
   if (action === 'reject') {
     if (!note?.trim()) return json({ error: 'Please write a short note for the seller' }, 400);
-    if (!['pending_review', 'approved', 'check_pending'].includes(p.listing_status)) return json({ error: `This listing is ${p.listing_status}` }, 409);
-    const { error } = await db.from('products').update({ listing_status: 'rejected', review_note: note.trim().slice(0, 1000), reviewed_at: now, reviewed_by: user.id }).eq('id', p.id);
-    if (error) throw error;
-    return json({ ok: true, status: 'rejected' });
+    const { data, error } = await db.rpc('mp_reject_listing', { p_product: p.id, p_user: user.id, p_note: note.trim().slice(0, 1000) });
+    if (error) return dbError(error, 409);
+    return json({ ok: true, status: (data as { status: string }).status });
   }
 
   if (p.listing_status !== 'pending_review') return json({ error: 'Only listings in the queue can be approved' }, 409);
   if ((p.sellers as { status?: string } | null)?.status !== 'approved') return json({ error: 'Approve the seller first' }, 409);
 
-  // every photo must be a screened asset of this seller that passed (or that staff are now approving after review)
+  // every photo and design-option picture must be a screened asset of this seller that passed (or that staff are now
+  // clearing after a review): a picture still pending, rejected or blocked stops the approval
   const paths = (p.images as string[]) ?? [];
-  const media = paths.filter((x) => !/^https:\/\//.test(x));
-  const { data: assets } = media.length ? await db.from('media_assets').select('path, status').in('path', media) : { data: [] };
+  const tailoring = p.tailoring as Tailoring;
+  const pictures = [...paths, ...optionImages(tailoring)];
+  const media = pictures.filter((x) => !/^https:\/\//.test(x));
+  const { data: assets } = media.length ? await db.from('media_assets').select('path, status').eq('seller_id', p.seller_id).in('path', media) : { data: [] };
   const ok = new Map(((assets ?? []) as { path: string; status: string }[]).map((a) => [a.path, a.status]));
-  if (media.some((x) => !['passed', 'review'].includes(ok.get(x) ?? ''))) return json({ error: 'A photo has not passed the photo check' }, 409);
+  const notPassed = media.filter((x) => !['passed', 'review'].includes(ok.get(x) ?? ''));
+  if (notPassed.length) {
+    const option = notPassed.some((x) => !paths.includes(x));
+    return json({ error: option ? 'A design-option picture has not passed the photo check' : 'A photo has not passed the photo check' }, 409);
+  }
 
   const base = `${env('SUPABASE_URL')}/storage/v1/object/public/catalogue/`;
   const publish = async (path: string): Promise<string> => {
@@ -53,15 +64,18 @@ Deno.serve(handle(async (req) => {
 
   const images = await Promise.all(paths.map(publish));
   // design-option pictures (made to measure) are published the same way
-  const tailoring = p.tailoring as { options?: { choices?: { image?: string }[] }[] } | null;
-  if (tailoring?.options) {
-    for (const o of tailoring.options) for (const c of o.choices ?? []) if (c.image) c.image = await publish(c.image);
+  const published = tailoring ? (JSON.parse(JSON.stringify(tailoring)) as NonNullable<Tailoring>) : null;
+  if (published?.options) {
+    for (const o of published.options) for (const c of o.choices ?? []) if (c.image) c.image = await publish(c.image);
   }
-  const { error: uErr } = await db.from('products').update({
-    images, tailoring, listing_status: 'approved', is_active: true,
-    review_note: note?.trim() ? note.trim().slice(0, 1000) : null, reviewed_at: now, reviewed_by: user.id,
-  }).eq('id', p.id);
-  if (uErr) throw uErr;
-  if (p.category_id) await db.from('categories').update({ is_active: true }).eq('id', p.category_id).eq('kind', 'category');
+  const { data: done, error: uErr } = await db.rpc('mp_approve_listing', {
+    p_product: p.id, p_user: user.id, p_expect_updated: p.updated_at, p_images: images, p_tailoring: published, p_note: note?.trim() ? note.trim().slice(0, 1000) : null,
+  });
+  if (uErr) return dbError(uErr, 409);
+  const r = done as { applied: boolean; status: string };
+  if (!r.applied) {
+    return fail(409, 'The seller changed this listing while you were approving it: it went back to them. Nothing was approved.',
+      'غيّر البائع هذا المنتج أثناء الموافقة عليه، فعاد إليه. لم تتم الموافقة على شيء.', 'listing_changed', { status: r.status });
+  }
   return json({ ok: true, status: 'approved', images });
 }));

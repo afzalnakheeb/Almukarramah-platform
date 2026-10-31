@@ -43,8 +43,11 @@ describe('sellers', () => {
 
   test('a seller cannot approve itself, change commission, kind or country, and the slug locks once approved', () => {
     db.exec(`update sellers set status = 'approved', commission_bps = 2500, kind = 'partner', country = 'AE', slug = 'renamed', name_ar = 'بيت العود' where id = '${A}'`, user('sellerA'));
-    const s = db.one<Record<string, unknown>>(`select status, commission_bps, kind, country, slug, name_ar from sellers where id = '${A}'`);
-    assert.deepEqual(s, { status: 'approved', commission_bps: null, kind: 'marketplace', country: 'SA', slug: 'oud-house-a', name_ar: 'بيت العود' });
+    const s = db.one<Record<string, unknown>>(`select status, commission_bps, kind, country, slug, name_ar, profile_pending from sellers where id = '${A}'`);
+    // a live shop's text change waits for our team (review H5): the public name stays until approved
+    assert.deepEqual(s, { status: 'approved', commission_bps: null, kind: 'marketplace', country: 'SA', slug: 'oud-house-a', name_ar: null, profile_pending: { name_ar: 'بيت العود' } });
+    db.exec(`select mp_review_seller('${A}', 'approve_profile', null)`, user('manager'));
+    assert.equal(db.val(`select name_ar from sellers where id = '${A}'`), 'بيت العود');
     const pending = db.one<{ id: string }>(`select id from sellers where slug = 'new-attar'`);
     db.exec(`update sellers set status = 'approved' where id = '${pending.id}'`, user('applicant'));
     assert.equal(db.val(`select status from sellers where id = '${pending.id}'`), 'pending');
@@ -63,7 +66,13 @@ describe('sellers', () => {
     assert.deepEqual(db.one(`select internal_notes, contact_phone from seller_private where seller_id = '${A}'`), { internal_notes: null, contact_phone: '+966500000000' });
     assert.equal(db.rows(`select 1 from seller_private`, user('customer')).length, 0);
     assert.equal(db.rows(`select 1 from seller_private`, user('marketing')).length, 0);
-    assert.ok(db.rows(`select 1 from seller_private`, user('support')).length >= 2);
+    // the row carries the bank details: finance, managers and the owner read it; support gets the contact details
+    // (never the bank details) through admin_sellers (review M12)
+    assert.ok(db.rows(`select 1 from seller_private`, user('finance')).length >= 2);
+    assert.equal(db.rows(`select 1 from seller_private`, user('support')).length, 0);
+    const forSupport = db.val<{ private: Record<string, unknown> | null }[]>(`select admin_sellers()`, user('support'));
+    assert.ok(forSupport.some((x) => x.private?.contact_phone === '+966500000000'));
+    assert.ok(forSupport.every((x) => !x.private || !('iban' in x.private)));
   });
 
   test('staff powers by role', () => {
@@ -89,8 +98,9 @@ describe('listings', () => {
   let draft = '';
   test('an approved seller adds a draft; staff-only fields are forced', () => {
     draft = db.val<string>(product(A, 'is_featured=true'), user('sellerA'));
-    const p = db.one<Record<string, unknown>>(`select listing_status, is_featured, compliance_status, ai_check from products where id = '${draft}'`);
-    assert.deepEqual(p, { listing_status: 'draft', is_featured: false, compliance_status: 'pending', ai_check: null });
+    const p = db.one<Record<string, unknown>>(`select listing_status, is_featured, compliance_status, ai_checked_at from products where id = '${draft}'`);
+    assert.deepEqual(p, { listing_status: 'draft', is_featured: false, compliance_status: 'pending', ai_checked_at: null });
+    assert.equal(db.val(`select count(*)::int from listing_reviews where product_id = '${draft}'`), 0, 'no review notes on a new draft');
   });
 
   test('no listings for another seller or for a seller not yet approved', () => {
@@ -116,13 +126,16 @@ describe('listings', () => {
   });
 
   test('editing a live listing sends it back; stock does not; compliance edits go to the compliance queue', () => {
-    db.exec(`update products set listing_status = 'approved', compliance_status = 'cleared', ai_check = '{"verdict":"pass"}' where id = '${draft}'`, 'service');
+    db.exec(`update products set listing_status = 'approved', compliance_status = 'cleared', ai_checked_at = now() where id = '${draft}';
+             insert into listing_reviews (product_id, ai_check) values ('${draft}', '{"verdict":"pass"}')
+               on conflict (product_id) do update set ai_check = excluded.ai_check`, 'service');
     db.exec(`update products set stock = 9 where id = '${draft}'`, user('sellerA'));
     assert.deepEqual(db.one(`select listing_status, stock from products where id = '${draft}'`), { listing_status: 'approved', stock: 9 });
     db.exec(`update products set hs_code = '330749' where id = '${draft}'`, user('sellerA'));
     assert.deepEqual(db.one(`select listing_status, compliance_status from products where id = '${draft}'`), { listing_status: 'approved', compliance_status: 'pending' });
     db.exec(`update products set description_en = 'Changed words' where id = '${draft}'`, user('sellerA'));
-    assert.deepEqual(db.one(`select listing_status, ai_check from products where id = '${draft}'`), { listing_status: 'draft', ai_check: null });
+    assert.deepEqual(db.one(`select listing_status, ai_checked_at from products where id = '${draft}'`), { listing_status: 'draft', ai_checked_at: null });
+    assert.equal(db.val<{ ai_check: unknown }[]>(`select mp_listing_private(array['${draft}']::uuid[])`, user('sellerA'))[0].ai_check, null, 'the old verdict no longer shows');
   });
 
   test('visibility: public sees approved listings of approved sellers; B never sees A drafts', () => {

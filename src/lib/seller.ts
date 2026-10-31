@@ -1,7 +1,7 @@
 // Seller dashboard data: the signed-in seller's account, listings, photos and orders.
 // Photos are uploaded to a PRIVATE bucket and are only made public by Al Mukarramah when a listing is approved.
 import { useCallback, useEffect, useState } from 'react';
-import { callFunction, supabase } from './supabase';
+import { AppError, callFunction, fromDb, supabase } from './supabase';
 import type { Seller, SizeChart, Tailoring } from './types';
 import { useSession } from './session';
 import { MARKET_DEMO, guidanceSnapshot } from './market';
@@ -77,18 +77,18 @@ export function useMySeller() {
 
 export async function applyAsSeller(p: Record<string, unknown>): Promise<string> {
   const { data, error } = await supabase.rpc('apply_as_seller', { p });
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   return data as string;
 }
 
 export async function updateSeller(id: string, patch: Partial<Seller>) {
   const { error } = await supabase.from('sellers').update(patch).eq('id', id);
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
 }
 
 export async function updateSellerPrivate(id: string, patch: Partial<SellerPrivate>) {
   const { error } = await supabase.from('seller_private').update(patch).eq('seller_id', id);
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
 }
 
 const demoCat = (slug: string) => guidanceSnapshot.categories.find((c) => c.slug === slug)?.id ?? null;
@@ -96,14 +96,14 @@ const demoCat = (slug: string) => guidanceSnapshot.categories.find((c) => c.slug
 export async function myListings(sellerId: string): Promise<Listing[]> {
   if (MARKET_DEMO) return DEMO_LISTINGS.map((l) => demoListing(l.id, demoCat)!);
   const { data, error } = await supabase.from('products').select(LISTING_COLUMNS).eq('seller_id', sellerId).order('updated_at', { ascending: false });
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   return (await withPrivate(data as unknown as Listing[])) as Listing[];
 }
 
 export async function getListing(id: string): Promise<Listing | null> {
   if (MARKET_DEMO) return demoListing(id, demoCat);
   const { data, error } = await supabase.from('products').select(LISTING_COLUMNS).eq('id', id).maybeSingle();
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   return data ? ((await withPrivate([data as unknown as Listing]))[0] as Listing) : null;
 }
 
@@ -114,7 +114,7 @@ export async function saveListing(sellerSlug: string, l: Partial<Listing> & { se
   const { id, listing_status: _s, review_note: _r, ai_check: _a, ai_checked_at: _c, submitted_at: _u, updated_at: _d, ...fields } = l;
   if (id) {
     const { error } = await supabase.from('products').update(fields).eq('id', id);
-    if (error) throw new Error(error.message);
+    if (error) throw fromDb(error);
     return id;
   }
   const base = `${sellerSlug}-${slugify(fields.name_en ?? 'product')}`.slice(0, 80);
@@ -122,14 +122,14 @@ export async function saveListing(sellerSlug: string, l: Partial<Listing> & { se
     const slug = n === 1 ? base : `${base}-${n}`;
     const { data, error } = await supabase.from('products').insert({ ...fields, slug }).select('id').single();
     if (!error) return (data as { id: string }).id;
-    if (!/duplicate|unique/i.test(error.message)) throw new Error(error.message);
+    if (!/duplicate|unique/i.test(error.message)) throw fromDb(error);
   }
-  throw new Error('Please choose a different product name');
+  throw new AppError({ en: 'Please choose a different product name', ar: 'يُرجى اختيار اسم آخر للمنتج' });
 }
 
 export async function deleteListing(id: string) {
   const { error } = await supabase.from('products').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
 }
 
 /** The server's view of a listing before submission: quality score, tips and contact details found (no AI, free). */
@@ -144,7 +144,7 @@ export async function submitListing(productId: string): Promise<{ submitted: boo
 
 export async function setStock(productId: string, stock: number, isActive?: boolean) {
   const { error } = await supabase.from('products').update({ stock, ...(isActive === undefined ? {} : { is_active: isActive }) }).eq('id', productId);
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
 }
 
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
@@ -162,7 +162,7 @@ export async function uploadMedia(sellerId: string, file: File, kind: MediaKind,
   const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
   const path = `${sellerId}/incoming/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
   const { error } = await supabase.storage.from('seller-uploads').upload(path, file, { contentType: file.type, upsert: false });
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   const r = await callFunction<{ asset: MediaAsset | null; reasons?: Reason[]; duplicate?: boolean }>('screen-image', { path, kind, ...ctx });
   return { asset: r.asset, reasons: r.asset?.reasons?.length ? r.asset.reasons : r.reasons ?? [], duplicate: r.duplicate };
 }
@@ -205,17 +205,19 @@ export type SellerSubOrder = {
 export async function sellerSubOrders(sellerId: string, status?: SubOrderStatus): Promise<SellerSubOrder[]> {
   if (MARKET_DEMO) return demoSubOrders().filter((x) => !status || x.status === status);
   const { data, error } = await supabase.rpc('seller_sub_orders', { p_seller: sellerId, p_status: status ?? null });
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   return (data as SellerSubOrder[]) ?? [];
 }
 const rpcOrThrow = async (name: string, args: Record<string, unknown>) => {
   const { data, error } = await supabase.rpc(name, args);
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   return data;
 };
 export const acceptSubOrder = (id: string) => rpcOrThrow('seller_accept_sub_order', { p_sub: id });
 export const productionDone = (id: string) => rpcOrThrow('seller_production_done', { p_sub: id });
-export const cancelSubOrder = (id: string, reason: string) => rpcOrThrow('seller_cancel_sub_order', { p_sub: id, p_reason: reason });
+/** A parcel the seller cannot fulfil: through the after-sale function, so the reason the customer reads is checked for
+ * contact details first (review M3), and the refund queue and the seller's statement follow. */
+export const cancelSubOrder = (id: string, reason: string) => callFunction<{ cancelled: boolean }>('after-sale', { action: 'cancel_parcel', subOrderId: id, reason });
 
 /** Buys the label through our approved courier (the same key never buys two). */
 export async function createLabel(subOrderId: string, idempotencyKey: string, locationId?: string, weightG?: number) {
@@ -233,18 +235,18 @@ export type ProductDocument = { id: string; doc_type: string; status: 'pending' 
 export async function productDocuments(productId: string): Promise<ProductDocument[]> {
   if (MARKET_DEMO) return [];
   const { data, error } = await supabase.from('product_documents').select('id, doc_type, status, file_name, note').eq('product_id', productId).order('uploaded_at', { ascending: false });
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   return (data as ProductDocument[]) ?? [];
 }
 
 /** A category's required document (halal certificate, printer licence...) into the private documents bucket. */
 export async function uploadProductDocument(sellerId: string, productId: string, docType: string, file: File) {
-  if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) throw new Error('PDF, JPEG or PNG only');
-  if (file.size > MAX_UPLOAD_BYTES) throw new Error('Up to 10 MB');
+  if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) throw new AppError({ en: 'PDF, JPEG or PNG only', ar: 'بصيغة PDF أو JPEG أو PNG فقط' });
+  if (file.size > MAX_UPLOAD_BYTES) throw new AppError({ en: 'Up to 10 MB', ar: 'حتى ١٠ ميغابايت' });
   const ext = file.type === 'application/pdf' ? 'pdf' : file.type === 'image/png' ? 'png' : 'jpg';
   const path = `${sellerId}/products/${productId}/${docType}-${Date.now().toString(36)}.${ext}`;
   const { error } = await supabase.storage.from('seller-kyc').upload(path, file, { contentType: file.type, upsert: false });
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   const { error: e2 } = await supabase.from('product_documents').insert({ product_id: productId, doc_type: docType, path, file_name: file.name.slice(0, 200) });
   if (e2) throw new Error(e2.message);
 }
@@ -285,59 +287,59 @@ export type SellerFile = {
 export async function mySellerFile(sellerId: string): Promise<SellerFile> {
   if (MARKET_DEMO) return demoFile(sellerId);
   const { data, error } = await supabase.rpc('my_seller_file', { p_seller: sellerId });
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   return data as SellerFile;
 }
 
 export async function updateApplication(sellerId: string, patch: Partial<SellerApplication>) {
   const { error } = await supabase.from('seller_applications').update(patch).eq('seller_id', sellerId);
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
 }
 
 export async function requestCategory(sellerId: string, categoryId: string) {
   const { error } = await supabase.from('seller_categories').insert({ seller_id: sellerId, category_id: categoryId });
-  if (error && !/duplicate/i.test(error.message)) throw new Error(error.message);
+  if (error && !/duplicate/i.test(error.message)) throw fromDb(error);
 }
 
 export async function withdrawCategory(sellerId: string, categoryId: string) {
   const { error } = await supabase.from('seller_categories').delete().eq('seller_id', sellerId).eq('category_id', categoryId);
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
 }
 
 /** A KYC document (kyc/) or a brand paper (brand/, with the brand it covers) into the private documents bucket. */
 export async function uploadSellerDocument(sellerId: string, docType: string, scope: 'kyc' | 'brand', file: File, subject?: string) {
-  if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) throw new Error('PDF, JPEG or PNG only');
-  if (file.size > MAX_UPLOAD_BYTES) throw new Error('Up to 10 MB');
+  if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) throw new AppError({ en: 'PDF, JPEG or PNG only', ar: 'بصيغة PDF أو JPEG أو PNG فقط' });
+  if (file.size > MAX_UPLOAD_BYTES) throw new AppError({ en: 'Up to 10 MB', ar: 'حتى ١٠ ميغابايت' });
   const ext = file.type === 'application/pdf' ? 'pdf' : file.type === 'image/png' ? 'png' : 'jpg';
   const path = `${sellerId}/${scope}/${docType}-${Date.now().toString(36)}.${ext}`;
   const { error } = await supabase.storage.from('seller-kyc').upload(path, file, { contentType: file.type, upsert: false });
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   const { error: e2 } = await supabase.from('seller_documents').insert({ seller_id: sellerId, doc_type: docType, path, file_name: file.name.slice(0, 200), subject: subject?.trim() || null });
   if (e2) throw new Error(e2.message);
 }
 
 export async function removeSellerDocument(id: string) {
   const { error } = await supabase.from('seller_documents').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
 }
 
 /** Sends the completed file to our team (or the answer to a request for more information). */
 export async function submitApplication(sellerId: string, message: string) {
   const { error } = await supabase.rpc('submit_seller_application', { p_seller: sellerId, p_message: message || null });
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
 }
 
 export async function saveLocation(sellerId: string, loc: Partial<SellerLocation>) {
   const { id, ...fields } = loc;
   const row = { ...fields, seller_id: sellerId };
   const { error } = id ? await supabase.from('seller_locations').update(row).eq('id', id) : await supabase.from('seller_locations').insert(row);
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
 }
 
 /** Pickup addresses are never deleted (shipments refer to them); they are switched off. */
 export async function removeLocation(id: string) {
   const { error } = await supabase.from('seller_locations').update({ active: false, is_default: false }).eq('id', id);
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
 }
 
 // ---------------------------------------------------------------- variants (sizes, volumes, colours)
@@ -346,7 +348,7 @@ export type Variant = { id?: string; label_en: string; label_ar: string; options
 export async function listingVariants(productId: string): Promise<Variant[]> {
   if (MARKET_DEMO) return [];
   const { data, error } = await supabase.from('product_variants').select('id, label_en, label_ar, options, sku, price_minor, stock, is_active, sort').eq('product_id', productId).order('sort');
-  if (error) throw new Error(error.message);
+  if (error) throw fromDb(error);
   return (data as Variant[]) ?? [];
 }
 
@@ -358,11 +360,11 @@ export async function saveVariants(productId: string, next: Variant[], before: V
     const old = v.id ? before.find((x) => x.id === v.id) : undefined;
     if (old && JSON.stringify({ ...old, sort: 0 }) === JSON.stringify({ ...row, id: old.id, product_id: undefined, sort: 0 })) continue;
     const { error } = v.id ? await supabase.from('product_variants').update(row).eq('id', v.id) : await supabase.from('product_variants').insert(row);
-    if (error) throw new Error(error.message);
+    if (error) throw fromDb(error);
   }
   for (const gone of before.filter((b) => b.id && !next.some((n) => n.id === b.id))) {
     const { error } = await supabase.from('product_variants').update({ is_active: false }).eq('id', gone.id!);
-    if (error) throw new Error(error.message);
+    if (error) throw fromDb(error);
   }
 }
 

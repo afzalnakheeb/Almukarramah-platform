@@ -37,7 +37,11 @@ alter table mp_settings
   add column review_window_days int not null default 365 check (review_window_days between 30 and 730),
   add column review_auto_publish boolean not null default false,                                         -- false: our team reads each one
   add column messages_per_hour int not null default 30 check (messages_per_hour between 1 and 500),
-  add column notifications_send_enabled boolean not null default false;                                  -- no provider connected yet
+  add column notifications_send_enabled boolean not null default false,                                  -- no provider connected yet
+  -- decisions given their safest default until Afzal decides (DECISIONS.md, "Needs Afzal")
+  add column payouts_enabled boolean not null default false,            -- no payout is recorded until the VAT treatment of payouts is settled
+  add column support_refund_limit_minor int not null default 0 check (support_refund_limit_minor >= 0),   -- SAR halalas; 0: support does not refund
+  add column payout_bank_hold_days int not null default 7 check (payout_bank_hold_days between 0 and 60); -- payouts wait after bank details change
 
 create or replace function mp_public_settings() returns jsonb
 language sql stable security definer set search_path = public as $$
@@ -50,6 +54,7 @@ language sql stable security definer set search_path = public as $$
     'default_return_window_days', default_return_window_days, 'payout_hold_days', payout_hold_days,
     'return_response_days', return_response_days, 'dispute_window_days', dispute_window_days, 'faulty_claim_days', faulty_claim_days,
     'review_window_days', review_window_days, 'messages_per_hour', messages_per_hour,
+    'marketplace_open', marketplace_open, 'sellers_open', sellers_open,
     'max_upload_bytes', 10485760, 'upload_types', jsonb_build_array('image/jpeg', 'image/png', 'image/webp'))
   from mp_settings where id = 1;
 $$;
@@ -59,6 +64,12 @@ alter table orders
   add column fx_per_sar numeric(18,8) check (fx_per_sar is null or fx_per_sar > 0),   -- the rate used at checkout
   add column refunded_minor int not null default 0 check (refunded_minor >= 0);
 alter table sub_orders add column refunded_minor int not null default 0 check (refunded_minor >= 0);
+-- Tax documents keep the VAT rate and exchange rate they were issued with (a credit note copies its invoice's), and an
+-- order has one tax invoice (mp_issue_document below; review H3, M9, M10). Existing invoices are not changed.
+alter table invoices
+  add column vat_rate_bp int check (vat_rate_bp is null or vat_rate_bp between 0 and 5000),
+  add column fx_per_sar numeric(18,8) check (fx_per_sar is null or fx_per_sar > 0);   -- units of its currency per SAR
+create unique index invoices_one_per_order on invoices (order_id) where doc = 'invoice' and order_id is not null;
 alter table order_items
   add column refunded_quantity int not null default 0 check (refunded_quantity >= 0),
   add column refunded_minor int not null default 0 check (refunded_minor >= 0),
@@ -124,7 +135,8 @@ create table return_requests (
   sub_order_id uuid not null references sub_orders on delete cascade,
   seq int not null check (seq between 1 and 99),               -- R-<order number>-<seq>
   seller_id uuid references sellers,                           -- null: our own products (our team answers)
-  user_id uuid not null references auth.users,
+  -- the customer; kept for the accounts but unlinked if they delete their account (the apps' account deletion)
+  user_id uuid references auth.users on delete set null,
   kind text not null check (kind in ('return', 'refund_only')),   -- refund only: nothing to send back (not received, missing)
   reason text not null check (reason in ('changed_mind', 'not_as_described', 'faulty', 'damaged', 'wrong_item', 'missing_item', 'not_received')),
   unopened boolean not null default false,
@@ -139,6 +151,7 @@ create table return_requests (
   flags text[] not null default '{}',
   respond_by timestamptz,
   decided_by text check (decided_by in ('seller', 'staff')),
+  approved_by uuid references auth.users on delete set null,   -- the person who approved it for a refund (review M13)
   accepted_at timestamptz,
   declined_at timestamptz,
   escalated_at timestamptz,
@@ -186,6 +199,10 @@ create table refunds (
   check (platform_minor <= items_minor + shipping_minor)
 );
 create index refunds_order on refunds (order_id, created_at);
+-- One live refund per return (review H1); one refund waiting for Moyasar per order at a time, so reconciling with
+-- Moyasar's refunded total is never ambiguous (review H2).
+create unique index refunds_one_per_return on refunds (return_id) where return_id is not null and status in ('processing', 'succeeded');
+create unique index refunds_one_processing on refunds (order_id) where status = 'processing';
 create index refunds_pending_note on refunds (credit_note_status) where credit_note_status = 'pending';
 
 create table refund_lines (
@@ -502,10 +519,12 @@ language sql stable security definer set search_path = public as $$
   select p_seller is not null and p_user is not null and exists (select 1 from seller_members where seller_id = p_seller and user_id = p_user);
 $$;
 -- Staff (with one of the roles), or a server-side caller: a function using the service role, or a direct database
--- session (Claude's connector, a scheduled job), which carries no API request at all. API users are never "server".
+-- session (Claude's connector, a scheduled job). A request through the API always logs in as "authenticator", so an
+-- API request without a role claim is never the server (review L3).
 create or replace function private.is_staff_or_server(p_roles staff_role[] default null) returns boolean
 language sql stable security definer set search_path = public as $$
-  select private.is_staff(p_roles) or coalesce(auth.role(), 'none') in ('service_role', 'none');
+  select private.is_staff(p_roles) or coalesce(auth.role(), '') = 'service_role'
+      or (auth.role() is null and session_user not in ('authenticator', 'anon', 'authenticated', 'service_role'));
 $$;
 
 -- English and Arabic of one thing, for templates
@@ -655,7 +674,7 @@ begin
   end if;
 end $$;
 
--- a delivered parcel: the sale and our commission, payable after the return window and the hold
+-- a delivered parcel: the sale and our commission, payable after the problem window (or a longer return window) and the hold
 create or replace function private.book_sale(p_sub uuid) returns void
 language plpgsql security definer set search_path = public as $$
 declare
@@ -663,6 +682,7 @@ declare
   fx numeric;
   v_days int;
   v_hold int;
+  v_claim int;
   v_on date;
   v_avail date;
   v_num text;
@@ -670,12 +690,16 @@ declare
 begin
   select * into s from sub_orders where id = p_sub;
   if s.seller_id is null or s.delivered_at is null or s.items_minor <= 0 then return; end if;
+  -- partners (our private-label and fulfilment partners): what they are owed (a fulfilment fee or a cost price) is not
+  -- decided yet, so nothing is booked as payable to them until it is (review M5; DECISIONS.md, Needs Afzal)
+  if s.kind = 'partner' or exists (select 1 from sellers x where x.id = s.seller_id and x.kind = 'partner') then return; end if;
   if exists (select 1 from seller_ledger where sub_order_id = s.id and kind = 'sale') then return; end if;
   fx := private.order_fx(s.order_id);
   select coalesce(max(return_window_days), 0) into v_days from order_items where sub_order_id = s.id;
-  select payout_hold_days into v_hold from mp_settings where id = 1;
+  select payout_hold_days, faulty_claim_days into v_hold, v_claim from mp_settings where id = 1;
   v_on := (s.delivered_at at time zone 'Asia/Riyadh')::date;
-  v_avail := v_on + v_days + coalesce(v_hold, 3);
+  -- payable once a problem can no longer be reported, not just after the return window (review L4)
+  v_avail := v_on + greatest(v_days, coalesce(v_claim, 30)) + coalesce(v_hold, 3);
   select format('AM-%s-%s', o.number, s.seq) into v_num from orders o where o.id = s.order_id;
   insert into seller_ledger (seller_id, kind, sub_order_id, currency, amount_minor, amount_sar_minor, booked_on, available_on, note)
   values (s.seller_id, 'sale', s.id, s.currency, s.items_minor, private.to_sar(s.items_minor, fx), v_on, v_avail, v_num)
@@ -711,7 +735,7 @@ grant select on seller_statement_months to authenticated;
 create or replace function seller_balance(p_seller uuid) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not (private.is_seller_member(p_seller) or private.is_staff_or_server(array['owner', 'manager', 'finance']::staff_role[])) then raise exception 'Not allowed'; end if;
+  if not (private.is_seller_member(p_seller) or private.is_staff_or_server(array['owner', 'manager', 'finance']::staff_role[])) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return private.ledger_available(p_seller) || jsonb_build_object(
     'currency', 'SAR',
     'last_payout', (select jsonb_build_object('amount_sar_minor', amount_sar_minor, 'paid_on', paid_on, 'reference', reference)
@@ -727,7 +751,7 @@ declare
   v_open int;
   v_net int;
 begin
-  if not (private.is_seller_member(p_seller) or private.is_staff_or_server(array['owner', 'manager', 'finance']::staff_role[])) then raise exception 'Not allowed'; end if;
+  if not (private.is_seller_member(p_seller) or private.is_staff_or_server(array['owner', 'manager', 'finance']::staff_role[])) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   select coalesce(sum(amount_sar_minor), 0) into v_open from seller_ledger where seller_id = p_seller and month < m;
   select coalesce(sum(amount_sar_minor), 0) into v_net from seller_ledger where seller_id = p_seller and month = m;
   return jsonb_build_object(
@@ -763,9 +787,15 @@ declare
   v_ref text := nullif(left(trim(coalesce(p_reference, '')), 100), '');
   v_avail int;
   v_iban text;
+  sp seller_private;
+  st mp_settings;
   pid uuid;
 begin
-  if not private.is_staff(array['owner', 'manager', 'finance']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff(array['owner', 'manager', 'finance']::staff_role[]) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  select * into st from mp_settings where id = 1;
+  if not st.payouts_enabled then
+    raise exception 'Payouts are not switched on yet: the VAT treatment of sellers'' payouts must be settled with the adviser first (DECISIONS.md, Needs Afzal)';
+  end if;
   if p_amount_sar is null or p_amount_sar <= 0 then raise exception 'Enter the amount paid'; end if;
   if v_ref is null or char_length(v_ref) < 3 then raise exception 'Enter the bank transfer reference'; end if;
   if p_paid_on is null or p_paid_on > private.riyadh_today() or p_paid_on < private.riyadh_today() - 31 then
@@ -773,14 +803,26 @@ begin
   end if;
   perform 1 from sellers where id = p_seller for update;      -- one payout at a time for a seller
   if not found then raise exception 'Seller not found'; end if;
+  -- the bank details we pay to must be checked: KYC approved, and a hold after any change (review M12)
+  select * into sp from seller_private where seller_id = p_seller;
+  if coalesce(sp.kyc_status, '') <> 'approved' then
+    raise exception 'The seller''s KYC is not approved (their bank details may have changed): review it before paying';
+  end if;
+  if sp.bank_changed_at is not null and sp.bank_changed_at > now() - make_interval(days => st.payout_bank_hold_days) then
+    raise exception 'The seller''s bank details changed on %: payouts wait % days after a change. Confirm the new details with the seller by phone first.',
+      to_char(sp.bank_changed_at at time zone 'Asia/Riyadh', 'YYYY-MM-DD'), st.payout_bank_hold_days;
+  end if;
   v_avail := (private.ledger_available(p_seller) ->> 'available_sar_minor')::int;
   if p_amount_sar > v_avail then raise exception 'Only % halalas can be paid out now', v_avail; end if;
-  select nullif(right(upper(regexp_replace(coalesce(iban, ''), '\s', '', 'g')), 4), '') into v_iban from seller_private where seller_id = p_seller;
+  v_iban := nullif(right(upper(regexp_replace(coalesce(sp.iban, ''), '\s', '', 'g')), 4), '');
   insert into seller_payouts (seller_id, amount_sar_minor, iban_last4, reference, paid_on, note, recorded_by)
   values (p_seller, p_amount_sar, v_iban, v_ref, p_paid_on, nullif(left(trim(coalesce(p_note, '')), 500), ''), auth.uid())
   returning id into pid;
+  -- booked on the day it is recorded, so a statement month already closed never changes (review L10); the transfer's
+  -- own date stays on the payout
   insert into seller_ledger (seller_id, kind, payout_id, currency, amount_minor, amount_sar_minor, booked_on, available_on, note, created_by)
-  values (p_seller, 'payout', pid, 'SAR', -p_amount_sar, -p_amount_sar, p_paid_on, p_paid_on, 'Bank transfer ' || v_ref, auth.uid());
+  values (p_seller, 'payout', pid, 'SAR', -p_amount_sar, -p_amount_sar, private.riyadh_today(), private.riyadh_today(),
+          format('Bank transfer %s (paid %s)', v_ref, p_paid_on), auth.uid());
   perform private.notify('seller_payout_recorded', jsonb_build_object('seller_id', p_seller),
     jsonb_build_object('amount', private.money_text(p_amount_sar, 'SAR'), 'iban4', coalesce(v_iban, '····'), 'date', p_paid_on::text, 'reference', v_ref),
     'payout:' || pid);
@@ -794,7 +836,7 @@ declare
   p seller_payouts;
   v_reason text := nullif(left(trim(coalesce(p_reason, '')), 500), '');
 begin
-  if not private.is_staff(array['owner', 'manager', 'finance']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff(array['owner', 'manager', 'finance']::staff_role[]) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   if v_reason is null or char_length(v_reason) < 5 then raise exception 'Give the reason'; end if;
   select * into p from seller_payouts where id = p_payout for update;
   if p.id is null then raise exception 'Payout not found'; end if;
@@ -810,7 +852,7 @@ create or replace function mp_ledger_adjust(p_seller uuid, p_amount_sar int, p_n
 language plpgsql security definer set search_path = public as $$
 declare v_note text := nullif(left(trim(coalesce(p_note, '')), 500), '');
 begin
-  if not private.is_staff(array['owner', 'manager', 'finance']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff(array['owner', 'manager', 'finance']::staff_role[]) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   if p_amount_sar is null or p_amount_sar = 0 then raise exception 'Enter the amount'; end if;
   if v_note is null or char_length(v_note) < 5 then raise exception 'Give the reason for the adjustment'; end if;
   if not exists (select 1 from sellers where id = p_seller) then raise exception 'Seller not found'; end if;
@@ -827,8 +869,10 @@ language sql stable security definer set search_path = public as $$
     'amount_minor', f.amount_minor, 'items_minor', f.items_minor, 'shipping_minor', f.shipping_minor, 'duties_minor', f.duties_minor,
     'platform_minor', f.platform_minor, 'reason', f.reason, 'restock', f.restock, 'payment_id', o.payment_id, 'error', f.error,
     'credit_note_status', f.credit_note_status, 'credit_note', (select i.number from invoices i where i.id = f.credit_note_id),
-    'created_at', f.created_at, 'completed_at', f.completed_at,
-    'invoice', (select jsonb_build_object('id', i.id, 'number', i.number) from invoices i where i.order_id = f.order_id and i.doc = 'invoice' order by i.icv limit 1),
+    'created_at', f.created_at, 'completed_at', f.completed_at, 'age_seconds', extract(epoch from now() - f.created_at)::int,
+    'order_refunded_minor', o.refunded_minor, 'provider_ref', f.provider_ref,
+    'invoice', (select jsonb_build_object('id', i.id, 'number', i.number, 'vat_rate_bp', i.vat_rate_bp, 'fx_per_sar', i.fx_per_sar)
+                from invoices i where i.order_id = f.order_id and i.doc = 'invoice' order by i.icv limit 1),
     'order', jsonb_build_object('id', o.id, 'number', o.number, 'currency', o.currency, 'ship_to', o.ship_to),
     'lines', (select coalesce(jsonb_agg(jsonb_build_object('kind', l.kind, 'sub_order_id', l.sub_order_id, 'order_item_id', l.order_item_id,
                'quantity', l.quantity, 'amount_minor', l.amount_minor, 'commission_minor', l.commission_minor, 'vat_rate_bp', l.vat_rate_bp,
@@ -861,8 +905,11 @@ declare
   rq int; ra int; rc int; q int; amt int; comm int;
   t_items int := 0; t_ship int := 0; t_duty int := 0; t_platform int := 0;
   rid uuid;
+  v_role text := coalesce(private.user_staff_role(p_user)::text, '');
+  v_limit int;
 begin
-  if coalesce(private.user_staff_role(p_user)::text, '') not in ('owner', 'manager', 'finance', 'support') then raise exception 'Not allowed'; end if;
+  if v_role not in ('owner', 'manager', 'finance', 'support') then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  perform private.act_as(p_user);
   if v_key is null or v_key !~ '^[A-Za-z0-9_-]{8,80}$' then raise exception 'A refund key is needed'; end if;
   select * into f from refunds where idempotency_key = v_key;
   if f.id is not null then
@@ -871,13 +918,21 @@ begin
   end if;
   if v_reason is null or char_length(v_reason) < 3 then raise exception 'Give the reason for the refund'; end if;
   select * into o from orders where id = p_order for update;          -- one refund at a time on an order
-  if o.id is null then raise exception 'Order not found'; end if;
+  if o.id is null then raise exception 'Order not found' using detail = 'لم يُعثر على الطلب'; end if;
   if o.payment_id is null or o.status in ('pending_payment', 'cancelled') then raise exception 'Order not paid'; end if;
   if o.status = 'refunded' then raise exception 'Already refunded'; end if;
+  -- one refund waiting for Moyasar per order: an answer that never came is reconciled first, never retried blind (H2)
+  if exists (select 1 from refunds where order_id = o.id and status = 'processing') then
+    raise exception 'A refund on this order is still being processed: check it with Moyasar (Reconcile) before starting another';
+  end if;
 
   if nullif(p ->> 'return_id', '') is not null then
     select * into rr from return_requests where id = (p ->> 'return_id')::uuid and order_id = o.id for update;
-    if rr.id is null then raise exception 'Return not found'; end if;
+    if rr.id is null then raise exception 'Return not found' using detail = 'لم يُعثر على طلب الإرجاع'; end if;
+    -- a return is refunded once, whatever key a second press or a second person uses (H1)
+    if exists (select 1 from refunds where return_id = rr.id and status in ('processing', 'succeeded')) then
+      raise exception 'This return has already been refunded (or is being refunded): it is refunded only once';
+    end if;
     if rr.status <> 'approved' then raise exception 'Approve the return before refunding it'; end if;
     v_mode := 'return';
     v_sub := rr.sub_order_id;
@@ -989,7 +1044,14 @@ begin
     raise exception 'The refund is more than what is left of the payment';
   end if;
   if t_platform > 0 and not exists (select 1 from invoices where order_id = o.id and doc = 'invoice') then
-    raise exception 'The tax invoice for this order has not been issued yet: issue it first, so the refund can have its credit note';
+    raise exception 'The tax invoice for this order has not been issued yet: run "Finish pending work" (or wait for it), so the refund can have its credit note';
+  end if;
+  -- support refunds only up to its limit; above it, finance, a manager or the owner (decision 54; Needs Afzal)
+  if v_role = 'support' then
+    select support_refund_limit_minor into v_limit from mp_settings where id = 1;
+    if private.to_sar(t_items + t_ship + t_duty, private.order_fx(o.id)) > coalesce(v_limit, 0) then
+      raise exception 'Refunds over % SAR are made by finance, a manager or the owner', to_char(coalesce(v_limit, 0) / 100.0, 'FM999,990.00');
+    end if;
   end if;
   insert into refunds (order_id, return_id, currency, amount_minor, items_minor, shipping_minor, duties_minor, platform_minor, reason, restock,
                        idempotency_key, created_by)
@@ -1062,18 +1124,139 @@ begin
   return private.refund_json(f.id);
 end $$;
 
-create or replace function mp_attach_credit_note(p_refund uuid, p_invoice uuid) returns jsonb
+-- A refund as reconciling with Moyasar needs it (server only; review H2).
+create or replace function mp_refund_state(p_refund uuid) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object('id', f.id, 'status', f.status, 'payment_id', o.payment_id, 'amount_minor', f.amount_minor, 'order_id', f.order_id,
+    'order_refunded_minor', o.refunded_minor, 'age_seconds', extract(epoch from now() - f.created_at)::int)
+  from refunds f join orders o on o.id = f.order_id where f.id = p_refund;
+$$;
+revoke all on function mp_refund_state(uuid) from public, anon, authenticated;
+
+-- ================================================================ tax invoices and credit notes (server only)
+-- ZATCA: every paid order we invoice gets ONE tax invoice; every refund of what we invoiced gets a credit note built
+-- from that invoice (its VAT rate and exchange rate, never today's settings). The invoice counter (ICV) is taken and
+-- the document stored in the same transaction, so a failure never leaves a gap in the numbers; a second attempt for
+-- the same order or refund returns the document already issued (review H3, M9, M10). Invoices are never edited.
+
+-- p: {doc: invoice | credit_note, order_id, refund_id (credit notes), original_invoice_id, reason, uuid, issue_at,
+--     currency, totals (minor units, VAT included), vat_rate_bp, fx_per_sar, buyer, qr_base64,
+--     xml (with {{NUMBER}} and {{ICV}} where the number and the counter go)}
+create or replace function mp_issue_document(p jsonb) returns jsonb
 language plpgsql security definer set search_path = public as $$
+declare
+  v_doc invoice_doc := coalesce(nullif(p ->> 'doc', ''), 'invoice')::invoice_doc;
+  v_order uuid := (p ->> 'order_id')::uuid;
+  v_refund uuid := nullif(p ->> 'refund_id', '')::uuid;
+  v_issue timestamptz := coalesce(nullif(p ->> 'issue_at', '')::timestamptz, now());
+  f refunds;
+  existing invoices;
+  v_icv bigint;
+  v_number text;
+  v_id uuid;
 begin
-  update refunds set credit_note_id = p_invoice, credit_note_status = 'issued'
-  where id = p_refund and status = 'succeeded' and credit_note_status = 'pending'
-    and exists (select 1 from invoices i where i.id = p_invoice and i.doc = 'credit_note' and i.order_id = refunds.order_id);
-  if not found then raise exception 'Credit note not attached'; end if;
-  return private.refund_json(p_refund);
+  if v_doc = 'invoice' then
+    select * into existing from invoices where order_id = v_order and doc = 'invoice';
+    if existing.id is not null then return jsonb_build_object('id', existing.id, 'number', existing.number, 'duplicate', true); end if;
+    if not exists (select 1 from orders where id = v_order and status not in ('pending_payment', 'cancelled')) then raise exception 'Order not paid'; end if;
+  elsif v_doc = 'credit_note' then
+    select * into f from refunds where id = v_refund for update;
+    if f.id is null or f.order_id is distinct from v_order then raise exception 'Refund not found'; end if;
+    if f.credit_note_status = 'issued' then
+      return (select jsonb_build_object('id', i.id, 'number', i.number, 'duplicate', true) from invoices i where i.id = f.credit_note_id);
+    end if;
+    if f.status <> 'succeeded' or f.credit_note_status <> 'pending' then raise exception 'This refund needs no credit note'; end if;
+    if not exists (select 1 from invoices i where i.id = nullif(p ->> 'original_invoice_id', '')::uuid and i.order_id = v_order and i.doc = 'invoice') then
+      raise exception 'A credit note refers to the order''s tax invoice';
+    end if;
+  else
+    raise exception 'Unknown document %', v_doc;
+  end if;
+  v_icv := next_invoice_slot();   -- in this transaction: undone with everything else if anything below fails
+  v_number := format('%s-%s-%s', case when v_doc = 'credit_note' then 'CN' else 'INV' end,
+                     extract(year from v_issue at time zone 'UTC')::int, lpad(v_icv::text, 6, '0'));
+  insert into invoices (uuid, number, icv, kind, doc, order_id, original_invoice_id, reason, issue_at, currency, total_excl_vat_minor, vat_minor,
+                        total_incl_vat_minor, total_sar_incl_vat_minor, vat_sar_minor, buyer, qr_base64, xml, vat_rate_bp, fx_per_sar)
+  values (coalesce(nullif(p ->> 'uuid', '')::uuid, gen_random_uuid()), v_number, v_icv, 'simplified', v_doc, v_order,
+          nullif(p ->> 'original_invoice_id', '')::uuid, nullif(p ->> 'reason', ''), v_issue, p ->> 'currency',
+          (p ->> 'total_excl_vat_minor')::int, (p ->> 'vat_minor')::int, (p ->> 'total_incl_vat_minor')::int,
+          (p ->> 'total_sar_incl_vat_minor')::int, (p ->> 'vat_sar_minor')::int, p -> 'buyer', p ->> 'qr_base64',
+          replace(replace(p ->> 'xml', '{{NUMBER}}', v_number), '{{ICV}}', v_icv::text),
+          nullif(p ->> 'vat_rate_bp', '')::int, nullif(p ->> 'fx_per_sar', '')::numeric)
+  returning id into v_id;
+  if v_doc = 'credit_note' then
+    update refunds set credit_note_id = v_id, credit_note_status = 'issued' where id = f.id;
+  end if;
+  return jsonb_build_object('id', v_id, 'number', v_number, 'duplicate', false);
+exception when unique_violation then
+  -- the order's invoice was issued at the same moment by another request: that one stands, and nothing of ours is kept
+  select * into existing from invoices where order_id = v_order and doc = 'invoice';
+  if v_doc = 'invoice' and existing.id is not null then
+    return jsonb_build_object('id', existing.id, 'number', existing.number, 'duplicate', true);
+  end if;
+  raise;
 end $$;
+
+-- What an order's tax invoice is made of (server only): the lines and delivery we invoice (our own products and the
+-- parcels where the platform is the supplier; never duties), at the order's checkout rate.
+create or replace function mp_invoice_context(p_order uuid) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'order', jsonb_build_object('id', o.id, 'number', o.number, 'currency', o.currency, 'status', o.status, 'ship_to', o.ship_to,
+               'fx_per_sar', o.fx_per_sar, 'paid_at', o.paid_at, 'total_minor', o.total_minor),
+    'invoice', (select jsonb_build_object('id', i.id, 'number', i.number) from invoices i where i.order_id = o.id and i.doc = 'invoice'),
+    'items', (select coalesce(jsonb_agg(jsonb_build_object('name_en', x.name_en, 'name_ar', x.name_ar, 'unit_price_minor', x.unit_price_minor,
+                 'quantity', x.quantity, 'line_total_minor', x.line_total_minor, 'vat_rate_bp', x.vat_rate_bp) order by x.name_en, x.id), '[]'::jsonb)
+              from order_items x left join sub_orders s on s.id = x.sub_order_id
+              where x.order_id = o.id and (x.sub_order_id is null or s.invoicer = 'platform')),
+    'shipping_minor', case when exists (select 1 from sub_orders s where s.order_id = o.id)
+                           then (select coalesce(sum(s.shipping_minor), 0) from sub_orders s where s.order_id = o.id and s.invoicer = 'platform')
+                           else o.shipping_minor end,
+    'seller_invoiced', (select count(*) from sub_orders s where s.order_id = o.id and s.invoicer <> 'platform'))
+  from orders o where o.id = p_order;
+$$;
+
+-- What a refund's credit note is made of (server only): the refund and the invoice it corrects.
+create or replace function mp_credit_note_context(p_refund uuid) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'refund', private.refund_json(f.id),
+    'original', (select jsonb_build_object('id', i.id, 'number', i.number, 'currency', i.currency, 'vat_rate_bp', i.vat_rate_bp, 'fx_per_sar', i.fx_per_sar,
+                   'total_incl_vat_minor', i.total_incl_vat_minor, 'vat_minor', i.vat_minor, 'total_sar_incl_vat_minor', i.total_sar_incl_vat_minor)
+                 from invoices i where i.order_id = f.order_id and i.doc = 'invoice'),
+    'order_fx_per_sar', (select o.fx_per_sar from orders o where o.id = f.order_id))
+  from refunds f where f.id = p_refund;
+$$;
+
+-- What a failure left half done (server only; finish-pending works through it, the dashboard counts it): paid orders
+-- with no tax invoice, paid orders whose parcels were not handed on, refunds whose credit note is missing, refunds
+-- still waiting for Moyasar's answer. p_min_age_seconds leaves alone what a request may be finishing right now.
+create or replace function mp_pending_work(p_limit int default 20, p_min_age_seconds int default 120) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'orders_without_invoice', (select coalesce(jsonb_agg(x.id), '[]'::jsonb) from (
+        select o.id from orders o
+        where o.status not in ('pending_payment', 'cancelled') and o.paid_at <= now() - make_interval(secs => p_min_age_seconds)
+          and not exists (select 1 from invoices i where i.order_id = o.id and i.doc = 'invoice')
+          and exists (select 1 from order_items x left join sub_orders s on s.id = x.sub_order_id
+                      where x.order_id = o.id and (x.sub_order_id is null or s.invoicer = 'platform'))
+        order by o.paid_at limit p_limit) x),
+    'orders_not_handed_on', (select coalesce(jsonb_agg(x.id), '[]'::jsonb) from (
+        select o.id from orders o
+        where o.status in ('paid', 'packing', 'shipped', 'delivered') and o.paid_at <= now() - make_interval(secs => p_min_age_seconds)
+          and exists (select 1 from sub_orders s where s.order_id = o.id and s.status = 'pending_payment')
+        order by o.paid_at limit p_limit) x),
+    'credit_notes', (select coalesce(jsonb_agg(x.id), '[]'::jsonb) from (
+        select id from refunds where status = 'succeeded' and credit_note_status = 'pending' order by completed_at limit p_limit) x),
+    'refunds_processing', (select coalesce(jsonb_agg(x.id), '[]'::jsonb) from (
+        select id from refunds where status = 'processing' and created_at <= now() - make_interval(secs => p_min_age_seconds) order by created_at limit p_limit) x));
+$$;
+revoke all on function mp_issue_document(jsonb) from public, anon, authenticated;
+revoke all on function mp_invoice_context(uuid) from public, anon, authenticated;
+revoke all on function mp_credit_note_context(uuid) from public, anon, authenticated;
+revoke all on function mp_pending_work(int, int) from public, anon, authenticated;
 revoke all on function mp_prepare_refund(uuid, jsonb, uuid) from public, anon, authenticated;
 revoke all on function mp_complete_refund(uuid, boolean, text, text) from public, anon, authenticated;
-revoke all on function mp_attach_credit_note(uuid, uuid) from public, anon, authenticated;
 
 -- ================================================================ returns
 -- how many of a line are refunded or in an open return already
@@ -1091,6 +1274,7 @@ language sql stable security definer set search_path = public as $$
     'sub_order_id', r.sub_order_id, 'sub_order_number', format('AM-%s-%s', o.number, s.seq), 'status', r.status, 'kind', r.kind,
     'reason', r.reason, 'unopened', r.unopened, 'details', r.details, 'seller_note', r.seller_note, 'escalation_note', r.escalation_note,
     'staff_note', r.staff_note, 'restock', r.restock, 'respond_by', r.respond_by, 'decided_by', r.decided_by,
+    'approved_by', case when p_side = 'staff' then (select coalesce(m.name, u.email) from auth.users u left join staff_members m on m.user_id = u.id where u.id = r.approved_by) end,
     'created_at', r.created_at, 'accepted_at', r.accepted_at, 'declined_at', r.declined_at, 'escalated_at', r.escalated_at,
     'received_at', r.received_at, 'approved_at', r.approved_at, 'resolved_at', r.resolved_at, 'currency', s.currency,
     'can_escalate', (r.status = 'declined' and r.declined_at > now() - make_interval(days => (select dispute_window_days from mp_settings where id = 1)))
@@ -1109,7 +1293,7 @@ language sql stable security definer set search_path = public as $$
     'value_minor', (select coalesce(sum(round(i.line_total_minor::numeric * rl.quantity / i.quantity)), 0)::int
                     from return_lines rl join order_items i on i.id = rl.order_item_id where rl.return_id = r.id),
     'thread_id', (select t.id from message_threads t where t.return_id = r.id),
-    'refund', (select jsonb_build_object('status', f.status, 'amount_minor', f.amount_minor, 'completed_at', f.completed_at)
+    'refund', (select jsonb_build_object('id', f.id, 'status', f.status, 'amount_minor', f.amount_minor, 'completed_at', f.completed_at)
                from refunds f where f.return_id = r.id and f.status <> 'failed' order by f.created_at desc limit 1),
     'flags', case when p_side = 'staff' then to_jsonb(r.flags) end)
   from return_requests r join orders o on o.id = r.order_id join sub_orders s on s.id = r.sub_order_id where r.id = p_return;
@@ -1186,38 +1370,44 @@ declare
   rid uuid;
   n int := 0;
 begin
+  perform private.act_as(p_user);
+  if not private.marketplace_open() then
+    raise exception using message = 'Returns cannot be requested online yet: please contact us and we will help', detail = 'لا يمكن طلب الإرجاع عبر الموقع بعد: تواصل معنا وسنساعدك';
+  end if;
   select * into s from sub_orders where id = nullif(p ->> 'sub_order_id', '')::uuid;
-  if s.id is null then raise exception 'Order not found'; end if;
+  if s.id is null then raise exception 'Order not found' using detail = 'لم يُعثر على الطلب'; end if;
   select * into o from orders where id = s.order_id for update;       -- numbering: one request at a time on an order
-  if o.user_id is distinct from p_user then raise exception 'Not allowed'; end if;
+  if o.user_id is distinct from p_user then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   select * into st from mp_settings where id = 1;
   if v_reason is null or v_reason not in ('changed_mind', 'not_as_described', 'faulty', 'damaged', 'wrong_item', 'missing_item', 'not_received') then
-    raise exception 'Choose a reason';
+    raise exception 'Choose a reason' using detail = 'اختر سببًا';
   end if;
   v_problem := v_reason <> 'changed_mind';
   v_kind := case when v_reason in ('not_received', 'missing_item') then 'refund_only' else 'return' end;
   if v_reason = 'not_received' then
     v_expected := coalesce(s.accepted_at, o.paid_at)::date + coalesce(s.days_max, 10);
     if not (s.status = 'delivered' or (s.status in ('ready_to_ship', 'shipped', 'delivery_failed') and private.riyadh_today() > v_expected + 2)) then
-      raise exception 'Your parcel is still within its delivery time. If it has not arrived by %, tell us here.', v_expected + 3;
+      raise exception 'Your parcel is still within its delivery time. If it has not arrived by %, tell us here.', v_expected + 3
+        using detail = format('ما زالت شحنتك ضمن مدة التوصيل. إن لم تصل بحلول %s فأخبرنا هنا.', v_expected + 3);
     end if;
     if coalesce((s.delivered_at at time zone 'Asia/Riyadh')::date, v_expected) < private.riyadh_today() - st.faulty_claim_days then
-      raise exception 'The time to report this has passed';
+      raise exception 'The time to report this has passed' using detail = 'انتهت مدة الإبلاغ عن ذلك';
     end if;
   else
-    if s.status <> 'delivered' or s.delivered_at is null then raise exception 'You can ask for a return once the parcel has been delivered'; end if;
+    if s.status <> 'delivered' or s.delivered_at is null then raise exception 'You can ask for a return once the parcel has been delivered' using detail = 'يمكنك طلب الإرجاع بعد توصيل الشحنة'; end if;
     if v_problem and s.delivered_at < now() - make_interval(days => st.faulty_claim_days) then
-      raise exception 'A problem can be reported up to % days after delivery', st.faulty_claim_days;
+      raise exception 'A problem can be reported up to % days after delivery', st.faulty_claim_days
+        using detail = format('يمكن الإبلاغ عن مشكلة خلال %s يومًا من التوصيل', st.faulty_claim_days);
     end if;
   end if;
   if v_reason in ('not_as_described', 'faulty', 'damaged', 'wrong_item') and coalesce(char_length(v_details), 0) < 10 then
-    raise exception 'Tell us what is wrong in a sentence or two';
+    raise exception 'Tell us what is wrong in a sentence or two' using detail = 'أخبرنا بالمشكلة في جملة أو جملتين';
   end if;
   v_photos := coalesce(array(select x::uuid from jsonb_array_elements_text(case when jsonb_typeof(p -> 'photos') = 'array' then p -> 'photos' else '[]'::jsonb end) x), '{}');
-  if cardinality(v_photos) > 4 then raise exception 'Up to 4 photos'; end if;
+  if cardinality(v_photos) > 4 then raise exception 'Up to 4 photos' using detail = 'أربع صور كحد أقصى'; end if;
   if exists (select 1 from unnest(v_photos) x where not exists (
       select 1 from media_assets a where a.id = x and a.user_id = p_user and a.seller_id is null and a.kind = 'return_photo' and a.status in ('passed', 'review'))) then
-    raise exception 'Every photo must pass the photo check';
+    raise exception 'Every photo must pass the photo check' using detail = 'يجب أن تجتاز كل صورة فحص الصور';
   end if;
   v_seq := coalesce((select max(r.seq) from return_requests r where r.order_id = o.id), 0) + 1;
   insert into return_requests (order_id, sub_order_id, seq, seller_id, user_id, kind, reason, unopened, details, photos, flags, respond_by)
@@ -1228,23 +1418,25 @@ begin
   for e in select (x ->> 'order_item_id')::uuid as id, sum((x ->> 'quantity')::int)::int as q
            from jsonb_array_elements(case when jsonb_typeof(p -> 'lines') = 'array' then p -> 'lines' else '[]'::jsonb end) x group by 1 loop
     select * into i from order_items where id = e.id;
-    if i.id is null or i.sub_order_id is distinct from s.id then raise exception 'That item is not in this parcel'; end if;
+    if i.id is null or i.sub_order_id is distinct from s.id then raise exception 'That item is not in this parcel' using detail = 'هذا المنتج ليس في هذه الشحنة'; end if;
     if e.q is null or e.q < 1 or e.q > i.quantity - private.line_taken(i.id, rid) then
-      raise exception 'Only % of "%" can be returned', greatest(i.quantity - private.line_taken(i.id, rid), 0), i.name_en;
+      raise exception 'Only % of "%" can be returned', greatest(i.quantity - private.line_taken(i.id, rid), 0), i.name_en
+        using detail = format('يمكن إرجاع %s فقط من «%s»', greatest(i.quantity - private.line_taken(i.id, rid), 0), coalesce(i.name_ar, i.name_en));
     end if;
     if not v_problem then
       if coalesce(i.return_policy, 'standard') in ('faulty_only', 'none') then
-        raise exception '"%" can only be returned if it is faulty, damaged, wrong or not as described', i.name_en;
+        raise exception '"%" can only be returned if it is faulty, damaged, wrong or not as described', i.name_en
+          using detail = format('لا يمكن إرجاع «%s» إلا إذا كان معيبًا أو تالفًا أو مختلفًا عن الطلب أو عن الوصف', coalesce(i.name_ar, i.name_en));
       end if;
-      if i.return_policy = 'unopened_only' and not v_unopened then raise exception '"%" can only be returned unopened', i.name_en; end if;
+      if i.return_policy = 'unopened_only' and not v_unopened then raise exception '"%" can only be returned unopened', i.name_en using detail = format('لا يمكن إرجاع «%s» إلا إذا كان غير مفتوح', coalesce(i.name_ar, i.name_en)); end if;
       if s.delivered_at + make_interval(days => coalesce(i.return_window_days, st.default_return_window_days)) < now() then
-        raise exception 'The return window for "%" has closed', i.name_en;
+        raise exception 'The return window for "%" has closed', i.name_en using detail = format('انتهت مدة إرجاع «%s»', coalesce(i.name_ar, i.name_en));
       end if;
     end if;
     insert into return_lines (return_id, order_item_id, quantity) values (rid, i.id, e.q);
     n := n + 1;
   end loop;
-  if n = 0 then raise exception 'Choose the items'; end if;
+  if n = 0 then raise exception 'Choose the items' using detail = 'اختر المنتجات'; end if;
   perform private.notify_return(rid, 'requested');
   return private.return_json(rid, 'customer');
 end $$;
@@ -1263,43 +1455,45 @@ declare
   v_note text := nullif(left(trim(coalesce(p_note, '')), 1000), '');
   v_event text;
 begin
+  perform private.act_as(p_user);
   select * into r from return_requests where id = p_return for update;
-  if r.id is null then raise exception 'Return not found'; end if;
+  if r.id is null then raise exception 'Return not found' using detail = 'لم يُعثر على طلب الإرجاع'; end if;
   select * into st from mp_settings where id = 1;
   v_staff := v_role in ('owner', 'manager', 'support', 'operations', 'finance');
   v_seller := private.user_is_member(r.seller_id, p_user);
   if p_action in ('escalate', 'withdraw') then
-    if r.user_id <> p_user then raise exception 'Not allowed'; end if;
+    if r.user_id is distinct from p_user then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   elsif p_action in ('accept', 'received') then
-    if not (v_seller or v_staff) then raise exception 'Not allowed'; end if;
+    if not (v_seller or v_staff) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   elsif p_action = 'decline' then
-    if not v_seller then raise exception 'Not allowed'; end if;
+    if not v_seller then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   elsif p_action in ('approve', 'reject') then
-    if not v_staff then raise exception 'Not allowed'; end if;
+    if not v_staff then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   else
-    raise exception 'Unknown action';
+    raise exception 'Unknown action' using detail = 'إجراء غير معروف';
   end if;
 
   if p_action = 'accept' then
-    if not (r.status = 'requested' or (r.status = 'escalated' and v_staff)) then raise exception 'This return is %', r.status; end if;
+    if not (r.status = 'requested' or (r.status = 'escalated' and v_staff)) then raise exception 'This return is %', r.status using detail = format('حالة طلب الإرجاع هذا: %s', private.status_ar(r.status)); end if;
     update return_requests set
       status = case when r.kind = 'refund_only' then 'approved' else 'accepted' end,
       accepted_at = now(), approved_at = case when r.kind = 'refund_only' then now() end,
       seller_note = case when v_seller then coalesce(v_note, seller_note) else seller_note end,
       staff_note = case when not v_seller then coalesce(v_note, staff_note) else staff_note end,
       decided_by = case when v_seller then 'seller' else 'staff' end,
+      approved_by = case when r.kind = 'refund_only' then p_user else approved_by end,
       flags = flags || coalesce(p_flags, '{}')
     where id = r.id;
     v_event := case when r.kind = 'refund_only' then 'approved' else 'accepted' end;
   elsif p_action = 'decline' then
-    if r.status <> 'requested' then raise exception 'This return is %', r.status; end if;
-    if v_note is null or char_length(v_note) < 5 then raise exception 'Tell the customer why'; end if;
+    if r.status <> 'requested' then raise exception 'This return is %', r.status using detail = format('حالة طلب الإرجاع هذا: %s', private.status_ar(r.status)); end if;
+    if v_note is null or char_length(v_note) < 5 then raise exception 'Tell the customer why' using detail = 'أخبر العميل بالسبب'; end if;
     update return_requests set status = 'declined', declined_at = now(), seller_note = v_note, decided_by = 'seller', flags = flags || coalesce(p_flags, '{}')
     where id = r.id;
     v_event := 'declined';
   elsif p_action = 'received' then
-    if r.status <> 'accepted' then raise exception 'This return is %', r.status; end if;
-    update return_requests set status = 'approved', received_at = now(), approved_at = now(), restock = coalesce(p_restock, false),
+    if r.status <> 'accepted' then raise exception 'This return is %', r.status using detail = format('حالة طلب الإرجاع هذا: %s', private.status_ar(r.status)); end if;
+    update return_requests set status = 'approved', received_at = now(), approved_at = now(), restock = coalesce(p_restock, false), approved_by = p_user,
       seller_note = case when v_seller and v_note is not null then v_note else seller_note end
     where id = r.id;
     v_event := 'approved';
@@ -1307,29 +1501,30 @@ begin
     if not ((r.status = 'declined' and r.declined_at > now() - make_interval(days => st.dispute_window_days))
             or (r.status = 'requested' and r.respond_by is not null and r.respond_by < now())
             or (r.status = 'accepted' and r.accepted_at < now() - interval '14 days')) then
-      raise exception 'You can ask us to decide once the seller has answered, or if they have not answered in time';
+      raise exception 'You can ask us to decide once the seller has answered, or if they have not answered in time'
+        using detail = 'يمكنك أن تطلب منا البت في الأمر بعد رد البائع، أو إن لم يرد في الوقت المحدد';
     end if;
-    if v_note is null or char_length(v_note) < 5 then raise exception 'Tell us why you disagree'; end if;
+    if v_note is null or char_length(v_note) < 5 then raise exception 'Tell us why you disagree' using detail = 'أخبرنا لماذا لا توافق'; end if;
     update return_requests set status = 'escalated', escalated_at = now(), escalation_note = v_note, flags = flags || coalesce(p_flags, '{}') where id = r.id;
     v_event := 'escalated';
   elsif p_action = 'withdraw' then
-    if r.status not in ('requested', 'accepted', 'declined', 'escalated') then raise exception 'This return is %', r.status; end if;
+    if r.status not in ('requested', 'accepted', 'declined', 'escalated') then raise exception 'This return is %', r.status using detail = format('حالة طلب الإرجاع هذا: %s', private.status_ar(r.status)); end if;
     update return_requests set status = 'withdrawn', resolved_at = now() where id = r.id;
     v_event := 'withdrawn';
   elsif p_action = 'approve' then
-    if r.status not in ('requested', 'accepted', 'declined', 'escalated') then raise exception 'This return is %', r.status; end if;
-    update return_requests set status = 'approved', approved_at = now(), decided_by = 'staff', staff_note = coalesce(v_note, staff_note),
+    if r.status not in ('requested', 'accepted', 'declined', 'escalated') then raise exception 'This return is %', r.status using detail = format('حالة طلب الإرجاع هذا: %s', private.status_ar(r.status)); end if;
+    update return_requests set status = 'approved', approved_at = now(), decided_by = 'staff', staff_note = coalesce(v_note, staff_note), approved_by = p_user,
       restock = coalesce(p_restock, restock), received_at = case when coalesce(p_restock, false) then coalesce(received_at, now()) else received_at end
     where id = r.id;
     v_event := 'approved';
   elsif p_action = 'reject' then
-    if r.status not in ('requested', 'accepted', 'declined', 'escalated') then raise exception 'This return is %', r.status; end if;
-    if v_note is null or char_length(v_note) < 5 then raise exception 'Explain the decision to the customer'; end if;
+    if r.status not in ('requested', 'accepted', 'declined', 'escalated') then raise exception 'This return is %', r.status using detail = format('حالة طلب الإرجاع هذا: %s', private.status_ar(r.status)); end if;
+    if v_note is null or char_length(v_note) < 5 then raise exception 'Explain the decision to the customer' using detail = 'اشرح القرار للعميل'; end if;
     update return_requests set status = 'rejected', resolved_at = now(), decided_by = 'staff', staff_note = v_note where id = r.id;
     v_event := 'rejected';
   end if;
   perform private.notify_return(r.id, v_event);
-  return private.return_json(r.id, case when r.user_id = p_user then 'customer' when v_seller then 'seller' else 'staff' end);
+  return private.return_json(r.id, case when r.user_id is not distinct from p_user then 'customer' when v_seller then 'seller' else 'staff' end);
 end $$;
 revoke all on function mp_return_request(uuid, jsonb) from public, anon, authenticated;
 revoke all on function mp_return_action(uuid, uuid, text, text, boolean, text[]) from public, anon, authenticated;
@@ -1337,7 +1532,7 @@ revoke all on function mp_return_action(uuid, uuid, text, text, boolean, text[])
 create or replace function seller_returns(p_seller uuid) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_seller_member(p_seller) then raise exception 'Not allowed'; end if;
+  if not private.is_seller_member(p_seller) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return coalesce((select jsonb_agg(private.return_json(r.id, 'seller') order by r.created_at desc) from return_requests r where r.seller_id = p_seller), '[]'::jsonb);
 end $$;
 
@@ -1395,26 +1590,30 @@ declare
   v_name text;
   rid uuid;
 begin
+  perform private.act_as(p_user);
+  if not private.marketplace_open() then
+    raise exception using message = 'Reviews open soon', detail = 'ستتاح التقييمات قريبًا';
+  end if;
   select * into i from order_items where id = nullif(p ->> 'order_item_id', '')::uuid;
   select * into o from orders where id = i.order_id;
-  if i.id is null or o.user_id is distinct from p_user then raise exception 'Not allowed'; end if;
-  if i.product_id is null then raise exception 'This item cannot be reviewed'; end if;
+  if i.id is null or o.user_id is distinct from p_user then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  if i.product_id is null then raise exception 'This item cannot be reviewed' using detail = 'لا يمكن تقييم هذا المنتج'; end if;
   select * into st from mp_settings where id = 1;
   v_delivered := case when i.sub_order_id is not null then (select delivered_at from sub_orders where id = i.sub_order_id)
                       when o.status = 'delivered' then o.updated_at end;
-  if v_delivered is null then raise exception 'You can review an item once it has been delivered'; end if;
-  if v_delivered < now() - make_interval(days => st.review_window_days) then raise exception 'The time to review this item has passed'; end if;
-  if v_rating is null or v_rating not between 1 and 5 then raise exception 'Choose from 1 to 5 stars'; end if;
+  if v_delivered is null then raise exception 'You can review an item once it has been delivered' using detail = 'يمكنك تقييم المنتج بعد توصيله'; end if;
+  if v_delivered < now() - make_interval(days => st.review_window_days) then raise exception 'The time to review this item has passed' using detail = 'انتهت مدة تقييم هذا المنتج'; end if;
+  if v_rating is null or v_rating not between 1 and 5 then raise exception 'Choose from 1 to 5 stars' using detail = 'اختر من نجمة إلى خمس نجوم'; end if;
   v_photos := coalesce(array(select x::uuid from jsonb_array_elements_text(case when jsonb_typeof(p -> 'photos') = 'array' then p -> 'photos' else '[]'::jsonb end) x), '{}');
-  if cardinality(v_photos) > 3 then raise exception 'Up to 3 photos'; end if;
+  if cardinality(v_photos) > 3 then raise exception 'Up to 3 photos' using detail = 'ثلاث صور كحد أقصى'; end if;
   if exists (select 1 from unnest(v_photos) x where not exists (
       select 1 from media_assets a where a.id = x and a.user_id = p_user and a.seller_id is null and a.kind = 'review_photo' and a.status in ('passed', 'review'))) then
-    raise exception 'Every photo must pass the photo check';
+    raise exception 'Every photo must pass the photo check' using detail = 'يجب أن تجتاز كل صورة فحص الصور';
   end if;
   v_flags := coalesce(array(select jsonb_array_elements_text(case when jsonb_typeof(p -> 'flags') = 'array' then p -> 'flags' else '[]'::jsonb end)), '{}');
   if exists (select 1 from media_assets a where a.id = any(v_photos) and a.status = 'review') then v_flags := array_append(v_flags, 'photo_review'); end if;
   select * into existing from product_reviews where order_item_id = i.id;
-  if existing.id is not null and existing.status = 'hidden' then raise exception 'This review was removed by our team'; end if;
+  if existing.id is not null and existing.status = 'hidden' then raise exception 'This review was removed by our team' using detail = 'أزال فريقنا هذا التقييم'; end if;
   v_seller := (select seller_id from products where id = i.product_id);
   v_name := coalesce(private.public_name(nullif(left(trim(coalesce(p ->> 'name', '')), 60), '')),
                      private.public_name((select full_name from profiles where id = p_user)),
@@ -1441,16 +1640,17 @@ declare
   v_staff boolean := coalesce(private.user_staff_role(p_user)::text, '') in ('owner', 'manager', 'marketing', 'support');
   v_publish boolean;
 begin
+  perform private.act_as(p_user);
   select * into r from product_reviews where id = p_review;
-  if r.id is null or r.status <> 'published' then raise exception 'Review not found'; end if;
+  if r.id is null or r.status <> 'published' then raise exception 'Review not found' using detail = 'لم يُعثر على التقييم'; end if;
   if r.seller_id is not null then
-    if not private.user_is_member(r.seller_id, p_user) then raise exception 'Not allowed'; end if;
+    if not private.user_is_member(r.seller_id, p_user) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   elsif not v_staff then
-    raise exception 'Not allowed';
+    raise exception 'Not allowed' using detail = 'غير مسموح';
   end if;
-  if char_length(v_body) < 2 or char_length(v_body) > 1500 then raise exception 'Write a reply (up to 1500 characters)'; end if;
+  if char_length(v_body) < 2 or char_length(v_body) > 1500 then raise exception 'Write a reply (up to 1500 characters)' using detail = 'اكتب ردًا (حتى ١٥٠٠ حرف)'; end if;
   select * into existing from review_replies where review_id = r.id;
-  if existing.review_id is not null and existing.status = 'hidden' then raise exception 'This reply was removed by our team'; end if;
+  if existing.review_id is not null and existing.status = 'hidden' then raise exception 'This reply was removed by our team' using detail = 'أزال فريقنا هذا الرد'; end if;
   -- our team's replies go out at once; a seller's are read first unless the setting says otherwise
   v_publish := r.seller_id is null or ((select review_auto_publish from mp_settings where id = 1) and cardinality(coalesce(p_flags, '{}')) = 0);
   insert into review_replies (review_id, seller_id, author_id, body, flags, status, published_at)
@@ -1469,11 +1669,12 @@ declare
   y review_replies;
   v_note text := nullif(left(trim(coalesce(p_note, '')), 500), '');
 begin
-  if coalesce(private.user_staff_role(p_user)::text, '') not in ('owner', 'manager', 'marketing', 'support') then raise exception 'Not allowed'; end if;
-  if p_action not in ('publish', 'reject', 'hide') or p_target not in ('review', 'reply') then raise exception 'Unknown action'; end if;
+  if coalesce(private.user_staff_role(p_user)::text, '') not in ('owner', 'manager', 'marketing', 'support') then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  perform private.act_as(p_user);
+  if p_action not in ('publish', 'reject', 'hide') or p_target not in ('review', 'reply') then raise exception 'Unknown action' using detail = 'إجراء غير معروف'; end if;
   if p_action in ('reject', 'hide') and (v_note is null or char_length(v_note) < 5) then raise exception 'Write a short note for the author'; end if;
   select * into r from product_reviews where id = p_review for update;
-  if r.id is null then raise exception 'Review not found'; end if;
+  if r.id is null then raise exception 'Review not found' using detail = 'لم يُعثر على التقييم'; end if;
   if p_target = 'review' then
     if p_action = 'publish' then
       if r.status = 'published' then return jsonb_build_object('status', 'published'); end if;
@@ -1549,7 +1750,7 @@ declare
 begin
   select * into i from order_items where id = p_item;
   select * into o from orders where id = i.order_id;
-  if i.id is null or o.user_id is distinct from auth.uid() then raise exception 'Not allowed'; end if;
+  if i.id is null or o.user_id is distinct from auth.uid() then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   v_delivered := case when i.sub_order_id is not null then (select delivered_at from sub_orders where id = i.sub_order_id)
                       when o.status = 'delivered' then o.updated_at end;
   return jsonb_build_object(
@@ -1566,7 +1767,7 @@ end $$;
 create or replace function seller_reviews(p_seller uuid) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_seller_member(p_seller) then raise exception 'Not allowed'; end if;
+  if not private.is_seller_member(p_seller) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return coalesce((select jsonb_agg(jsonb_build_object(
       'id', r.id, 'product', jsonb_build_object('id', p.id, 'slug', p.slug, 'name_en', p.name_en, 'name_ar', p.name_ar),
       'author', r.author_name, 'rating', r.rating, 'title', r.title, 'body', r.body, 'lang', r.lang, 'photos', to_jsonb(r.photo_urls),
@@ -1623,19 +1824,23 @@ declare
   v_was_flagged boolean;
   mid bigint;
 begin
-  if v_as not in ('customer', 'seller', 'staff') then raise exception 'Not allowed'; end if;
-  if v_as = 'staff' and v_role not in ('owner', 'manager', 'support', 'operations') then raise exception 'Not allowed'; end if;
-  if char_length(v_body) < 1 or char_length(v_body) > 2000 then raise exception 'Write a message (up to 2000 characters)'; end if;
+  perform private.act_as(p_user);
+  if v_as not in ('customer', 'seller', 'staff') then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  if v_as <> 'staff' and not private.marketplace_open() then
+    raise exception using message = 'Messages open soon: please contact us by email or WhatsApp for now', detail = 'ستتاح الرسائل قريبًا: تواصل معنا الآن عبر البريد أو واتساب';
+  end if;
+  if v_as = 'staff' and v_role not in ('owner', 'manager', 'support', 'operations') then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  if char_length(v_body) < 1 or char_length(v_body) > 2000 then raise exception 'Write a message (up to 2000 characters)' using detail = 'اكتب رسالة (حتى ٢٠٠٠ حرف)'; end if;
   select * into st from mp_settings where id = 1;
   select count(*) into v_recent from messages where sender_id = p_user and created_at > now() - interval '1 hour';
-  if v_as <> 'staff' and v_recent >= st.messages_per_hour then raise exception 'You have sent a lot of messages in the last hour. Please try again a little later.'; end if;
+  if v_as <> 'staff' and v_recent >= st.messages_per_hour then raise exception 'You have sent a lot of messages in the last hour. Please try again a little later.' using detail = 'أرسلت رسائل كثيرة خلال الساعة الماضية. يُرجى المحاولة بعد قليل.'; end if;
 
   if nullif(p ->> 'thread_id', '') is not null then
     select * into t from message_threads where id = (p ->> 'thread_id')::uuid for update;
-    if t.id is null then raise exception 'Conversation not found'; end if;
+    if t.id is null then raise exception 'Conversation not found' using detail = 'لم يُعثر على المحادثة'; end if;
   elsif nullif(p ->> 'return_id', '') is not null then
     select * into r from return_requests where id = (p ->> 'return_id')::uuid;
-    if r.id is null then raise exception 'Return not found'; end if;
+    if r.id is null then raise exception 'Return not found' using detail = 'لم يُعثر على طلب الإرجاع'; end if;
     select * into t from message_threads where return_id = r.id for update;
     if t.id is null then
       select * into o from orders where id = r.order_id;
@@ -1646,9 +1851,9 @@ begin
     end if;
   elsif nullif(p ->> 'sub_order_id', '') is not null then
     select * into s from sub_orders where id = (p ->> 'sub_order_id')::uuid;
-    if s.id is null then raise exception 'Order not found'; end if;
+    if s.id is null then raise exception 'Order not found' using detail = 'لم يُعثر على الطلب'; end if;
     select * into o from orders where id = s.order_id;
-    if o.user_id is null then raise exception 'This order was placed without an account: our team will contact the customer'; end if;
+    if o.user_id is null then raise exception 'This order was placed without an account: our team will contact the customer' using detail = 'طُلب هذا الطلب دون حساب: سيتواصل فريقنا مع العميل'; end if;
     select * into t from message_threads where user_id = o.user_id and sub_order_id = s.id and return_id is null for update;
     if t.id is null then
       insert into message_threads (user_id, seller_id, sub_order_id, subject)
@@ -1657,10 +1862,10 @@ begin
       if t.id is null then select * into t from message_threads where user_id = o.user_id and sub_order_id = s.id and return_id is null; end if;
     end if;
   elsif nullif(p ->> 'product_id', '') is not null then
-    if v_as <> 'customer' then raise exception 'Only customers ask about a product'; end if;
+    if v_as <> 'customer' then raise exception 'Only customers ask about a product' using detail = 'السؤال عن المنتج متاح للعملاء فقط'; end if;
     select * into pr from products where id = (p ->> 'product_id')::uuid and is_active and listing_status = 'approved'
       and (seller_id is null or private.seller_approved(seller_id));
-    if pr.id is null then raise exception 'Product not found'; end if;
+    if pr.id is null then raise exception 'Product not found' using detail = 'لم يُعثر على المنتج'; end if;
     select * into t from message_threads where user_id = p_user and product_id = pr.id and sub_order_id is null and return_id is null for update;
     if t.id is null then
       insert into message_threads (user_id, seller_id, product_id, subject) values (p_user, pr.seller_id, pr.id, coalesce(v_subject, left(pr.name_en, 140)))
@@ -1668,14 +1873,14 @@ begin
       if t.id is null then select * into t from message_threads where user_id = p_user and product_id = pr.id and sub_order_id is null and return_id is null; end if;
     end if;
   else
-    if v_as <> 'customer' then raise exception 'Choose the conversation'; end if;
-    if v_subject is null or char_length(v_subject) < 2 then raise exception 'Add a subject'; end if;
+    if v_as <> 'customer' then raise exception 'Choose the conversation' using detail = 'اختر المحادثة'; end if;
+    if v_subject is null or char_length(v_subject) < 2 then raise exception 'Add a subject' using detail = 'أضف عنوانًا للرسالة'; end if;
     insert into message_threads (user_id, seller_id, subject) values (p_user, null, v_subject) returning * into t;
   end if;
 
   -- who may write here
-  if v_as = 'customer' and t.user_id <> p_user then raise exception 'Not allowed'; end if;
-  if v_as = 'seller' and (t.seller_id is null or not private.user_is_member(t.seller_id, p_user)) then raise exception 'Not allowed'; end if;
+  if v_as = 'customer' and t.user_id <> p_user then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  if v_as = 'seller' and (t.seller_id is null or not private.user_is_member(t.seller_id, p_user)) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
 
   v_was_flagged := t.flagged;
   insert into messages (thread_id, sender, sender_id, body, masked, flags)
@@ -1711,8 +1916,8 @@ $$;
 create or replace function mp_threads(p_seller uuid default null) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if auth.uid() is null then raise exception 'Not allowed'; end if;
-  if p_seller is not null and not private.is_seller_member(p_seller) then raise exception 'Not allowed'; end if;
+  if auth.uid() is null then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  if p_seller is not null and not private.is_seller_member(p_seller) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return coalesce((select jsonb_agg(private.thread_json(t, case when p_seller is null then 'customer' else 'seller' end) order by t.last_message_at desc nulls last)
                    from message_threads t where case when p_seller is null then t.user_id = auth.uid() else t.seller_id = p_seller end), '[]'::jsonb);
 end $$;
@@ -1724,11 +1929,11 @@ declare
   v_side text;
 begin
   select * into t from message_threads where id = p_thread;
-  if t.id is null then raise exception 'Conversation not found'; end if;
+  if t.id is null then raise exception 'Conversation not found' using detail = 'لم يُعثر على المحادثة'; end if;
   v_side := case when t.user_id = auth.uid() then 'customer'
                  when t.seller_id is not null and private.is_seller_member(t.seller_id) then 'seller'
                  when private.is_staff(array['owner', 'manager', 'support', 'operations']::staff_role[]) then 'staff' end;
-  if v_side is null then raise exception 'Not allowed'; end if;
+  if v_side is null then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return private.thread_json(t, v_side) || jsonb_build_object('side', v_side,
     'messages', (select coalesce(jsonb_agg(jsonb_build_object('id', m.id, 'sender', m.sender, 'body', m.body, 'masked', m.masked, 'at', m.created_at,
                    'mine', m.sender = v_side, 'flags', case when v_side = 'staff' then to_jsonb(m.flags) end) order by m.id), '[]'::jsonb)
@@ -1747,8 +1952,8 @@ $$;
 create or replace function my_notifications(p_seller uuid default null, p_limit int default 30) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if auth.uid() is null then raise exception 'Not allowed'; end if;
-  if p_seller is not null and not private.is_seller_member(p_seller) then raise exception 'Not allowed'; end if;
+  if auth.uid() is null then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  if p_seller is not null and not private.is_seller_member(p_seller) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return jsonb_build_object(
     'unread', (select count(*) from notification_outbox n where n.channel = 'in_app' and n.status <> 'cancelled' and n.send_after <= now() and n.read_at is null
                and case when p_seller is null then n.user_id = auth.uid() else n.seller_id = p_seller end),
@@ -1763,8 +1968,8 @@ create or replace function mp_mark_notifications_read(p_ids bigint[] default nul
 language plpgsql security definer set search_path = public as $$
 declare n int;
 begin
-  if auth.uid() is null then raise exception 'Not allowed'; end if;
-  if p_seller is not null and not private.is_seller_member(p_seller) then raise exception 'Not allowed'; end if;
+  if auth.uid() is null then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  if p_seller is not null and not private.is_seller_member(p_seller) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   update notification_outbox set read_at = now()
   where channel = 'in_app' and read_at is null and (p_ids is null or id = any(p_ids))
     and case when p_seller is null then user_id = auth.uid() else seller_id = p_seller end;
@@ -1936,14 +2141,14 @@ end $$;
 create or replace function mp_seller_performance(p_seller uuid) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not (private.is_seller_member(p_seller) or private.is_staff_or_server()) then raise exception 'Not allowed'; end if;
+  if not (private.is_seller_member(p_seller) or private.is_staff_or_server()) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return private.seller_performance(p_seller);
 end $$;
 
 create or replace function admin_seller_performance() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff_or_server() then raise exception 'Not allowed'; end if;
+  if not private.is_staff_or_server() then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return coalesce((select jsonb_agg(private.seller_performance(s.id) || jsonb_build_object('name_en', s.name_en, 'slug', s.slug, 'seller_status', s.status, 'kind', s.kind)
                                     order by s.name_en)
                    from sellers s where s.status in ('approved', 'suspended')), '[]'::jsonb);
@@ -1965,7 +2170,7 @@ declare
 begin
   -- owner or manager, a server function (service role) or a scheduled job in the database (no request at all)
   if not private.is_staff_or_server(array['owner', 'manager']::staff_role[]) then
-    raise exception 'Not allowed';
+    raise exception 'Not allowed' using detail = 'غير مسموح';
   end if;
   for s in select id, name_en, name_ar, status from sellers where status = 'approved' loop
     perf := private.seller_performance(s.id);
@@ -2003,7 +2208,7 @@ declare
   st mp_settings;
 begin
   select * into o from orders where id = p_order;
-  if o.id is null or not (o.user_id = auth.uid() or private.is_staff()) then raise exception 'Not allowed'; end if;
+  if o.id is null or not (o.user_id = auth.uid() or private.is_staff()) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   select * into st from mp_settings where id = 1;
   return jsonb_build_object(
     'order', jsonb_build_object('id', o.id, 'number', o.number, 'status', o.status, 'currency', o.currency, 'total_minor', o.total_minor,
@@ -2045,7 +2250,7 @@ end $$;
 create or replace function admin_returns(p_status text default null) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff_or_server(array['owner', 'manager', 'support', 'operations', 'finance']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff_or_server(array['owner', 'manager', 'support', 'operations', 'finance']::staff_role[]) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return coalesce((select jsonb_agg(private.return_json(r.id, 'staff') order by r.created_at desc)
                    from return_requests r where p_status is null or r.status = p_status), '[]'::jsonb);
 end $$;
@@ -2053,7 +2258,7 @@ end $$;
 create or replace function admin_refund_queue() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff_or_server(array['owner', 'manager', 'finance', 'support']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff_or_server(array['owner', 'manager', 'finance', 'support']::staff_role[]) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return jsonb_build_object(
     'returns', (select coalesce(jsonb_agg(private.return_json(r.id, 'staff') order by r.approved_at), '[]'::jsonb) from return_requests r where r.status = 'approved'),
     'cancelled', (select coalesce(jsonb_agg(jsonb_build_object('sub_order_id', s.id, 'number', format('AM-%s-%s', o.number, s.seq), 'order_id', o.id,
@@ -2063,7 +2268,7 @@ begin
                   from sub_orders s join orders o on o.id = s.order_id where s.needs_refund),
     'credit_notes', (select coalesce(jsonb_agg(private.refund_json(f.id) order by f.created_at), '[]'::jsonb) from refunds f where f.credit_note_status = 'pending'),
     'stuck', (select coalesce(jsonb_agg(private.refund_json(f.id) order by f.created_at), '[]'::jsonb) from refunds f
-              where f.status = 'processing' and f.created_at < now() - interval '10 minutes'),
+              where f.status = 'processing'),
     'recent', (select coalesce(jsonb_agg(private.refund_json(x.id) order by x.created_at desc), '[]'::jsonb)
                from (select id, created_at from refunds order by created_at desc limit 20) x));
 end $$;
@@ -2071,7 +2276,7 @@ end $$;
 create or replace function admin_reviews(p_status text default 'pending') returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff_or_server(array['owner', 'manager', 'marketing', 'support']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff_or_server(array['owner', 'manager', 'marketing', 'support']::staff_role[]) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return jsonb_build_object(
     'reviews', (select coalesce(jsonb_agg(jsonb_build_object(
         'id', r.id, 'status', r.status, 'rating', r.rating, 'title', r.title, 'body', r.body, 'lang', r.lang, 'author', r.author_name, 'flags', to_jsonb(r.flags),
@@ -2091,7 +2296,7 @@ end $$;
 create or replace function admin_payouts() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff_or_server(array['owner', 'manager', 'finance']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff_or_server(array['owner', 'manager', 'finance']::staff_role[]) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return coalesce((select jsonb_agg(jsonb_build_object(
       'id', s.id, 'name_en', s.name_en, 'slug', s.slug, 'country', s.country, 'status', s.status, 'kind', s.kind,
       'kyc_status', p.kyc_status, 'iban_last4', nullif(right(upper(regexp_replace(coalesce(p.iban, ''), '\s', '', 'g')), 4), ''),
@@ -2105,12 +2310,28 @@ end $$;
 create or replace function admin_threads(p_flagged boolean default true) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff_or_server(array['owner', 'manager', 'support', 'operations']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff_or_server(array['owner', 'manager', 'support', 'operations']::staff_role[]) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return coalesce((select jsonb_agg(private.thread_json(t, 'staff') order by t.last_message_at desc nulls last)
                    from (select * from message_threads where (not p_flagged or flagged) order by last_message_at desc nulls last limit 200) t), '[]'::jsonb);
 end $$;
 
 -- ================================================================ function grants
+-- Helpers in the private schema that write (statements, notifications, ratings) or read across accounts are run only
+-- by the functions above, never by the API roles (review L2). (Helpers used by row-level security policies and by the
+-- guards that run as the person stay executable: is_staff, is_seller_member, review_author, the switches, ...)
+do $$
+declare f text;
+begin
+  foreach f in array array['private.book_sale(uuid)', 'private.book_refund(uuid, uuid)', 'private.refresh_rating(uuid)',
+    'private.notify_return(uuid, text)', 'private.notify_message(uuid, text, boolean)', 'private.notify_review(uuid, text)',
+    'private.ledger_available(uuid)', 'private.refund_json(uuid)', 'private.return_json(uuid, text)', 'private.thread_json(message_threads, text)',
+    'private.seller_performance(uuid)', 'private.line_taken(uuid, uuid)', 'private.user_staff_role(uuid)', 'private.user_is_member(uuid, uuid)',
+    'private.is_staff_or_server(staff_role[])', 'private.order_fx(uuid)', 'private.render(text, jsonb, text)', 'private.seller_label(uuid)',
+    'private.set_listing_review(uuid, jsonb)', 'private.act_as(uuid)', 'private.asset_of(text, uuid)', 'private.seller_may_list(uuid, uuid)'] loop
+    execute format('revoke all on function %s from public, anon, authenticated', f);
+  end loop;
+end $$;
+
 -- Supabase gives new functions to the API roles; these are for signed-in people only (each checks who is asking).
 do $$
 declare f text;
@@ -2126,6 +2347,21 @@ begin
 end $$;
 
 -- ================================================================ customers' photos (review and return photos)
+-- A customer's photo is screened (the AI costs money) only with an order that can have one (server only; review L5):
+-- a review photo for an item delivered within the review window, a return photo for a parcel delivered within the
+-- problem window or overdue. And only while the marketplace is open (review M6).
+create or replace function mp_customer_may_upload(p_user uuid, p_kind text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select private.marketplace_open() and exists (
+    select 1 from sub_orders s join orders o on o.id = s.order_id, mp_settings st
+    where st.id = 1 and o.user_id = p_user
+      and case p_kind
+        when 'review_photo' then s.delivered_at > now() - make_interval(days => st.review_window_days)
+        when 'return_photo' then s.delivered_at > now() - make_interval(days => st.faulty_claim_days)
+                                 or s.status in ('ready_to_ship', 'shipped', 'delivery_failed')
+        else false end);
+$$;
+revoke all on function mp_customer_may_upload(uuid, text) from public, anon, authenticated;
 -- PRIVATE. Customers add files only under <their user id>/incoming/; screen-image checks each one and keeps it under
 -- <user id>/media/. The customer, our team and (for a return) the seller can open them; published review photos are
 -- copied to the public catalogue by the after-sale function.

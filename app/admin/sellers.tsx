@@ -12,7 +12,7 @@ import { MARKET_DEMO } from '@/lib/market';
 import { demoAdminSellers } from '@/lib/market-demo';
 import { STATUS_TONE } from '@/lib/seller-context';
 import { mediaFor, photoUrls, type Checklist, type MediaAsset, type SellerApplication, type SellerCategory, type SellerPrivate } from '@/lib/seller';
-import { callFunction, supabase } from '@/lib/supabase';
+import { callFunction, fromDb, supabase } from '@/lib/supabase';
 import type { Seller } from '@/lib/types';
 import { colors } from '@/theme';
 
@@ -25,9 +25,10 @@ type Row = {
   categories: SellerCategory[]; locations: number; strikes: number;
   events: { kind: string; message: string | null; at: string; visible: boolean }[]; checklist: Checklist;
 };
-type Tab = 'review' | 'info_requested' | 'in_progress' | 'approved' | 'suspended' | 'rejected';
+type Tab = 'review' | 'shop_pages' | 'info_requested' | 'in_progress' | 'approved' | 'suspended' | 'rejected';
 const TABS: { key: Tab; label: string; test: (r: Row) => boolean }[] = [
   { key: 'review', label: 'To review', test: (r) => r.seller.status === 'pending' && !!r.application?.submitted_at },
+  { key: 'shop_pages', label: 'Shop page changes', test: (r) => !!r.seller.profile_pending },
   { key: 'info_requested', label: 'Waiting for the seller', test: (r) => r.seller.status === 'info_requested' },
   { key: 'in_progress', label: 'Still filling in', test: (r) => r.seller.status === 'pending' && !r.application?.submitted_at },
   { key: 'approved', label: 'Approved', test: (r) => r.seller.status === 'approved' },
@@ -64,7 +65,7 @@ function SellerCard({ r, onChanged }: { r: Row; onChanged: () => void }) {
     catch (e) { setMsg({ tone: 'warn', text: e instanceof Error ? e.message : String(e) }); }
     finally { setBusy(null); }
   };
-  const rpc = async (name: string, args: Record<string, unknown>) => { const { error } = await supabase.rpc(name, args); if (error) throw new Error(error.message); };
+  const rpc = async (name: string, args: Record<string, unknown>) => { const { error } = await supabase.rpc(name, args); if (error) throw fromDb(error); };
   const table = async (name: string, patch: Record<string, unknown>, col: string, val: string) => {
     const { error } = await supabase.from(name).update(patch).eq(col, val);
     if (error) throw new Error(error.message);
@@ -84,6 +85,7 @@ function SellerCard({ r, onChanged }: { r: Row; onChanged: () => void }) {
   };
   const addMember = () => run('member', () => rpc('staff_add_seller_member', { p_seller: s.id, p_email: email }).then(() => setEmail('')), `${email} can now open the seller dashboard.`);
   const waitingMedia = [s.logo, s.banner].some((x) => x && !/^https:\/\//.test(x));
+  const pendingText = Object.entries(s.profile_pending ?? {});
   const missing = r.checklist.items.filter((x) => !x.done);
 
   return (
@@ -101,6 +103,19 @@ function SellerCard({ r, onChanged }: { r: Row; onChanged: () => void }) {
         {countryName(s.country, 'en')}{s.city ? `, ${s.city}` : ''} · applied {s.created_at.slice(0, 10)}{a?.submitted_at ? ` · sent ${a.submitted_at.slice(0, 10)}` : ' · not sent yet'} · {r.live} live · {r.waiting} waiting · {r.locations} pickup address{r.locations === 1 ? '' : 'es'}
       </T>
       {missing.length ? <T size={12.5} color={colors.brassText}>Missing: {missing.map((x) => x.key).join(', ')}</T> : <T size={12.5} color={colors.success}>File complete</T>}
+      {pendingText.length ? (
+        <View style={{ backgroundColor: colors.sandSoft, padding: 12, gap: 4 }}>
+          <T w={700} size={13.5}>Shop page changes waiting for approval{s.profile_submitted_at ? ` (sent ${s.profile_submitted_at.slice(0, 10)})` : ''}</T>
+          <T size={12.5} color={colors.muted}>The public page keeps showing the approved text until you approve. Check for contact details, links and claims.</T>
+          {pendingText.map(([k, v]) => (
+            <T key={k} size={13} lh={1.5}><T w={600} size={13}>{k.replace(/_/g, ' ')}:</T> {v ?? '(removed)'}{'  '}<T size={12} color={colors.muted}>was: {String((s as unknown as Record<string, unknown>)[k] ?? '—')}</T></T>
+          ))}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+            <Button size="sm" label="Approve the changes" busy={busy === 'approve_profile'} onPress={() => review('approve_profile')} />
+            <Button size="sm" kind="danger" label="Send back (message required)" busy={busy === 'reject_profile'} disabled={!note.trim()} onPress={() => review('reject_profile')} />
+          </View>
+        </View>
+      ) : null}
       {!open ? <Button label="Open the file" kind="text" size="sm" onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start' }} /> : (
         <View style={{ gap: 12 }}>
           {a ? (

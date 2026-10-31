@@ -124,8 +124,9 @@ create table corridors (
 );
 
 -- A corridor opens (pilot or open) only with a tax adviser's sign-off on record, and its tax terms cannot change
--- while it is open without a new sign-off. The phase 1 rows below are seeded open (the business already trades on
--- them); record the adviser's sign-off for them from the admin panel.
+-- while it is open without a new sign-off. Our own (house) corridors are seeded open: the business already trades on
+-- them (record the adviser's sign-off for them from the admin panel). The marketplace corridor Saudi Arabia to Saudi
+-- Arabia is seeded CLOSED: it opens when the adviser's sign-off is recorded (docs/marketplace/SWITCH-ON.md).
 create or replace function corridors_guard() returns trigger language plpgsql set search_path = public as $$
 begin
   new.updated_at := now();
@@ -159,8 +160,8 @@ insert into corridors (scope, from_country, to_country, phase, status, invoicer,
   ('house', 'SA', 'SA', 1, 'open', 'platform', 'origin', 'none', 'Our own products in Saudi Arabia (existing).'),
   ('house', 'SA', '*', 1, 'open', 'platform', 'origin', 'dap',
    'Our own products worldwide (existing house shipping). VAT as today (store_settings.zero_rate_exports); duties paid by the customer on delivery until a landed-cost provider is live.'),
-  ('marketplace', 'SA', 'SA', 1, 'open', 'platform', 'origin', 'none',
-   'Saudi sellers to Saudi customers. Al Mukarramah issues the ZATCA invoice; commission per line.'),
+  ('marketplace', 'SA', 'SA', 1, 'closed', 'platform', 'origin', 'none',
+   'Saudi sellers to Saudi customers. Al Mukarramah issues the ZATCA invoice; commission per line. Opens with the adviser''s sign-off.'),
   -- Phase 2: closed until the adviser signs off
   ('marketplace', 'AE', 'AE', 2, 'closed', 'seller', 'destination', 'none', 'UAE sellers in the UAE: the seller invoices under UAE VAT.'),
   ('marketplace', 'KW', 'KW', 2, 'closed', 'seller', 'zero', 'none', 'Kuwaiti sellers in Kuwait (no VAT).'),
@@ -232,7 +233,8 @@ alter table seller_private
     check (kyc_status in ('not_started', 'submitted', 'info_requested', 'approved', 'rejected', 'expired')),
   add column kyc_note text,
   add column kyc_reviewed_at timestamptz,
-  add column kyc_reviewed_by uuid references auth.users;
+  add column kyc_reviewed_by uuid references auth.users,
+  add column bank_changed_at timestamptz;    -- payouts wait for KYC and a hold after the bank details change (0019)
 
 -- IBAN check digits (ISO 13616, mod 97). Used by the KYC guard and the application.
 create or replace function private.iban_valid(p text) returns boolean
@@ -326,6 +328,13 @@ create trigger audit_seller_documents after insert or update or delete on seller
 -- bank detail sends the account back for review.
 create or replace function seller_private_guard() returns trigger language plpgsql set search_path = public as $$
 begin
+  -- whoever changes them: payouts wait (mp_record_payout) and the seller is told (0019). Only staff or the server
+  -- may set the date otherwise (for example to end the wait after confirming the change with the seller by phone).
+  if (new.iban, new.bank_name, new.account_holder) is distinct from (old.iban, old.bank_name, old.account_holder) then
+    new.bank_changed_at := now();
+  elsif private.is_end_user() then
+    new.bank_changed_at := old.bank_changed_at;
+  end if;
   if not private.is_end_user() then
     if new.kyc_status is distinct from old.kyc_status and new.kyc_status in ('approved', 'rejected', 'info_requested') then
       new.kyc_reviewed_at := now();
@@ -338,7 +347,7 @@ begin
   new.kyc_reviewed_at := old.kyc_reviewed_at;
   new.kyc_reviewed_by := old.kyc_reviewed_by;
   if new.iban is not null and new.iban is distinct from old.iban and not private.iban_valid(new.iban) then
-    raise exception 'Please check the IBAN: its check digits do not match';
+    raise exception 'Please check the IBAN: its check digits do not match' using detail = 'يُرجى التحقق من رقم الآيبان: أرقام التحقق فيه غير مطابقة';
   end if;
   -- the only change a seller may make to the status: send it for review
   if new.kyc_status is distinct from old.kyc_status
@@ -377,9 +386,7 @@ alter table products
   add column allowed_destinations text[],   -- null: wherever the rulebook allows; otherwise only these countries
   add column compliance_status text not null default 'unreviewed'
     check (compliance_status in ('unreviewed', 'pending', 'cleared', 'rejected')),
-  add column compliance_note text,
-  add column compliance_reviewed_at timestamptz,
-  add column compliance_reviewed_by uuid references auth.users;
+  add column compliance_reviewed_at timestamptz;      -- the note and the reviewer are in listing_reviews (0012)
 comment on column products.restricted_countries is 'Blocked destinations (ISO codes). The rulebook never sells there.';
 create index products_compliance_queue on products (compliance_status) where compliance_status = 'pending';
 
@@ -430,7 +437,7 @@ begin
   end if;
   select seller_id into sid from products where id = new.product_id;
   if new.document_path is not null and new.document_path not like sid::text || '/%' then
-    raise exception 'Upload the permit document through your seller dashboard';
+    raise exception 'Upload the permit document through your seller dashboard' using detail = 'ارفع مستند التصريح من لوحة البائع';
   end if;
   -- any change by the seller needs a fresh check
   new.status := 'pending';
@@ -451,18 +458,17 @@ declare
   content_changed boolean;
   compliance_changed boolean;
   img text;
-  staff_keys text[] := array['stock', 'is_active', 'updated_at', 'listing_status', 'submitted_at', 'ai_check', 'ai_checked_at', 'review_note', 'reviewed_at', 'reviewed_by',
-                              'compliance_status', 'compliance_note', 'compliance_reviewed_at', 'compliance_reviewed_by'];
+  staff_keys text[] := array['stock', 'is_active', 'updated_at', 'listing_status', 'submitted_at', 'ai_checked_at', 'reviewed_at',
+                              'compliance_status', 'compliance_reviewed_at'];
   compliance_keys text[] := array['hs_code', 'origin_country', 'dangerous_goods', 'length_mm', 'width_mm', 'height_mm', 'allowed_destinations', 'restricted_countries'];
 begin
   if not private.is_end_user() then
     if tg_op = 'UPDATE' and new.compliance_status is distinct from old.compliance_status and new.compliance_status in ('cleared', 'rejected') then
       new.compliance_reviewed_at := now();
-      new.compliance_reviewed_by := auth.uid();
     end if;
     return new;
   end if;
-  if new.seller_id is null then raise exception 'Not allowed'; end if;
+  if new.seller_id is null then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
 
   foreach img in array coalesce(new.images, '{}') loop
     if not (img like new.seller_id::text || '/media/%' or img like '%/storage/v1/object/public/catalogue/' || new.seller_id::text || '/%') then
@@ -475,31 +481,21 @@ begin
 
   if tg_op = 'INSERT' then
     new.listing_status := 'draft';
-    new.ai_check := null;
     new.ai_checked_at := null;
     new.submitted_at := null;
     new.reviewed_at := null;
-    new.reviewed_by := null;
-    new.review_note := null;
     new.is_featured := false;
     new.compliance_status := 'pending';
-    new.compliance_note := null;
     new.compliance_reviewed_at := null;
-    new.compliance_reviewed_by := null;
     return new;
   end if;
 
   new.is_featured := old.is_featured;
   new.reviewed_at := old.reviewed_at;
-  new.reviewed_by := old.reviewed_by;
-  new.review_note := old.review_note;
   new.seller_id := old.seller_id;
   new.submitted_at := old.submitted_at;
-  new.ai_check := old.ai_check;
   new.ai_checked_at := old.ai_checked_at;
-  new.compliance_note := old.compliance_note;
   new.compliance_reviewed_at := old.compliance_reviewed_at;
-  new.compliance_reviewed_by := old.compliance_reviewed_by;
 
   compliance_changed := (select jsonb_object_agg(k, to_jsonb(new) -> k) from unnest(compliance_keys) k)
                         is distinct from (select jsonb_object_agg(k, to_jsonb(old) -> k) from unnest(compliance_keys) k);
@@ -508,7 +504,6 @@ begin
   content_changed := (to_jsonb(new) - staff_keys - compliance_keys) is distinct from (to_jsonb(old) - staff_keys - compliance_keys);
   if content_changed then
     if old.listing_status = 'suspended' then raise exception 'This listing is suspended. Please contact Al Mukarramah'; end if;
-    new.ai_check := null;
     new.ai_checked_at := null;
     if old.listing_status in ('approved', 'pending_review', 'check_pending') then
       new.listing_status := 'draft';
@@ -523,6 +518,31 @@ begin
   end if;
   return new;
 end $$;
+
+-- Who recorded a compliance decision (listing_reviews), and the decision with its note in one call for staff.
+create or replace function private.products_compliance_stamp() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.compliance_status is distinct from old.compliance_status and new.compliance_status in ('cleared', 'rejected') and not private.is_end_user() then
+    perform private.set_listing_review(new.id, jsonb_build_object('compliance_reviewed_by', auth.uid()));
+  end if;
+  return null;
+end $$;
+revoke all on function private.products_compliance_stamp() from public, anon, authenticated;
+create trigger products_compliance_stamp after update of compliance_status on products for each row execute function private.products_compliance_stamp();
+
+create or replace function mp_compliance_decision(p_product uuid, p_status text, p_note text default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+begin
+  if not private.is_staff(array['owner', 'manager', 'operations']::staff_role[]) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  if p_status not in ('cleared', 'rejected', 'pending') then raise exception 'Unknown decision %', p_status; end if;
+  update products set compliance_status = p_status where id = p_product and seller_id is not null;
+  if not found then raise exception 'Listing not found'; end if;
+  perform private.set_listing_review(p_product, jsonb_build_object('compliance_note', nullif(trim(coalesce(p_note, '')), ''), 'compliance_reviewed_by', auth.uid()));
+  return jsonb_build_object('product_id', p_product, 'compliance_status', p_status);
+end $$;
+revoke all on function mp_compliance_decision(uuid, text, text) from public, anon;
+grant execute on function mp_compliance_decision(uuid, text, text) to authenticated;
 
 -- ================================================================ seller pickup addresses and parcel defaults
 alter table sellers add column parcel_defaults jsonb not null
@@ -569,7 +589,7 @@ declare home char(2);
 begin
   select country into home from sellers where id = new.seller_id;
   if new.country is distinct from home then
-    raise exception 'Pickup addresses must be in your registered country (%)', home;
+    raise exception 'Pickup addresses must be in your registered country (%)', home using detail = format('يجب أن يكون عنوان الاستلام في بلد التسجيل (%s)', home);
   end if;
   if private.is_end_user() then
     new.provider_refs := case when tg_op = 'UPDATE' then old.provider_refs else '{}'::jsonb end;   -- set by the server only
@@ -597,9 +617,9 @@ create table carrier_providers (
   updated_at timestamptz not null default now()
 );
 insert into carrier_providers (id, name, kind, regions, mode, active, secret_names, supports, notes) values
-  ('sandbox', 'Sandbox (no real parcels)', 'both', 'Everywhere', 'sandbox', true, '{}',
+  ('sandbox', 'Sandbox (no real parcels)', 'both', 'Everywhere', 'sandbox', false, '{}',
    '{"quote": true, "label": true, "pickup": true, "track": true, "cancel": true, "landed_cost": true, "webhook": true}',
-   'Deterministic rates from carrier_rate_cards, a sample PDF label and simulated tracking, so the whole flow works before any real account exists.'),
+   'Deterministic rates from carrier_rate_cards, a sample PDF label and simulated tracking. OFF by default: it marks parcels delivered by the clock, so switch it on only on a test project (or for a test run before switch-on), never with real orders.'),
   ('oto', 'OTO (tryoto) marketplace API', 'aggregator', 'Origins: Saudi Arabia, UAE', 'sandbox', false, '{OTO_API_KEY,OTO_WEBHOOK_SECRET}',
    '{"quote": true, "label": true, "pickup": true, "track": true, "cancel": true, "landed_cost": false, "webhook": true}',
    'Planned (end of project): multi-vendor sub-accounts / pickup locations per seller. Not connected.'),
@@ -719,7 +739,7 @@ create trigger audit_kyc_requirements after insert or update or delete on kyc_re
 create or replace function admin_sellers() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_staff() then raise exception 'Not allowed'; end if;
+  if not private.is_staff() then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return coalesce((
     select jsonb_agg(jsonb_build_object(
       'seller', to_jsonb(s), 'private', to_jsonb(p),

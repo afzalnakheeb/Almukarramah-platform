@@ -1,10 +1,14 @@
 // Creates an order (or a first membership/box payment) and a Moyasar hosted payment page.
 // Prices, delivery, duties and totals are always recalculated here from the database, every line decided by the
 // rulebook; the app's numbers are never trusted. An idempotency key from the app makes a retry return the same order.
+// Sellers' items are sold only while the marketplace is open (review M6). A bag we would have to invoice at two VAT
+// rates is refused (one invoice has one rate). A seller sees the gift message with contact details masked (review M3).
+// Refusals come back in English and Arabic (review M8).
+import { cleanText } from '../_shared/aftersale.ts';
 import { createInvoice } from '../_shared/moyasar.ts';
 import type { CartItem } from '../_shared/cart.ts';
 import { inCurrency, planCheckout } from '../_shared/checkout.ts';
-import { admin, caller, env, fxPerSar, handle, json, vatIncluded } from '../_shared/util.ts';
+import { admin, caller, env, fail, fxPerSar, handle, json, UserError, vatIncluded } from '../_shared/util.ts';
 
 type Body = {
   items?: CartItem[];
@@ -26,17 +30,17 @@ Deno.serve(handle(async (req) => {
   const site = env('PUBLIC_SITE_URL');
 
   const { data: settings } = await db.from('store_settings').select('store_open, checkout_open, vat_rate_bp').eq('id', 1).single();
-  if (!settings?.store_open || !settings?.checkout_open) throw new Error('Checkout is closed');
+  if (!settings?.store_open || !settings?.checkout_open) throw new UserError('Checkout is closed at the moment', 'الدفع مغلق حاليًا');
 
   // ------------------------------------------------ membership or box club (first period)
   if (body.planId) {
-    if (!user) throw new Error('Sign in first');
+    if (!user) throw new UserError('Sign in first', 'سجّل الدخول أولًا');
     const { data: plan } = await db.from('plans').select('*').eq('id', body.planId).eq('active', true).single();
-    if (!plan) throw new Error('Plan not found');
+    if (!plan) throw new UserError('Plan not found', 'لم يُعثر على الباقة');
     // Box clubs are delivered every month: they need a Saudi delivery address.
     const shipTo = plan.kind === 'box' ? body.shipTo : null;
     if (plan.kind === 'box' && (!shipTo || shipTo.country !== 'SA' || !shipTo.recipient_name || !shipTo.phone || !shipTo.city || !shipTo.line1)) {
-      throw new Error('A delivery address in Saudi Arabia is needed for this box');
+      throw new UserError('A delivery address in Saudi Arabia is needed for this box', 'يلزم عنوان توصيل داخل المملكة لهذا الصندوق');
     }
     const { data: sub } = await db.from('subscriptions').insert({ user_id: user.id, plan_id: plan.id, source: 'moyasar', status: 'past_due', ship_to: shipTo }).select('id').single();
     const { data: order } = await db.from('orders').insert({
@@ -52,7 +56,7 @@ Deno.serve(handle(async (req) => {
 
   // ------------------------------------------------ shop order
   const items = body.items ?? [];
-  if (!items.length || !body.shipTo || !body.email) throw new Error('Missing order details');
+  if (!items.length || !body.shipTo || !body.email) throw new UserError('Missing order details', 'بيانات الطلب ناقصة');
   const key = body.idempotencyKey && /^[A-Za-z0-9_-]{8,80}$/.test(body.idempotencyKey) ? body.idempotencyKey : null;
   if (key) {
     // the same checkout pressed twice (or retried after a network error): the same order and payment page
@@ -64,12 +68,20 @@ Deno.serve(handle(async (req) => {
 
   // every line decided by the rulebook; anything that cannot be delivered here stops the payment, with the reason
   const checkout = await planCheckout(db, items, body.shipTo);
-  if (checkout.blocked.length) return json({ error: checkout.blocked.map((b) => (body.lang === 'ar' ? b.ar : b.en)).join(' '), blocked: checkout.blocked }, 409);
+  if (checkout.blocked.length) {
+    return json({ error: checkout.blocked.map((b) => b.en).join(' '), error_ar: checkout.blocked.map((b) => b.ar).join(' '), blocked: checkout.blocked }, 409);
+  }
+  // one tax invoice has one VAT rate: what we invoice must share it (the rulebook's open corridors agree today)
+  const rates = new Set(checkout.subOrders.filter((s) => s.invoicer === 'platform').flatMap((s) => s.lines.map((l) => l.vat_rate_bp)));
+  if (rates.size > 1) {
+    return fail(409, 'These items cannot be bought together in one order yet: please place them as two orders.',
+      'لا يمكن شراء هذه المنتجات معًا في طلب واحد حاليًا: يُرجى إتمامها في طلبين.', 'vat_rates_differ');
+  }
   let zone = null;
   if (checkout.zones) {
-    if (!body.zoneId) throw new Error('Choose a delivery option');
+    if (!body.zoneId) throw new UserError('Choose a delivery option', 'اختر طريقة التوصيل');
     zone = checkout.zones.find((q) => q.zoneId === body.zoneId) ?? null;
-    if (!zone) throw new Error('Delivery option not available for this address');
+    if (!zone) throw new UserError('Delivery option not available for this address', 'طريقة التوصيل هذه غير متاحة لهذا العنوان');
   }
   const t = inCurrency(checkout, currency, perSar, zone);
 
@@ -87,6 +99,8 @@ Deno.serve(handle(async (req) => {
     throw oErr;
   }
 
+  // the seller's copy of the gift message, contact details masked
+  const giftForSellers = body.giftMessage ? cleanText(body.giftMessage, 500).text || null : null;
   // one sub-order per seller (and one for ours), with what the rulebook decided, then the lines
   for (const [n, x] of t.subOrders.entries()) {
     const s = x.s;
@@ -97,6 +111,7 @@ Deno.serve(handle(async (req) => {
       to_country: s.to_country, service_id: s.service_id, zone_id: s.kind === 'house' ? zone?.zoneId ?? null : null,
       delivery_price_id: s.delivery.mode === 'price' ? s.delivery.price_id : null, weight_g: s.weight_g, handling_days: s.handling_days,
       production_days: s.production_days, days_min: s.kind === 'house' && zone ? zone.daysMin : s.days_min, days_max: s.kind === 'house' && zone ? zone.daysMax : s.days_max,
+      gift_message: s.kind === 'house' ? null : giftForSellers,
     }).select('id').single();
     if (sErr) throw sErr;
     const { error: iErr } = await db.from('order_items').insert(x.lines.map((y) => ({

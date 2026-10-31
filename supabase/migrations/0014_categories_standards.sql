@@ -9,6 +9,12 @@
 -- ================================================================ marketplace settings (one row; owner/manager, audited)
 create table mp_settings (
   id int primary key default 1 check (id = 1),
+  -- THE SWITCHES. Off until Afzal switches them on (docs/marketplace/SWITCH-ON.md); staff can always test.
+  --   marketplace_open: seller listings, shop pages and search results are public; checkout takes seller items;
+  --                     customers can ask for returns, review and message (for our own products too).
+  --   sellers_open:     people can apply to sell; sellers can submit listings and have photos checked (AI, paid).
+  marketplace_open boolean not null default false,
+  sellers_open boolean not null default false,
   -- photos of people: the default is NO human models (flat-lay, mannequin or ghost mannequin only)
   allow_modest_models_in_fashion boolean not null default false,
   min_quality_score int not null default 70 check (min_quality_score between 0 and 100),
@@ -46,6 +52,31 @@ begin new.updated_at := now(); return new; end $$;
 create trigger mp_settings_touch before update on mp_settings for each row execute function mp_touch();
 create trigger audit_mp_settings after insert or update or delete on mp_settings for each row execute function audit_trigger();
 
+-- The switches, for policies and functions (a fresh or missing row counts as off).
+create or replace function private.marketplace_open() returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((select marketplace_open from mp_settings where id = 1), false);
+$$;
+create or replace function private.sellers_open() returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((select sellers_open from mp_settings where id = 1), false);
+$$;
+-- (used by row-level security policies, so the API roles may run them; they only read the two switches)
+grant execute on function private.marketplace_open(), private.sellers_open() to anon, authenticated;
+
+-- Seller listings and shop pages are public only while the marketplace is open; our own products always are. The
+-- seller's members and our team see them either way (to prepare and test). Every client is covered, including
+-- website and app builds that read products with select *.
+drop policy if exists "read active products" on products;
+create policy "read active products" on products for select using (
+  (is_active and listing_status = 'approved' and (seller_id is null or (private.marketplace_open() and private.seller_approved(seller_id))))
+  or private.is_staff()
+  or private.is_seller_member(seller_id)
+);
+drop policy if exists "read approved sellers" on sellers;
+create policy "read approved sellers" on sellers for select
+  using ((status = 'approved' and kind = 'marketplace' and private.marketplace_open()) or private.is_seller_member(id) or private.is_staff());
+
 -- What sellers and the website may know of the settings.
 create or replace function mp_public_settings() returns jsonb
 language sql stable security definer set search_path = public as $$
@@ -54,6 +85,7 @@ language sql stable security definer set search_path = public as $$
     'quality_weights', quality_weights, 'default_min_photos', default_min_photos, 'default_min_long_side_px', default_min_long_side_px,
     'price_change_review_bps', price_change_review_bps, 'strike_limit', strike_limit, 'strike_window_days', strike_window_days,
     'perf_window_days', perf_window_days, 'perf_thresholds', perf_thresholds,
+    'marketplace_open', marketplace_open, 'sellers_open', sellers_open,
     'max_upload_bytes', 10485760, 'upload_types', jsonb_build_array('image/jpeg', 'image/png', 'image/webp'))
   from mp_settings where id = 1;
 $$;

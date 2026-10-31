@@ -24,6 +24,12 @@ function sameHex(a: string, b: string): boolean {
   return d === 0;
 }
 
+/** The customer's phone as the seller's copy of a label shows it: the courier needs it, the seller does not (review M3). */
+export function maskPhone(phone: string | null | undefined): string {
+  const d = String(phone ?? '').replace(/[^0-9+]/g, '');
+  return d.length > 6 ? `${d.slice(0, 4)}*****${d.slice(-2)}` : '';
+}
+
 /** A minimal single-page PDF (A6 label) with plain ASCII text. */
 export function labelPdf(lines: string[]): Uint8Array {
   const safe = (s: string) => s.replace(/[^\x20-\x7E]/g, '?').replace(/([\\()])/g, '\\$1').slice(0, 90);
@@ -70,7 +76,7 @@ export function sandboxAdapter(webhookSecret: string): CarrierAdapter {
       const label = labelPdf([
         'AL MUKARRAMAH - SANDBOX', `Tracking ${tracking}   Ref ${req.reference}   ${req.service_code}`,
         `FROM ${req.from.name}, ${req.from.line1}, ${req.from.city} ${req.from.country}`, `     ${req.from.phone}`,
-        `TO   ${req.to.name}, ${req.to.line1}${req.to.line2 ? `, ${req.to.line2}` : ''}`, `     ${req.to.city} ${req.to.postal_code ?? ''} ${req.to.country}   ${req.to.phone}`,
+        `TO   ${req.to.name}, ${req.to.line1}${req.to.line2 ? `, ${req.to.line2}` : ''}`, `     ${req.to.city} ${req.to.postal_code ?? ''} ${req.to.country}   ${maskPhone(req.to.phone)}`,
         `${(req.parcel.weight_g / 1000).toFixed(2)} kg${req.parcel.dangerous_goods ? '   DANGEROUS GOODS (UN1266 LQ)' : ''}${req.ddp ? '   DDP' : ''}`,
         `Declared ${(req.declared_value_minor / 100).toFixed(2)} ${req.currency}`,
         ...req.customs.slice(0, 6).map((c) => `${c.quantity} x ${c.description} ${c.hs_code ?? ''} ${c.origin_country ?? ''}`),

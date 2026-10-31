@@ -21,7 +21,8 @@ const slugs = (r: Search) => r.items.map((x) => x.slug).sort();
 function live(seller: string, who: 'sellerA' | 'sellerB', f: { slug: string; name_en: string; name_ar: string; price: number; category: string; attributes?: object; description_en?: string }) {
   const id = db.val<string>(`insert into products (slug, name_en, name_ar, description_en, base_price_sar, seller_id, category_id, attributes)
     values ('${f.slug}', '${f.name_en}', '${f.name_ar}', '${f.description_en ?? ''}', ${f.price}, '${seller}', '${cat(f.category)}', '${JSON.stringify(f.attributes ?? {})}') returning id`, user(who));
-  db.exec(`update products set listing_status = 'approved', is_active = true, review_note = 'Approved', ai_check = '{"verdict": "pass", "reasons": []}' where id = '${id}'`, 'service');
+  db.exec(`update products set listing_status = 'approved', is_active = true, ai_checked_at = now() where id = '${id}';
+           insert into listing_reviews (product_id, review_note, ai_check) values ('${id}', 'Approved', '{"verdict": "pass", "reasons": []}')`, 'service');
   return id;
 }
 
@@ -114,10 +115,13 @@ describe('search', () => {
 
 describe('review fields stay private', () => {
   test('nobody reads AI notes or review notes through the API; sellers and staff get their own through the function', () => {
-    for (const who of ['anon', user('customer'), user('sellerA'), user('owner')] as const) {
-      assert.match(db.error(`select ai_check from products where id = '${royal}'`, who) ?? '', /permission denied/);
-      assert.match(db.error(`select review_note from products where id = '${royal}'`, who) ?? '', /permission denied/);
+    // they are not on products (which every client reads with select *: review H4) but in listing_reviews
+    for (const who of ['anon', user('customer')] as const) {
+      assert.equal(db.rows(`select 1 from listing_reviews where product_id = '${royal}'`, who).length, 0);
+      assert.ok(!('review_note' in db.one<Record<string, unknown>>(`select * from products where id = '${royal}'`, who)));
     }
+    assert.equal(db.rows(`select 1 from listing_reviews where product_id = '${royal}'`, user('sellerB')).length, 0);
+    assert.match(db.error(`update listing_reviews set review_note = 'mine' where product_id = '${royal}'`, user('sellerA')) ?? '', /permission denied/);
     assert.equal(db.val(`select name_en from products where id = '${royal}'`, 'anon'), 'Royal oud oil 12 ml');
     const mine = db.val<{ id: string; review_note: string }[]>(`select mp_listing_private(array['${royal}', '${draft}']::uuid[])`, user('sellerA'));
     assert.equal(mine.length, 2);
@@ -133,8 +137,10 @@ describe('the price guard and variants', () => {
     db.exec(`update products set base_price_sar = 95000 where id = '${royal}'`, user('sellerA'));
     assert.equal(db.val(`select listing_status from products where id = '${royal}'`), 'approved', '+5.6%');
     db.exec(`update products set base_price_sar = 140000 where id = '${royal}'`, user('sellerA'));
-    assert.deepEqual(db.one(`select listing_status, review_note from products where id = '${royal}'`),
-      { listing_status: 'pending_review', review_note: 'Price changed from 95000 to 140000 halalas (47%).' });
+    assert.equal(db.val(`select listing_status from products where id = '${royal}'`), 'pending_review');
+    // compared with the price our team approved (90000), not the last step (review M1)
+    assert.equal(db.val<{ review_note: string }[]>(`select mp_listing_private(array['${royal}']::uuid[])`, user('sellerA'))[0].review_note,
+      'Price changed from 90000 (approved) to 140000 halalas (56%).');
     assert.equal(search({ q: 'royal' }).total, 0, 'off sale until approved');
     db.exec(`update products set listing_status = 'approved' where id = '${royal}'`, 'service');
     db.exec(`update products set description_en = 'Aged Hindi oud, ten years' where id = '${royal}'`, user('sellerA'));

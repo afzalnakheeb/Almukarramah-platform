@@ -210,9 +210,10 @@ begin
   if new.kind = 'severe' then
     update sellers set flagged_at = now(), flag_reason = coalesce(new.policy_code, 'severe violation') where id = new.seller_id;
     if new.product_id is not null then
-      update products set listing_status = 'suspended', is_active = false,
-        review_note = coalesce(review_note, 'Suspended automatically after a severe violation of the Al Mukarramah standard')
-      where id = new.product_id;
+      update products set listing_status = 'suspended', is_active = false where id = new.product_id;
+      if not exists (select 1 from listing_reviews where product_id = new.product_id and review_note is not null) then
+        perform private.set_listing_review(new.product_id, jsonb_build_object('review_note', 'Suspended automatically after a severe violation of the Al Mukarramah standard'));
+      end if;
     end if;
   end if;
   select count(*) into active from seller_strikes
@@ -324,7 +325,7 @@ declare
 begin
   select * into p from products where id = p_product for update;
   if p.id is null or p.seller_id is null then raise exception 'Listing not found'; end if;
-  if not exists (select 1 from seller_members m where m.seller_id = p.seller_id and m.user_id = p_user) then raise exception 'Not allowed'; end if;
+  if not exists (select 1 from seller_members m where m.seller_id = p.seller_id and m.user_id = p_user) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   if not private.seller_approved(p.seller_id) then raise exception 'Your seller account is not approved'; end if;
   if p.listing_status not in ('draft', 'rejected', 'check_pending') then raise exception 'This listing is already %', p.listing_status; end if;
   -- photos are screened media of this seller, or catalogue copies published at an earlier approval
@@ -366,12 +367,11 @@ begin
   new_status := case v when 'block' then 'rejected' when 'error' then 'check_pending' else 'pending_review' end;
   update products set
     listing_status = new_status,
-    ai_check = p_outcome - 'strike' - 'policy_code' || jsonb_build_object('checked_at', now(), 'run_id', final_run),
     ai_checked_at = now(),
-    review_note = case when v = 'block' then left(coalesce(p_outcome ->> 'summary_en', 'Rejected by the automatic check'), 1000) else review_note end,
-    reviewed_at = case when v = 'block' then now() else reviewed_at end,
-    reviewed_by = case when v = 'block' then null else reviewed_by end
+    reviewed_at = case when v = 'block' then now() else reviewed_at end
   where id = p.id;
+  perform private.set_listing_review(p.id, jsonb_build_object('ai_check', p_outcome - 'strike' - 'policy_code' || jsonb_build_object('checked_at', now(), 'run_id', final_run))
+    || case when v = 'block' then jsonb_build_object('review_note', left(coalesce(p_outcome ->> 'summary_en', 'Rejected by the automatic check'), 1000), 'reviewed_by', null) else '{}'::jsonb end);
   if v = 'block' and coalesce(p_outcome ->> 'strike', '') in ('hard', 'severe') then
     insert into seller_strikes (seller_id, kind, policy_code, product_id, run_id, note)
     values (p.seller_id, p_outcome ->> 'strike', p_outcome ->> 'policy_code', p.id, final_run, 'Listing screening');
@@ -391,7 +391,7 @@ declare
   a media_assets;
   p products;
 begin
-  if not private.is_staff(array['owner', 'manager', 'marketing']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff(array['owner', 'manager', 'marketing']::staff_role[]) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   if coalesce(trim(p_reason), '') = '' or char_length(trim(p_reason)) < 5 then raise exception 'Write the reason for the override'; end if;
   if p_subject = 'image' then
     if p_outcome not in ('passed', 'rejected', 'blocked') then raise exception 'Unknown outcome'; end if;
@@ -419,10 +419,12 @@ begin
     insert into screening_runs (subject, product_id, seller_id, stage, verdict, reasons, actor)
     values ('listing', p.id, p.seller_id, 'override', case p_outcome when 'pending_review' then 'review' else 'block' end,
             jsonb_build_array(jsonb_build_object('code', 'staff_override', 'en', trim(p_reason), 'ar', trim(p_reason))), uid);
-    update products set listing_status = p_outcome::listing_status, review_note = trim(p_reason), reviewed_at = now(), reviewed_by = uid,
-      submitted_at = case when p_outcome = 'pending_review' then now() else submitted_at end,
-      ai_check = coalesce(ai_check, '{}'::jsonb) || jsonb_build_object('override', jsonb_build_object('by', uid, 'at', now(), 'reason', trim(p_reason), 'outcome', p_outcome))
+    update products set listing_status = p_outcome::listing_status, reviewed_at = now(),
+      submitted_at = case when p_outcome = 'pending_review' then now() else submitted_at end
     where id = p.id;
+    perform private.set_listing_review(p.id, jsonb_build_object('review_note', trim(p_reason), 'reviewed_by', uid,
+      'ai_check', coalesce((select ai_check from listing_reviews where product_id = p.id), '{}'::jsonb)
+                  || jsonb_build_object('override', jsonb_build_object('by', uid, 'at', now(), 'reason', trim(p_reason), 'outcome', p_outcome))));
     if p_outcome = 'pending_review' then
       update seller_strikes set voided_at = now(), voided_by = uid, void_reason = trim(p_reason) where product_id = p.id and voided_at is null;
     end if;
@@ -437,7 +439,7 @@ grant execute on function mp_override_screening(text, uuid, text, text, text) to
 create or replace function mp_void_strike(p_strike uuid, p_reason text) returns void
 language plpgsql security definer set search_path = public as $$
 begin
-  if not private.is_staff(array['owner', 'manager']::staff_role[]) then raise exception 'Not allowed'; end if;
+  if not private.is_staff(array['owner', 'manager']::staff_role[]) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   if coalesce(trim(p_reason), '') = '' then raise exception 'Write the reason'; end if;
   update seller_strikes set voided_at = now(), voided_by = auth.uid(), void_reason = trim(p_reason) where id = p_strike and voided_at is null;
 end $$;

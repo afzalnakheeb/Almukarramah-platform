@@ -5,19 +5,25 @@
 -- * create-payment plans every line with the rulebook (supabase/functions/_shared/rules.ts) and stores what it
 --   decided on each line and sub-order: corridor, who invoices, VAT, duties, carrier service, delivery price,
 --   production and handling time, the return policy at the time of purchase.
--- * Paid (mp_order_paid): our own sub-order is accepted at once; a seller's waits for the seller to accept it. Stock
---   (of the option, or the product) is taken then, never from the browser.
+-- * Paid (mp_payment_received): the order is marked paid, the sub-orders move on and stock comes off in ONE
+--   transaction, only if the order was still waiting for payment, so a retried or duplicated webhook can never do it
+--   twice or leave it half done (review H3, M10). Our own sub-order is accepted at once; a seller's waits for the
+--   seller to accept it.
 -- * Seller: accept (or cancel with a reason) -> made-to-measure pieces are made -> create the label (create-shipment
 --   with an idempotency key; the label PDF is private) -> the courier collects -> tracking events (carrier-webhook,
---   shipment-sync) move the shipment, the sub-order and the order along. A seller never sees the customer's email or
---   phone; the label carries the address.
+--   shipment-sync) move the shipment, the sub-order and the order along. A failed delivery attempt is not the end: a
+--   later delivery still counts, at the carrier's own time (review M4, L7). A seller never sees the customer's email;
+--   the courier label carries the address (and the phone only as far as the carrier needs it, see SWITCH-ON).
+-- * A seller's cancellation reason reaches the customer through the after-sale function, which masks contact details
+--   (review M3); so does the gift message (a masked copy on the seller's sub-order).
 -- * Every row is audited; tracking events are append-only and de-duplicated.
 
 -- ================================================================ orders and lines
 alter table orders
   add column idempotency_key text unique check (idempotency_key is null or idempotency_key ~ '^[A-Za-z0-9_-]{8,80}$'),
   add column duties_minor int not null default 0 check (duties_minor >= 0),
-  add column payment_url text check (payment_url is null or payment_url ~* '^https://');   -- Moyasar's hosted page, for a retried checkout
+  add column payment_url text check (payment_url is null or payment_url ~* '^https://'),   -- Moyasar's hosted page, for a retried checkout
+  add column stock_taken_at timestamptz;   -- when the order's stock came off (mp_order_paid), so it never comes off twice
 
 create type sub_order_status as enum ('pending_payment', 'awaiting_acceptance', 'accepted', 'in_production', 'ready_to_ship', 'shipped',
                                       'delivered', 'delivery_failed', 'cancelled', 'returned');
@@ -56,6 +62,7 @@ create table sub_orders (
   cancel_reason text check (char_length(cancel_reason) <= 1000),
   cancelled_by text check (cancelled_by in ('seller', 'staff', 'customer', 'system')),
   needs_refund boolean not null default false,            -- cancelled after payment: our team refunds it (refund-order)
+  gift_message text check (char_length(gift_message) <= 500),   -- the customer's gift message, contact details masked (sellers read this)
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (order_id, seq)
@@ -104,7 +111,8 @@ create table shipments (
   updated_at timestamptz not null default now()
 );
 create index shipments_sub_order on shipments (sub_order_id, created_at desc);
-create unique index shipments_one_active on shipments (sub_order_id) where status not in ('cancelled', 'failed', 'returned');
+-- a failed delivery attempt is not the end of a shipment (the courier tries again), so it still counts as the live one
+create unique index shipments_one_active on shipments (sub_order_id) where status not in ('cancelled', 'returned');
 create unique index shipments_tracking on shipments (provider_id, tracking_number) where tracking_number is not null;
 
 create table shipment_events (
@@ -163,14 +171,22 @@ create or replace function mp_order_paid(p_order uuid) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
   i record;
-  n int;
+  n int := 0;
 begin
-  update sub_orders set status = case when kind = 'house' then 'accepted'::sub_order_status else 'awaiting_acceptance'::sub_order_status end,
-                        accepted_at = case when kind = 'house' then now() end,
-                        ship_by = case when kind = 'house' then current_date + production_days + handling_days end
-  where order_id = p_order and status = 'pending_payment';
-  get diagnostics n = row_count;
-  if n = 0 then return jsonb_build_object('applied', false); end if;
+  if exists (select 1 from sub_orders where order_id = p_order) then
+    update sub_orders set status = case when kind = 'house' then 'accepted'::sub_order_status else 'awaiting_acceptance'::sub_order_status end,
+                          accepted_at = case when kind = 'house' then now() end,
+                          ship_by = case when kind = 'house' then current_date + production_days + handling_days end
+    where order_id = p_order and status = 'pending_payment';
+    get diagnostics n = row_count;
+    if n = 0 then return jsonb_build_object('applied', false); end if;
+    update orders set stock_taken_at = coalesce(stock_taken_at, now()) where id = p_order;
+  else
+    -- an order made by an older create-payment has no parcels (review M7: functions deployed at different times, or
+    -- an order started just before the switch-on): its stock still comes off, once
+    update orders set stock_taken_at = now() where id = p_order and status = 'paid' and stock_taken_at is null;
+    if not found then return jsonb_build_object('applied', false); end if;
+  end if;
   for i in select oi.product_id, oi.variant_id, oi.quantity, coalesce(p.made_to_measure, false) as mtm
            from order_items oi left join products p on p.id = oi.product_id where oi.order_id = p_order and oi.product_id is not null loop
     if i.variant_id is not null then
@@ -183,13 +199,64 @@ begin
 end $$;
 revoke all on function mp_order_paid(uuid) from public, anon, authenticated;
 
+-- The payment webhook (server only), with Moyasar's payment as re-read from Moyasar: {id, amount, currency, token,
+-- invoice_id, order_id}. In one transaction and only if the order was still waiting: the order is marked paid, the
+-- sub-orders move on and stock comes off (mp_order_paid), and a membership or box club starts. Anything else answers
+-- without changing a thing, so Moyasar's retries and duplicate deliveries are harmless (review H3, M10).
+create or replace function mp_payment_received(p jsonb) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  o orders;
+  r jsonb;
+  v_order uuid := case when coalesce(p ->> 'order_id', '') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then (p ->> 'order_id')::uuid end;
+begin
+  select * into o from orders
+  where (nullif(p ->> 'invoice_id', '') is not null and payment_ref = p ->> 'invoice_id') or id = v_order
+  order by (payment_ref is not distinct from p ->> 'invoice_id') desc
+  limit 1
+  for update;
+  if o.id is null then return jsonb_build_object('found', false); end if;
+  if o.status <> 'pending_payment' then
+    -- already done (a retry or a duplicate): nothing changes; a different payment for the same order is flagged
+    if o.payment_id is distinct from p ->> 'id' and o.payment_id is not null then
+      insert into audit_log (actor_label, table_name, row_id, action, new_data)
+      values ('moyasar-webhook', 'orders', o.id::text, 'SECOND_PAYMENT', jsonb_build_object('payment_id', p ->> 'id', 'amount', p -> 'amount', 'currency', p ->> 'currency'));
+    end if;
+    return jsonb_build_object('found', true, 'order_id', o.id, 'applied', false, 'status', o.status, 'second_payment', o.payment_id is distinct from p ->> 'id');
+  end if;
+  if (p ->> 'amount')::bigint is distinct from o.total_minor or (p ->> 'currency') is distinct from o.currency::text then
+    insert into audit_log (actor_label, table_name, row_id, action, new_data) values ('moyasar-webhook', 'orders', o.id::text, 'PAYMENT_MISMATCH', p);
+    return jsonb_build_object('found', true, 'order_id', o.id, 'applied', false, 'mismatch', true);
+  end if;
+  update orders set status = 'paid', payment_id = p ->> 'id', paid_at = now(), updated_at = now() where id = o.id;
+  r := mp_order_paid(o.id);
+  if o.kind = 'subscription' and o.subscription_id is not null then
+    update subscriptions set status = 'active', current_period_end = now() + interval '1 month', moyasar_token = nullif(p ->> 'token', ''), updated_at = now()
+    where id = o.subscription_id;
+  end if;
+  return jsonb_build_object('found', true, 'order_id', o.id, 'applied', true, 'sub_orders', coalesce((r ->> 'sub_orders')::int, 0));
+end $$;
+revoke all on function mp_payment_received(jsonb) from public, anon, authenticated;
+
+-- Server functions act for a person (the after-sale and refund functions pass the caller's id): the request is
+-- attributed to them for the rest of the transaction, so the audit triggers record who did it (rule 9, review M13).
+create or replace function private.act_as(p_user uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if p_user is null or coalesce(auth.role(), '') <> 'service_role' then return; end if;
+  perform set_config('request.jwt.claim.sub', p_user::text, true);
+  perform set_config('request.jwt.claims', jsonb_build_object('sub', p_user, 'role', 'service_role',
+    'email', (select email from auth.users where id = p_user))::text, true);
+end $$;
+revoke all on function private.act_as(uuid) from public, anon, authenticated;
+
 -- ================================================================ the seller's order flow
 create or replace function private.seller_sub_order(p_sub uuid) returns sub_orders
 language plpgsql stable security definer set search_path = public as $$
 declare s sub_orders;
 begin
   select * into s from sub_orders where id = p_sub;
-  if s.id is null or s.seller_id is null or not private.is_seller_member(s.seller_id) then raise exception 'Not allowed'; end if;
+  if s.id is null or s.seller_id is null or not private.is_seller_member(s.seller_id) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return s;
 end $$;
 
@@ -197,14 +264,14 @@ end $$;
 create or replace function seller_sub_orders(p_seller uuid, p_status text default null) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  if not private.is_seller_member(p_seller) then raise exception 'Not allowed'; end if;
+  if not private.is_seller_member(p_seller) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return coalesce((
     select jsonb_agg(jsonb_build_object(
       'id', s.id, 'number', format('AM-%s-%s', o.number, s.seq), 'status', s.status, 'currency', s.currency,
       'items_minor', s.items_minor, 'commission_minor', s.commission_minor, 'paid_at', o.paid_at, 'created_at', s.created_at,
       'accepted_at', s.accepted_at, 'ship_by', s.ship_by, 'handling_days', s.handling_days, 'production_days', s.production_days,
       'to_country', s.to_country, 'city', o.ship_to ->> 'city', 'recipient', split_part(coalesce(o.ship_to ->> 'recipient_name', ''), ' ', 1),
-      'gift_message', o.gift_message, 'cancel_reason', s.cancel_reason, 'weight_g', s.weight_g,
+      'gift_message', s.gift_message, 'cancel_reason', s.cancel_reason, 'weight_g', s.weight_g,
       'service', (select jsonb_build_object('carrier', c.carrier_name, 'service', c.service_name, 'service_ar', c.service_name_ar) from carrier_services c where c.id = s.service_id),
       'lines', (select coalesce(jsonb_agg(jsonb_build_object('id', i.id, 'name_en', i.name_en, 'name_ar', i.name_ar, 'variant', i.variant_label, 'quantity', i.quantity,
                   'unit_price_minor', i.unit_price_minor, 'line_total_minor', i.line_total_minor, 'commission_minor', i.commission_minor, 'custom', i.custom,
@@ -227,7 +294,7 @@ create or replace function seller_accept_sub_order(p_sub uuid) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare s sub_orders := private.seller_sub_order(p_sub);
 begin
-  if s.status <> 'awaiting_acceptance' then raise exception 'This order is %', s.status; end if;
+  if s.status <> 'awaiting_acceptance' then raise exception 'This order is %', s.status using detail = format('حالة هذا الطلب: %s', private.status_ar(s.status::text)); end if;
   update sub_orders set status = case when production_days > 0 then 'in_production'::sub_order_status else 'accepted'::sub_order_status end,
     accepted_at = now(), ship_by = current_date + production_days + handling_days
   where id = s.id;
@@ -239,25 +306,38 @@ create or replace function seller_production_done(p_sub uuid) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare s sub_orders := private.seller_sub_order(p_sub);
 begin
-  if s.status <> 'in_production' then raise exception 'This order is %', s.status; end if;
+  if s.status <> 'in_production' then raise exception 'This order is %', s.status using detail = format('حالة هذا الطلب: %s', private.status_ar(s.status::text)); end if;
   update sub_orders set status = 'accepted', made_at = now() where id = s.id;
   return jsonb_build_object('status', 'accepted');
 end $$;
 
--- the seller cannot fulfil it: stock goes back, our team refunds the customer
-create or replace function seller_cancel_sub_order(p_sub uuid, p_reason text) returns jsonb
+-- The seller cannot fulfil it: stock goes back, our team refunds the customer. Server only: the after-sale function
+-- masks contact details in the reason first, which the customer reads (review M3).
+create or replace function mp_cancel_parcel(p_user uuid, p_sub uuid, p_reason text, p_flags text[] default '{}') returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
-  s sub_orders := private.seller_sub_order(p_sub);
+  s sub_orders;
   i record;
+  v_reason text := nullif(left(trim(coalesce(p_reason, '')), 1000), '');
 begin
-  if s.status not in ('awaiting_acceptance', 'accepted', 'in_production') then raise exception 'This order is %', s.status; end if;
-  if coalesce(trim(p_reason), '') = '' then raise exception 'Tell the customer why'; end if;
-  if exists (select 1 from shipments h where h.sub_order_id = s.id and h.status not in ('cancelled', 'failed')) then
-    raise exception 'Cancel the shipping label first';
+  perform private.act_as(p_user);
+  select * into s from sub_orders where id = p_sub for update;
+  if s.id is null or s.seller_id is null or not exists (select 1 from seller_members m where m.seller_id = s.seller_id and m.user_id = p_user) then
+    raise exception using message = 'Not allowed', detail = 'غير مسموح';
   end if;
-  update sub_orders set status = 'cancelled', cancelled_at = now(), cancel_reason = left(trim(p_reason), 1000), cancelled_by = 'seller', needs_refund = true
+  if s.status not in ('awaiting_acceptance', 'accepted', 'in_production') then
+    raise exception using message = format('This order is %s', s.status), detail = format('حالة هذا الطلب الآن: %s', s.status);
+  end if;
+  if v_reason is null then raise exception using message = 'Tell the customer why', detail = 'أخبر العميل بالسبب'; end if;
+  if exists (select 1 from shipments h where h.sub_order_id = s.id and h.status not in ('cancelled', 'returned')) then
+    raise exception using message = 'Cancel the shipping label first', detail = 'ألغِ ملصق الشحن أولًا';
+  end if;
+  update sub_orders set status = 'cancelled', cancelled_at = now(), cancel_reason = v_reason, cancelled_by = 'seller', needs_refund = true
   where id = s.id;
+  if cardinality(coalesce(p_flags, '{}')) > 0 then
+    insert into audit_log (actor, table_name, row_id, action, new_data)
+    values (p_user, 'sub_orders', s.id::text, 'CANCEL_REASON_FLAGGED', jsonb_build_object('flags', p_flags));
+  end if;
   for i in select oi.product_id, oi.variant_id, oi.quantity, coalesce(p.made_to_measure, false) as mtm from order_items oi
            left join products p on p.id = oi.product_id where oi.sub_order_id = s.id and oi.product_id is not null loop
     if i.variant_id is not null then update product_variants set stock = stock + i.quantity where id = i.variant_id;
@@ -267,10 +347,9 @@ begin
 end $$;
 revoke all on function seller_accept_sub_order(uuid) from public, anon;
 revoke all on function seller_production_done(uuid) from public, anon;
-revoke all on function seller_cancel_sub_order(uuid, text) from public, anon;
+revoke all on function mp_cancel_parcel(uuid, uuid, text, text[]) from public, anon, authenticated;
 grant execute on function seller_accept_sub_order(uuid) to authenticated;
 grant execute on function seller_production_done(uuid) to authenticated;
-grant execute on function seller_cancel_sub_order(uuid, text) to authenticated;
 
 -- ================================================================ shipments and tracking (server only)
 -- create-shipment records the label it bought (idempotent: the same key returns the same shipment).
@@ -287,7 +366,7 @@ begin
     return jsonb_build_object('id', existing.id, 'duplicate', true);
   end if;
   select * into s from sub_orders where id = p_sub for update;
-  if s.status not in ('accepted', 'in_production', 'ready_to_ship') then raise exception 'This order is %', s.status; end if;
+  if s.status not in ('accepted', 'in_production', 'ready_to_ship') then raise exception 'This order is %', s.status using detail = format('حالة هذا الطلب: %s', private.status_ar(s.status::text)); end if;
   insert into shipments (sub_order_id, provider_id, service_id, provider_ref, tracking_number, tracking_url, label_path, pickup_location_id,
                          pickup_from, pickup_to, weight_g, parcel, ddp, declared_value_minor, idempotency_key, created_by)
   values (s.id, p ->> 'provider_id', (p ->> 'service_id')::uuid, p ->> 'provider_ref', p ->> 'tracking_number', p ->> 'tracking_url', p ->> 'label_path',
@@ -302,8 +381,8 @@ begin
 end $$;
 revoke all on function mp_record_shipment(uuid, jsonb) from public, anon, authenticated;
 
--- Tracking events from the carrier (webhook or sync): de-duplicated, never moving a shipment backwards (except a
--- failure, cancellation or return), and carrying the sub-order and the order along.
+-- Tracking events from the carrier (webhook or sync): de-duplicated, never moving a shipment backwards (except to show
+-- a failed attempt, a cancellation or a return), and carrying the sub-order and the order along.
 create or replace function mp_record_shipment_event(p_shipment uuid, p_events jsonb) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
@@ -312,6 +391,9 @@ declare
   added int := 0;
   rank_of constant jsonb := '{"label_created": 1, "pickup_scheduled": 2, "picked_up": 3, "in_transit": 4, "out_for_delivery": 5, "delivered": 6, "failed": 7, "returned": 8, "cancelled": 9}';
   latest shipment_status;
+  prog shipment_status;
+  prog_at timestamptz;
+  fail_at timestamptz;
   o uuid;
 begin
   select * into h from shipments where id = p_shipment for update;
@@ -323,9 +405,16 @@ begin
     on conflict (dedupe_key) do nothing;
     if found then added := added + 1; end if;
   end loop;
-  -- the furthest status reached (a failure, return or cancellation always wins once it happens after the rest)
-  select ev.status into latest from shipment_events ev where ev.shipment_id = h.id
-  order by case when ev.status in ('failed', 'returned', 'cancelled') then 100 else (rank_of ->> ev.status::text)::int end desc, ev.occurred_at desc limit 1;
+  -- Where the parcel is (review M4): a cancellation or a return ends it. Otherwise the furthest step reached, never
+  -- backwards, except that a failed delivery attempt shows when it is the latest news; a later delivery still wins.
+  select ev.status into latest from shipment_events ev where ev.shipment_id = h.id and ev.status in ('cancelled', 'returned')
+  order by ev.occurred_at desc limit 1;
+  if latest is null then
+    select ev.status, ev.occurred_at into prog, prog_at from shipment_events ev where ev.shipment_id = h.id and ev.status not in ('failed', 'cancelled', 'returned')
+    order by (rank_of ->> ev.status::text)::int desc, ev.occurred_at desc limit 1;
+    select max(ev.occurred_at) into fail_at from shipment_events ev where ev.shipment_id = h.id and ev.status = 'failed';
+    latest := case when fail_at is not null and prog is distinct from 'delivered' and (prog_at is null or fail_at > prog_at) then 'failed'::shipment_status else prog end;
+  end if;
   if latest is distinct from h.status then
     update shipments set status = latest where id = h.id;
     update sub_orders set
@@ -335,8 +424,13 @@ begin
         when 'failed' then 'delivery_failed'::sub_order_status when 'returned' then 'returned'::sub_order_status
         when 'cancelled' then (case when made_at is not null or production_days = 0 then 'accepted' else 'in_production' end)::sub_order_status
         else status end,
-      shipped_at = case when latest in ('picked_up', 'in_transit', 'out_for_delivery', 'delivered') then coalesce(shipped_at, now()) else shipped_at end,
-      delivered_at = case when latest = 'delivered' then now() else delivered_at end,
+      -- at the carrier's own times, not when we heard (review L7): return windows and payouts count from them
+      shipped_at = case when latest in ('picked_up', 'in_transit', 'out_for_delivery', 'delivered')
+                        then coalesce(shipped_at, (select least(min(ev.occurred_at), now()) from shipment_events ev where ev.shipment_id = h.id
+                                                   and ev.status in ('picked_up', 'in_transit', 'out_for_delivery', 'delivered')), now()) else shipped_at end,
+      delivered_at = case when latest = 'delivered'
+                          then coalesce((select least(min(ev.occurred_at), now()) from shipment_events ev where ev.shipment_id = h.id and ev.status = 'delivered'), now())
+                          else delivered_at end,
       ready_at = case when latest = 'cancelled' then null else ready_at end
     where id = h.sub_order_id
     returning order_id into o;
@@ -360,7 +454,8 @@ language sql stable security definer set search_path = public as $$
     'lines', (select coalesce(jsonb_agg(jsonb_build_object('name_en', i.name_en, 'quantity', i.quantity, 'hs_code', i.hs_code, 'origin_country', i.origin_country,
                'line_total_minor', i.line_total_minor)), '[]'::jsonb) from order_items i where i.sub_order_id = s.id),
     'locations', (select coalesce(jsonb_agg(to_jsonb(l) order by l.is_default desc, l.created_at), '[]'::jsonb) from seller_locations l where l.seller_id = s.seller_id and l.active),
-    'service', (select to_jsonb(c) from carrier_services c where c.id = s.service_id),
+    'service', (select to_jsonb(c) || jsonb_build_object('provider_active', coalesce((select pv.active from carrier_providers pv where pv.id = c.provider_id), false))
+                from carrier_services c where c.id = s.service_id),
     'shipments', (select coalesce(jsonb_agg(to_jsonb(h) order by h.created_at desc), '[]'::jsonb) from shipments h where h.sub_order_id = s.id))
   from sub_orders s join orders o on o.id = s.order_id where s.id = p_sub;
 $$;
@@ -372,7 +467,7 @@ language plpgsql stable security definer set search_path = public as $$
 declare o orders;
 begin
   select * into o from orders where id = p_order;
-  if o.id is null or not (o.user_id = auth.uid() or private.is_staff()) then raise exception 'Not allowed'; end if;
+  if o.id is null or not (o.user_id = auth.uid() or private.is_staff()) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   return jsonb_build_object(
     'order', jsonb_build_object('id', o.id, 'number', o.number, 'status', o.status, 'currency', o.currency, 'total_minor', o.total_minor,
                'shipping_minor', o.shipping_minor, 'duties_minor', o.duties_minor, 'paid_at', o.paid_at, 'created_at', o.created_at,

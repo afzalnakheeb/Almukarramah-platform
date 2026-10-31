@@ -129,7 +129,8 @@ describe('settings, documents and styles', () => {
     assert.equal(pub.min_quality_score, 75);
     assert.equal('escalate_below_confidence' in pub, false, 'internal screening settings stay internal');
     assert.ok('perf_thresholds' in pub, 'sellers see the performance thresholds');
-    assert.equal(db.val(`select count(*) from audit_log where table_name = 'mp_settings'`), 1);
+    assert.equal(db.val(`select count(*) from audit_log where table_name = 'mp_settings' and actor is not null`), 1, 'the owner\'s change, with its author');
+    assert.equal(pub.marketplace_open, true, 'the switches are public (the site shows "opening soon" while they are off)');
   });
 
   test('document types and garment styles are public; only owner/manager edit them', () => {

@@ -131,11 +131,14 @@ describe('the seller\'s order flow', () => {
     const second = makeOrder(ids.customer2);
     db.exec(`select mp_order_paid('${second.o}')`, 'service');
     assert.equal(db.val(`select stock from product_variants where id = '${variant}'`), 6);
-    assert.match(db.error(`select seller_cancel_sub_order('${second.a}', ' ')`, user('sellerA')) ?? '', /why/);
-    db.exec(`select seller_cancel_sub_order('${second.a}', 'The 12 ml bottles are delayed by our glassmaker.')`, user('sellerA'));
+    // through the after-sale function, which masks the reason first (review M3): the server calls this as the seller
+    assert.ok(db.error(`select seller_cancel_sub_order('${second.a}', 'no reason')`, user('sellerA')), 'no direct route around the masking');
+    assert.match(db.error(`select mp_cancel_parcel('${ids.sellerA}', '${second.a}', ' ')`, 'service') ?? '', /why/);
+    assert.match(db.error(`select mp_cancel_parcel('${ids.sellerB}', '${second.a}', 'Not mine to cancel')`, 'service') ?? '', /Not allowed/);
+    db.exec(`select mp_cancel_parcel('${ids.sellerA}', '${second.a}', 'The 12 ml bottles are delayed by our glassmaker.')`, 'service');
     assert.deepEqual(db.one(`select status, needs_refund, cancelled_by from sub_orders where id = '${second.a}'`), { status: 'cancelled', needs_refund: true, cancelled_by: 'seller' });
     assert.equal(db.val(`select stock from product_variants where id = '${variant}'`), 8);
-    assert.match(db.error(`select seller_cancel_sub_order('${subA}', 'too late')`, user('sellerA')) ?? '', /delivered/);
+    assert.match(db.error(`select mp_cancel_parcel('${ids.sellerA}', '${subA}', 'too late')`, 'service') ?? '', /delivered/);
   });
 
   test('labels are private to the seller of the sub-order and our operations team', () => {

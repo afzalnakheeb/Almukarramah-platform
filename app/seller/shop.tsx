@@ -25,9 +25,13 @@ export default function SellerShop() {
   const { t, lang } = useI18n();
   const { me, reload } = useSeller();
   const s = me.seller;
+  // a live shop's text changes wait for our team's approval (review H5): the form shows what was sent
+  const pend = s.profile_pending ?? {};
+  const live = s.status === 'approved' || s.status === 'suspended';
+  const text = (k: keyof NonNullable<typeof s.profile_pending>) => (k in pend ? pend[k] : s[k]) ?? '';
   const [f, setF] = useState({
-    name_ar: s.name_ar ?? '', tagline_en: s.tagline_en ?? '', tagline_ar: s.tagline_ar ?? '', about_en: s.about_en ?? '', about_ar: s.about_ar ?? '',
-    city: s.city ?? '', website: s.website ?? '', returns_en: s.returns_en ?? '', returns_ar: s.returns_ar ?? '',
+    name_ar: text('name_ar'), tagline_en: text('tagline_en'), tagline_ar: text('tagline_ar'), about_en: text('about_en'), about_ar: text('about_ar'),
+    city: s.city ?? '', website: text('website'), returns_en: text('returns_en'), returns_ar: text('returns_ar'),
     handling_days: String(s.handling_days ?? 3),
   });
   const [p, setP] = useState({ contact_name: me.private?.contact_name ?? '', contact_email: me.private?.contact_email ?? '', contact_phone: me.private?.contact_phone ?? '' });
@@ -66,7 +70,7 @@ export default function SellerShop() {
     });
     await updateSellerPrivate(s.id, { contact_name: p.contact_name.trim(), contact_email: p.contact_email.trim(), contact_phone: p.contact_phone.trim() || null });
     await reload();
-  }, t('pfSaved'));
+  }, live ? t('ssSavedForApproval') : t('pfSaved'));
 
   const uploadArt = (field: 'logo' | 'banner', files: File[]) => run(field, async () => {
     const r = await uploadMedia(s.id, files[0], field === 'logo' ? 'seller_logo' : 'seller_banner');
@@ -115,6 +119,7 @@ export default function SellerShop() {
       <Serif role="h1" size={wide ? 40 : 30}>{t('sdShop')}</Serif>
       <T size={13.5} color={colors.muted} style={{ marginVertical: 8 }}>{s.name_en} · {countryName(s.country, lang)}{s.status === 'approved' ? ` · almukarramah.com/sellers/${s.slug}` : ''}</T>
       {MARKET_DEMO ? <Notice text={t('lfDemo')} /> : null}
+      {s.profile_pending ? <Notice text={t('ssPendingNotice')} /> : null}
       <View style={{ gap: 14 }}>
         {card(t('ssProfile'), <>
           {row(<>{col(<Field label={t('shopNameAr')} value={f.name_ar} onChangeText={set('name_ar')} style={{ writingDirection: 'rtl', textAlign: 'right' }} />)}{col(<Field label={t('city')} value={f.city} onChangeText={set('city')} />)}</>)}

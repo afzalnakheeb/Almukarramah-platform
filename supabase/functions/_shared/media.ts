@@ -81,6 +81,9 @@ type Context = {
   documents: { doc_type: string; status: string }[];
   categories: { slug: string; name_en: string; name_ar: string }[];
   settings: Settings;
+  /** the listing's options (review M2) and whether the seller is new to us (review M14) */
+  variants?: { label_en: string; label_ar: string; price_minor: number | null; is_active: boolean }[];
+  new_seller?: boolean;
 };
 
 /** The quality score as the server sees it (photo sizes and flags from the screening records). */
@@ -133,6 +136,7 @@ export async function runListingCheck(db: Db, c: Context) {
     },
     images, quality, rules: setup.rules, documents: c.documents.map((d) => d.doc_type), alwaysReview: pol.always_review === true,
     categories: c.categories, settings: setup.settings, models: setup.models, call: setup.call,
+    variants: (c.variants ?? []).map((v) => ({ label_en: v.label_en, label_ar: v.label_ar, price_minor: v.price_minor })), newSeller: c.new_seller !== false,
   });
   const outcome = {
     verdict: decision.verdict, summary_en: decision.summary_en, summary_ar: decision.summary_ar, reasons: decision.reasons,

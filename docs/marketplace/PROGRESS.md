@@ -15,6 +15,7 @@ database or deployed. Read this first if you are picking the work up.
 | M6 | Checkout, rulebook, sub-orders, sandbox shipping, order flows | done |
 | M7 | Statements, returns/disputes, reviews, messages, notifications, performance | done |
 | M8 | Dashboards, polish, screenshots, docs | done |
+| Review | Fix pass after the independent review (6 High, 15 Medium, 11 Low): `REVIEW-FIXES.md` | done |
 
 ## Where things are
 
@@ -24,7 +25,8 @@ database or deployed. Read this first if you are picking the work up.
     carriers · 0014 category tree and policies, attributes, the Islamic standard, settings, document types, styles
     · 0015 AI screening: media assets, verdict records, strikes, quarantine, rate limits, product documents
     · 0016 onboarding: the vetting application, checklist, categories per seller, review history, seller review
-    · 0017 listings and search: variants and stock, the price guard, public columns only, mp_search, storefronts
+    · 0017 listings and search: variants and stock, the price guard, mp_search, storefronts (no column grants:
+    products are read with `select *` as before; review fields are in `listing_reviews`, 0012)
     · 0018 orders and shipping: sub-orders, shipments, tracking events, labels, the seller's order flow, tracking
     · 0019 after the sale: the seller ledger, statements and recorded payouts, refunds, returns and disputes, reviews
     and replies, messages, the notifications outbox and its templates, seller performance
@@ -66,7 +68,10 @@ database or deployed. Read this first if you are picking the work up.
   - `lib/db.ts` creates a fresh database from `supabase_stub.sql` (a minimal Supabase stand-in), migrations
     0001–0011, `fixtures/live_baseline.sql` (the live categories, zones and a few products) and then the marketplace
     migrations; it runs SQL as anon, a signed-in user, the service role or the migration owner.
-- Decisions waiting for Afzal: `docs/marketplace/DECISIONS.md`.
+- Decisions waiting for Afzal: `docs/marketplace/DECISIONS.md` (the ones from the review are at the top).
+- Edge Function tests: `supabase/tests/lib/edge.ts` runs the functions under Node against the test database, with
+  supabase-js replaced by a local stand-in (`lib/fake-supabase.ts`, which runs each call as SQL with the caller's
+  role), Moyasar and the carriers mocked, and every other host refused.
 
 ## Running the tests
 
@@ -160,4 +165,12 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
   screenshots (`/checkout?demo=ddp`, screenshot build only). Screenshots of every after-sale page in English and
   Arabic, phone and desktop. `SWITCH-ON.md`; marketplace routines added to `docs/run-from-claude.md`.
   Tests: 4 more SQL (189 in all).
-
+- Review fix pass: every finding of the independent review reproduced by a failing test first, then fixed
+  (`REVIEW-FIXES.md` has the table). Highlights: a return is refunded once; a Moyasar timeout is never a failed
+  refund (read back and reconciled); payment, parcels and stock in one transaction, one invoice per order, the counter
+  and the document in one transaction, and `finish-pending` for anything a failure leaves; products readable with
+  `select *` again (review fields in `listing_reviews`); shop pages show only approved text and our own media;
+  option pictures screened and reviewed; the marketplace, seller applications, payouts and the test courier switched
+  off in the database until Afzal decides; errors in Arabic and English end to end. A test harness now runs the Edge
+  Functions (moyasar-webhook, refund-order, finish-pending, after-sale, create-shipment, review-listing,
+  screen-image) against the local database with Moyasar and the carriers mocked. Tests: 272 (189 before).

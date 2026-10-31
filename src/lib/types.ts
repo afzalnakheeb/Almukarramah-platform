@@ -54,6 +54,9 @@ export type Seller = SellerRef & {
   status: 'pending' | 'info_requested' | 'approved' | 'rejected' | 'suspended';
   /** negotiated commission; null: the category's rate */
   commission_bps: number | null; review_note: string | null;
+  /** a live shop's text changes, waiting for our team's approval (review H5); the public page shows the approved text */
+  profile_pending?: Partial<Record<'name_en' | 'name_ar' | 'tagline_en' | 'tagline_ar' | 'about_en' | 'about_ar' | 'returns_en' | 'returns_ar' | 'website', string | null>> | null;
+  profile_submitted_at?: string | null;
   created_at: string;
 };
 

@@ -5,7 +5,8 @@ import { adapterFor } from '../functions/_shared/carriers/index.ts';
 import { hmacHex, labelPdf } from '../functions/_shared/carriers/sandbox.ts';
 import type { ShipmentRequest } from '../functions/_shared/carriers/types.ts';
 
-const env = (n: string) => (n === 'CRON_SECRET' ? 'test-secret' : undefined);
+// the sandbox's webhooks are signed with their own secret (never the scheduler's: review L9)
+const env = (n: string) => (n === 'SANDBOX_WEBHOOK_SECRET' ? 'test-secret' : undefined);
 const sbx = adapterFor('sandbox', env);
 const req = (key: string): ShipmentRequest => ({
   idempotency_key: key, reference: 'AM-104950-1', service_code: 'sbx-sa-road', ddp: false, declared_value_minor: 50000, currency: 'SAR',

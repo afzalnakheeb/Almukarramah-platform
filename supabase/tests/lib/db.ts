@@ -105,8 +105,12 @@ export class Db {
   }
 }
 
-/** A fresh database with the Supabase stand-in and every migration applied in order. */
-export function freshDb(name: string, upTo?: string): Db {
+/**
+ * A fresh database with the Supabase stand-in and every migration applied in order. The marketplace ships switched
+ * off (marketplace_open, sellers_open, the sandbox courier, the Saudi marketplace corridor without its adviser
+ * sign-off); the tests switch it on as Afzal will, unless asShipped is set (to test the defaults themselves).
+ */
+export function freshDb(name: string, upTo?: string, opts: { asShipped?: boolean } = {}): Db {
   const dbName = `t_${name.replace(/[^a-z0-9_]/gi, '_').toLowerCase()}`;
   run('postgres', ['-c', `drop database if exists ${dbName} with (force)`]);
   run('postgres', ['-c', `create database ${dbName}`]);
@@ -126,7 +130,22 @@ export function freshDb(name: string, upTo?: string): Db {
       throw new Error(`migration ${f} failed: ${(e as Error).message}`);
     }
   }
+  if (!opts.asShipped) switchOn(db);
   return db;
+}
+
+/** The switch-on steps of docs/marketplace/SWITCH-ON.md, as far as the tests need them (each only if it exists yet). */
+export function switchOn(db: Db) {
+  db.exec(`do $$ begin
+    if to_regclass('public.mp_settings') is not null and exists (select 1 from information_schema.columns where table_name = 'mp_settings' and column_name = 'marketplace_open') then
+      update mp_settings set marketplace_open = true, sellers_open = true where id = 1;
+    end if;
+    if to_regclass('public.carrier_providers') is not null then update carrier_providers set active = true where id = 'sandbox'; end if;
+    if to_regclass('public.corridors') is not null then
+      update corridors set adviser_name = 'Test adviser', adviser_signed_off_at = now(), status = 'open'
+      where scope = 'marketplace' and from_country = 'SA' and to_country = 'SA' and status = 'closed';
+    end if;
+  end $$;`);
 }
 
 /** Deterministic ids for test people. */

@@ -1,5 +1,8 @@
 // Shared helpers for Supabase Edge Functions (Deno).
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { UserError } from './errors.ts';
+
+export { UserError };
 
 export const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -35,6 +38,24 @@ export async function staffRole(db: SupabaseClient, userId: string): Promise<str
   return data?.role ?? null;
 }
 
+const ARABIC = /[\u0600-\u06FF]/;
+
+/** An error for the person using the app, in English and Arabic (the app shows the one in their language; review M8). */
+export function fail(status: number, en: string, ar: string, code?: string, extra: Record<string, unknown> = {}) {
+  return json({ error: en, error_ar: ar, ...(code ? { code } : {}), ...extra }, status);
+}
+
+/** The Arabic of a database error: our functions put it in the error's detail. */
+export function arabicOf(e: unknown): string | null {
+  const d = (e as { details?: unknown } | null)?.details;
+  return typeof d === 'string' && ARABIC.test(d) ? d : null;
+}
+
+/** A database error passed on to the app, in both languages when the database gave both. */
+export function dbError(e: { message: string; details?: string | null; code?: string }, status = 400) {
+  return json({ error: e.message, error_ar: arabicOf(e), ...(e.code ? { code: e.code } : {}) }, status);
+}
+
 export function handle(fn: (req: Request) => Promise<Response>) {
   return async (req: Request) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
@@ -42,7 +63,8 @@ export function handle(fn: (req: Request) => Promise<Response>) {
       return await fn(req);
     } catch (e) {
       console.error(e);
-      return json({ error: e instanceof Error ? e.message : String(e) }, 400);
+      const message = e instanceof Error ? e.message : String((e as { message?: unknown })?.message ?? e);
+      return json({ error: message, error_ar: e instanceof UserError ? e.ar : arabicOf(e), ...(e instanceof UserError && e.code ? { code: e.code } : {}) }, 400);
     }
   };
 }

@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Image, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { Seo } from '@/components/seo';
-import { RefundButton } from '@/components/admin-refund';
+import { CheckWithMoyasar, FinishPendingButton, RefundButton } from '@/components/admin-refund';
 import { Button, Card, Chip, Field, H1, Notice, T, Tag, useWide } from '@/components/ui';
 import { adminRefundQueue, adminReturns, customerPhotoUrls, returnAction, type RefundQueue, type ReturnRequest, type ReturnStatus } from '@/lib/aftersale';
 import { MARKET_DEMO } from '@/lib/flags';
@@ -116,13 +116,20 @@ export default function AdminReturns() {
           {queue.credit_notes.length ? (
             <>
               <T w={700} size={17}>Credit notes still to issue</T>
-              {queue.credit_notes.map((f) => <Notice key={f.id} tone="warn" text={`AM-${f.order_number}: refunded ${formatMoney(f.amount_minor, f.currency)} on ${day(f.completed_at)}; the credit note for ${formatMoney(f.platform_minor, f.currency)} was not issued (see the audit history, CREDIT_NOTE_PENDING).`} />)}
+              {queue.credit_notes.map((f) => <Notice key={f.id} tone="warn" text={`AM-${f.order_number}: refunded ${formatMoney(f.amount_minor, f.currency)} on ${day(f.completed_at)}; the credit note for ${formatMoney(f.platform_minor, f.currency)} is still to be issued. The scheduler issues it within 15 minutes, or press "Finish pending work now".`} />)}
+              <FinishPendingButton onDone={load} />
             </>
           ) : null}
           {queue.stuck.length ? (
             <>
               <T w={700} size={17}>Refunds still processing</T>
-              {queue.stuck.map((f) => <Notice key={f.id} tone="warn" text={`AM-${f.order_number}: ${formatMoney(f.amount_minor, f.currency)} since ${day(f.created_at)}. Check the payment in Moyasar before doing anything else.`} />)}
+              <T size={13} color={colors.muted}>Moyasar's answer did not come back for these. Never refund them again: "Check with Moyasar" reads the payment back and settles each one.</T>
+              {queue.stuck.map((f) => (
+                <Card key={f.id} pad={14} style={{ gap: 6 }}>
+                  <T size={14}>AM-{f.order_number}: {formatMoney(f.amount_minor, f.currency)} since {day(f.created_at)}{f.error ? ` (${f.error})` : ''}</T>
+                  <CheckWithMoyasar refundId={f.id} onDone={load} />
+                </Card>
+              ))}
             </>
           ) : null}
           <T w={700} size={17}>Recent refunds</T>

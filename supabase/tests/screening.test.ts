@@ -149,13 +149,14 @@ describe('image screening', () => {
     assert.equal((await run(mock({ 'fast-model': vague, 'strong-model': vague }))).outcome.status, 'review');
   });
 
-  test('never fail open: if the stronger model is unavailable or unreadable, the image stays pending', async () => {
+  test('never fail open: if the stronger model is unavailable the image stays pending; answers neither model could read go to a person', async () => {
     const fastBlock = img({ verdict: 'block', confidence: 0.99, rule_hits: [{ code: 'adult_immodest', confidence: 0.99 }] });
     const down = await run(mock({ 'fast-model': fastBlock, 'strong-model': 'throw' }));
     assert.equal(down.outcome.status, 'pending');
     assert.ok(down.runs.some((r) => r.stage === 'strong' && r.verdict === 'error'));
+    // review M14: two unreadable answers (a photo can be made to cause them) are never a pass, and never pending for ever
     const garbled = await run(mock({ 'fast-model': 'I think it is fine', 'strong-model': 'also fine' }));
-    assert.equal(garbled.outcome.status, 'pending');
+    assert.equal(garbled.outcome.status, 'review');
     const allDown = await run(mock({}));
     assert.equal(allDown.outcome.status, 'pending');
     assert.match(allDown.outcome.reasons[0].ar, /تلقائيًا/);

@@ -260,7 +260,8 @@ export function demoOverview(): import('./aftersale').Overview {
   return {
     days: 30,
     queues: { sellers_to_review: 3, listings_waiting: 7, listings_checking: 1, photos_checking: 2, returns_to_answer: 2, disputes: 1, refunds_to_make: 2,
-      credit_notes_pending: 0, refunds_stuck: 0, reviews_to_publish: 3, conversations_flagged: 1, awaiting_acceptance: 1, late_to_ship: 1, not_collected: 0, delivery_failed: 0 },
+      credit_notes_pending: 0, refunds_stuck: 0, reviews_to_publish: 3, conversations_flagged: 1, awaiting_acceptance: 1, late_to_ship: 1, not_collected: 0, delivery_failed: 0,
+      shop_pages_to_approve: 1 },
     sales: { orders: 184, parcels: 236, marketplace_parcels: 97, marketplace_sar_minor: 6845000, house_sar_minor: 9120000, delivery_sar_minor: 702500,
       commission_sar_minor: 1711250, refunded_sar_minor: 188000, cancelled_by_sellers: 2, delivered: 201 },
     owed_to_sellers: { available_sar_minor: 1820000, held_sar_minor: 2430000, balance_sar_minor: 4250000 }, paid_out_sar_minor: 3170000,
@@ -272,6 +273,8 @@ export function demoOverview(): import('./aftersale').Overview {
     ],
     destinations: [{ country: 'SA', parcels: 171 }, { country: 'AE', parcels: 31 }, { country: 'KW', parcels: 14 }, { country: 'GB', parcels: 11 }, { country: 'QA', parcels: 9 }],
     notifications_queued: 412,
+    pending_work: { orders_without_invoice: 0, orders_not_handed_on: 0, credit_notes_pending: 0, refunds_processing: 0 },
+    switches: { marketplace_open: false, sellers_open: false, payouts_enabled: false, sandbox_carrier: false, support_refund_limit_minor: 0 },
   };
 }
 

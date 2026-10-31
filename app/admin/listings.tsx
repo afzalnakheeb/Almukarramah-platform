@@ -22,7 +22,12 @@ type Row = {
   made_to_measure: boolean; garment: string | null; garment_style: string | null; sizes: string[] | null; size_chart: SizeChart | null; tailoring: Tailoring | null;
   hs_code: string | null; origin_country: string | null;
   categories: { name_en: string } | null; sellers: { name_en: string; country: string; kind: string; status: string } | null;
+  /** the price we last approved (a higher price comes back for review; review M2) */
+  approved_price_sar?: number | null;
+  product_variants?: { id: string; label_en: string; label_ar: string; price_minor: number | null; approved_price_minor: number | null; stock: number; is_active: boolean }[];
 };
+/** the design-option pictures of a made-to-measure listing: screened and approved like the photos (review H6) */
+const optionImages = (t: Tailoring | null) => (t?.options ?? []).flatMap((o) => o.choices.map((c) => c.image).filter((x): x is string => !!x));
 type Run = { id: number; stage: string; model: string | null; prompt_version: string | null; verdict: string; confidence: number | null; reasons: Reason[]; created_at: string };
 type Doc = ProductDocument & { path: string };
 type Tab = 'pending_review' | 'auto' | 'check_pending' | 'rejected' | 'approved' | 'suspended';
@@ -36,7 +41,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'suspended', label: 'Suspended' },
 ];
 // review fields (AI notes, notes, dates) come from mp_listing_private()
-const COLUMNS = 'id, slug, seller_id, name_en, name_ar, description_en, description_ar, base_price_sar, stock, weight_g, ship_class, images, listing_status, updated_at, attributes, made_to_measure, garment, garment_style, sizes, size_chart, tailoring, hs_code, origin_country, categories(name_en), sellers(name_en, country, kind, status)';
+const COLUMNS = 'id, slug, seller_id, name_en, name_ar, description_en, description_ar, base_price_sar, stock, weight_g, ship_class, images, listing_status, updated_at, attributes, made_to_measure, garment, garment_style, sizes, size_chart, tailoring, hs_code, origin_country, categories(name_en), sellers(name_en, country, kind, status), product_variants(id, label_en, label_ar, price_minor, approved_price_minor, stock, is_active)';
 const VERDICT: Record<string, { label: string; tone: 'ok' | 'warn' | 'err' | 'info' }> = {
   pass: { label: 'AI: no concerns', tone: 'ok' }, review: { label: 'AI: notes for you', tone: 'warn' },
   block: { label: 'AI: rejected', tone: 'err' }, error: { label: 'AI: not checked yet', tone: 'info' },
@@ -165,8 +170,31 @@ function ListingCard({ r, urls, media, strikes, onDone }: { r: Row; urls: Record
           {r.tailoring.options.map((o) => (
             <T key={o.key} size={12.5} color={colors.body}>{o.label.en}: {o.choices.map((c) => `${c.label.en}${c.price_minor ? ` +${formatMoney(c.price_minor, 'SAR', 'en')}` : ''}${c.season ? ` (${c.season})` : ''}`).join(', ')}</T>
           ))}
+          {optionImages(r.tailoring).length ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+              {r.tailoring.options.flatMap((o) => o.choices.filter((c) => c.image).map((c) => {
+                const p = c.image as string;
+                const st = media[p]?.status ?? (/^https:/.test(p) ? 'passed' : 'pending');
+                return (
+                  <View key={`${o.key}-${c.id}`} style={{ width: 96, gap: 3 }}>
+                    <Photo uri={urls[p]} ratio={1} tone={colors.sandSoft} fit="contain" style={{ borderWidth: st === 'passed' ? 1 : 2, borderColor: st === 'rejected' || st === 'blocked' ? colors.danger : st === 'passed' ? colors.line : colors.gold }} />
+                    <T size={11}>{o.label.en}: {c.label.en}</T>
+                    <Tag label={st} tone={PHOTO_TONE[st as keyof typeof PHOTO_TONE] ?? 'info'} />
+                  </View>
+                );
+              }))}
+            </View>
+          ) : null}
         </View>
       ) : null}
+      {r.product_variants?.length ? (
+        <T size={12.5} color={colors.body}>
+          Options: {r.product_variants.map((v) => `${v.label_en}${v.price_minor !== null ? ` ${formatMoney(v.price_minor, 'SAR', 'en')}` : ''}${v.approved_price_minor !== null && v.price_minor !== null && v.price_minor > v.approved_price_minor ? ` (approved ${formatMoney(v.approved_price_minor, 'SAR', 'en')})` : ''} · stock ${v.stock}${v.is_active ? '' : ' · hidden'}`).join('  |  ')}
+        </T>
+      ) : null}
+      {r.listing_status === 'pending_review' && r.approved_price_sar !== null && r.approved_price_sar !== undefined && r.approved_price_sar !== r.base_price_sar ? (
+        <Notice tone="warn" text={`Back for review after a price change: approved at ${formatMoney(r.approved_price_sar, 'SAR', 'en')}, now ${formatMoney(r.base_price_sar, 'SAR', 'en')}.`} />
+      ) : r.review_note && r.listing_status !== 'approved' ? <T size={12.5} color={colors.brassText}>Note: {r.review_note}</T> : null}
 
       {docs.length ? (
         <View style={{ gap: 6 }}>
@@ -251,7 +279,7 @@ export default function AdminListings() {
     if (tab === 'auto') list = list.filter(isAuto);
     if (tab === 'rejected') list = list.filter((r) => !isAuto(r));
     setRows(list);
-    const paths = list.flatMap((r) => r.images);
+    const paths = list.flatMap((r) => [...r.images, ...optionImages(r.tailoring)]);
     const [u, m] = await Promise.all([photoUrls(paths), mediaFor(paths)]);
     setUrls(u); setMedia(m);
     const sellers = [...new Set(list.map((r) => r.seller_id))];

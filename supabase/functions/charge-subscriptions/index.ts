@@ -2,7 +2,7 @@
 // Requires recurring (merchant-initiated) payments to be enabled on the Moyasar account.
 import { chargeToken } from '../_shared/moyasar.ts';
 import { admin, env, handle, json, vatIncluded } from '../_shared/util.ts';
-import { issueInvoice, type OrderForInvoice } from '../_shared/zatca.ts';
+import { ensureInvoice } from '../_shared/zatca.ts';
 
 Deno.serve(handle(async (req) => {
   if (req.headers.get('x-cron-secret') !== env('CRON_SECRET')) return json({ error: 'unauthorised' }, 401);
@@ -49,8 +49,12 @@ Deno.serve(handle(async (req) => {
       const end = new Date(sub.current_period_end!);
       end.setMonth(end.getMonth() + 1);
       await db.from('subscriptions').update({ status: 'active', current_period_end: end.toISOString(), updated_at: new Date().toISOString() }).eq('id', sub.id);
-      const { data: full } = await db.from('orders').select('*, order_items(*)').eq('id', order!.id).single();
-      await issueInvoice(db, full as OrderForInvoice);
+      // the card was charged: an invoice that fails now is issued later by finish-pending, never a reason to cancel
+      try {
+        await ensureInvoice(db, order!.id);
+      } catch (e) {
+        console.error('invoice left pending', order!.id, e);
+      }
       results.push({ id: sub.id, ok: true });
     } catch (e) {
       await db.from('orders').update({ status: 'cancelled' }).eq('id', order!.id);

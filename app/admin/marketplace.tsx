@@ -2,11 +2,12 @@
 // sales by sellers and our own products (SAR), commission, refunds, what we owe sellers, the busiest sellers with their
 // standards, and where parcels went.
 import { Link, type Href } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { countryName } from '@/components/country';
 import { Seo } from '@/components/seo';
+import { FinishPendingButton } from '@/components/admin-refund';
 import { Card, H1, Notice, T, Tag, useWide } from '@/components/ui';
 import { adminOverview, type Overview } from '@/lib/aftersale';
 import { MARKET_DEMO } from '@/lib/flags';
@@ -22,6 +23,7 @@ const QUEUES: { key: keyof Overview['queues']; label: string; href: Href; urgent
   { key: 'late_to_ship', label: 'Parcels late to ship', href: '/admin/orders', urgent: true },
   { key: 'delivery_failed', label: 'Deliveries failed', href: '/admin/orders', urgent: true },
   { key: 'sellers_to_review', label: 'Sellers to review', href: '/admin/sellers' },
+  { key: 'shop_pages_to_approve', label: 'Shop page changes to approve', href: '/admin/sellers' },
   { key: 'listings_waiting', label: 'Listings to approve', href: '/admin/listings' },
   { key: 'reviews_to_publish', label: 'Reviews to publish', href: '/admin/reviews' },
   { key: 'conversations_flagged', label: 'Conversations flagged', href: '/admin/messages' },
@@ -36,7 +38,11 @@ export default function AdminMarketplace() {
   const wide = useWide();
   const [v, setV] = useState<Overview | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  useEffect(() => { adminOverview(30).then(setV).catch((e) => setErr(String(e.message ?? e))); }, []);
+  const load = useCallback(() => { adminOverview(30).then(setV).catch((e) => setErr(String(e.message ?? e))); }, []);
+  useEffect(() => { load(); }, [load]);
+  const pending = v?.pending_work;
+  const left = pending ? pending.orders_without_invoice + pending.orders_not_handed_on + pending.credit_notes_pending + pending.refunds_processing : 0;
+  const sw = v?.switches;
   const tile = (label: string, value: string, note?: string) => (
     <Card key={label} pad={18} style={{ flexGrow: 1, flexBasis: wide ? 250 : '100%', gap: 4 }}>
       <T size={12.5} color={colors.muted}>{label}</T>
@@ -68,6 +74,29 @@ export default function AdminMarketplace() {
               {QUEUES.every((q) => !v.queues[q.key]) ? <T color={colors.muted}>Nothing waiting.</T> : null}
             </View>
           </Card>
+          {pending && left > 0 ? (
+            <Card pad={wide ? 20 : 14} style={{ gap: 6, borderColor: colors.danger }}>
+              <T w={700} size={17} color={colors.navy}>Half-done work</T>
+              <T size={13.5} lh={1.55}>
+                {pending.orders_not_handed_on} paid orders not handed to their sellers · {pending.orders_without_invoice} paid orders without a tax invoice ·
+                {' '}{pending.credit_notes_pending} credit notes to issue · {pending.refunds_processing} refunds waiting for Moyasar's answer.
+                {' '}The scheduler finishes these every 15 minutes; you can run it now.
+              </T>
+              <FinishPendingButton onDone={load} />
+            </Card>
+          ) : null}
+          {sw ? (
+            <Card pad={wide ? 20 : 14} style={{ gap: 6 }}>
+              <T w={700} size={17} color={colors.navy}>Switches (Afzal decides; see DECISIONS.md)</T>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                <Tag label={`Marketplace ${sw.marketplace_open ? 'open' : 'closed'}`} tone={sw.marketplace_open ? 'ok' : 'mute'} />
+                <Tag label={`Seller applications ${sw.sellers_open ? 'open' : 'closed'}`} tone={sw.sellers_open ? 'ok' : 'mute'} />
+                <Tag label={`Payouts ${sw.payouts_enabled ? 'on' : 'off'}`} tone={sw.payouts_enabled ? 'ok' : 'mute'} />
+                <Tag label={`Test courier ${sw.sandbox_carrier ? 'on' : 'off'}`} tone={sw.sandbox_carrier ? 'warn' : 'mute'} />
+                <Tag label={`Support refunds up to ${sar(sw.support_refund_limit_minor)}`} tone="info" />
+              </View>
+            </Card>
+          ) : null}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
             {tile('Sellers\' sales', sar(v.sales.marketplace_sar_minor), `${v.sales.marketplace_parcels} parcels`)}
             {tile('Our own products', sar(v.sales.house_sar_minor), `${v.sales.orders} orders in all`)}

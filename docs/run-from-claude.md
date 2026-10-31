@@ -22,13 +22,21 @@ Windsor.ai and the other connectors in the Claude app.
 | 1st of month | Sales and VAT summary for the accountant; subscriptions and churn |
 
 ## The marketplace (once it is switched on: see `docs/marketplace/SWITCH-ON.md`)
-- "What needs doing on the marketplace today?" Claude reads `admin_marketplace_overview()`: sellers and listings to
-  review, returns waiting, disputes, refunds to make, credit notes still to issue, reviews to publish, flagged
-  conversations, parcels late to ship or not collected, and the last 30 days' sales and commission.
+- "What needs doing on the marketplace today?" Claude reads `admin_marketplace_overview()`: sellers, shop page
+  changes and listings to review, returns waiting, disputes, refunds to make, credit notes still to issue, refunds
+  waiting for Moyasar's answer, half-done work (`pending_work`), reviews to publish, flagged conversations, parcels
+  late to ship or not collected, the switches, and the last 30 days' sales and commission.
+- Half-done work (an order without its tax invoice, a credit note not issued, a refund waiting for Moyasar) is
+  finished by the `finish-pending` job every 15 minutes. If the count stays above zero, Claude reports the reason the
+  job gives; it never re-runs a refund. A refund still "processing" is settled only by reading the payment back from
+  Moyasar ("Check with Moyasar" on `/admin/returns`).
 - "Show me the dispute on R-104902-1 and suggest a decision." Claude reads the return, the conversation and the photos'
   screening; the decision and any refund wait for approval.
 - "Which sellers can be paid this week?" Claude lists what is payable (`admin_payouts()`); finance makes the bank
-  transfers and records them. Claude never records a payout or makes a refund without approval.
+  transfers and records them. Claude never records a payout or makes a refund without approval. Payouts stay switched
+  off until Afzal switches them on (`docs/marketplace/DECISIONS.md`, "Needs Afzal").
+- The marketplace switches (`mp_settings`: `marketplace_open`, `sellers_open`, `payouts_enabled`, support's refund
+  limit) are Afzal's decisions: Claude shows the statement and waits for his yes, like any change to store settings.
 - Daily brief: add the marketplace queues. Weekly: `select mp_performance_review();` warns sellers below the standard
   (it never suspends while `perf_auto_suspend` is off).
 

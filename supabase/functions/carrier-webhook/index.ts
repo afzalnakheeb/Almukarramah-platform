@@ -11,6 +11,9 @@ Deno.serve(async (req) => {
   const adapter = adapterFor(provider, (n) => Deno.env.get(n));
   if (!(await adapter.verifyWebhook(req.headers, raw))) return json({ error: 'bad signature' }, 401);
   const db = admin();
+  // a provider that is switched off (the sandbox on a live project) cannot move parcels on
+  const { data: prov } = await db.from('carrier_providers').select('active').eq('id', provider).maybeSingle();
+  if (!prov?.active) return json({ error: 'unknown provider' }, 404);
   let added = 0;
   for (const group of adapter.parseWebhook(raw)) {
     const { data: s } = await db.from('shipments').select('id').eq('provider_id', provider).eq('tracking_number', group.tracking_number).maybeSingle();
