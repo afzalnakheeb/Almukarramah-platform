@@ -1,13 +1,23 @@
 {
   "note": "Encrypted deck and film bundle for /decks: see scripts/decks-media.mjs. Replaced whenever a new bundle is published.",
-  "version": "test-1",
-  "sha256": "ad89bd0b3125d5c9c1fdb716d769a7c2401c5533d77c588e8a0cbd57cba0fdd1",
-  "bytes": 163868,
+  "version": "story-1",
+  "sha256": "836eca9534e52f7e6e0dcfe6e6d39eee84382e5c0cb446aac4bf3138ec0ed006",
+  "bytes": 124323868,
   "parts": [
     {
-      "url": "https://raw.githubusercontent.com/afzalnakheeb/Almukarramah-platform/d8b71f0125e051cf75ee5a9abb610dbc875aff01/decks/test-1/part-00.enc",
-      "sha256": "ad89bd0b3125d5c9c1fdb716d769a7c2401c5533d77c588e8a0cbd57cba0fdd1",
-      "bytes": 163868
+      "url": "https://raw.githubusercontent.com/afzalnakheeb/Almukarramah-platform/c1c7c15691ef2ca4a8440945e29680863fac35c3/decks/story-1/part-00.enc",
+      "sha256": "2a4dd6a246277ea5c4c45d946087cacae4ae041a53bc69530f4f8eb1dd87d377",
+      "bytes": 47185920
+    },
+    {
+      "url": "https://raw.githubusercontent.com/afzalnakheeb/Almukarramah-platform/c1c7c15691ef2ca4a8440945e29680863fac35c3/decks/story-1/part-01.enc",
+      "sha256": "ce3b64185cbd3243075a74d8c8fdee132bf1d73878de9625b51e09567098f2f5",
+      "bytes": 47185920
+    },
+    {
+      "url": "https://raw.githubusercontent.com/afzalnakheeb/Almukarramah-platform/c1c7c15691ef2ca4a8440945e29680863fac35c3/decks/story-1/part-02.enc",
+      "sha256": "cf01c02745ac5f8de4c7f6b9f43a4a59491508b1ecf3cf38a547ed355f3c2ddb",
+      "bytes": 29952028
     }
   ]
 }
