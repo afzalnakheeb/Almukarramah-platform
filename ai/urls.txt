@@ -315,3 +315,7 @@ private/pitch-v3/shot3-start.png https://media.weavy.ai/image/upload/v1793403660
 private/pitch-v3/shot2-veo.mp4 https://media.weavy.ai/video/upload/v1793403916/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/zgnc0gpx3wherjlff6e6.mp4
 private/pitch-v3/shot1-veo.mp4 https://media.weavy.ai/video/upload/v1793404179/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/eqmewxvepc1cpc8jcfti.mp4
 private/pitch-v3/shot3-veo.mp4 https://media.weavy.ai/video/upload/v1793404259/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/bxrhivqwrpowzyp6maqd.mp4
+private/pitch-v3/p1.png https://media.weavy.ai/image/upload/v1793427686/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/fcrun9lx7lxrho5s1mzl.png
+private/pitch-v3/p2.png https://media.weavy.ai/image/upload/v1793427686/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/jgbzm7gjnlvoe2l9z1uf.png
+private/pitch-v3/p3.png https://media.weavy.ai/image/upload/v1793427690/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/jcyrjvrpypvqgmnrqzpp.png
+private/pitch-v3/p5.png https://media.weavy.ai/image/upload/v1793427694/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/eyhddqymqvh0t5ckb8sc.png
