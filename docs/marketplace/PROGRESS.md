@@ -204,3 +204,9 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
   launch; accepted returns never sent back close on their own after 30 days (`return_autoclose_days`, owner only,
   in `finish-pending`; the customer's "I have sent it back" keeps a return in transit open); `DECISIONS.md` marks
   what he approved and what waits for advisers. Tests: 404 (383 before).
+- Sixth fix pass (verification REVIEW-6; table in `REVIEW-FIXES.md`), each finding shown by a failing test first:
+  على and the other Arabic connectors after a contact word (R6-1); a closed return keeps its units, staff see goodwill
+  already given on the parcel, decision Z is an owner-only switch, off (R6-2); the send-back date is stored at
+  acceptance and a return closes only once that date has ended everywhere, "by" in both languages (R6-3); couriers'
+  tracking numbers kept (R6-4); the auto-close notice points to hello@almukarramah.com; a refund carries the
+  previewed amount. Tests: 416 (404 before).

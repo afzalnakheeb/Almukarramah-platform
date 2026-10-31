@@ -20,7 +20,8 @@ const REASON: Record<string, string> = {
 const TONE: Record<string, 'ok' | 'warn' | 'info' | 'err' | 'mute'> = {
   requested: 'warn', accepted: 'info', declined: 'err', escalated: 'warn', approved: 'ok', refunded: 'ok', rejected: 'err', withdrawn: 'mute', closed: 'mute',
 };
-const day = (s: string | null) => (s ? new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '');
+// a date without a time is shown as that very date, wherever the browser is
+const day = (s: string | null) => (s ? new Date(s.length === 10 ? `${s}T12:00:00Z` : s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', ...(s.length === 10 ? { timeZone: 'UTC' } : {}) }) : '');
 
 function ReturnRow({ r, onDone }: { r: ReturnRequest; onDone: () => void }) {
   const wide = useWide();
@@ -56,10 +57,10 @@ function ReturnRow({ r, onDone }: { r: ReturnRequest; onDone: () => void }) {
       {r.status === 'accepted' ? (
         <T size={13} lh={1.5} color={colors.body}>
           {r.sent_back_at ? `Sent back by the customer on ${day(r.sent_back_at)}${r.sent_back_note ? `: “${r.sent_back_note}”` : ''} (in transit: it never closes on its own).`
-            : r.send_back_by ? `Not sent back yet: closes on its own on ${day(r.send_back_by)} if the customer does not send the items.` : ''}
+            : r.send_back_by ? `Not sent back yet: to send back by ${day(r.send_back_by)}; it closes on its own once that date has ended everywhere.` : ''}
         </T>
       ) : null}
-      {r.status === 'closed' && r.auto_closed ? <T size={13} color={colors.muted}>Closed on its own: the items were not sent back in time.</T> : null}
+      {r.status === 'closed' && r.auto_closed ? <T size={13} color={colors.muted}>Closed on its own: the items were not sent back by the date given. If they arrive after all, refund them by line (the return itself cannot be refunded).</T> : null}
       {r.photos.length ? <View style={{ flexDirection: 'row', gap: 8 }}>{r.photos.map((p) => photos[p.path] ? <Image key={p.id} source={{ uri: photos[p.path] }} style={{ width: 96, height: 96, borderRadius: 6 }} /> : null)}</View> : null}
       {msg ? <Notice tone="warn" text={msg} /> : null}
       {open ? (

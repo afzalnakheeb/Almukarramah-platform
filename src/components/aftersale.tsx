@@ -13,6 +13,7 @@ import type { ParcelTracking } from '@/lib/orders';
 import { returnReasons } from '../../supabase/functions/_shared/returns';
 import { useI18n, type Key } from '@/lib/i18n';
 import { MARKET_DEMO } from '@/lib/flags';
+import { openExternal } from '@/lib/links';
 import { formatMoney } from '@/lib/money';
 import { colors } from '@/theme';
 
@@ -40,8 +41,10 @@ export function StarPicker({ value, onChange }: { value: number; onChange: (n: n
   );
 }
 
+// a date without a time (a deadline: send it back by...) is shown as that very date wherever the device is (review R6-3)
 const dateOf = (s: string | null, lang: 'ar' | 'en', withYear = false) =>
-  s ? new Date(s.length === 10 ? `${s}T12:00:00Z` : s).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-GB', { day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}) }) : '';
+  s ? new Date(s.length === 10 ? `${s}T12:00:00Z` : s).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-GB',
+    { day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}), ...(s.length === 10 ? { timeZone: 'UTC' } : {}) }) : '';
 
 // ---------------------------------------------------------------- a return
 const RETURN_TONE: Record<string, 'ok' | 'warn' | 'info' | 'err' | 'mute'> = {
@@ -108,6 +111,10 @@ export function ReturnCard({ r, side, onDone, messagesHref }: { r: ReturnRequest
         </T>
       ) : null}
       {r.status === 'closed' && r.auto_closed ? <Notice text={t('rtAutoClosed')} /> : null}
+      {r.status === 'closed' && r.auto_closed && side === 'customer' ? (
+        <Button size="sm" kind="secondary" label={t('rtEmailUs')} style={{ alignSelf: 'flex-start' }}
+          onPress={() => openExternal(`mailto:hello@almukarramah.com?subject=${encodeURIComponent(`${r.number} (${r.sub_order_number})`)}`)} />
+      ) : null}
       {r.status === 'approved' ? <T size={13} color={colors.emerald}>{t('rtRefundSoon')}</T> : null}
       {r.refund?.status === 'succeeded' ? <T size={13} color={colors.emerald}>{t('rtRefunded').replace('{amount}', money(r.refund.amount_minor))}</T> : null}
 

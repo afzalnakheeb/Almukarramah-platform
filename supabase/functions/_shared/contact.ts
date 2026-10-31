@@ -202,7 +202,8 @@ const BANK_WORDS = /(?:iban|account|acct|a\/c|ايبان|حساب|الحساب)[
 const COUNTRY_SHAPES = '966\\d{9}|971\\d{8,9}|96[58]\\d{8}|97[34]\\d{8}|962\\d{9}|961\\d{7,8}|964\\d{10}|963\\d{9}|967\\d{9}|970\\d{9}'
   + '|20\\d{10}|21[23]\\d{9}|216\\d{8}|218\\d{9}|249\\d{9}|44\\d{10}|1\\d{10}|9[12]\\d{10}|880\\d{10}|90\\d{10}|60\\d{9,10}|62\\d{9,12}'
   + '|63\\d{10}|234\\d{10}|254\\d{9}|27\\d{9}|33\\d{9}|49\\d{10,11}|7\\d{10}|86\\d{11}';
-const PHONE_SHAPE = new RegExp(`^(?:0\\d{8,10}|5\\d{8}|00\\d{8,15}|${COUNTRY_SHAPES})$`);
+// (after 00 comes a country code, never 0: "JT0001234567890" is a J&T tracking number: review R6-4)
+const PHONE_SHAPE = new RegExp(`^(?:0\\d{8,10}|5\\d{8}|00[1-9]\\d{7,14}|${COUNTRY_SHAPES})$`);
 /** A run of digits shaped like a phone number (plus: written with a + before it). */
 export function phoneShaped(digits: string, plus = false): boolean {
   return plus ? digits.length >= 8 && digits.length <= 15 : PHONE_SHAPE.test(digits);
@@ -220,7 +221,8 @@ const DATE8 = /^(?:0[1-9]|[12]\d|3[01])(?:0[1-9]|1[0-2])(?:19|20)\d\d$/;
 const CONTACT_WORDS = 'call|phone|mobile|mob|cell|tel|telephone|whats\\s?app|wa|sms|text\\s+me|contact\\s+me|reach\\s+me|ring\\s+me'
   + '|my\\s+(?:number|no|phone|mobile|cell|whats\\s?app)'
   + '|رقمي|جوالي|جوال|الجوال|موبايلي|موبايل|هاتفي|هاتف|تلفوني|تلفون|واتسابي|واتساب|واتس|اتصل|اتصلي|اتصلوا|كلمني|كلموني|تواصل|راسلني';
-const CONTACT_BEFORE = new RegExp(`(?:^|[^a-z\\u0621-\\u064a])[وف]?(?:${CONTACT_WORDS})(?:[\\s:#.\\-(]*(?:me|us|on|at|is|via|by|to|number|no|هو|على|ع|رقم|رقمي)(?![a-z\\u0621-\\u064a]))*[\\s:#.\\-(+]*$`, 'i');
+// (the connectors are matched in the normalised text, where على is علي: review R6-1; also عبر, معي, معنا)
+const CONTACT_BEFORE = new RegExp(`(?:^|[^a-z\\u0621-\\u064a])[وف]?(?:${CONTACT_WORDS})(?:[\\s:#.\\-(]*(?:me|us|on|at|is|via|by|to|number|no|هو|على|علي|عبر|معي|معنا|ع|رقم|رقمي)(?![a-z\\u0621-\\u064a]))*[\\s:#.\\-(+]*$`, 'i');
 /** What separates the numbers of a list. */
 const LIST_SEP = /^[\s,،/\-–—+|;]+$/;
 /** What joins the two ends of a range: a dash, a slash, "to" or إلى (read الي here). */
@@ -243,11 +245,34 @@ const CODE_WORDS = 'isbn|ean|gtin|barcode|sku|upc|ref|reference|model|batch|lot|
   + '|measurements?|prices?|total|sar|sr|riyals?|ml|cm|kg'
   + '|باركود|الباركود|الدفعة|دفعة|الطلب|طلب|طلبي|الطلبية|طلبية|الطلبات|طلبات|طلباتي|الطلبان|الطلبين|الفاتورة|فاتورة|الشحنة|شحنة|الشحنات|التتبع|تتبع'
   + '|الحجز|حجز|الكود|كود|الرمز|رمز|الخصم|خصم|الكوبون|كوبون|المقاس|مقاس|المقاسات|مقاسات|القياس|قياس|القياسات|قياسات|السعر|سعر|الاسعار|اسعار|ريال|الغرفة|غرفة|القسيمة|قسيمة|البطاقة|بطاقة';
-const CARRIERS = 'smsa|aramex|dhl|fedex|ups|naqel|spl|zajil|ajex|imile';
+/** Couriers by name, in English and Arabic (normalised: أرامكس is ارامكس), and "express" (DHL Express, J&T Express). */
+const CARRIER_NAMES = 'smsa|aramex|dhl|fedex|ups|naqel|spl|zajil|ajex|imile|aymakan|j&t|ارامكس|سمسا|ناقل|زاجل|البريد\\s+السعودي|سبل|ايمكان';
+const CARRIERS = `${CARRIER_NAMES}|express`;
 const CODE_BEFORE = new RegExp(`(?:^|[^a-z\\u0621-\\u064a])(?:${CODE_WORDS}|${CARRIERS})(?:[\\s:#.\\-]*(?:number|num|no|nos|is|are|رقم|رقمه|رقمها|هو|هي)(?![a-z\\u0621-\\u064a]))*`
   + `[\\s:#.\\-]*(?:(?:${CARRIERS})[\\s:#.\\-]*)?$`, 'i');
 /** Barcode words: after them even a number shaped like a phone (a Saudi barcode looks like +62 8...) is a barcode. */
 const BARCODE_BEFORE = /(?:isbn|ean|gtin|barcode|sku|upc|باركود|الرقم الدولي)[\s:#.-]*$/i;
+/** A courier's name right before a number. */
+const COURIER_BEFORE = new RegExp(`(?:^|[^a-z\\u0621-\\u064a])(?:${CARRIER_NAMES})(?:[\\s:#.\\-]*(?:number|num|no|tracking|رقم|التتبع)(?![a-z\\u0621-\\u064a]))*[\\s:#.\\-]*$`, 'i');
+/** A shipping word right before a number: tracking, receipt, waybill, رقم الشحنة... */
+const SHIPPING_BEFORE = new RegExp('(?:^|[^a-z\\u0621-\\u064a])(?:tracking|track|awb|waybill|receipt|shipment|consignment|الشحنة|شحنة|التتبع|تتبع|البوليصة|بوليصة|الايصال|ايصال)'
+  + '(?:[\\s:#.\\-]*(?:number|num|no|is|رقم|رقمها|هو)(?![a-z\\u0621-\\u064a]))*[\\s:#.\\-]*$', 'i');
+/** A courier named anywhere in the text before a number. */
+const COURIER_NAMED = new RegExp(`(?:^|[^a-z\\u0621-\\u064a])(?:${CARRIER_NAMES})(?![a-z\\u0621-\\u064a])`, 'i');
+/**
+ * A courier's tracking number, not a phone number (review R6-4): right after a courier's name, a number that does not
+ * start like a phone number (0, 00, +, a Gulf code) even when it is shaped like one without its 0 ("Naqel 501234567");
+ * right after a shipping word in a note that names the courier, any number ("dropped at the SMSA branch, receipt
+ * 0512345678"). Read from the start of the word that holds the number ("UPS 1Z999AA10123456784"). A contact word in
+ * between, or a whole mobile number right after a courier's name ("SMSA 0501234567"), is still a phone number.
+ */
+function courierNumber(norm: string, a: number, anchored: boolean): boolean {
+  let t = a;
+  while (t > 0 && !/\s/.test(norm[t - 1])) t--;
+  const before = norm.slice(Math.max(0, t - 60), t).toLowerCase();
+  if (!anchored && COURIER_BEFORE.test(before)) return true;
+  return SHIPPING_BEFORE.test(before) && COURIER_NAMED.test(norm.slice(Math.max(0, t - 120), t).toLowerCase());
+}
 
 /**
  * Dates (with a four-digit year), times and amounts (with decimals or thousands): never part of a phone number. Each
@@ -402,6 +427,7 @@ function phoneParts(norm: string, work: string): Span[] {
     const start = g[0].plus ? g[0].a - 1 : g[0].a;
     const before = norm.slice(Math.max(0, start - 40), start).toLowerCase();
     if (BANK_WORDS.test(before.slice(-20))) continue;
+    if (courierNumber(norm, start, true)) continue;                 // a courier's number after a shipping word (R6-4)
     const parts: { i: number; span: Span }[] = [];
     for (let i = 0; i < g.length;) {
       let d = '';
@@ -505,6 +531,7 @@ function numberSpans(norm: string, units: Unit[]): Span[] {
     const start = plus ? a - 1 : a;
     const glued = (start > 0 && isLetter(work.codePointAt(start - 1) ?? 0)) || (b < work.length && isLetter(work.codePointAt(b) ?? 0));
     const kind = classifyNumber({ groups, seps, plus, real, words, before: work.slice(Math.max(0, start - 40), start).toLowerCase(), glued, rtl });
+    if (kind === 'phone' && courierNumber(norm, start, plus || ANCHORED.test(groups.join('')))) continue;   // a tracking number (R6-4)
     if (kind) out.push({ kind, a: start, b });
   }
   return out;

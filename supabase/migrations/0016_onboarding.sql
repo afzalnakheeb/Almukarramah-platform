@@ -64,7 +64,7 @@ alter table sellers
 create or replace function private.phone_shaped(d text, plus boolean default false) returns boolean
 language sql immutable as $$
   select case when plus then length(d) between 8 and 15
-    else d ~ ('^(0[0-9]{8,10}|5[0-9]{8}|00[0-9]{8,15}|966[0-9]{9}|971[0-9]{8,9}|96[58][0-9]{8}|97[34][0-9]{8}|962[0-9]{9}|961[0-9]{7,8}'
+    else d ~ ('^(0[0-9]{8,10}|5[0-9]{8}|00[1-9][0-9]{7,14}|966[0-9]{9}|971[0-9]{8,9}|96[58][0-9]{8}|97[34][0-9]{8}|962[0-9]{9}|961[0-9]{7,8}'
               || '|964[0-9]{10}|963[0-9]{9}|967[0-9]{9}|970[0-9]{9}|20[0-9]{10}|21[23][0-9]{9}|216[0-9]{8}|218[0-9]{9}|249[0-9]{9}|44[0-9]{10}'
               || '|1[0-9]{10}|9[12][0-9]{10}|880[0-9]{10}|90[0-9]{10}|60[0-9]{9,10}|62[0-9]{9,12}|63[0-9]{10}|234[0-9]{10}|254[0-9]{9}'
               || '|27[0-9]{9}|33[0-9]{9}|49[0-9]{10,11}|7[0-9]{10}|86[0-9]{11})$') end;
@@ -112,7 +112,7 @@ declare
   lens text;
   kinds text[];
   anchor constant text := '^(0|96[5-8]|97[134])';
-  carriers constant text := 'smsa|aramex|dhl|fedex|ups|naqel|spl|zajil|ajex|imile';
+  carriers constant text := 'smsa|aramex|dhl|fedex|ups|naqel|spl|zajil|ajex|imile|aymakan|j&t|ارامكس|سمسا|ناقل|زاجل|البريد\s+السعودي|سبل|ايمكان|express';
   code_words constant text := 'isbn|ean|gtin|barcode|sku|upc|ref|reference|model|batch|lot|serial|codes?|items?|orders?|invoices?|inv|receipt|tracking|track|awb'
     || '|waybill|shipments?|parcels?|bookings?|reservations?|confirmation|voucher|coupon|discount|promo|gift\s*card|card|room|sizes?|chest|length|sleeve'
     || '|measurements?|prices?|total|sar|sr|riyals?|ml|cm|kg'
@@ -188,7 +188,7 @@ declare
   contact_before constant text := '(^|[^a-z\u0621-\u064a])[وف]?(call|phone|mobile|mob|cell|tel|telephone|whats\s?app|wa|sms|text\s+me|contact\s+me|reach\s+me|ring\s+me'
     || '|my\s+(number|no|phone|mobile|cell|whats\s?app)'
     || '|رقمي|جوالي|جوال|الجوال|موبايلي|موبايل|هاتفي|هاتف|تلفوني|تلفون|واتسابي|واتساب|واتس|اتصل|اتصلي|اتصلوا|كلمني|كلموني|تواصل|راسلني)'
-    || '([\s:#.(-]*(me|us|on|at|is|via|by|to|number|no|هو|على|ع|رقم|رقمي)(?![a-z\u0621-\u064a]))*[\s:#.(+-]*$';
+    || '([\s:#.(-]*(me|us|on|at|is|via|by|to|number|no|هو|على|علي|عبر|معي|معنا|ع|رقم|رقمي)(?![a-z\u0621-\u064a]))*[\s:#.(+-]*$';
   -- a range (contact.ts isRange, review R5-1): two numbers of four digits joined by a dash, a slash, "to" or إلى (read
   -- الي here), both round or with a unit after them, the smaller first
   range_sep constant text := '^\s*([-–—/]|to|الي)\s*$';
@@ -196,6 +196,15 @@ declare
     || '|pcs?|pieces?|units?|sar|sr|riyals?|rials?|aed|usd|kwd|qar|bhd|omr|ريال|ريالات|ر\.?س|درهم|دينار|غ|غم|غرام|جرام|جم|كغ|كجم|كيلو|ملغ|مل|لتر|سم|مم|ملم|متر|م'
     || '|عقدة|عقده|عقد|غرزة|غرزه|حبة|حبه|حبات|قطعة|قطعه|قطع)(?![a-zء-ي])';
   rng boolean;
+  -- a courier's tracking number (contact.ts courierNumber, review R6-4): right after a courier's name, a number that does
+  -- not start like a phone number; right after a shipping word in a text that names the courier, any number
+  carrier_names constant text := 'smsa|aramex|dhl|fedex|ups|naqel|spl|zajil|ajex|imile|aymakan|j&t|ارامكس|سمسا|ناقل|زاجل|البريد\s+السعودي|سبل|ايمكان';
+  courier_before constant text := '(^|[^a-z\u0621-\u064a])(' || carrier_names || ')([\s:#.-]*(number|num|no|tracking|رقم|التتبع)(?![a-z\u0621-\u064a]))*[\s:#.-]*$';
+  shipping_before constant text := '(^|[^a-z\u0621-\u064a])(tracking|track|awb|waybill|receipt|shipment|consignment|الشحنة|شحنة|التتبع|تتبع|البوليصة|بوليصة|الايصال|ايصال)'
+    || '([\s:#.-]*(number|num|no|is|رقم|رقمها|هو)(?![a-z\u0621-\u064a]))*[\s:#.-]*$';
+  courier_named constant text := '(^|[^a-z\u0621-\u064a])(' || carrier_names || ')(?![a-z\u0621-\u064a])';
+  ts int;
+  tb text;
   m text;
   core text;
   g text[];
@@ -229,6 +238,12 @@ begin
     off := st + length(m);
     ctx := translate(lower(substr(tp, greatest(1, st - 40), st - greatest(1, st - 40))), '٠١٢٣٤٥٦٧٨٩०१२३४५६७८९', '01234567890123456789');
     continue when right(ctx, 20) ~* '(iban|account|acct|a/c|ايبان|حساب|الحساب)[^0-9]{0,14}$';   -- an account number: below, as a whole
+    -- a courier's number after a shipping word, the courier named before it ("SMSA branch, receipt 0512345678"): read
+    -- from the start of the word that holds it
+    ts := st;
+    while ts > 1 and substr(tp, ts - 1, 1) !~ '\s' loop ts := ts - 1; end loop;
+    tb := lower(substr(tp, greatest(1, ts - 60), ts - greatest(1, ts - 60)));
+    continue when tb ~* shipping_before and lower(substr(tp, greatest(1, ts - 120), ts - greatest(1, ts - 120))) ~* courier_named;
     plus := left(m, 1) = '+';
     core := case when plus then substr(m, 2) else m end;
     g := regexp_split_to_array(core, '[^' || da || ']+');
@@ -270,6 +285,16 @@ begin
     k := private.number_kind(array(select translate(x, '٠١٢٣٤٥٦٧٨٩', '0123456789') from unnest(g) x), seps, plus,
                              length(regexp_replace(core, '[^0-9]', '', 'g')), length(regexp_replace(core, '[^٠-٩]', '', 'g')), ctx, glued,
                              t ~ '[\u0621-\u064A]');
+    if k = 'phone' then
+      -- a courier's tracking number (as contact.ts courierNumber): "Naqel 501234567", "UPS 1Z999AA10123456784"
+      ts := st;
+      while ts > 1 and substr(t, ts - 1, 1) !~ '\s' loop ts := ts - 1; end loop;
+      tb := lower(substr(t, greatest(1, ts - 60), ts - greatest(1, ts - 60)));
+      if (not (plus or translate(core, '٠١٢٣٤٥٦٧٨٩', '0123456789') ~ anchor) and tb ~* courier_before)
+         or (tb ~* shipping_before and lower(substr(t, greatest(1, ts - 120), ts - greatest(1, ts - 120))) ~* courier_named) then
+        k := null;
+      end if;
+    end if;
     if k is not null then return k; end if;
   end loop;
   return null;

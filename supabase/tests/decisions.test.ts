@@ -1,9 +1,10 @@
 // Afzal's marketplace decisions of 31 October 2026 (DECISIONS.md), each written as a test before the change:
 // * commission stays 25% in every category for launch, and support does not refund (guards on the defaults);
-// * a return accepted for sending back that is never sent back closes on its own after `return_autoclose_days` (30,
-//   owner only), in the finish-pending job: the seller's sale is then free to be paid, the customer and the seller are
-//   told (in Arabic and English), each closure is in the audit log, a second run changes nothing, and a return the
-//   customer has sent back (in transit) is never touched.
+// * a return accepted for sending back that is never sent back closes on its own (`return_autoclose_days`, 30, owner
+//   only), in the finish-pending job, once the date the customer was given (fixed at acceptance) has ended everywhere
+//   (review R6-3): the seller's sale is then free to be paid, the customer and the seller are told (in Arabic and
+//   English), each closure is in the audit log, a second run changes nothing, and a return the customer has sent back
+//   (in transit) is never touched.
 import assert from 'node:assert/strict';
 import { after, before, beforeEach, describe, test } from 'node:test';
 import { type Db, freshDb, ids, user } from './lib/db.ts';
@@ -44,11 +45,17 @@ function deliveredLongAgo(): Order {
   return o;
 }
 let seq = 0;
-/** A return of one bottle from seller A's parcel, in the state given, accepted (the seller said "send it back") that long ago. */
-function acceptedReturn(o: Order, acceptedAgo: string, status = 'accepted'): string {
+/** Today's date where it is earliest (UTC−12): a date before it has ended everywhere; this one is still running somewhere. */
+const ENDED = `(now() at time zone 'Etc/GMT+12')::date - 1`;
+const RUNNING = `(now() at time zone 'Etc/GMT+12')::date`;
+/**
+ * A return of one bottle from seller A's parcel, in the state given, accepted (the seller said "send it back") that long
+ * ago; its send-back date is the one acceptance stores (the Riyadh day plus the days set), or the date given.
+ */
+function acceptedReturn(o: Order, acceptedAgo: string, status = 'accepted', by?: string): string {
   seq += 1;
-  const id = db.val<string>(`insert into return_requests (order_id, sub_order_id, seq, seller_id, user_id, kind, reason, status, accepted_at, decided_by, created_at)
-    values ('${o.o}', '${o.a}', ${seq}, '${s.A}', '${ids.customer}', 'return', 'changed_mind', '${status}', now() - interval '${acceptedAgo}', 'seller',
+  const id = db.val<string>(`insert into return_requests (order_id, sub_order_id, seq, seller_id, user_id, kind, reason, status, accepted_at, send_back_by, decided_by, created_at)
+    values ('${o.o}', '${o.a}', ${seq}, '${s.A}', '${ids.customer}', 'return', 'changed_mind', '${status}', now() - interval '${acceptedAgo}', ${by ?? 'null'}, 'seller',
             now() - interval '${acceptedAgo}' - interval '1 day') returning id`, 'service');
   svc(`insert into return_lines (return_id, order_item_id, quantity) values ('${id}', '${o.items.a}', 1)`);
   return id;
@@ -67,10 +74,10 @@ describe('Afzal, 31 October: an accepted return that is never sent back closes a
     db.exec(`update mp_settings set return_autoclose_days = 30 where id = 1`, user('owner'));
   });
 
-  test('closed at 30 days, not at 29: the seller can be paid, the customer and the seller are told, the closure is logged', async () => {
+  test('closed once its date has ended everywhere, not while it runs: the seller can be paid, both sides are told, the closure is logged', async () => {
     const o = deliveredLongAgo();
-    const due = acceptedReturn(o, '30 days 1 minute');
-    const notYet = acceptedReturn(o, '29 days 23 hours');
+    const due = acceptedReturn(o, '31 days', 'accepted', ENDED);
+    const notYet = acceptedReturn(o, '30 days', 'accepted', RUNNING);
     const before = db.val<{ available_sar_minor: number; held_sar_minor: number }>(`select private.ledger_available('${s.A}')`);
     const run = await finishPending();
     assert.equal(run.status, 200, JSON.stringify(run.body));
@@ -82,13 +89,14 @@ describe('Afzal, 31 October: an accepted return that is never sent back closes a
     assert.equal(after1.available_sar_minor - before.available_sar_minor, 0, 'the parcel still has the 29-day return open');
     // the customer (email and in the app, both languages) and the seller are told; the closure is in the audit log
     assert.equal(told('return_autoclosed', due), 2);
-    assert.ok(db.val<boolean>(`select bool_and(subject_ar <> '' and body_ar ~ '[ء-ي]' and body_en ~ '30 days') from notification_outbox
-      where template_key = 'return_autoclosed' and payload ->> 'return_id' = '${due}'`));
+    const date = db.val<string>(`select send_back_by::text from return_requests where id = '${due}'`);
+    assert.ok(db.val<boolean>(`select bool_and(subject_ar <> '' and body_ar ~ '[ء-ي]' and position(${lit(date)} in body_en) > 0 and position(${lit(date)} in body_ar) > 0)
+      from notification_outbox where template_key = 'return_autoclosed' and payload ->> 'return_id' = '${due}'`));
     assert.ok(told('seller_return_autoclosed', due) > 0);
     assert.equal(closures(due), 1);
     assert.equal(closures(notYet) + told('return_autoclosed', notYet), 0);
-    // a day later the other one closes too, and then the parcel's sale is free
-    svc(`update return_requests set accepted_at = accepted_at - interval '1 day' where id = '${notYet}'`);
+    // once its date has ended too, the other one closes, and then the parcel's sale is free
+    svc(`update return_requests set send_back_by = send_back_by - 1 where id = '${notYet}'`);
     assert.deepEqual((await finishPending()).body.returns_closed, [notYet]);
     const after2 = db.val<{ available_sar_minor: number; held_sar_minor: number }>(`select private.ledger_available('${s.A}')`);
     assert.equal(after2.available_sar_minor - before.available_sar_minor, 50000 - 12500, 'the oud sale less our commission');
@@ -96,7 +104,7 @@ describe('Afzal, 31 October: an accepted return that is never sent back closes a
 
   test('a second run, or two at once, change nothing more: closed once, told once, logged once', async () => {
     const o = deliveredLongAgo();
-    const due = acceptedReturn(o, '45 days');
+    const due = acceptedReturn(o, '45 days', 'accepted', `${ENDED} - 10`);
     const both = await Promise.all([finishPending(), finishPending()]);
     assert.deepEqual(both.map((r) => r.status), [200, 200]);
     assert.deepEqual(both.flatMap((r) => r.body.returns_closed), [due]);
@@ -109,13 +117,13 @@ describe('Afzal, 31 October: an accepted return that is never sent back closes a
 
   test('never touches a return the customer has sent back (in transit), nor one in any other state', async () => {
     const o = deliveredLongAgo();
-    const sent = acceptedReturn(o, '40 days');
+    const sent = acceptedReturn(o, '40 days', 'accepted', `${ENDED} - 5`);
     // the customer says they sent it back, with the courier's tracking number
     const r = await invoke('after-sale', { action: 'return_action', returnId: sent, do: 'sent_back', note: 'Aramex 7712345678, sent on Sunday' }, { as: ids.customer });
     assert.equal(r.status, 200, JSON.stringify(r.body));
     assert.ok(r.body.sent_back_at, JSON.stringify(r.body));
     assert.ok(db.val<number>(`select count(*)::int from notification_outbox where template_key = 'seller_return_sent_back' and payload ->> 'return_id' = '${sent}'`) > 0);
-    const others = ['requested', 'escalated', 'approved', 'declined'].map((st) => acceptedReturn(o, '40 days', st));
+    const others = ['requested', 'escalated', 'approved', 'declined'].map((st) => acceptedReturn(o, '40 days', st, `${ENDED} - 5`));
     const run = await finishPending();
     assert.equal(run.status, 200, JSON.stringify(run.body));
     assert.deepEqual(run.body.returns_closed, []);
@@ -145,16 +153,18 @@ describe('Afzal, 31 October: an accepted return that is never sent back closes a
     assert.equal(String(mine.send_back_by).slice(0, 10), db.val<string>(`select ((accepted_at + interval '30 days') at time zone 'Asia/Riyadh')::date::text from return_requests where id = '${waiting}'`));
   });
 
-  test('the number of days is the owner\'s setting', async () => {
+  test('the number of days is the owner\'s setting when the return is accepted; a later change does not move its date', async () => {
     const o = deliveredLongAgo();
-    const rid = acceptedReturn(o, '40 days');
     db.exec(`update mp_settings set return_autoclose_days = 45 where id = 1`, user('owner'));
+    let rid = '';
     try {
+      rid = acceptedReturn(o, '40 days');                         // its date: 45 days after it was accepted, 5 days from now
+      assert.equal(db.val(`select send_back_by - (accepted_at at time zone 'Asia/Riyadh')::date from return_requests where id = '${rid}'`), 45);
       assert.deepEqual((await finishPending()).body.returns_closed, []);
-      assert.equal(statusOf(rid), 'accepted');
     } finally {
       db.exec(`update mp_settings set return_autoclose_days = 30 where id = 1`, user('owner'));
     }
-    assert.deepEqual((await finishPending()).body.returns_closed, [rid]);
+    assert.deepEqual((await finishPending()).body.returns_closed, [], 'back to 30 days: its date stays');
+    assert.equal(statusOf(rid), 'accepted');
   });
 });

@@ -14,12 +14,19 @@ import { MARKET_DEMO } from '@/lib/flags';
 import { formatMoney } from '@/lib/money';
 import { colors } from '@/theme';
 
-/** What the refund will be, in a sentence: the amount, and the goodwill already given when it is counted. */
+/**
+ * What the refund will be, in a sentence: the amount; the goodwill already given when it is counted; and goodwill given
+ * on this parcel that is not taken off (decision Z is open: review R6-2), so it is never missed.
+ */
 export function previewText(p: RefundPreview): string {
-  const amount = formatMoney(p.amount_minor, p.currency);
-  if (!p.goodwill_deducted_minor) return `This refunds ${amount}.`;
-  return `This refunds ${amount}: what is left of the payment. The ${p.items_minor ? 'items' : 'refund'}${p.shipping_minor ? ' and delivery' : ''} come to `
-    + `${formatMoney(p.lines_minor, p.currency)}, less ${formatMoney(p.goodwill_deducted_minor, p.currency)} of goodwill already given on this order.`;
+  const money = (m: number) => formatMoney(m, p.currency);
+  const onParcel = p.goodwill_on_parcels_minor ?? 0;
+  const parcelNote = !p.parcel_goodwill_deducted && onParcel > p.goodwill_deducted_minor
+    ? ` Goodwill of ${money(onParcel)} was already given on this parcel; ${p.goodwill_deducted_minor ? 'only what the payment lacks is' : 'it is not'} taken off this refund (decision Z is open).`
+    : '';
+  if (!p.goodwill_deducted_minor) return `This refunds ${money(p.amount_minor)}.${parcelNote}`;
+  return `This refunds ${money(p.amount_minor)}. The ${p.items_minor ? 'items' : 'refund'}${p.shipping_minor ? ' and delivery' : ''} come to `
+    + `${money(p.lines_minor)}, less ${money(p.goodwill_deducted_minor)} of goodwill already given on this order.${parcelNote}`;
 }
 
 /** One Refund button: what it will refund shown first, a fresh key per confirmed press, the reason required, the result shown. */
@@ -28,15 +35,15 @@ export function RefundButton({ orderId, label, returnId, subOrderId, onDone }: {
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'warn'; text: string } | null>(null);
-  const [preview, setPreview] = useState<{ tone: 'info' | 'warn'; text: string } | null>(null);
+  const [preview, setPreview] = useState<{ tone: 'info' | 'warn'; text: string; amount?: number } | null>(null);
   const key = useRef(freshKey('rf'));
-  const start = () => {
-    setOpen(true);
+  const look = () => {
     setPreview(null);
     previewRefund({ orderId, returnId, subOrderId })
-      .then((p) => setPreview({ tone: 'info', text: previewText(p) }))
+      .then((p) => setPreview({ tone: 'info', text: previewText(p), amount: p.amount_minor }))
       .catch((e) => setPreview({ tone: 'warn', text: e instanceof Error ? e.message : String(e) }));
   };
+  const start = () => { setOpen(true); look(); };
   if (!open) return <Button size="sm" kind="danger" label={label} onPress={start} style={{ alignSelf: 'flex-start' }} />;
   return (
     <View style={{ gap: 8, alignSelf: 'stretch' }}>
@@ -48,7 +55,8 @@ export function RefundButton({ orderId, label, returnId, subOrderId, onDone }: {
           if (MARKET_DEMO) { setMsg({ tone: 'warn', text: 'Example data: nothing is refunded here.' }); return; }
           setBusy(true); setMsg(null);
           try {
-            const r = await refund({ orderId, reason: reason.trim(), key: key.current, returnId, subOrderId });
+            // the amount shown above goes with the refund: if it changed meanwhile, nothing is refunded (REVIEW-6)
+            const r = await refund({ orderId, reason: reason.trim(), key: key.current, returnId, subOrderId, expectedAmount: preview?.amount });
             key.current = freshKey('rf');
             if (r.pending || r.recorded === false) {
               setMsg({ tone: 'warn', text: r.error ?? 'Moyasar did not confirm the refund. It stays processing: do not refund again; use "Check with Moyasar".' });
@@ -57,7 +65,11 @@ export function RefundButton({ orderId, label, returnId, subOrderId, onDone }: {
               setMsg({ tone: 'ok', text: `Refunded ${formatMoney(r.amount ?? 0, r.currency ?? 'SAR')}${less}.${r.creditNote ? ` Credit note ${r.creditNote}.` : r.creditNotePending ? ' The credit note is pending: "Finish pending work" issues it.' : ''}` });
             }
             onDone();
-          } catch (e) { setMsg({ tone: 'warn', text: e instanceof Error ? e.message : String(e) }); } finally { setBusy(false); }
+          } catch (e) {
+            const text = e instanceof Error ? e.message : String(e);
+            setMsg({ tone: 'warn', text });
+            if (/amount changed since the preview/i.test(text)) { key.current = freshKey('rf'); look(); }
+          } finally { setBusy(false); }
         }} />
         <Button size="sm" kind="text" label="Cancel" onPress={() => setOpen(false)} />
       </View>

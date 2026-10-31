@@ -143,7 +143,25 @@ export const R5_CONTACT_RANGES = ['whatsapp 5000 - 7000 riyals', 'واتس ٥٠�
  */
 export const R5_GULF_MASK = ['my number 99123456', 'call 9912 3456', 'رقمي ٣٦١٢٣٤٥٦', 'واتس ٩١٢٣ ٤٥٦٧', 'whatsapp: 55512345', 'Qatar mobile 3312 3456',
   'my no. 66123456', 'تواصل على ٧١٢٣٤٥٦٧', 'call 9912-3456', 'my number 9912/3456', 'واتس ٩١٢٣-٤٥٦٧', 'mobile 3312 - 3456', '33123456', '٣٣١٢٣٤٥٦',
-  'call 5000-7123', 'whatsapp me 6612 to 7745'];
+  'call 5000-7123', 'whatsapp me 6612 to 7745',
+  // after على (read علي once ى is made ي), عبر, معي and معنا (REVIEW-6, R6-1: js/r6_ala.mts)
+  ...['تواصل على ٩٩١٢ ٣٤٥٦', 'واتساب على ٩٩١٢ ٣٤٥٦', 'اتصل على ٩٩١٢ ٣٤٥٦', 'كلمني على ٩٩١٢ ٣٤٥٦', 'راسلني على ٩٩١٢ ٣٤٥٦', 'تواصل معي على ٩٩١٢ ٣٤٥٦',
+    'واتس على 9912 3456', 'تواصل على ٥٠ ١٢٣ ٤٥ ٦٧', 'واتساب على ٥٠١ ٢٣ ٤٥ ٦٧', 'اتصل على 50 123 45 67', 'تواصل على ٩٩ ١٢ ٣٤ ٥٦', 'واتس على ٩٩١ ٢٣ ٤٥٦',
+    'تواصل عبر ٩٩١٢ ٣٤٥٦', 'تواصل معنا على ٩٩١٢ ٣٤٥٦', 'اتصل علي ٩٩١٢ ٣٤٥٦']];
+/**
+ * What customers write in "Courier and tracking number" when they send a return back (REVIEW-6, R6-4:
+ * js/r6_notes.mts): every number is kept, in the server and the database.
+ */
+export const R6_NOTES = ['Aramex 34567890123', 'Sent with Aramex, tracking 34567890123', 'SMSA 290012345678', 'smsa 2900123456', 'DHL 1234567890',
+  'DHL Express 5012345678', 'SPL RR123456789SA', 'J&T JT0001234567890', 'Naqel 501234567', 'Aymakan AY5012345678', 'Zajil 7012345678',
+  'UPS 1Z999AA10123456784', 'FedEx 771234567890', 'ارامكس ٣٤٥٦٧٨٩٠١٢٣', 'سمسا ٢٩٠٠١٢٣٤٥٦٧٨', 'البريد السعودي RR123456789SA', 'ناقل ٥٠١٢٣٤٥٦٧',
+  'رقم الشحنة ٥٠١٢٣٤٥٦٧٨', 'أرسلتها مع ارامكس رقم التتبع 34567890123', 'dropped at the SMSA branch, receipt 0512345678', 'Aramex', 'I sent it today',
+  // and the other names couriers go by
+  'أرامكس ٣٤٥٦٧٨٩٠١٢٣', 'زاجل ٧٠١٢٣٤٥٦٧٨', 'سبل RR123456789SA', 'ايمكان ٥٠١٢٣٤٥٦٧٨', 'J&T Express 5012345678'];
+/** Phone numbers next to a courier's name that must still be masked: a whole mobile, or one after a contact word. */
+export const R6_COURIER_PHONES = ['SMSA 0501234567', 'Aramex call 0501234567', 'ارامكس اتصل ٠٥٠١٢٣٤٥٦٧', 'DHL whatsapp 0551234567', 'سمسا رقمي ٠٥٥١٢٣٤٥٦٧',
+  'Naqel, my number 501234567', 'receipt 0512345678', 'Express 0501234567'];
+
 /** ...and the numbers next to them that must stay as they are (js/r5_gulf.mts). */
 export const R5_GULF_STAY = ['Delivered on 31102026 to room 1204', 'Order 35001234 arrived', 'رقم الطلب ٥٠٠١٢٣٤٥', 'Invoice INV-50012345', 'Ref 55551234',
   'Tracking 51234567', 'AWB: 71234567', 'Voucher 71234567', 'Hijri date 1447/05/09', 'تاريخ ٣١١٠٢٠٢٦', 'Gift card 9123 4567', 'Booking 51234567 at the Hilton',

@@ -40,6 +40,10 @@ Windsor.ai and the other connectors in the Claude app.
   closing it is finance's decision on `/admin/returns`, never Claude's without approval.
 - "Show me the dispute on R-104902-1 and suggest a decision." Claude reads the return, the conversation and the photos'
   screening; the decision and any refund wait for approval.
+- A return closed on its own (the customer never sent the items back by the date given) or closed by our team holds
+  nothing and cannot be refunded through the return. If the items arrive after all, refund them by line on
+  `/admin/returns` (the preview shows any goodwill already given on that parcel); the customer is pointed to
+  hello@almukarramah.com for this.
 - "Which sellers can be paid this week?" Claude lists what is payable (`admin_payouts()`); finance makes the bank
   transfers and records them. Claude never records a payout or makes a refund without approval. Payouts stay switched
   off until Afzal switches them on (`docs/marketplace/DECISIONS.md`, "Needs Afzal").

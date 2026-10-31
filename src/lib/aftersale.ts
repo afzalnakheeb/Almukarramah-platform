@@ -28,7 +28,8 @@ export type ReturnRequest = {
   value_minor: number; thread_id: string | null; refund: { status: string; amount_minor: number; completed_at: string | null } | null; flags?: string[] | null;
   /** the customer said the items are on their way back (in transit: the return never closes on its own), and what they wrote */
   sent_back_at?: string | null; sent_back_note?: string | null;
-  /** accepted, waiting for the items: the date to send them back by before the return closes on its own (Afzal, 31 October) */
+  /** accepted, waiting for the items: the date to send them back by, fixed at acceptance; the return closes on its own only once
+   *  that date has ended everywhere (Afzal, 31 October; review R6-3) */
   send_back_by?: string | null;
   /** closed on its own: the items were never sent back */
   auto_closed?: boolean;
@@ -225,7 +226,7 @@ export type RefundResult = {
   pending?: boolean; recorded?: boolean; code?: string; error?: string; error_ar?: string;
 };
 /** Staff-only refund through refund-order (the amount is worked out on the server). */
-export async function refund(p: { orderId: string; reason: string; key: string; returnId?: string; subOrderId?: string }): Promise<RefundResult> {
+export async function refund(p: { orderId: string; reason: string; key: string; returnId?: string; subOrderId?: string; expectedAmount?: number }): Promise<RefundResult> {
   if (MARKET_DEMO) return demoOnly();
   return callFunction<RefundResult>('refund-order', p);
 }
@@ -233,6 +234,10 @@ export async function refund(p: { orderId: string; reason: string; key: string; 
 export type RefundPreview = {
   currency: string; amount_minor: number; lines_minor: number; items_minor: number; shipping_minor: number; duties_minor: number;
   goodwill_deducted_minor: number; payment_left_minor: number; platform_minor: number;
+  /** goodwill already given on the parcel(s) of this refund and not yet counted by one (review R6-2) */
+  goodwill_on_parcels_minor?: number;
+  /** decision Z: is goodwill on a parcel taken off a later refund of it (a switch, off until Afzal decides) */
+  parcel_goodwill_deducted?: boolean;
 };
 export async function previewRefund(p: { orderId: string; returnId?: string; subOrderId?: string }): Promise<RefundPreview> {
   if (MARKET_DEMO) return demo.demoRefundPreview();

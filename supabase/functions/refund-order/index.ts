@@ -21,7 +21,9 @@
 //
 // After goodwill given on an order (money back without items), the last refund on it is what is left of the payment,
 // the goodwill counted as already paid back ("goodwillDeducted"); "preview" shows staff the amount before they press
-// Refund, with nothing reserved and Moyasar not asked (review R5-2). An action this function does not know is refused.
+// Refund, with nothing reserved and Moyasar not asked, and the goodwill already given on the parcel (review R5-2,
+// R6-2). The refund carries the amount the preview showed ("expectedAmount") and is refused if it has changed since.
+// An action this function does not know is refused.
 import { getPayment, MoyasarError, refundPayment } from '../_shared/moyasar.ts';
 import { graceMinutes, reconcileRefund } from '../_shared/refunds.ts';
 import { admin, caller, dbError, type Db, fail, handle, json, staffRole, UUID } from '../_shared/util.ts';
@@ -37,12 +39,15 @@ type Body = {
   issueId?: string; do?: 'refund' | 'attach' | 'dismiss'; amount?: number; reference?: string; goodwill?: boolean;
   orderId?: string; reason?: string; key?: string; returnId?: string; subOrderId?: string;
   lines?: { orderItemId: string; quantity: number }[]; shipping?: string[]; duties?: string[]; orderShipping?: boolean; restock?: boolean;
+  /** the amount the preview showed: the refund is made only if it is still that (REVIEW-6) */
+  expectedAmount?: number;
 };
 const ACTIONS = ['refund', 'preview', 'reconcile', 'resolve', 'payment_issue', 'record_moyasar'];
 
 /** What to refund, as mp_prepare_refund reads it: an approved return, a parcel, chosen lines, or the whole order. */
 function whatToRefund(body: Body): Record<string, unknown> {
   const p: Record<string, unknown> = { reason: (body.reason ?? '').slice(0, 500), restock: body.restock === true };
+  if (Number.isInteger(body.expectedAmount) && (body.expectedAmount as number) >= 0) p.expected_amount_minor = body.expectedAmount;
   if (body.returnId && UUID.test(body.returnId)) p.return_id = body.returnId;
   else if (body.subOrderId && UUID.test(body.subOrderId)) p.sub_order_id = body.subOrderId;
   else if (body.lines || body.shipping || body.duties || body.orderShipping) {
@@ -54,7 +59,7 @@ function whatToRefund(body: Body): Record<string, unknown> {
   return p;
 }
 /** A refusal from mp_prepare_refund: a state to settle first (409), or a request to correct (400). */
-const PREPARE_CONFLICT = /still being processed|already been refunded|Already refunded|is in return|was closed/;
+const PREPARE_CONFLICT = /still being processed|already been refunded|Already refunded|is in return|was closed|amount changed since the preview/;
 
 Deno.serve(handle(async (req) => {
   const db = admin();
