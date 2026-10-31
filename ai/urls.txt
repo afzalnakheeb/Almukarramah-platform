@@ -331,3 +331,6 @@ private/categories/thobe.png https://media.weavy.ai/image/upload/v1793428458/upl
 private/categories/umrah.png https://media.weavy.ai/image/upload/v1793428463/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/fwf11ljicnhs2ihz87ss.png
 private/categories/ring.png https://media.weavy.ai/image/upload/v1793428463/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/g9cn3ukt5yt2eh7o2klt.png
 private/categories/blackseed.png https://media.weavy.ai/image/upload/v1793428468/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/l97bgsskchyfja4a50cy.png
+private/pitch-v3/motion-a-gather.mp4 https://media.weavy.ai/video/upload/v1793430523/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/ohwhlttsglctae9g4fr1.mp4
+private/pitch-v3/motion-b-incense.mp4 https://media.weavy.ai/video/upload/v1793430526/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/dagcudtw61nfk2rppgbu.mp4
+private/pitch-v3/motion-c-honey.mp4 https://media.weavy.ai/video/upload/v1793430554/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/ujbweicueom0wswyorcc.mp4
