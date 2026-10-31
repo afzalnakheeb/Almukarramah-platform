@@ -52,7 +52,7 @@ export function ReturnCard({ r, side, onDone, messagesHref }: { r: ReturnRequest
   const { t, lang } = useI18n();
   const wide = useWide();
   const [photos, setPhotos] = useState<Record<string, string>>({});
-  const [mode, setMode] = useState<null | 'accept' | 'decline' | 'received' | 'escalate'>(null);
+  const [mode, setMode] = useState<null | 'accept' | 'decline' | 'received' | 'escalate' | 'sent_back'>(null);
   const [note, setNote] = useState('');
   const [restock, setRestock] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -95,14 +95,26 @@ export function ReturnCard({ r, side, onDone, messagesHref }: { r: ReturnRequest
       {r.seller_note ? <Notice text={`${side === 'seller' ? t('rtYourAnswer') : t('rtSellerSays')} ${r.seller_note}`} /> : null}
       {r.escalation_note ? <Notice tone="warn" text={`${side === 'customer' ? t('rtYouAsked') : t('rtCustomerAsked')} ${r.escalation_note}`} /> : null}
       {r.staff_note ? <Notice tone={r.status === 'rejected' ? 'warn' : 'ok'} text={`${t('rtOurDecision')} ${r.staff_note}`} /> : null}
-      {r.status === 'accepted' && side === 'customer' ? <T size={13} lh={1.5} color={colors.emerald}>{t('rtSendBackHint')}</T> : null}
+      {r.status === 'accepted' && side === 'customer' ? (
+        <T size={13} lh={1.5} color={colors.emerald}>
+          {r.sent_back_at ? t('rtSentBackOn').replace('{date}', dateOf(r.sent_back_at, lang))
+            : `${t('rtSendBackHint')}${r.send_back_by ? ` ${t('rtSendBackBy').replace('{date}', dateOf(r.send_back_by, lang, true))}` : ''}`}
+        </T>
+      ) : null}
+      {r.status === 'accepted' && side === 'seller' && (r.sent_back_at || r.send_back_by) ? (
+        <T size={13} lh={1.5} color={colors.body}>
+          {r.sent_back_at ? `${t('rtCustomerSentBack').replace('{date}', dateOf(r.sent_back_at, lang))}${r.sent_back_note ? ` “${r.sent_back_note}”` : ''}`
+            : t('rtClosesOn').replace('{date}', dateOf(r.send_back_by ?? null, lang, true))}
+        </T>
+      ) : null}
+      {r.status === 'closed' && r.auto_closed ? <Notice text={t('rtAutoClosed')} /> : null}
       {r.status === 'approved' ? <T size={13} color={colors.emerald}>{t('rtRefundSoon')}</T> : null}
       {r.refund?.status === 'succeeded' ? <T size={13} color={colors.emerald}>{t('rtRefunded').replace('{amount}', money(r.refund.amount_minor))}</T> : null}
 
       {msg ? <Notice tone="warn" text={msg} /> : null}
       {mode ? (
         <View style={{ gap: 8 }}>
-          <Field label={t(mode === 'decline' ? 'rtDeclineWhy' : mode === 'escalate' ? 'rtEscalateWhy' : mode === 'accept' ? 'rtAcceptNote' : 'rtReceivedNote')}
+          <Field label={t(mode === 'decline' ? 'rtDeclineWhy' : mode === 'escalate' ? 'rtEscalateWhy' : mode === 'accept' ? 'rtAcceptNote' : mode === 'sent_back' ? 'rtSentBackNote' : 'rtReceivedNote')}
             value={note} onChangeText={setNote} multiline maxLength={1000} hint={t('msMaskedHint')} />
           {mode === 'received' ? (
             <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
@@ -113,7 +125,7 @@ export function ReturnCard({ r, side, onDone, messagesHref }: { r: ReturnRequest
           <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
             <Button size="sm" kind={mode === 'decline' ? 'danger' : 'primary'} busy={busy}
               disabled={(mode === 'decline' || mode === 'escalate') && note.trim().length < 5}
-              label={t(mode === 'decline' ? 'rtDecline' : mode === 'escalate' ? 'rtEscalate' : mode === 'accept' ? 'rtAccept' : 'rtReceived')} onPress={() => act(mode)} />
+              label={t(mode === 'decline' ? 'rtDecline' : mode === 'escalate' ? 'rtEscalate' : mode === 'accept' ? 'rtAccept' : mode === 'sent_back' ? 'rtSentBack' : 'rtReceived')} onPress={() => act(mode)} />
             <Button size="sm" kind="text" label={t('cancel')} onPress={() => { setMode(null); setNote(''); }} />
           </View>
         </View>
@@ -122,6 +134,7 @@ export function ReturnCard({ r, side, onDone, messagesHref }: { r: ReturnRequest
           {side === 'seller' && r.status === 'requested' ? <Button size="sm" label={t('rtAccept')} onPress={() => setMode('accept')} /> : null}
           {side === 'seller' && r.status === 'requested' ? <Button size="sm" kind="text" label={t('rtDecline')} onPress={() => setMode('decline')} /> : null}
           {side === 'seller' && r.status === 'accepted' ? <Button size="sm" label={t('rtReceived')} onPress={() => setMode('received')} /> : null}
+          {side === 'customer' && r.status === 'accepted' && r.kind === 'return' && !r.sent_back_at ? <Button size="sm" label={t('rtSentBack')} onPress={() => setMode('sent_back')} /> : null}
           {side === 'customer' && r.can_escalate ? <Button size="sm" kind="secondary" label={t('rtEscalate')} onPress={() => setMode('escalate')} /> : null}
           {side === 'customer' && open ? <Button size="sm" kind="text" label={t('rtWithdraw')} busy={busy} onPress={() => act('withdraw')} /> : null}
           {messagesHref ? <Link href={messagesHref}><T size={13} w={600} color={colors.emerald}>{t('rtMessages')}</T></Link> : null}

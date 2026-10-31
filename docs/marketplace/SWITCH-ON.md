@@ -45,7 +45,7 @@ migrations add columns.
 | `0016_onboarding.sql` | The seller's application file and checklist, categories per seller, review history; KYC and brand papers; approval through `mp_review_seller` only. |
 | `0017_listings_search.sql` | Product options (`product_variants`), the price guard (against the approved price), search columns and indexes, `mp_search`, storefronts, `mp_approve_listing` / `mp_reject_listing`. No change to what the API can read on `products`. |
 | `0018_orders_shipping.sql` | Sub-orders, shipments, tracking events, the `labels` bucket (private); new columns on `orders` (including `stock_taken_at` and `charge_given_id`, the key of each renewal charge) and `order_items`; `mp_payment_received` (payment, parcels and stock in one transaction; a payment for an order no longer waiting, or whose order no longer exists, is kept in `payment_issues` for finance; a renewal follows the paid period and keeps the saved card); `shipment_claims` (one label bought at a time per parcel; kept when the carrier's answer is lost); the seller's order flow; the customer's tracking. |
-| `0019_after_sale.sql` | Statements (ledger, payouts, monthly view), refunds (one per return, one waiting for Moyasar per order), returns, reviews and replies, messages, the notifications outbox with 41 templates, seller performance; `orders.fx_per_sar` and refunded amounts; `invoices.vat_rate_bp` and `fx_per_sar`, one invoice per order, and `mp_issue_document` (the counter and the document in one transaction); `payouts_enabled`, `support_refund_limit_minor` and `payout_bank_hold_days` (off, 0, 7); the `customer-uploads` bucket (private); replaces `my_order_tracking` and `mp_public_settings`; widens `media_assets.kind` for return photos; only the owner changes the switches (a guard on `mp_settings`); message threads are kept, unlinked, when a customer deletes their account (`message_threads.user_id` becomes `on delete set null`); finance's tools for refunds settled by hand, refunds made in the Moyasar dashboard (`mp_record_moyasar_refund`, `moyasar_refund_checks`, refunds' `goodwill_minor`) and payments to resolve; the last refund after goodwill is what is left of the payment (refunds' `goodwill_deducted_minor`) and an approved return can be closed with a reason (return status `closed`). |
+| `0019_after_sale.sql` | Statements (ledger, payouts, monthly view), refunds (one per return, one waiting for Moyasar per order), returns, reviews and replies, messages, the notifications outbox with 44 templates, seller performance; `orders.fx_per_sar` and refunded amounts; `invoices.vat_rate_bp` and `fx_per_sar`, one invoice per order, and `mp_issue_document` (the counter and the document in one transaction); `payouts_enabled`, `support_refund_limit_minor` and `payout_bank_hold_days` (off, 0, 7); the `customer-uploads` bucket (private); replaces `my_order_tracking` and `mp_public_settings`; widens `media_assets.kind` for return photos; only the owner changes the switches (a guard on `mp_settings`); message threads are kept, unlinked, when a customer deletes their account (`message_threads.user_id` becomes `on delete set null`); finance's tools for refunds settled by hand, refunds made in the Moyasar dashboard (`mp_record_moyasar_refund`, `moyasar_refund_checks`, refunds' `goodwill_minor`) and payments to resolve; the last refund after goodwill is what is left of the payment (refunds' `goodwill_deducted_minor`) and an approved return can be closed with a reason (return status `closed`); `return_autoclose_days` (30, owner only), the customer's "I have sent it back" (`sent_back_at`) and `mp_autoclose_returns`, which closes returns never sent back (Afzal, 31 October). |
 | `0020_marketplace_dashboard.sql` | `admin_marketplace_overview` (read only), with the half-done work, the payments to resolve and the switches. |
 
 Checks after the last file:
@@ -156,9 +156,13 @@ With Supabase Cron (pg_cron) and `pg_net` (already enabled live), each sending t
   behind, and checks refunds still waiting for Moyasar's answer (review H3). The same runs from "Finish pending work
   now" on `/admin/marketplace`. It invoices only orders paid in the last 7 days and not refunded; older ones are
   listed for our team (re-review N5). It also asks Moyasar again about refunds marked failed in the last three days
-  and lists what Moyasar completed for finance (re-review R3-2). **Before scheduling it**, run `select mp_pending_work(500, 0);` on the live
-  database (read only) and show Afzal what it lists, `orders_without_invoice` and `orders_without_invoice_old` above
-  all; schedule it only after his yes.
+  and lists what Moyasar completed for finance (re-review R3-2). It closes returns accepted for sending back whose items
+  were never sent back, 30 days after the seller accepted them (`return_autoclose_days`; Afzal, 31 October): the
+  customer and the seller are told and each closure is in the audit log. **Before scheduling it**, run
+  `select mp_pending_work(500, 0);` on the live database (read only) and show Afzal what it lists,
+  `orders_without_invoice` and `orders_without_invoice_old` above all, and how many returns its first run would close
+  (`select count(*) from return_requests where status = 'accepted' and kind = 'return' and sent_back_at is null and
+  accepted_at <= now() - interval '30 days';`, none while online returns are closed); schedule it only after his yes.
 - Optional, weekly: `select mp_performance_review();` warns sellers below the standard (it never suspends while
   `perf_auto_suspend` is off).
 
@@ -186,7 +190,8 @@ owner's account, the server or the database connector can change these columns (
 update mp_settings set sellers_open = true where id = 1;       -- B: sellers can apply at /sell
 update mp_settings set marketplace_open = true where id = 1;   -- A: sellers' listings, shops, checkout, returns, reviews, messages
 update mp_settings set payouts_enabled = true where id = 1;    -- C: only after the adviser's ruling on VAT in payouts
-update mp_settings set support_refund_limit_minor = 50000 where id = 1;   -- D: an example, 500 SAR
+update mp_settings set support_refund_limit_minor = 50000 where id = 1;   -- D: an example, 500 SAR (Afzal, 31 Oct: stays 0)
+update mp_settings set return_autoclose_days = 30 where id = 1;          -- L: already 30 (Afzal, 31 Oct); owner only
 ```
 
 Switching `marketplace_open` back to false closes it again at once, in the database: sellers' listings and shops
@@ -196,7 +201,7 @@ Parcels already ordered can still be accepted, shipped and refunded by our team.
 - `mp_settings`: commission defaults, photo rules, strike limits, the price guard, return windows, payout hold,
   the bank-change hold, review moderation, message limits, performance thresholds (all in `DECISIONS.md`).
 - Corridors to open, each with the adviser's sign-off, and the delivery price for every open route.
-- The wording of the 41 notification templates (`/admin/notifications` shows what each one looks like).
+- The wording of the 44 notification templates (`/admin/notifications` shows what each one looks like).
 - `store_settings.zero_rate_exports` stays as it is.
 
 ## 8. A test run in production (sandbox shipping, Moyasar test mode)

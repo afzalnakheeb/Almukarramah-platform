@@ -41,14 +41,18 @@ alter table mp_settings
   -- decisions given their safest default until Afzal decides (DECISIONS.md, "Needs Afzal")
   add column payouts_enabled boolean not null default false,            -- no payout is recorded until the VAT treatment of payouts is settled
   add column support_refund_limit_minor int not null default 0 check (support_refund_limit_minor >= 0),   -- SAR halalas; 0: support does not refund
-  add column payout_bank_hold_days int not null default 7 check (payout_bank_hold_days between 0 and 60); -- payouts wait after bank details change
+  add column payout_bank_hold_days int not null default 7 check (payout_bank_hold_days between 0 and 60), -- payouts wait after bank details change
+  -- a return accepted for sending back whose items the customer never sends closes on its own after this many days
+  -- (Afzal, 31 October: 30), so it stops holding the seller's sale (review L4; finish-pending, mp_autoclose_returns)
+  add column return_autoclose_days int not null default 30 check (return_autoclose_days between 7 and 365);
 
 -- The switches and limits are Afzal's decisions: only the owner changes them (a manager edits the other settings;
 -- the server and the database connector too, with Afzal's yes under the approval rule). Review N9, REVIEW-2.
 create or replace function private.mp_settings_guard() returns trigger language plpgsql set search_path = public as $$
 begin
-  if (new.marketplace_open, new.sellers_open, new.payouts_enabled, new.support_refund_limit_minor, new.payout_bank_hold_days)
-     is distinct from (old.marketplace_open, old.sellers_open, old.payouts_enabled, old.support_refund_limit_minor, old.payout_bank_hold_days)
+  if (new.marketplace_open, new.sellers_open, new.payouts_enabled, new.support_refund_limit_minor, new.payout_bank_hold_days, new.return_autoclose_days)
+     is distinct from (old.marketplace_open, old.sellers_open, old.payouts_enabled, old.support_refund_limit_minor, old.payout_bank_hold_days,
+                       old.return_autoclose_days)
      and not (private.is_staff(array['owner']::staff_role[]) or coalesce(auth.role(), '') = 'service_role'
               or (auth.role() is null and session_user not in ('authenticator', 'anon', 'authenticated', 'service_role'))) then
     raise exception 'Only the owner changes the marketplace switches and limits' using detail = 'لا يغيّر مفاتيح السوق وحدوده إلا المالك';
@@ -157,7 +161,8 @@ create table return_requests (
   details text check (char_length(details) <= 2000),           -- the customer's words, contact details masked
   photos uuid[] not null default '{}' check (cardinality(photos) <= 4),
   -- closed: an approved return our team settled another way, with the reason (review R5-2): the goodwill already given
-  -- covered it, the customer kept the item, or it was refunded outside Al Mukarramah
+  -- covered it, the customer kept the item, or it was refunded outside Al Mukarramah; or an accepted return whose
+  -- items were never sent back, closed on its own after return_autoclose_days (flag auto_closed)
   status text not null default 'requested'
     check (status in ('requested', 'accepted', 'declined', 'escalated', 'approved', 'refunded', 'rejected', 'withdrawn', 'closed')),
   seller_note text check (char_length(seller_note) <= 1000),   -- shown to the customer (masked)
@@ -172,6 +177,10 @@ create table return_requests (
   declined_at timestamptz,
   escalated_at timestamptz,
   received_at timestamptz,
+  -- the customer (or our team for them) said the items are on their way back, with the courier and tracking number if
+  -- they gave them: in transit, so the return never closes on its own (Afzal, 31 October)
+  sent_back_at timestamptz,
+  sent_back_note text check (char_length(sent_back_note) <= 300),
   approved_at timestamptz,
   resolved_at timestamptz,
   created_at timestamptz not null default now(),
@@ -1788,6 +1797,11 @@ language sql stable security definer set search_path = public as $$
     'approved_by', case when p_side = 'staff' then (select coalesce(m.name, u.email) from auth.users u left join staff_members m on m.user_id = u.id where u.id = r.approved_by) end,
     'created_at', r.created_at, 'accepted_at', r.accepted_at, 'declined_at', r.declined_at, 'escalated_at', r.escalated_at,
     'received_at', r.received_at, 'approved_at', r.approved_at, 'resolved_at', r.resolved_at, 'currency', s.currency,
+    -- sent back (in transit), or the date to send the items back by before the return closes on its own; closed so
+    'sent_back_at', r.sent_back_at, 'sent_back_note', r.sent_back_note,
+    'send_back_by', case when r.status = 'accepted' and r.kind = 'return' and r.sent_back_at is null and r.accepted_at is not null
+                         then ((r.accepted_at + make_interval(days => (select return_autoclose_days from mp_settings where id = 1))) at time zone 'Asia/Riyadh')::date end,
+    'auto_closed', r.status = 'closed' and 'auto_closed' = any(r.flags),
     'can_escalate', (r.status = 'declined' and r.declined_at > now() - make_interval(days => (select dispute_window_days from mp_settings where id = 1)))
                     or (r.status = 'requested' and r.respond_by is not null and r.respond_by < now())
                     or (r.status = 'accepted' and r.accepted_at < now() - interval '14 days'),
@@ -1862,6 +1876,17 @@ begin
     if r.seller_id is not null then
       perform private.notify('seller_return_decided', jsonb_build_object('seller_id', r.seller_id), v || jsonb_build_object('decision', private.bi('closed', 'إغلاق')),
         'return:' || r.id || ':closed:seller');
+    end if;
+  elsif p_event = 'sent_back' then
+    if r.seller_id is not null then
+      perform private.notify('seller_return_sent_back', jsonb_build_object('seller_id', r.seller_id), v, 'return:' || r.id || ':sent_back');
+    end if;
+  elsif p_event = 'autoclosed' then
+    -- the items never came back within the days set (Afzal, 31 October): both sides told, in their language
+    v := v || jsonb_build_object('days', (select return_autoclose_days from mp_settings where id = 1));
+    perform private.notify('return_autoclosed', cust, v, 'return:' || r.id || ':autoclosed');
+    if r.seller_id is not null then
+      perform private.notify('seller_return_autoclosed', jsonb_build_object('seller_id', r.seller_id), v, 'return:' || r.id || ':autoclosed:seller');
     end if;
   end if;
 end $$;
@@ -1963,6 +1988,8 @@ end $$;
 -- refund: owner, manager, finance, support) closes an approved return that will not be refunded through it, with the
 -- reason the customer and the seller read: the goodwill already given covered it, the customer kept the item, or it
 -- was refunded another way (review R5-2). A closed return holds nothing any more: what is still due is refunded by line.
+-- The customer (or our team for them) says the items are on their way back ("sent_back", with the courier and the
+-- tracking number if they have them): the return is then in transit and never closes on its own (Afzal, 31 October).
 create or replace function mp_return_action(p_user uuid, p_return uuid, p_action text, p_note text default null, p_restock boolean default null,
                                             p_flags text[] default '{}') returns jsonb
 language plpgsql security definer set search_path = public as $$
@@ -1991,6 +2018,8 @@ begin
     if not v_staff then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   elsif p_action = 'close' then
     if v_role not in ('owner', 'manager', 'finance', 'support') then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  elsif p_action = 'sent_back' then
+    if not (r.user_id is not distinct from p_user or v_staff) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   else
     raise exception 'Unknown action' using detail = 'إجراء غير معروف';
   end if;
@@ -2057,12 +2086,58 @@ begin
     end if;
     update return_requests set status = 'closed', resolved_at = now(), staff_note = v_note, flags = flags || coalesce(p_flags, '{}') where id = r.id;
     v_event := 'closed';
+  elsif p_action = 'sent_back' then
+    if r.status <> 'accepted' or r.kind <> 'return' then
+      raise exception 'Only a return accepted for sending back can be marked sent back: this one is %', r.status
+        using detail = format('لا يُسجَّل إرسال المنتجات إلا لطلب إرجاع مقبول بانتظار إعادتها، وحالة هذا الطلب: %s', private.status_ar(r.status));
+    end if;
+    if r.sent_back_at is not null then
+      raise exception 'You already told us the items were sent back' using detail = 'سبق أن أخبرتنا بأنك أعدت إرسال المنتجات';
+    end if;
+    update return_requests set sent_back_at = now(), sent_back_note = left(v_note, 300), flags = flags || coalesce(p_flags, '{}') where id = r.id;
+    v_event := 'sent_back';
   end if;
   perform private.notify_return(r.id, v_event);
   return private.return_json(r.id, case when r.user_id is not distinct from p_user then 'customer' when v_seller then 'seller' else 'staff' end);
 end $$;
 revoke all on function mp_return_request(uuid, jsonb) from public, anon, authenticated;
 revoke all on function mp_return_action(uuid, uuid, text, text, boolean, text[]) from public, anon, authenticated;
+
+-- Returns accepted for sending back whose items never came (Afzal, 31 October; review L4): once return_autoclose_days
+-- (30) have passed since the seller accepted, with the customer never saying the items were sent back, the return
+-- closes on its own. It then holds nothing, so the seller's sale is paid as usual; the customer and the seller are told
+-- in their language, and each closure is in the audit log. A step of finish-pending (server only). Safe to repeat and
+-- to run twice at once: a return is taken locked and only while it is still accepted, so it closes, is told and is
+-- logged once; one in transit, received or decided is never touched.
+create or replace function mp_autoclose_returns(p_limit int default 50) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_days int;
+  r record;
+  v_closed jsonb := '[]';
+begin
+  select return_autoclose_days into v_days from mp_settings where id = 1;
+  for r in
+    with due as (
+      select x.id from return_requests x
+      where x.status = 'accepted' and x.kind = 'return' and x.sent_back_at is null and x.received_at is null
+        and x.accepted_at <= now() - make_interval(days => v_days)
+      order by x.accepted_at limit greatest(coalesce(p_limit, 50), 1)
+      for update skip locked)
+    update return_requests q set status = 'closed', resolved_at = now(), flags = q.flags || array['auto_closed']
+    from due where q.id = due.id and q.status = 'accepted'
+    returning q.id, q.order_id, q.seq, q.accepted_at
+  loop
+    insert into audit_log (actor_label, table_name, row_id, action, new_data)
+    values ('finish-pending', 'return_requests', r.id::text, 'RETURN_AUTOCLOSED',
+            jsonb_build_object('return', (select format('R-%s-%s', o.number, r.seq) from orders o where o.id = r.order_id), 'order_id', r.order_id,
+                               'accepted_at', r.accepted_at, 'days', v_days, 'why', 'the items were not sent back'));
+    perform private.notify_return(r.id, 'autoclosed');
+    v_closed := v_closed || to_jsonb(r.id);
+  end loop;
+  return jsonb_build_object('days', v_days, 'closed', v_closed);
+end $$;
+revoke all on function mp_autoclose_returns(int) from public, anon, authenticated;
 
 create or replace function seller_returns(p_seller uuid) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
@@ -3001,6 +3076,10 @@ insert into notification_templates (key, audience, channels, subject_en, subject
  'Your return {{return}} is closed', 'أُغلق طلب الإرجاع {{return}}',
  'Our team has closed this return. You can read why on your order page.',
  'أغلق فريقنا طلب الإرجاع هذا. يمكنك الاطلاع على السبب في صفحة طلبك.', '/order?id={{order_id}}'),
+('return_autoclosed', 'customer', '{email,in_app}',
+ 'Your return {{return}} is closed', 'أُغلق طلب الإرجاع {{return}}',
+ 'The items were not sent back within {{days}} days of the return being accepted, so it has closed. If you did send them, tell us on your order page and our team will look into it.',
+ 'لم تصلنا إعادة المنتجات خلال {{days}} يومًا من قبول طلب الإرجاع، لذا أُغلق الطلب. إن كنت قد أرسلتها فأخبرنا من صفحة طلبك وسيتابع فريقنا الأمر.', '/order?id={{order_id}}'),
 ('refund_issued', 'customer', '{email,in_app}',
  'Your refund of {{amount}}', 'استرداد مبلغ {{amount}}',
  'We have refunded {{amount}} for order AM-{{order}} to your original payment method. It may take a few working days to appear, depending on your bank.',
@@ -3032,6 +3111,14 @@ insert into notification_templates (key, audience, channels, subject_en, subject
  'Decision on return {{return}}', 'القرار بشأن طلب الإرجاع {{return}}',
  'Our team has {{decision}} the return. The details are on your returns page.',
  'قرر فريقنا {{decision}} طلب الإرجاع. التفاصيل في صفحة طلبات الإرجاع.', '/seller/returns'),
+('seller_return_sent_back', 'seller', '{email,in_app}',
+ 'Return {{return}} is on its way back', 'منتجات طلب الإرجاع {{return}} في طريقها إليك',
+ 'The customer has sent back the items from {{number}}. Confirm on your returns page when they arrive.',
+ 'أعاد العميل إرسال المنتجات من الطلب {{number}}. أكّد وصولها من صفحة طلبات الإرجاع عند استلامها.', '/seller/returns'),
+('seller_return_autoclosed', 'seller', '{email,in_app}',
+ 'Return {{return}} is closed', 'أُغلق طلب الإرجاع {{return}}',
+ 'The customer did not send the items back within {{days}} days, so the return has closed and the sale on {{number}} stands.',
+ 'لم يُعد العميل المنتجات خلال {{days}} يومًا، فأُغلق طلب الإرجاع وتبقى عملية البيع على الطلب {{number}} قائمة.', '/seller/returns'),
 ('seller_refund_recorded', 'seller', '{in_app}',
  'Refund on {{number}}', 'استرداد على الطلب {{number}}',
  '{{amount}} was refunded to the customer. Your statement shows the change.',

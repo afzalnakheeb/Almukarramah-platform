@@ -200,4 +200,7 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
   7000", "3500 - 3900 knots"), in the server and the database; after goodwill on an order its last refund is what is
   left of the payment, shown to staff before they refund (`refund-order` preview); the refusal for an item in an
   open return says what to do; our team can close an approved return with a reason; an unknown `refund-order`
-  action refunds nothing. Tests: 397 (383 before).
+  action refunds nothing. Afzal's decisions of 31 October folded in: commission 25% and no refunds by support for
+  launch; accepted returns never sent back close on their own after 30 days (`return_autoclose_days`, owner only,
+  in `finish-pending`; the customer's "I have sent it back" keeps a return in transit open); `DECISIONS.md` marks
+  what he approved and what waits for advisers. Tests: 404 (383 before).

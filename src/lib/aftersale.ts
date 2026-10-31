@@ -26,6 +26,12 @@ export type ReturnRequest = {
   photos: { id: string; bucket: string; path: string; status: string }[];
   lines: { order_item_id: string; name_en: string; name_ar: string; variant: string | null; quantity: number; bought: number; unit_price_minor: number; line_total_minor: number; return_policy: string | null; custom: boolean }[];
   value_minor: number; thread_id: string | null; refund: { status: string; amount_minor: number; completed_at: string | null } | null; flags?: string[] | null;
+  /** the customer said the items are on their way back (in transit: the return never closes on its own), and what they wrote */
+  sent_back_at?: string | null; sent_back_note?: string | null;
+  /** accepted, waiting for the items: the date to send them back by before the return closes on its own (Afzal, 31 October) */
+  send_back_by?: string | null;
+  /** closed on its own: the items were never sent back */
+  auto_closed?: boolean;
 };
 export const RETURN_REASONS: ReturnReason[] = ['changed_mind', 'not_as_described', 'faulty', 'damaged', 'wrong_item', 'missing_item', 'not_received'];
 
@@ -33,9 +39,10 @@ export async function requestReturn(p: { subOrderId: string; reason: ReturnReaso
   if (MARKET_DEMO) return demoOnly();
   return callFunction<ReturnRequest>('after-sale', { action: 'return_request', ...p });
 }
-/** Customer: escalate, withdraw. Seller: accept, decline, received. Our team: approve, reject (and accept/received for a seller),
- *  and close an approved return with the reason (owner, manager, finance, support: review R5-2). */
-export async function returnAction(returnId: string, action: 'escalate' | 'withdraw' | 'accept' | 'decline' | 'received' | 'approve' | 'reject' | 'close', note?: string, restock?: boolean) {
+/** Customer: escalate, withdraw, sent_back (the items are on their way back). Seller: accept, decline, received. Our team: approve, reject
+ *  (and accept/received for a seller, sent_back for a customer), and close an approved return with the reason (owner, manager, finance,
+ *  support: review R5-2). */
+export async function returnAction(returnId: string, action: 'escalate' | 'withdraw' | 'sent_back' | 'accept' | 'decline' | 'received' | 'approve' | 'reject' | 'close', note?: string, restock?: boolean) {
   if (MARKET_DEMO) return demoOnly();
   return callFunction<ReturnRequest>('after-sale', { action: 'return_action', returnId, do: action, note, restock });
 }
@@ -357,7 +364,8 @@ export type Overview = {
     /** paid more than 7 days ago with no invoice: never invoiced by the job, settled with the accountant (review N5) */
     orders_without_invoice_old?: number; payment_issues?: number };
   /** the switches Afzal decides (DECISIONS.md, Needs Afzal); all off until he switches them on */
-  switches?: { marketplace_open: boolean; sellers_open: boolean; payouts_enabled: boolean; sandbox_carrier: boolean | null; support_refund_limit_minor: number };
+  switches?: { marketplace_open: boolean; sellers_open: boolean; payouts_enabled: boolean; sandbox_carrier: boolean | null; support_refund_limit_minor: number;
+               return_autoclose_days?: number };
 };
 export async function adminOverview(days = 30): Promise<Overview> {
   if (MARKET_DEMO) return demo.demoOverview();

@@ -6,7 +6,10 @@
 // * refunds with no credit note: issued from the order's invoice;
 // * refunds still waiting for Moyasar's answer: reconciled with Moyasar (never marked failed on a guess);
 // * orders with a refund marked failed in the last three days: Moyasar is asked again whether it completed it after
-//   all (at most hourly); what it shows is listed for finance on the refunds page, never recorded on a guess (R3-2).
+//   all (at most hourly); what it shows is listed for finance on the refunds page, never recorded on a guess (R3-2);
+// * returns accepted for sending back whose items never came: closed once `return_autoclose_days` (30) have passed,
+//   so they stop holding the seller's sale; never one the customer has sent back (Afzal, 31 October;
+//   mp_autoclose_returns tells both sides and writes each closure to the audit log).
 // What cannot be finished (a multi-rate order, Moyasar unreachable, a refund made outside the platform) stays on the
 // dashboard with the reason in the answer.
 import { getPayment } from '../_shared/moyasar.ts';
@@ -28,7 +31,7 @@ Deno.serve(handle(async (req) => {
   const { data, error } = await db.rpc('mp_pending_work', { p_limit: 25, p_min_age_seconds: Number.isFinite(minAge) ? minAge : 120 });
   if (error) throw error;
   const w = data as Work;
-  const done: Record<string, unknown[]> = { handed_on: [], invoices: [], credit_notes: [], refunds: [], left: [] };
+  const done: Record<string, unknown[]> = { handed_on: [], invoices: [], credit_notes: [], refunds: [], returns_closed: [], left: [] };
 
   for (const id of w.orders_not_handed_on) {
     const { data: r, error: e } = await db.rpc('mp_order_paid', { p_order: id });
@@ -71,6 +74,10 @@ Deno.serve(handle(async (req) => {
       done.left.push({ order: id, step: 'check with Moyasar', error: String((e as Error).message ?? e) });
     }
   }
+  // returns whose items were never sent back: closed after the days Afzal set, each told and logged in the database
+  const { data: closed, error: closeErr } = await db.rpc('mp_autoclose_returns', { p_limit: 50 });
+  if (closeErr) done.left.push({ step: 'close returns never sent back', error: closeErr.message });
+  else done.returns_closed.push(...((closed as { closed: string[] } | null)?.closed ?? []));
   // what only our team can settle, listed every time until it is (review N2, N5): an old or refunded order without its
   // invoice (never invoiced today by a job: the accountant decides), and payments to refund or attach
   for (const id of w.orders_without_invoice_old ?? []) done.left.push({ order: id, step: 'old order without invoice', error: 'for our team: settle it with the accountant' });

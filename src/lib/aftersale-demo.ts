@@ -23,7 +23,7 @@ export function demoReturns(side: 'seller' | 'staff' | 'customer'): ReturnReques
       details: 'The bottle arrived with a cracked cap and some oil had leaked into the box.', photos: [{ id: 'p1', bucket: 'catalogue', path: '/products/aam/aswad-by-ahmed-10-ml-1.jpg', status: 'passed' }],
       lines: [rl('i1', 'Ameer al oud, aged oud oil, 6 ml', 'أمير العود، دهن عود معتّق ٦ مل', 98000, 1, 'unopened_only', '6 ml')] }),
     ret({ id: 'r2', number: 'R-104931-1', order_number: 104931, sub_order_number: 'AM-104931-2', status: 'accepted', reason: 'changed_mind', unopened: true,
-      created_at: '2026-10-26T12:00:00Z', accepted_at: '2026-10-26T16:30:00Z', decided_by: 'seller', customer: 'Huda',
+      created_at: '2026-10-26T12:00:00Z', accepted_at: '2026-10-26T16:30:00Z', send_back_by: '2026-11-25', decided_by: 'seller', customer: 'Huda',
       seller_note: 'Please send it back in its box with the seal intact. Our courier will collect it.',
       lines: [rl('i2', 'Cambodian oud oil, 3 ml', 'دهن عود كمبودي ٣ مل', 45000, 1)] }),
     ret({ id: 'r3', number: 'R-104902-1', order_number: 104902, sub_order_number: 'AM-104902-1', status: 'escalated', reason: 'not_as_described',
@@ -291,7 +291,7 @@ export function demoOverview(): import('./aftersale').Overview {
     destinations: [{ country: 'SA', parcels: 171 }, { country: 'AE', parcels: 31 }, { country: 'KW', parcels: 14 }, { country: 'GB', parcels: 11 }, { country: 'QA', parcels: 9 }],
     notifications_queued: 412,
     pending_work: { orders_without_invoice: 0, orders_not_handed_on: 0, credit_notes_pending: 0, refunds_processing: 0, orders_without_invoice_old: 0, payment_issues: 0 },
-    switches: { marketplace_open: false, sellers_open: false, payouts_enabled: false, sandbox_carrier: false, support_refund_limit_minor: 0 },
+    switches: { marketplace_open: false, sellers_open: false, payouts_enabled: false, sandbox_carrier: false, support_refund_limit_minor: 0, return_autoclose_days: 30 },
   };
 }
 

@@ -98,6 +98,7 @@ export default function AdminMarketplace() {
                 <Tag label={`Payouts ${sw.payouts_enabled ? 'on' : 'off'}`} tone={sw.payouts_enabled ? 'ok' : 'mute'} />
                 <Tag label={`Test courier ${sw.sandbox_carrier ? 'on' : 'off'}`} tone={sw.sandbox_carrier ? 'warn' : 'mute'} />
                 <Tag label={`Support refunds up to ${sar(sw.support_refund_limit_minor)}`} tone="info" />
+                {sw.return_autoclose_days ? <Tag label={`Returns never sent back close after ${sw.return_autoclose_days} days`} tone="info" /> : null}
               </View>
             </Card>
           ) : null}

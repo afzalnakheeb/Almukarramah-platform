@@ -1,47 +1,53 @@
 # Marketplace: decisions for Afzal
 
 Each item below is a default chosen to be conservative so the build could carry on. All of them are settings or
-policy rows that staff can change (owner or manager, audited), unless marked otherwise; the switches A to D and the
-bank-change hold G are owner only. Please reply yes, or tell us what to change.
+policy rows that staff can change (owner or manager, audited), unless marked otherwise; the switches A to D, the
+bank-change hold G and the auto-close days L are owner only. Please reply yes, or tell us what to change.
+
+**Afzal's decisions, 31 October 2026:** commission stays 25% in every category for launch (rates per category or per
+seller can be set later); refunds by support stay off; accepted returns that are never sent back close on their own
+after 30 days (L); every other default (M to Y, F and G) is approved as set. Still waiting on advisers, not on Afzal:
+A and B (opening) wait for the SWITCH-ON steps, C (paying sellers) and H (the Saudi corridor) for the tax adviser, J
+(return windows on our own products) for the legal adviser, E (partner terms) for the first partner agreement.
 
 ## Needs Afzal (from the independent review before switch-on)
 
 The review (31 October) asked for these to be decided by you. Each has the safest default now, enforced in the
 database, so nothing happens until you say yes. Every switch is a row in `mp_settings` (audited). Since the
 re-review (N9) only the owner can change `marketplace_open`, `sellers_open`, `payouts_enabled`,
-`support_refund_limit_minor` and `payout_bank_hold_days` (the server and the database connector can too, and do so only
+`support_refund_limit_minor`, `payout_bank_hold_days` and `return_autoclose_days` (the server and the database connector can too, and do so only
 with your yes); managers still edit the other settings. The dashboard at `/admin/marketplace` shows where each one
 stands.
 
-## Chosen in the second fix pass (please confirm)
+## Chosen in the second fix pass (approved by Afzal, 31 Oct)
 
 The re-review (REVIEW-2) led to these choices. Each is the conservative one; say if you want it otherwise.
 
 | # | Choice | Why | To change it |
 |---|---|---|---|
-| M | **A deleted customer's messages** are kept for the seller and for disputes, unlinked from the person, with the customer's words replaced by "Removed: the customer deleted their account" (English and Arabic). The seller's replies stay. | Account deletion must succeed (Apple 5.1.1(v), Google Play, PDPL), and a seller's side of an order conversation may be needed in a dispute. | Say if the whole conversation should go instead. |
-| N | **A deleted customer's reviews** go with the account, with the seller's reply. Returns and their photos are kept for the accounts, unlinked. | A review is the person's own words on a public page. | Say if reviews should stay, anonymised, instead. |
-| O | **A payment for an order no longer waiting** (cancelled, paid twice, another amount) is kept in "Payments to resolve" until finance refunds it in full, attaches it to its order, or closes it with a reason. Nothing is refunded automatically. | A refund is a decision for a person (approval rule). | Say if such payments should be refunded automatically. |
-| P | **Missing tax invoices** are issued automatically only for orders paid in the last 7 days; older orders without one are listed for our team to settle with the accountant. | An invoice dated long after the sale needs the accountant's view. | Tell us another cut-off. |
-| Q | **A shop's city** is checked and, on a live shop, waits for our team's approval like the other shop text. **A shop's website** is not shown to the public. | Both appear on the public shop page; a website takes customers away from Al Mukarramah. | Say if the website should be shown (we would check and hold it like the text). |
-| R | **Seller details for staff**: notes, legal, registration and tax numbers, KYC notes and contact details are for owner, manager and finance; marketing, support and operations see the rest. | They have no need for them (re-review N11). | Name a role that should see them. |
+| M | **A deleted customer's messages** are kept for the seller and for disputes, unlinked from the person, with the customer's words replaced by "Removed: the customer deleted their account" (English and Arabic). The seller's replies stay. **Approved by Afzal, 31 Oct.** | Account deletion must succeed (Apple 5.1.1(v), Google Play, PDPL), and a seller's side of an order conversation may be needed in a dispute. | Say if the whole conversation should go instead. |
+| N | **A deleted customer's reviews** go with the account, with the seller's reply. Returns and their photos are kept for the accounts, unlinked. **Approved by Afzal, 31 Oct.** | A review is the person's own words on a public page. | Say if reviews should stay, anonymised, instead. |
+| O | **A payment for an order no longer waiting** (cancelled, paid twice, another amount) is kept in "Payments to resolve" until finance refunds it in full, attaches it to its order, or closes it with a reason. Nothing is refunded automatically. **Approved by Afzal, 31 Oct.** | A refund is a decision for a person (approval rule). | Say if such payments should be refunded automatically. |
+| P | **Missing tax invoices** are issued automatically only for orders paid in the last 7 days; older orders without one are listed for our team to settle with the accountant. **Approved by Afzal, 31 Oct.** | An invoice dated long after the sale needs the accountant's view. | Tell us another cut-off. |
+| Q | **A shop's city** is checked and, on a live shop, waits for our team's approval like the other shop text. **A shop's website** is not shown to the public. **Approved by Afzal, 31 Oct.** | Both appear on the public shop page; a website takes customers away from Al Mukarramah. | Say if the website should be shown (we would check and hold it like the text). |
+| R | **Seller details for staff**: notes, legal, registration and tax numbers, KYC notes and contact details are for owner, manager and finance; marketing, support and operations see the rest. **Approved by Afzal, 31 Oct.** | They have no need for them (re-review N11). | Name a role that should see them. |
 
-## Chosen in the third fix pass (please confirm)
-
-| # | Choice | Why | To change it |
-|---|---|---|---|
-| S | **A refund made in the Moyasar dashboard** is recorded by finance on `/admin/returns` (amount, Moyasar's reference, what it was for), never more than Moyasar shows. Until it is, no new refund can be made on that order. | Our records, the credit notes and the sellers' statements must match Moyasar (review R3-2). | Avoid refunding in the dashboard: refund from `/admin/returns`. |
-| T | **Goodwill, and a refund Moyasar made twice**, are borne by Al Mukarramah: they are not taken from the seller's statement. | The seller did nothing wrong. | Finance can add a statement adjustment with a reason for a case where the seller should bear it. |
-| U | **Refunds marked failed** are checked with Moyasar again for three days (at most hourly). What Moyasar shows is listed for finance; nothing is recorded automatically. | A refund can complete late at Moyasar. | Tell us a longer or shorter window. |
-| V | **A renewal paid after the customer cancelled**: the paid month runs, then the subscription ends; nothing more is charged and nothing is refunded automatically. | The customer paid for that month. | Say if such a renewal should be refunded instead. |
-| W | **Card numbers typed into messages** are masked, like phone numbers. | Card data never touches our database (rule 2). | Nothing to decide. |
-
-## Chosen in the fourth fix pass (please confirm)
+## Chosen in the third fix pass (approved by Afzal, 31 Oct)
 
 | # | Choice | Why | To change it |
 |---|---|---|---|
-| X | **8-digit Gulf mobiles** (Kuwait, Qatar, Bahrain, Oman: eight digits from 3, 5, 6, 7 or 9) are masked even without a country code when written as one run ("99123456"), unless after a word like "order", "model" or "tracking". Written 4+4 ("9912 3456") they are masked only after "call", "my number", رقمي, واتس and the like, and never when they are a range ("5000 - 7000", "3500 to 3900 knots"): changed in the fifth pass (review R5-1). | Customers there rarely write the code; two numbers of four digits side by side are far more often a price or quantity range. | Say if a bare "9912 3456" should be masked again (ranges like "5000 7000" would be masked with it). |
-| Y | **Goodwill on an order with parcels the sellers invoice, or with duties**, must name its parcel; its part on our credit note is never more than is left on our invoice. | A credit note can only reduce what we invoiced (review R4-3). | Nothing to decide. |
+| S | **A refund made in the Moyasar dashboard** is recorded by finance on `/admin/returns` (amount, Moyasar's reference, what it was for), never more than Moyasar shows. Until it is, no new refund can be made on that order. **Approved by Afzal, 31 Oct.** | Our records, the credit notes and the sellers' statements must match Moyasar (review R3-2). | Avoid refunding in the dashboard: refund from `/admin/returns`. |
+| T | **Goodwill, and a refund Moyasar made twice**, are borne by Al Mukarramah: they are not taken from the seller's statement. **Approved by Afzal, 31 Oct.** | The seller did nothing wrong. | Finance can add a statement adjustment with a reason for a case where the seller should bear it. |
+| U | **Refunds marked failed** are checked with Moyasar again for three days (at most hourly). What Moyasar shows is listed for finance; nothing is recorded automatically. **Approved by Afzal, 31 Oct.** | A refund can complete late at Moyasar. | Tell us a longer or shorter window. |
+| V | **A renewal paid after the customer cancelled**: the paid month runs, then the subscription ends; nothing more is charged and nothing is refunded automatically. **Approved by Afzal, 31 Oct.** | The customer paid for that month. | Say if such a renewal should be refunded instead. |
+| W | **Card numbers typed into messages** are masked, like phone numbers. **Approved by Afzal, 31 Oct.** | Card data never touches our database (rule 2). | Nothing to decide. |
+
+## Chosen in the fourth fix pass (approved by Afzal, 31 Oct)
+
+| # | Choice | Why | To change it |
+|---|---|---|---|
+| X | **8-digit Gulf mobiles** (Kuwait, Qatar, Bahrain, Oman: eight digits from 3, 5, 6, 7 or 9) are masked even without a country code when written as one run ("99123456"), unless after a word like "order", "model" or "tracking". Written 4+4 ("9912 3456") they are masked only after "call", "my number", رقمي, واتس and the like, and never when they are a range ("5000 - 7000", "3500 to 3900 knots"): changed in the fifth pass (review R5-1). **Approved by Afzal, 31 Oct; the 4+4 form narrowed in this same pass, as the review asked (R5-1).** | Customers there rarely write the code; two numbers of four digits side by side are far more often a price or quantity range. | Say if a bare "9912 3456" should be masked again (ranges like "5000 7000" would be masked with it). |
+| Y | **Goodwill on an order with parcels the sellers invoice, or with duties**, must name its parcel; its part on our credit note is never more than is left on our invoice. **Approved by Afzal, 31 Oct.** | A credit note can only reduce what we invoiced (review R4-3). | Nothing to decide. |
 
 ## Chosen in the fifth fix pass (please confirm)
 
@@ -50,21 +56,22 @@ The re-review (REVIEW-2) led to these choices. Each is the conservative one; say
 | Z | **The last refund on an order after goodwill** refunds what is left of the payment: when its items, delivery and duties come to more, the difference is counted as the goodwill already given, and staff see it before pressing Refund. A refund that fits what is left is never cut, so goodwill given early stays on top of a later partial refund. The seller's statement is charged the full item, as for any return (goodwill stays ours: T). | The customer gets back what they paid, never more (review R5-2). | Say if goodwill on a parcel should also be taken off a later refund of that parcel when the payment has room. |
 | AA | **An approved return can be closed** by the owner, a manager, finance or support, with a reason the customer and the seller read: the goodwill already given covered it, the customer kept the item, or it was refunded another way. Closing refunds nothing; anything still due is then refunded by line. | An approved return could otherwise stay open for good, holding the seller's money (review R5-2). | Name the roles that may close one. |
 | AB | **An item in an open return** is refunded only through that return ("Refund this return"), or by line once the return is closed; the refusal says which. | Refunded by line, the return would lose its own rules (the delivery when the whole parcel came back, the stock) and stay open with nothing left to refund. | Nothing to decide. |
+| AC | **How a return "in transit" is known** (for L): the customer presses "I have sent it back" on the return, with the courier and tracking number if they have them (our team can do it for them). From then it never closes on its own: the seller confirms it came back, or after 14 days the customer can ask our team to decide, as before. The customer sees the date to send it back by; the seller sees it too, and when it was sent. | Afzal asked that a return already on its way back is never closed; there was no record of that until now. | Say if a return in transit should also close after a longer time. |
 
 | # | Decision | Default now | To change it |
 |---|---|---|---|
-| A | **Open the marketplace** to the public: sellers' listings and shop pages, marketplace checkout, online returns, reviews and messages. | Off (`marketplace_open = false`). The public sees only our own products, as today. | After the steps in SWITCH-ON.md: `update mp_settings set marketplace_open = true where id = 1;` |
-| B | **Take seller applications** at `/sell`. | Off (`sellers_open = false`): no new applications or listing checks from sellers. Staff can still create sellers. | `update mp_settings set sellers_open = true where id = 1;` |
-| C | **Pay sellers** (decision 53). Without VAT invoices from sellers (self-billing), Al Mukarramah owes all the output VAT and keeps about 13.75% of a sale, not 25% (on 115 SAR: keeps 28.75, pays 15 VAT). | Off (`payouts_enabled = false`): no payout can be recorded. Statements still build. | Once the adviser has ruled: `update mp_settings set payouts_enabled = true where id = 1;` |
-| D | **Refunds by support** (decision 54). | Support cannot refund (`support_refund_limit_minor = 0`); finance, managers and the owner can. | A limit in halalas, e.g. 500 SAR: `update mp_settings set support_refund_limit_minor = 50000 where id = 1;` |
-| E | **What partners are owed** (review M5): a fulfilment fee, or a cost price. | Nothing is booked as payable to a partner automatically (it was the full retail price, VAT included). Finance can add an adjustment with a reason. | Tell us the terms; we add them to the partner's account and to `book_sale`. |
-| F | **When a sale becomes payable** (decisions 51 and 56; review L4). | After the longer of the item's return window and the 30-day problem window, plus 3 days' hold: 33 days after delivery for most items (it was the return window plus 3 days, so food was payable on day 6). | `faulty_claim_days` and `payout_hold_days` in `mp_settings`. |
-| G | **Payouts after bank details change** (review M12). | No payout until the KYC is approved again and 7 days have passed since the change (`payout_bank_hold_days`); the seller is told. Only owner, manager and finance see bank details. | `payout_bank_hold_days` (0 to 60). |
-| H | **The Saudi marketplace corridor** (decision 2). | Seeded **closed**, with no adviser recorded. Our own products keep selling as today. | Record the adviser's sign-off on the corridor in the admin panel, then open it. |
+| A | **Open the marketplace** to the public: sellers' listings and shop pages, marketplace checkout, online returns, reviews and messages. | Off (`marketplace_open = false`). The public sees only our own products, as today. **Waiting for the SWITCH-ON steps** (then Afzal's yes on the day). | After the steps in SWITCH-ON.md: `update mp_settings set marketplace_open = true where id = 1;` |
+| B | **Take seller applications** at `/sell`. | Off (`sellers_open = false`): no new applications or listing checks from sellers. Staff can still create sellers. **Waiting for the SWITCH-ON steps** (then Afzal's yes on the day). | `update mp_settings set sellers_open = true where id = 1;` |
+| C | **Pay sellers** (decision 53). Without VAT invoices from sellers (self-billing), Al Mukarramah owes all the output VAT and keeps about 13.75% of a sale, not 25% (on 115 SAR: keeps 28.75, pays 15 VAT). | Off (`payouts_enabled = false`): no payout can be recorded. Statements still build. **Waiting for the tax adviser** (the VAT treatment of payouts, self-billing). | Once the adviser has ruled: `update mp_settings set payouts_enabled = true where id = 1;` |
+| D | **Refunds by support** (decision 54). | Support cannot refund (`support_refund_limit_minor = 0`); finance, managers and the owner can. **Approved by Afzal, 31 Oct.** Support does not refund. | A limit in halalas, e.g. 500 SAR: `update mp_settings set support_refund_limit_minor = 50000 where id = 1;` |
+| E | **What partners are owed** (review M5): a fulfilment fee, or a cost price. | Nothing is booked as payable to a partner automatically (it was the full retail price, VAT included). Finance can add an adjustment with a reason. **Waiting for the first partner agreement.** | Tell us the terms; we add them to the partner's account and to `book_sale`. |
+| F | **When a sale becomes payable** (decisions 51 and 56; review L4). | After the longer of the item's return window and the 30-day problem window, plus 3 days' hold: 33 days after delivery for most items (it was the return window plus 3 days, so food was payable on day 6). **Approved by Afzal, 31 Oct.** | `faulty_claim_days` and `payout_hold_days` in `mp_settings`. |
+| G | **Payouts after bank details change** (review M12). | No payout until the KYC is approved again and 7 days have passed since the change (`payout_bank_hold_days`); the seller is told. Only owner, manager and finance see bank details. **Approved by Afzal, 31 Oct.** | `payout_bank_hold_days` (0 to 60). |
+| H | **The Saudi marketplace corridor** (decision 2). | Seeded **closed**, with no adviser recorded. Our own products keep selling as today. **Waiting for the tax adviser** (the sign-off on the corridor). | Record the adviser's sign-off on the corridor in the admin panel, then open it. |
 | I | **The test courier** (sandbox). | Switched off (`carrier_providers.active = false` for `sandbox`); its webhooks need their own secret (`SANDBOX_WEBHOOK_SECRET`). | Switch it on only for the production test run in SWITCH-ON.md, then off again. |
-| J | **Return windows on our own products** (decision 7). | The category windows apply to our own products too (dates: only if faulty, 3 days; perfume: unopened, 7 days). Online returns stay closed while the marketplace is off. | Confirm with the legal adviser, or change the category policies. |
+| J | **Return windows on our own products** (decision 7). | The category windows apply to our own products too (dates: only if faulty, 3 days; perfume: unopened, 7 days). Online returns stay closed while the marketplace is off. **Waiting for the legal adviser.** | Confirm with the legal adviser, or change the category policies. |
 | K | **Category commission rates are public** (review L8): the category tree and policy answer anyone, and the app ships a snapshot. | Left as they are (they are also in the seller handbook). | Say if they should be private; we then strip them from the public calls and the snapshot. |
-| L | **A return left accepted** when the customer never sends the item back holds the seller's money with no end date (review L4). | Left: our team closes these by hand from `/admin/returns`. | Tell us after how many days to close them automatically. |
+| L | **A return left accepted** when the customer never sends the item back holds the seller's money with no end date (review L4). **Decided by Afzal, 31 Oct: auto-close after 30 days.** | Closed on its own 30 days after the seller accepted it (`return_autoclose_days`, owner only), by the `finish-pending` job, unless the customer has said they sent the items back (then it is in transit and never closes on its own). The seller's sale is then paid as usual; the customer and the seller are told in Arabic and English; each closure is in the audit log. | `update mp_settings set return_autoclose_days = 45 where id = 1;` (7 to 365, owner only). |
 
 ## Platform and process
 
@@ -88,8 +95,8 @@ The re-review (REVIEW-2) led to these choices. Each is the conservative one; say
 All of these are per-category settings in the category tree (owner/manager edit; marketing can rename and
 re-photograph categories but not change their policy).
 
-6. **Commission.** Every category starts at 25%, the bottom of the agreed 25%–50% range. Please set the rate per
-   category (or per seller) before launch.
+6. **Commission.** Every category starts at 25%, the bottom of the agreed 25%–50% range. **Approved by Afzal, 31 Oct:
+   25% in every category for launch;** rates per category or per seller can be set later.
 7. **Returns (please check against the Saudi e-commerce law with the legal adviser).**
    - Fragrance and natural care: unopened and sealed, within 7 days.
    - Dates and food: only if faulty or not as ordered, within 3 days.

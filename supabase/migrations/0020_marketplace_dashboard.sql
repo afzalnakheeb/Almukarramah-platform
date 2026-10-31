@@ -48,7 +48,8 @@ begin
         'payment_issues', jsonb_array_length(w -> 'payment_issues'))
       from (select mp_pending_work(1000, 0) as w) x),
     'switches', (select jsonb_build_object('marketplace_open', marketplace_open, 'sellers_open', sellers_open, 'payouts_enabled', payouts_enabled,
-        'sandbox_carrier', (select active from carrier_providers where id = 'sandbox'), 'support_refund_limit_minor', support_refund_limit_minor)
+        'sandbox_carrier', (select active from carrier_providers where id = 'sandbox'), 'support_refund_limit_minor', support_refund_limit_minor,
+        'return_autoclose_days', return_autoclose_days)
       from mp_settings where id = 1),
     'sales', (select jsonb_build_object(
         'orders', count(distinct s.order_id),

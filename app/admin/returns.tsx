@@ -53,6 +53,13 @@ function ReturnRow({ r, onDone }: { r: ReturnRequest; onDone: () => void }) {
       {r.seller_note ? <T size={13} lh={1.5} color={colors.body}>Seller: “{r.seller_note}”</T> : null}
       {r.escalation_note ? <T size={13} lh={1.5} color={colors.brassText}>Customer disagrees: “{r.escalation_note}”</T> : null}
       {r.staff_note ? <T size={13} lh={1.5} color={colors.emerald}>Our decision: “{r.staff_note}”</T> : null}
+      {r.status === 'accepted' ? (
+        <T size={13} lh={1.5} color={colors.body}>
+          {r.sent_back_at ? `Sent back by the customer on ${day(r.sent_back_at)}${r.sent_back_note ? `: “${r.sent_back_note}”` : ''} (in transit: it never closes on its own).`
+            : r.send_back_by ? `Not sent back yet: closes on its own on ${day(r.send_back_by)} if the customer does not send the items.` : ''}
+        </T>
+      ) : null}
+      {r.status === 'closed' && r.auto_closed ? <T size={13} color={colors.muted}>Closed on its own: the items were not sent back in time.</T> : null}
       {r.photos.length ? <View style={{ flexDirection: 'row', gap: 8 }}>{r.photos.map((p) => photos[p.path] ? <Image key={p.id} source={{ uri: photos[p.path] }} style={{ width: 96, height: 96, borderRadius: 6 }} /> : null)}</View> : null}
       {msg ? <Notice tone="warn" text={msg} /> : null}
       {open ? (
