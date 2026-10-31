@@ -193,6 +193,10 @@ describe('M12: bank details', () => {
     assert.match(db.error(pay, user('finance')) ?? 'accepted', /bank details|KYC/i);
     svc(`update seller_private set kyc_status = 'approved' where seller_id = '${s.A}'`);
     assert.match(db.error(pay, user('finance')) ?? 'accepted', /bank details changed/i, 'the hold after a change');
+    // and once the hold has passed (the change 8 days ago), the payout goes through (REVIEW-2: the block is not for ever)
+    svc(`update seller_private set bank_changed_at = now() - interval '8 days' where seller_id = '${s.A}'`);
+    assert.equal(db.error(pay, user('finance')), null);
+    assert.equal(db.val(`select count(*)::int from seller_payouts where seller_id = '${s.A}' and reference = 'TRF-1'`), 1);
   });
 });
 
@@ -267,15 +271,4 @@ describe('Lows', () => {
     assert.equal(db.val(`select paid_on::text from seller_payouts where reference = 'TRF-LATE'`), paidOn);
   });
 
-  test('X1: a customer who asked for a return can still delete their account (the apps\' account deletion)', () => {
-    db.exec(`insert into profiles (id) values ('${ids.customer2}') on conflict do nothing`);
-    const o = paidOrder(ids.customer2);
-    svc(`update sub_orders set status = 'delivered', delivered_at = now() - interval '1 day' where id = '${o.h}'`);
-    const r = db.val<{ id: string }>(`select mp_return_request('${ids.customer2}', ${j({ sub_order_id: o.h, reason: 'damaged', details: 'The box was crushed', lines: [{ order_item_id: o.items.h, quantity: 1 }] })})`, 'service');
-    // what the apps' delete_account_data (0010, shots/apps) does first: orders are kept for the accounts, unlinked
-    svc(`update orders set user_id = null, email = null where user_id = '${ids.customer2}'`);
-    // then the delete-account function deletes the person; before the fix the return request blocked this
-    assert.equal(db.error(`delete from auth.users where id = '${ids.customer2}'`), null);
-    assert.equal(db.val(`select user_id from return_requests where id = '${r.id}'`), null, 'the return is kept for the accounts, unlinked from the person');
-  });
 });

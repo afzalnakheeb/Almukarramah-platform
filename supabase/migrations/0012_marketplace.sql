@@ -150,9 +150,11 @@ create policy "staff manage sellers" on sellers for all
   with check (private.is_staff(array['owner', 'manager']::staff_role[]));
 
 -- Commission, review notes and guideline dates are not public: the public (and sellers, through the API) read only
--- these columns. Sellers and staff get the full record through my_sellers() and admin_sellers().
+-- these columns, each of them checked for contact details and held for approval once the shop is live (0016; review
+-- H5). The seller's own website is a way off the platform, so it is not public either. Sellers and staff get the full
+-- record through my_sellers() and admin_sellers().
 revoke select on sellers from anon, authenticated;
-grant select (id, slug, name_en, name_ar, tagline_en, tagline_ar, about_en, about_ar, country, city, logo, banner, website,
+grant select (id, slug, name_en, name_ar, tagline_en, tagline_ar, about_en, about_ar, country, city, logo, banner,
   handling_days, returns_en, returns_ar, kind, status, created_at) on sellers to anon, authenticated;
 
 -- Bank details are on this row (0013), so only the seller, the owner, managers and finance read it; the rest of our team

@@ -3,19 +3,23 @@
 // written, emails, links, handles, messaging apps, bank account numbers), and what was found is kept as flags for our
 // team, including an invitation to deal or pay outside the platform. A number split across two messages is caught
 // in the second one. No imports besides contact.ts, so the app and the tests use it as it is.
-import { findContacts, maskContacts, splitNumber } from './contact.ts';
+import { detectContacts, maskContacts, splitNumber } from './contact.ts';
 
 export type Cleaned = { text: string; masked: number; flags: string[] };
 
 /**
- * Trimmed to max characters, control characters removed, contact details masked; flags like contact_phone, solicit.
+ * Trimmed to max characters, control characters and invisible tricks removed (zero-width characters and direction
+ * overrides; the joiners inside emoji and Persian words stay), contact details masked; flags like contact_phone, solicit.
  * previous: the same person's last message in the conversation, to catch a number split across the two.
  */
 export function cleanText(input: unknown, max: number, opts: { previous?: string | null } = {}): Cleaned {
-  // eslint-disable-next-line no-control-regex
-  const raw = String(input ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').replace(/\r\n?/g, '\n').trim().slice(0, max);
+  const raw = String(input ?? '')
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .replace(/[\u00AD\u061C\u180E\u200B\u200E\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF]/g, '')
+    .replace(/\r\n?/g, '\n').trim().slice(0, max);
   if (!raw) return { text: '', masked: 0, flags: [] };
-  const hits = findContacts(raw);
+  const hits = detectContacts(raw);
   const masking = maskContacts(raw);
   let text = masking.text;
   let masked = masking.masked;

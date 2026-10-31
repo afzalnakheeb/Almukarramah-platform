@@ -174,3 +174,12 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
   off in the database until Afzal decides; errors in Arabic and English end to end. A test harness now runs the Edge
   Functions (moyasar-webhook, refund-order, finish-pending, after-sale, create-shipment, review-listing,
   screen-image) against the local database with Moyasar and the carriers mocked. Tests: 272 (189 before).
+- Second fix pass (re-review REVIEW-2; table in `REVIEW-FIXES.md`), each finding shown by a failing test first: one
+  refund ledger for every route (lines, return, parcel, order); every public shop field checked and held, the city
+  included, the website no longer public; the 43 disguised contact details caught in the server and the database;
+  account deletion works for customers with messages (kept, unlinked, words removed), tested with the apps branch's
+  real 0010 and 0011; payments for orders no longer waiting recorded for finance (refund, attach or close); renewals
+  charged with a `given_id` and never cancelled on a lost answer; immutable records follow deleted parents; old
+  orders never invoiced automatically; one label at a time per parcel; refunds settled by hand with Moyasar read back;
+  only the owner changes the switches; seller details for owner, manager and finance only. Staff pages for payments
+  to resolve and refunds settled by hand. Tests: 350 (272 before).

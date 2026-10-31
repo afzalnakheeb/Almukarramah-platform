@@ -11,7 +11,8 @@ import { graceMinutes, reconcileRefund } from '../_shared/refunds.ts';
 import { admin, caller, cronAuthorized, fail, handle, json, staffRole } from '../_shared/util.ts';
 import { ensureInvoice, issueCreditNote } from '../_shared/zatca.ts';
 
-type Work = { orders_without_invoice: string[]; orders_not_handed_on: string[]; credit_notes: string[]; refunds_processing: string[] };
+type Work = { orders_without_invoice: string[]; orders_not_handed_on: string[]; credit_notes: string[]; refunds_processing: string[];
+  orders_without_invoice_old?: string[]; payment_issues?: string[] };
 
 Deno.serve(handle(async (req) => {
   const db = admin();
@@ -56,7 +57,11 @@ Deno.serve(handle(async (req) => {
       done.left.push({ refund: id, step: 'reconcile', error: String((e as Error).message ?? e) });
     }
   }
-  if (Object.values(done).some((x) => x.length)) {
+  // what only our team can settle, listed every time until it is (review N2, N5): an old or refunded order without its
+  // invoice (never invoiced today by a job: the accountant decides), and payments to refund or attach
+  for (const id of w.orders_without_invoice_old ?? []) done.left.push({ order: id, step: 'old order without invoice', error: 'for our team: settle it with the accountant' });
+  for (const id of w.payment_issues ?? []) done.left.push({ payment_issue: id, step: 'payment to resolve', error: 'for finance: refund it, revive the order with it, or close it' });
+  if (Object.entries(done).some(([k, x]) => x.length && k !== 'left') || done.left.some((x) => !('payment_issue' in (x as object)) && (x as { step?: string }).step !== 'old order without invoice')) {
     await db.from('audit_log').insert({ actor_label: 'finish-pending', table_name: 'orders', row_id: '', action: 'FINISH_PENDING', new_data: done });
   }
   return json({ ok: true, ...done });

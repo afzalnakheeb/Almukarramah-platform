@@ -1,11 +1,12 @@
 // Edge Functions, run for real under Node against the local test database (lib/edge.ts): moyasar-webhook,
 // refund-order, after-sale, create-shipment, review-listing and the job that finishes half-done work, with Moyasar
 // and the carriers mocked. Timeouts, gateway errors, definite rejections, duplicate and concurrent webhooks, and
-// failures between steps are reproduced here (review findings H2, H3, H6, M3, M7, M8, M9, M10, M11, M13, M15).
+// failures between steps are reproduced here (review findings H2, H3, H6, M3, M7, M8, M9, M10, M11, M13, M15, and from
+// the re-review N2 (renewals, stray payments), N6 (labels bought at the same moment) and N7 (refunds settled by hand).
 import assert from 'node:assert/strict';
 import { after, before, beforeEach, describe, test } from 'node:test';
 import { type Db, freshDb, ids, user } from './lib/db.ts';
-import { env, fake, invoke, moyasar, moyasarEvent } from './lib/edge.ts';
+import { env, fake, invoke, moyasar, moyasarEvent, type Reply } from './lib/edge.ts';
 import { type Order, type Shop, seedShop, unpaidOrder } from './lib/market.ts';
 
 let db: Db;
@@ -163,7 +164,7 @@ describe('refund-order', () => {
 
   test('H2: when the read-back times out too, the refund stays processing, blocks a second refund, and reconciling completes it', async () => {
     const { o, payId } = await paidThroughWebhook();
-    moyasar.next.push({ op: 'refund', do: 'timeout_after' }, { op: 'get', do: 'timeout' });
+    moyasar.next.push({ op: 'get', do: 'ok' }, { op: 'refund', do: 'timeout_after' }, { op: 'get', do: 'timeout' });
     const r = await refundDates(o, 'rf-timeout-01');
     assert.equal(r.status, 202, JSON.stringify(r.body));
     assert.equal(refundRow(o).status, 'processing', `a timeout is not a rejection: ${JSON.stringify(r.body)}`);
@@ -459,3 +460,165 @@ describe('review-listing', () => {
     assert.match(row.tailoring.options[0].choices[0].image, /^https:\/\/project\.supabase\.test\/storage\/v1\/object\/public\/catalogue\//);
   });
 });
+
+// ================================================================ the re-review (REVIEW-2)
+const cron = () => ({ headers: { 'x-cron-secret': env.CRON_SECRET } });
+function useMockCarrier(sub: string) {
+  svc(`insert into carrier_providers (id, name, kind, regions, mode, active) values ('mockcarrier', 'Mock carrier', 'carrier', 'Test', 'test', true) on conflict (id) do nothing;
+       insert into carrier_services (provider_id, code, carrier_name, service_name, from_countries, to_countries, days_min, days_max)
+       values ('mockcarrier', 'mock-road', 'Mock', 'Road', '{SA}', '{SA}', 1, 3) on conflict do nothing;
+       update sub_orders set service_id = (select id from carrier_services where code = 'mock-road') where id = '${sub}'`);
+}
+
+describe('charge-subscriptions (N2)', () => {
+  function dueSubscription(): string {
+    const plan = db.val<string>(`insert into plans (slug, kind, name_en, name_ar, price_sar) values ('box-' || substr(md5(random()::text), 1, 8), 'box', 'Oud box', 'صندوق العود', 9900) returning id`, 'service');
+    return db.val<string>(`insert into subscriptions (user_id, plan_id, source, status, current_period_end, moyasar_token, ship_to)
+      values ('${ids.customer}', '${plan}', 'moyasar', 'active', now() - interval '1 hour', 'tok_saved_card',
+              '{"kind": "home", "recipient_name": "Maryam", "country": "SA", "city": "Riyadh", "line1": "Olaya 1"}') returning id`, 'service');
+  }
+  const renewals = (sub: string) => db.rows<{ id: string; status: string }>(`select id, status::text as status from orders where subscription_id = '${sub}' order by created_at`);
+
+  test('N2: an unknown answer leaves the renewal waiting (never cancelled); the next run asks again with the same key and the card is charged once', async () => {
+    const sub = dueSubscription();
+    const charged = moyasar.charges;
+    moyasar.next.push({ op: 'charge', do: 'timeout_after' });
+    const r1 = await invoke('charge-subscriptions', {}, cron());
+    assert.equal(r1.status, 200, JSON.stringify(r1.body));
+    assert.deepEqual(renewals(sub).map((x) => x.status), ['pending_payment'], 'never cancelled on a guess');
+    assert.equal(db.val(`select status from subscriptions where id = '${sub}'`), 'active', 'not past due either');
+    assert.equal(moyasar.charges, charged + 1, 'Moyasar did charge the card');
+    const r2 = await invoke('charge-subscriptions', {}, cron());
+    assert.equal(r2.status, 200, JSON.stringify(r2.body));
+    assert.equal(moyasar.charges, charged + 1, 'asking again with the same key does not charge again');
+    const rows = renewals(sub);
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].status, 'paid');
+    assert.ok(db.val<boolean>(`select current_period_end > now() from subscriptions where id = '${sub}'`), 'renewed');
+    assert.equal(invoices(rows[0].id).length, 1);
+  });
+
+  test('a declined card cancels that renewal and the subscription waits for the next try, as before', async () => {
+    const sub = dueSubscription();
+    moyasar.declineNext = true;
+    await invoke('charge-subscriptions', {}, cron());
+    assert.deepEqual(renewals(sub).map((x) => x.status), ['cancelled']);
+    assert.equal(db.val(`select status from subscriptions where id = '${sub}'`), 'past_due');
+  });
+});
+
+describe('stray payments (N2)', () => {
+  async function strayPayment(): Promise<{ o: Order; payId: string; issue: string }> {
+    const o = unpaidOrder(db, s);
+    const pay = moyasar.pay({ orderId: o.o, amount: o.total, invoiceId: o.paymentRef });
+    svc(`update orders set status = 'cancelled' where id = '${o.o}'`);
+    const r = await invoke('moyasar-webhook', moyasarEvent(pay));
+    assert.equal(r.status, 200, JSON.stringify(r.body));
+    assert.equal(r.body.stray, true, 'answered so Moyasar stops retrying, and recorded for our team');
+    return { o, payId: pay.id, issue: db.val<string>(`select id from payment_issues where payment_id = '${pay.id}'`) };
+  }
+
+  test('N2: finance refunds a payment for a cancelled order in full through Moyasar', async () => {
+    const { o, payId, issue } = await strayPayment();
+    assert.equal((await invoke('refund-order', { action: 'payment_issue', issueId: issue, do: 'refund', reason: 'The order was cancelled' }, { as: ids.support })).status, 403);
+    const r = await invoke('refund-order', { action: 'payment_issue', issueId: issue, do: 'refund', reason: 'The order was cancelled' }, { as: ids.finance });
+    assert.equal(r.status, 200, JSON.stringify(r.body));
+    assert.equal(moyasar.payments.get(payId)!.refunded, o.total);
+    assert.equal(db.val(`select status from payment_issues where id = '${issue}'`), 'refunded');
+    assert.equal((await invoke('refund-order', { action: 'payment_issue', issueId: issue, do: 'refund', reason: 'Again' }, { as: ids.finance })).status, 409, 'once');
+  });
+
+  test('N2: or revives the order with it: paid, parcels handed on, invoiced', async () => {
+    const { o, payId, issue } = await strayPayment();
+    const r = await invoke('refund-order', { action: 'payment_issue', issueId: issue, do: 'attach', reason: 'The customer still wants the order' }, { as: ids.finance });
+    assert.equal(r.status, 200, JSON.stringify(r.body));
+    assert.deepEqual([order(o.o).status, order(o.o).payment_id], ['paid', payId]);
+    assert.deepEqual(subStatuses(o), ['awaiting_acceptance', 'awaiting_acceptance', 'accepted']);
+    assert.equal(invoices(o.o).length, 1);
+    assert.equal(db.val(`select status from payment_issues where id = '${issue}'`), 'attached');
+  });
+});
+
+describe('create-shipment (N6)', () => {
+  test('N6: two people pressing at the same moment buy one label; the other is told one is being bought', async () => {
+    const { o } = await paidThroughWebhook();
+    db.val(`select seller_accept_sub_order('${o.a}')`, user('sellerA'));
+    useMockCarrier(o.a);
+    const { mockCarrier } = await import('./lib/edge-carrier.ts');
+    const creates = () => mockCarrier.calls.filter((c) => c.op === 'create').length;
+    const before = creates();
+    mockCarrier.delayMs = 400;
+    let res: Reply[];
+    try {
+      res = await Promise.all([
+        invoke('create-shipment', { subOrderId: o.a, idempotencyKey: 'race-key-00001' }, { as: ids.sellerA }),
+        invoke('create-shipment', { subOrderId: o.a, idempotencyKey: 'race-key-00002' }, { as: ids.operations }),
+      ]);
+    } finally {
+      mockCarrier.delayMs = 0;
+    }
+    assert.deepEqual(res.map((x) => x.status).sort(), [200, 409], JSON.stringify(res.map((x) => x.body)));
+    assert.equal(creates() - before, 1, 'one label bought');
+    assert.equal(db.val(`select count(*)::int from shipments where sub_order_id = '${o.a}'`), 1);
+  });
+
+  test('N6: a label bought but not recorded is cancelled at the carrier, and a new try works', async () => {
+    const { o } = await paidThroughWebhook();
+    db.val(`select seller_accept_sub_order('${o.a}')`, user('sellerA'));
+    useMockCarrier(o.a);
+    const { mockCarrier } = await import('./lib/edge-carrier.ts');
+    const cancels = () => mockCarrier.calls.filter((c) => c.op === 'cancel').length;
+    const before = cancels();
+    fake.faults.push({ match: (op) => op.kind === 'rpc' && op.name === 'mp_record_shipment', error: { message: 'connection lost' } });
+    const r = await invoke('create-shipment', { subOrderId: o.a, idempotencyKey: 'orphan-key-0001' }, { as: ids.sellerA });
+    assert.notEqual(r.status, 200);
+    assert.equal(cancels() - before, 1, 'the label nobody recorded is cancelled');
+    assert.equal(db.val(`select count(*)::int from shipments where sub_order_id = '${o.a}'`), 0);
+    const ok = await invoke('create-shipment', { subOrderId: o.a, idempotencyKey: 'orphan-key-0002' }, { as: ids.sellerA });
+    assert.equal(ok.status, 200, JSON.stringify(ok.body));
+  });
+});
+
+describe('refund-order (N7)', () => {
+  test('N7: finance settles a refund stuck waiting for Moyasar, with a reason; the order is free again', async () => {
+    const { o, payId } = await paidThroughWebhook();
+    moyasar.next.push({ op: 'refund', do: '5xx' });
+    await refundDates(o, 'rf-n7-0000001');
+    const stuck = refundRow(o);
+    assert.equal(stuck.status, 'processing');
+    assert.equal((await invoke('refund-order', { action: 'resolve', refundId: stuck.id, outcome: 'failed', reason: 'Checked' }, { as: ids.support })).status, 403);
+    assert.equal((await invoke('refund-order', { action: 'resolve', refundId: stuck.id, outcome: 'failed', reason: 'x' }, { as: ids.finance })).status, 400, 'a reason is needed');
+    const r = await invoke('refund-order', { action: 'resolve', refundId: stuck.id, outcome: 'failed', reason: 'Checked the Moyasar dashboard: no refund was made' }, { as: ids.finance });
+    assert.equal(r.status, 200, JSON.stringify(r.body));
+    assert.equal(refundRow(o).status, 'failed');
+    assert.equal((await refundDates(o, 'rf-n7-0000002')).status, 200, 'a new refund can be made');
+    assert.equal(moyasar.payments.get(payId)!.refunded, 6000);
+  });
+
+  test('N7: a refund Moyasar completed late, after it was marked failed, blocks a new one until it is settled', async () => {
+    const { o, payId } = await paidThroughWebhook();
+    moyasar.next.push({ op: 'refund', do: '5xx' });
+    await refundDates(o, 'rf-n7-0000003');
+    env.REFUND_RECONCILE_GRACE_MINUTES = '0';
+    try {
+      await invoke('refund-order', { action: 'reconcile', refundId: refundRow(o).id }, { as: ids.finance });
+    } finally {
+      env.REFUND_RECONCILE_GRACE_MINUTES = '15';
+    }
+    const failed = refundRow(o);
+    assert.equal(failed.status, 'failed');
+    moyasar.payments.get(payId)!.refunded = 6000;   // ...then Moyasar completes it after all
+    const again = await refundDates(o, 'rf-n7-0000004');
+    assert.equal(again.status, 409, JSON.stringify(again.body));
+    assert.match(String(again.body.error), /Moyasar shows/);
+    assert.equal(moyasar.payments.get(payId)!.refunded, 6000, 'never refunded twice');
+    const r = await invoke('refund-order', { action: 'resolve', refundId: failed.id, outcome: 'succeeded', reason: 'Moyasar completed it late (dashboard checked)' }, { as: ids.finance });
+    assert.equal(r.status, 200, JSON.stringify(r.body));
+    // the failed record never changes; the late completion is recorded as its own refund, with its credit note
+    assert.equal(db.val(`select status from refunds where id = '${failed.id}'`), 'failed');
+    assert.deepEqual([refundRow(o).status, refundRow(o).credit_note_status], ['succeeded', 'issued']);
+    assert.equal(order(o.o).refunded_minor, 6000);
+    assert.notEqual((await refundDates(o, 'rf-n7-0000005')).status, 200, 'and that unit is not refunded again');
+  });
+});
+

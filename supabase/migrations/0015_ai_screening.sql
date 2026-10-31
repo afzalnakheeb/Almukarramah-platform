@@ -171,8 +171,24 @@ create index screening_runs_recent on screening_runs (created_at desc) where sta
 alter table screening_runs enable row level security;
 create policy "staff read screening" on screening_runs for select using (private.is_staff());
 -- Nobody edits or deletes a verdict, not even staff (corrections are new 'override' rows).
-create or replace function screening_runs_immutable() returns trigger language plpgsql set search_path = public as $$
+create or replace function screening_runs_immutable() returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_old jsonb := to_jsonb(old);
+  v_new jsonb := case when tg_op = 'UPDATE' then to_jsonb(new) end;
+  link text;
+  gone boolean;
 begin
+  -- the one exception (review N4, REVIEW-2): a seller deletes a draft, a photo is deleted, a seller is deleted; the
+  -- record stays, unlinked by its foreign key (the parent must really be gone)
+  if tg_op = 'UPDATE' then
+    foreach link in array array['product_id=products', 'asset_id=media_assets', 'seller_id=sellers'] loop
+      continue when (v_old ->> split_part(link, '=', 1)) is null;
+      execute format('select not exists (select 1 from %s where id = $1::uuid)', split_part(link, '=', 2)) into gone using v_old ->> split_part(link, '=', 1);
+      if gone and (v_new -> split_part(link, '=', 1)) = 'null'::jsonb and (v_old - split_part(link, '=', 1)) = (v_new - split_part(link, '=', 1)) then
+        return new;
+      end if;
+    end loop;
+  end if;
   raise exception 'Screening records are never edited or deleted; record an override instead';
 end $$;
 create trigger screening_runs_immutable before update or delete on screening_runs for each row execute function screening_runs_immutable();

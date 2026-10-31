@@ -18,9 +18,13 @@ function Body({ text }: { text: string }) {
   const parts: React.ReactNode[] = [];
   let at = 0;
   hits.forEach((h, i) => {
-    if (h.index > at) parts.push(text.slice(at, h.index));
-    parts.push(<T key={i} size={14} w={700} color={colors.brassText} style={{ backgroundColor: colors.goldSoft }}>{h.match}</T>);
-    at = Math.max(at, h.index + h.match.length);
+    // hits can overlap (a phrase and the app name in it): only the part not highlighted yet
+    const end = h.index + h.match.length;
+    if (end <= at) return;
+    const from = Math.max(at, h.index);
+    if (from > at) parts.push(text.slice(at, from));
+    parts.push(<T key={i} size={14} w={700} color={colors.brassText} style={{ backgroundColor: colors.goldSoft }}>{text.slice(from, end)}</T>);
+    at = end;
   });
   parts.push(text.slice(at));
   return <T size={14} lh={1.6} color={colors.body}>{parts}</T>;

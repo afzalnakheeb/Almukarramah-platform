@@ -19,6 +19,7 @@ const QUEUES: { key: keyof Overview['queues']; label: string; href: Href; urgent
   { key: 'refunds_to_make', label: 'Refunds to make', href: '/admin/returns', urgent: true },
   { key: 'disputes', label: 'Disputes to decide', href: '/admin/returns', urgent: true },
   { key: 'refunds_stuck', label: 'Refunds still processing', href: '/admin/returns', urgent: true },
+  { key: 'payments_to_resolve', label: 'Payments to resolve', href: '/admin/returns', urgent: true },
   { key: 'credit_notes_pending', label: 'Credit notes to issue', href: '/admin/returns', urgent: true },
   { key: 'late_to_ship', label: 'Parcels late to ship', href: '/admin/orders', urgent: true },
   { key: 'delivery_failed', label: 'Deliveries failed', href: '/admin/orders', urgent: true },
@@ -41,7 +42,8 @@ export default function AdminMarketplace() {
   const load = useCallback(() => { adminOverview(30).then(setV).catch((e) => setErr(String(e.message ?? e))); }, []);
   useEffect(() => { load(); }, [load]);
   const pending = v?.pending_work;
-  const left = pending ? pending.orders_without_invoice + pending.orders_not_handed_on + pending.credit_notes_pending + pending.refunds_processing : 0;
+  const old = pending?.orders_without_invoice_old ?? 0;
+  const left = pending ? pending.orders_without_invoice + pending.orders_not_handed_on + pending.credit_notes_pending + pending.refunds_processing + old : 0;
   const sw = v?.switches;
   const tile = (label: string, value: string, note?: string) => (
     <Card key={label} pad={18} style={{ flexGrow: 1, flexBasis: wide ? 250 : '100%', gap: 4 }}>
@@ -81,6 +83,7 @@ export default function AdminMarketplace() {
                 {pending.orders_not_handed_on} paid orders not handed to their sellers · {pending.orders_without_invoice} paid orders without a tax invoice ·
                 {' '}{pending.credit_notes_pending} credit notes to issue · {pending.refunds_processing} refunds waiting for Moyasar's answer.
                 {' '}The scheduler finishes these every 15 minutes; you can run it now.
+                {old ? ` ${old} orders paid more than 7 days ago still have no tax invoice: the scheduler leaves them for our team to settle with the accountant.` : ''}
               </T>
               <FinishPendingButton onDone={load} />
             </Card>

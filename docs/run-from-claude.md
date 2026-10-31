@@ -29,7 +29,12 @@ Windsor.ai and the other connectors in the Claude app.
 - Half-done work (an order without its tax invoice, a credit note not issued, a refund waiting for Moyasar) is
   finished by the `finish-pending` job every 15 minutes. If the count stays above zero, Claude reports the reason the
   job gives; it never re-runs a refund. A refund still "processing" is settled only by reading the payment back from
-  Moyasar ("Check with Moyasar" on `/admin/returns`).
+  Moyasar ("Check with Moyasar" on `/admin/returns`, or finance's "Settle by hand" after checking Moyasar's dashboard).
+  Orders paid more than 7 days ago without an invoice (`orders_without_invoice_old`) are never invoiced by the job:
+  Claude lists them for the accountant.
+- "Payments to resolve" (`payment_issues`): a payment Moyasar took for an order that was cancelled, already paid or of
+  another amount. Claude reports each one with its order and amount; refunding it, attaching it to its order or
+  closing it is finance's decision on `/admin/returns`, never Claude's without approval.
 - "Show me the dispute on R-104902-1 and suggest a decision." Claude reads the return, the conversation and the photos'
   screening; the decision and any refund wait for approval.
 - "Which sellers can be paid this week?" Claude lists what is payable (`admin_payouts()`); finance makes the bank

@@ -44,9 +44,9 @@ migrations add columns.
 | `0015_ai_screening.sql` | Screened media, verdict records (append-only), strikes, blocked hashes, rate counters, product documents; the `quarantine` bucket (staff only). |
 | `0016_onboarding.sql` | The seller's application file and checklist, categories per seller, review history; KYC and brand papers; approval through `mp_review_seller` only. |
 | `0017_listings_search.sql` | Product options (`product_variants`), the price guard (against the approved price), search columns and indexes, `mp_search`, storefronts, `mp_approve_listing` / `mp_reject_listing`. No change to what the API can read on `products`. |
-| `0018_orders_shipping.sql` | Sub-orders, shipments, tracking events, the `labels` bucket (private); new columns on `orders` (including `stock_taken_at`) and `order_items`; `mp_payment_received` (payment, parcels and stock in one transaction); the seller's order flow; the customer's tracking. |
-| `0019_after_sale.sql` | Statements (ledger, payouts, monthly view), refunds (one per return, one waiting for Moyasar per order), returns, reviews and replies, messages, the notifications outbox with 40 templates, seller performance; `orders.fx_per_sar` and refunded amounts; `invoices.vat_rate_bp` and `fx_per_sar`, one invoice per order, and `mp_issue_document` (the counter and the document in one transaction); `payouts_enabled`, `support_refund_limit_minor` and `payout_bank_hold_days` (off, 0, 7); the `customer-uploads` bucket (private); replaces `my_order_tracking` and `mp_public_settings`; widens `media_assets.kind` for return photos. |
-| `0020_marketplace_dashboard.sql` | `admin_marketplace_overview` (read only), with the half-done work and the switches. |
+| `0018_orders_shipping.sql` | Sub-orders, shipments, tracking events, the `labels` bucket (private); new columns on `orders` (including `stock_taken_at` and `charge_given_id`, the key of each renewal charge) and `order_items`; `mp_payment_received` (payment, parcels and stock in one transaction; a payment for an order no longer waiting is kept in `payment_issues` for finance); `shipment_claims` (one label bought at a time per parcel); the seller's order flow; the customer's tracking. |
+| `0019_after_sale.sql` | Statements (ledger, payouts, monthly view), refunds (one per return, one waiting for Moyasar per order), returns, reviews and replies, messages, the notifications outbox with 40 templates, seller performance; `orders.fx_per_sar` and refunded amounts; `invoices.vat_rate_bp` and `fx_per_sar`, one invoice per order, and `mp_issue_document` (the counter and the document in one transaction); `payouts_enabled`, `support_refund_limit_minor` and `payout_bank_hold_days` (off, 0, 7); the `customer-uploads` bucket (private); replaces `my_order_tracking` and `mp_public_settings`; widens `media_assets.kind` for return photos; only the owner changes the switches (a guard on `mp_settings`); message threads are kept, unlinked, when a customer deletes their account (`message_threads.user_id` becomes `on delete set null`); finance's tools for refunds settled by hand and payments to resolve. |
+| `0020_marketplace_dashboard.sql` | `admin_marketplace_overview` (read only), with the half-done work, the payments to resolve and the switches. |
 
 Checks after the last file:
 
@@ -58,6 +58,7 @@ select marketplace_open, sellers_open, payouts_enabled, support_refund_limit_min
 select active from carrier_providers where id = 'sandbox';            -- f
 select count(*) from corridors where status <> 'closed';             -- our own products' routes only
 select count(*) from invoices i group by order_id having count(*) filter (where doc = 'invoice') > 1;   -- no rows
+select mp_pending_work(500, 0);   -- read only: what finish-pending would do on its first run (step 4)
 ```
 
 Then run the Supabase security advisors (`get_advisors`) and confirm nothing new about row-level security. Load the
@@ -98,15 +99,15 @@ sets which ones skip the sign-in check (`verify_jwt = false`): cron jobs and web
 | `translate-draft` | new | the second language, drafted |
 | `review-seller` | new | approval, logo and banner |
 | `shipping-quote` | new | the checkout's quote |
-| `create-shipment` | new | labels |
+| `create-shipment` | new | labels; the parcel is claimed before a label is bought, and a label that cannot be recorded is cancelled at the carrier |
 | `carrier-webhook` | new | `verify_jwt = false`, HMAC signature |
 | `shipment-sync` | new | cron, `verify_jwt = false` |
 | `after-sale` | new | messages, returns, reviews, replies, moderation, a seller's cancellation of a parcel |
 | `finish-pending` | new | cron every 15 minutes and staff (owner, manager, finance), `verify_jwt = false`, checks the cron secret or the staff role itself |
 | `create-payment` | changed | sub-orders, idempotency key, checkout rate, the marketplace switch |
-| `moyasar-webhook` | changed | `mp_payment_received` (paid, parcels handed on and stock taken in one transaction); invoices only what we sell, once |
-| `refund-order` | changed | partial, idempotent refunds and credit notes; a timeout stays "processing" and is reconciled (`action: "reconcile"`) |
-| `charge-subscriptions` | changed | the invoice through the same once-only path |
+| `moyasar-webhook` | changed | `mp_payment_received` (paid, parcels handed on and stock taken in one transaction); invoices only what we sell, once; a payment for an order no longer waiting is recorded for finance and answered 200 (`stray: true`) |
+| `refund-order` | changed | partial, idempotent refunds and credit notes; a timeout stays "processing" and is reconciled (`action: "reconcile"`); finance settles a refund by hand after checking Moyasar (`action: "resolve"`) and resolves payments for orders no longer waiting (`action: "payment_issue"`: refund, attach or close); Moyasar is read back before every new refund |
+| `charge-subscriptions` | changed | the invoice through the same once-only path; each renewal is charged with its own `given_id` (Moyasar answers a repeat with the same payment), and a lost answer leaves the renewal waiting to be asked again, never cancelled. Check with Moyasar that `given_id` is accepted on saved-card (merchant-initiated) payments before scheduling it |
 | `shipping-rates` | changed | the same rulebook for older app builds |
 
 Deploy the changed ones only after the migrations (they call the new database functions). The payment functions are
@@ -153,7 +154,10 @@ With Supabase Cron (pg_cron) and `pg_net` (already enabled live), each sending t
 - `shipment-sync` every 15 minutes: asks the carrier for tracking when no webhook came.
 - `finish-pending` every 15 minutes: issues missing tax invoices and credit notes, hands on paid orders a failure left
   behind, and checks refunds still waiting for Moyasar's answer (review H3). The same runs from "Finish pending work
-  now" on `/admin/marketplace`.
+  now" on `/admin/marketplace`. It invoices only orders paid in the last 7 days and not refunded; older ones are
+  listed for our team (re-review N5). **Before scheduling it**, run `select mp_pending_work(500, 0);` on the live
+  database (read only) and show Afzal what it lists, `orders_without_invoice` and `orders_without_invoice_old` above
+  all; schedule it only after his yes.
 - Optional, weekly: `select mp_performance_review();` warns sellers below the standard (it never suspends while
   `perf_auto_suspend` is off).
 
@@ -174,7 +178,8 @@ AI model through a short-lived signed link instead of a resized copy.
 
 ## 7. Switching the marketplace on, and settings to review with Afzal
 
-Each switch is Afzal's decision (DECISIONS.md, "Needs Afzal"); show him the statement and wait for his yes.
+Each switch is Afzal's decision (DECISIONS.md, "Needs Afzal"); show him the statement and wait for his yes. Only the
+owner's account, the server or the database connector can change these columns (a manager is refused: re-review N9).
 
 ```sql
 update mp_settings set sellers_open = true where id = 1;       -- B: sellers can apply at /sell

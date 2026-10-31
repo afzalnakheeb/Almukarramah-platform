@@ -5,7 +5,7 @@
 import React, { useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Field, Notice } from '@/components/ui';
-import { checkWithMoyasar, finishPendingWork, freshKey, refund } from '@/lib/aftersale';
+import { checkWithMoyasar, finishPendingWork, freshKey, refund, settlePaymentIssue, settleRefundByHand, type PaymentIssue } from '@/lib/aftersale';
 import { MARKET_DEMO } from '@/lib/flags';
 import { formatMoney } from '@/lib/money';
 
@@ -72,6 +72,75 @@ export function CheckWithMoyasar({ refundId, onDone }: { refundId: string; onDon
     </View>
   );
 }
+
+/** Owner, manager, finance: a refund "Check with Moyasar" cannot settle (review N7). Record what Moyasar's dashboard
+ *  shows, with what was checked; the server reads Moyasar back first and refuses an outcome Moyasar does not show. */
+export function SettleByHand({ refundId, onDone }: { refundId: string; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ tone: 'ok' | 'warn'; text: string } | null>(null);
+  if (!open) return <Button size="sm" kind="text" label="Settle by hand" onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start' }} />;
+  const go = async (outcome: 'succeeded' | 'failed') => {
+    if (MARKET_DEMO) { setMsg({ tone: 'warn', text: 'Example data: nothing is saved here.' }); return; }
+    setBusy(outcome); setMsg(null);
+    try {
+      const r = await settleRefundByHand(refundId, outcome, reason.trim());
+      setMsg({ tone: 'ok', text: `Recorded as ${r.status}.${r.creditNote ? ` Credit note ${r.creditNote}.` : ''}` });
+      onDone();
+    } catch (e) { setMsg({ tone: 'warn', text: e instanceof Error ? e.message : String(e) }); } finally { setBusy(null); }
+  };
+  return (
+    <View style={{ gap: 8, alignSelf: 'stretch' }}>
+      <Field label="What you checked in Moyasar's dashboard (at least 10 characters)" value={reason} onChangeText={setReason} maxLength={500} />
+      {msg ? <Notice tone={msg.tone} text={msg.text} /> : null}
+      <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+        <Button size="sm" kind="secondary" label="Moyasar shows it refunded" busy={busy === 'succeeded'} disabled={reason.trim().length < 10} onPress={() => go('succeeded')} />
+        <Button size="sm" kind="secondary" label="Moyasar shows no refund" busy={busy === 'failed'} disabled={reason.trim().length < 10} onPress={() => go('failed')} />
+        <Button size="sm" kind="text" label="Cancel" onPress={() => setOpen(false)} />
+      </View>
+    </View>
+  );
+}
+
+const ISSUE: Record<PaymentIssue['kind'], string> = {
+  order_not_waiting: 'paid after the order was cancelled or closed',
+  second_payment: 'a second payment for an order already paid',
+  amount_mismatch: 'an amount that does not match the order',
+};
+
+/** Owner, manager, finance: a payment Moyasar took for an order no longer waiting (review N2). Refund it in full,
+ *  attach it to its order (the order is paid with it and invoiced), or close it with a reason. */
+export function PaymentIssueRow({ issue, onDone }: { issue: PaymentIssue; onDone: () => void }) {
+  const [reason, setReason] = useState('');
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ tone: 'ok' | 'warn'; text: string } | null>(null);
+  const go = async (action: 'refund' | 'attach' | 'dismiss') => {
+    if (MARKET_DEMO) { setMsg({ tone: 'warn', text: 'Example data: nothing is saved here.' }); return; }
+    setBusy(action); setMsg(null);
+    try {
+      const r = await settlePaymentIssue(issue.id, action, reason.trim());
+      if (r.pending || r.error) setMsg({ tone: 'warn', text: r.error ?? 'Moyasar did not confirm the refund. Press "Refund in full" again in a few minutes to check it.' });
+      else { setMsg({ tone: 'ok', text: `Done: ${r.status}.${r.invoice ? ` Invoice ${r.invoice}.` : ''}` }); onDone(); }
+    } catch (e) { setMsg({ tone: 'warn', text: e instanceof Error ? e.message : String(e) }); } finally { setBusy(null); }
+  };
+  // the server checks the rest (unpaid, same amount, no parcel cancelled on its own)
+  const canAttach = issue.status === 'open' && issue.kind === 'order_not_waiting' && issue.order_id !== null && issue.orders?.status === 'cancelled';
+  return (
+    <View style={{ gap: 8, alignSelf: 'stretch' }}>
+      <Field label="Reason (kept with the payment and in the audit log)" value={reason} onChangeText={setReason} maxLength={500} />
+      {msg ? <Notice tone={msg.tone} text={msg.text} /> : null}
+      <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+        <Button size="sm" kind="danger" label={issue.status === 'refund_pending' ? 'Check the refund with Moyasar' : 'Refund in full'} busy={busy === 'refund'}
+          disabled={reason.trim().length < 3} onPress={() => go('refund')} />
+        {canAttach ? <Button size="sm" kind="secondary" label="Attach to the order" busy={busy === 'attach'} disabled={reason.trim().length < 3} onPress={() => go('attach')} /> : null}
+        {issue.status === 'open' ? <Button size="sm" kind="text" label="Close (settled elsewhere)" busy={busy === 'dismiss'} disabled={reason.trim().length < 3} onPress={() => go('dismiss')} /> : null}
+      </View>
+    </View>
+  );
+}
+export const issueLabel = (i: PaymentIssue) =>
+  `${i.orders ? `AM-${i.orders.number}` : 'No order'} · ${formatMoney(i.amount_minor, i.currency)} · ${ISSUE[i.kind]} · Moyasar ${i.payment_id}${i.status === 'refund_pending' ? ' · refund waiting for Moyasar' : ''}${i.error ? ` · last error: ${i.error}` : ''}`;
 
 /** Owner, manager, finance: finish what a failure left half done (the scheduler also runs it every 15 minutes; review H3). */
 export function FinishPendingButton({ onDone }: { onDone: () => void }) {

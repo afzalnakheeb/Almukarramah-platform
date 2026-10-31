@@ -23,7 +23,7 @@ Deno.serve(handle(async (req) => {
   const quality = serverQuality(ctx);
   const text = textChecks({ name_en: String(ctx.product.name_en ?? ''), name_ar: String(ctx.product.name_ar ?? ''),
     description_en: String(ctx.product.description_en ?? ''), description_ar: String(ctx.product.description_ar ?? '') }, [],
-    { attributes: (ctx.product.attributes ?? {}) as Record<string, unknown>, variants: ctx.variants ?? [] });
+    { attributes: (ctx.product.attributes ?? {}) as Record<string, unknown>, variants: ctx.variants ?? [], tailoring: (ctx.product.tailoring ?? null) as never });
   if (!submit) return json({ status: ctx.product.listing_status, quality, contacts: text.filter((h) => h.kind === 'contact') });
   if (!member) return fail(403, 'Only the seller can submit a listing', 'لا يرسل المنتج للمراجعة إلا البائع');
   if (!['draft', 'rejected'].includes(ctx.product.listing_status)) return fail(409, `This listing is ${ctx.product.listing_status}`, 'لا يمكن إرسال هذا المنتج في حالته الحالية');

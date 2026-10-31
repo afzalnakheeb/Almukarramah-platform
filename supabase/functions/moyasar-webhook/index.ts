@@ -32,13 +32,16 @@ Deno.serve(async (req) => {
   });
   // nothing was changed: Moyasar retries, and the retry does it all
   if (error) return json({ error: error.message }, 500);
-  const r = data as { found: boolean; order_id?: string; applied?: boolean; status?: string; mismatch?: boolean; second_payment?: boolean };
+  const r = data as { found: boolean; order_id?: string; applied?: boolean; status?: string; mismatch?: boolean; second_payment?: boolean; stray?: boolean };
   if (!r.found) return json({ error: 'order not found' }, 404);
   if (r.mismatch) {
+    // recorded for our team (payment_issues): refunded or settled from the dashboard
     console.error('Amount mismatch', payment.id, r.order_id);
     return json({ error: 'amount mismatch' }, 409);
   }
-  if (r.applied === false && r.status === 'cancelled') return json({ ok: true, already: r.status });
+  // a payment for an order no longer waiting (cancelled meanwhile, or already paid with another payment): kept for our
+  // team to refund, or to revive the order with, never dropped (review N2, REVIEW-2); Moyasar need not send it again
+  if (r.stray) return json({ ok: true, applied: false, stray: true, status: r.status });
 
   // ZATCA tax invoice (Phase 1 now; reported in Phase 2 by zatca-report) for what WE sell. Issued once per order: a
   // retry of this webhook issues one that failed before. Sub-orders a seller invoices are left out, and so are duties.

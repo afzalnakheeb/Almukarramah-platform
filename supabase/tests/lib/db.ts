@@ -5,7 +5,7 @@
 // Environment: PGHOST (default /var/run/postgresql), PGPORT (default 54329), PGUSER (default postgres).
 import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -13,6 +13,7 @@ export const ROOT = join(here, '..', '..', '..');
 const MIGRATIONS = join(ROOT, 'supabase', 'migrations');
 const STUB = join(here, '..', 'supabase_stub.sql');
 const BASELINE = join(here, '..', 'fixtures', 'live_baseline.sql');
+const APPS = join(here, '..', 'fixtures', 'apps');
 
 const PGHOST = process.env.PGHOST ?? '/var/run/postgresql';
 const PGPORT = process.env.PGPORT ?? '54329';
@@ -110,14 +111,19 @@ export class Db {
  * off (marketplace_open, sellers_open, the sandbox courier, the Saudi marketplace corridor without its adviser
  * sign-off); the tests switch it on as Afzal will, unless asShipped is set (to test the defaults themselves).
  */
-export function freshDb(name: string, upTo?: string, opts: { asShipped?: boolean } = {}): Db {
+export function freshDb(name: string, upTo?: string, opts: { asShipped?: boolean; withApps?: boolean } = {}): Db {
   const dbName = `t_${name.replace(/[^a-z0-9_]/gi, '_').toLowerCase()}`;
   run('postgres', ['-c', `drop database if exists ${dbName} with (force)`]);
   run('postgres', ['-c', `create database ${dbName}`]);
   const db = new Db(dbName);
   db.exec(readFileSync(STUB, 'utf8'));
   let baseline = false;
-  for (const f of readdirSync(MIGRATIONS).filter((x) => x.endsWith('.sql')).sort()) {
+  // withApps: the apps branch's 0010 and 0011 (account deletion, assistant reports) in their place, as on main once
+  // both branches are merged (fixtures/apps holds the copies)
+  const files = readdirSync(MIGRATIONS).filter((x) => x.endsWith('.sql')).map((f) => join(MIGRATIONS, f));
+  if (opts.withApps) files.push(...readdirSync(APPS).filter((x) => x.endsWith('.sql')).map((f) => join(APPS, f)));
+  for (const path of files.sort((a, b) => basename(a).localeCompare(basename(b)))) {
+    const f = basename(path);
     if (upTo && f > upTo) break;
     // the live database before the marketplace: our categories, zones and a few products (applied after 0011)
     if (!baseline && f >= '0012') {
@@ -125,7 +131,7 @@ export function freshDb(name: string, upTo?: string, opts: { asShipped?: boolean
       baseline = true;
     }
     try {
-      db.exec(readFileSync(join(MIGRATIONS, f), 'utf8'));
+      db.exec(readFileSync(path, 'utf8'));
     } catch (e) {
       throw new Error(`migration ${f} failed: ${(e as Error).message}`);
     }

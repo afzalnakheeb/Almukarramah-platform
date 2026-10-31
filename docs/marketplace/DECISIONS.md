@@ -1,14 +1,30 @@
 # Marketplace: decisions for Afzal
 
 Each item below is a default chosen to be conservative so the build could carry on. All of them are settings or
-policy rows that staff can change (owner or manager, audited), unless marked otherwise. Please reply yes, or tell us
-what to change.
+policy rows that staff can change (owner or manager, audited), unless marked otherwise; the switches A to D and the
+bank-change hold G are owner only. Please reply yes, or tell us what to change.
 
 ## Needs Afzal (from the independent review before switch-on)
 
 The review (31 October) asked for these to be decided by you. Each has the safest default now, enforced in the
-database, so nothing happens until you say yes. Every switch is a row in `mp_settings` (owner or manager, audited);
-the dashboard at `/admin/marketplace` shows where each one stands.
+database, so nothing happens until you say yes. Every switch is a row in `mp_settings` (audited). Since the
+re-review (N9) only the owner can change `marketplace_open`, `sellers_open`, `payouts_enabled`,
+`support_refund_limit_minor` and `payout_bank_hold_days` (the server and the database connector can too, and do so only
+with your yes); managers still edit the other settings. The dashboard at `/admin/marketplace` shows where each one
+stands.
+
+## Chosen in the second fix pass (please confirm)
+
+The re-review (REVIEW-2) led to these choices. Each is the conservative one; say if you want it otherwise.
+
+| # | Choice | Why | To change it |
+|---|---|---|---|
+| M | **A deleted customer's messages** are kept for the seller and for disputes, unlinked from the person, with the customer's words replaced by "Removed: the customer deleted their account" (English and Arabic). The seller's replies stay. | Account deletion must succeed (Apple 5.1.1(v), Google Play, PDPL), and a seller's side of an order conversation may be needed in a dispute. | Say if the whole conversation should go instead. |
+| N | **A deleted customer's reviews** go with the account, with the seller's reply. Returns and their photos are kept for the accounts, unlinked. | A review is the person's own words on a public page. | Say if reviews should stay, anonymised, instead. |
+| O | **A payment for an order no longer waiting** (cancelled, paid twice, another amount) is kept in "Payments to resolve" until finance refunds it in full, attaches it to its order, or closes it with a reason. Nothing is refunded automatically. | A refund is a decision for a person (approval rule). | Say if such payments should be refunded automatically. |
+| P | **Missing tax invoices** are issued automatically only for orders paid in the last 7 days; older orders without one are listed for our team to settle with the accountant. | An invoice dated long after the sale needs the accountant's view. | Tell us another cut-off. |
+| Q | **A shop's city** is checked and, on a live shop, waits for our team's approval like the other shop text. **A shop's website** is not shown to the public. | Both appear on the public shop page; a website takes customers away from Al Mukarramah. | Say if the website should be shown (we would check and hold it like the text). |
+| R | **Seller details for staff**: notes, legal, registration and tax numbers, KYC notes and contact details are for owner, manager and finance; marketing, support and operations see the rest. | They have no need for them (re-review N11). | Name a role that should see them. |
 
 | # | Decision | Default now | To change it |
 |---|---|---|---|

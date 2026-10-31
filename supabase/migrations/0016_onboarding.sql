@@ -56,44 +56,99 @@ alter table sellers
   add column profile_submitted_at timestamptz;
 
 -- The first contact detail in a text ('phone', 'email', 'link', 'handle', 'messaging', 'bank', 'solicit'), or null.
--- Disguises are undone first: Arabic-Indic, Persian and full-width digits, the letters o and l inside a number,
--- separators between digits, numbers spelled out (English and Arabic), "name at gmail dot com", spaced-out letters.
+-- The same rules as the server's contact.ts (review M3): invisible characters (zero-width, direction marks) are
+-- dropped; look-alike forms made plain (NFKC: full-width, mathematical, circled and superscript digits and letters);
+-- every digit system made 0-9; Arabic marks dropped and alef forms made plain; number words made digits; o and l
+-- between digits read as 0 and 1. Then: nine or more digits with anything but letters between them (several numbers
+-- run together, or an account number, count too); emails however the @ and the dots are written; links; handles
+-- (also "ig:@name"); messaging apps (also spaced out, or a short name with a marked handle: "snap: name"); IBANs and
+-- invitations to deal or pay outside Al Mukarramah, in English and Arabic.
 create or replace function private.contact_hint(p text) returns text
 language plpgsql immutable set search_path = public as $$
 declare
-  t text := lower(coalesce(p, ''));
+  t text;
+  cam text;
   squeezed text;
   m text;
-  word constant text := '(zero|oh|one|two|three|four|five|six|seven|eight|nine|صفر|واحد|اثنان|اثنين|ثلاثة|ثلاث|اربعة|أربعة|اربع|أربع|خمسة|خمس|ستة|ست|سبعة|سبع|ثمانية|ثمان|تسعة|تسع)';
+  n int;
+  w text[];
+  letter constant text := 'a-z\u00C0-\u024F\u0370-\u052F\u0590-\u05FF\u0620-\u064A\u066E-\u06D3\u06D5\u06FA-\u06FF';
+  tld constant text := '(com|net|org|sa|ae|kw|qa|om|bh|in|co|io|me|shop|store|info|biz|ly|gl|link|site|online|app|uk|us|pk|eg|tr|my|id|tv|page|website|ru|de|fr)';
+  at_ constant text := '(@|\(at\)|\[at\]|\{at\}|<at>)';
+  dot_ constant text := '(\.|\(dot\)|\[dot\]|\{dot\}|<dot>|\s+dot\s+)';
+  words constant text[] := array['zero', '0', 'oh', '0', 'one', '1', 'two', '2', 'three', '3', 'four', '4', 'five', '5', 'six', '6', 'seven', '7',
+    'eight', '8', 'nine', '9', 'صفر', '0', 'واحد', '1', 'اثنان', '2', 'اثنين', '2', 'اثنتان', '2', 'ثلاثة', '3', 'ثلاث', '3', 'اربعة', '4', 'اربع', '4',
+    'خمسة', '5', 'خمس', '5', 'ستة', '6', 'ست', '6', 'سبعة', '7', 'سبع', '7', 'ثمانية', '8', 'ثماني', '8', 'ثمان', '8', 'تسعة', '9', 'تسع', '9'];
 begin
-  if t = '' then return null; end if;
-  t := translate(t, '٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹０１２３４５６７８９＠．', '012345678901234567890123456789@.');
-  t := regexp_replace(t, '[ً-ٰٟـ]', '', 'g');
-  -- phone numbers: 9 to 15 digits with any separators, where o and l may stand for 0 and 1 (6 real digits at least)
-  for m in select x[1] from regexp_matches(t, '(\+?[0-9ol][0-9ol\s\-/_.()]{6,30}[0-9ol])', 'g') as x loop
-    if length(regexp_replace(m, '[^0-9ol]', '', 'g')) between 9 and 15 and length(regexp_replace(m, '[^0-9]', '', 'g')) >= 6 then return 'phone'; end if;
+  if coalesce(p, '') = '' then return null; end if;
+  t := regexp_replace(p, '[­͏؜ᅟᅠ឴឵᠎​-‏‪-‮⁠-⁯ㅤ︀-️﻿ﾠ￹-￻]', '', 'g');
+  t := normalize(t, NFKC);
+  t := translate(t, '٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹߀߁߂߃߄߅߆߇߈߉०१२३४५६७८९০১২৩৪৫৬৭৮৯੦੧੨੩੪੫੬੭੮੯૦૧૨૩૪૫૬૭૮૯୦୧୨୩୪୫୬୭୮୯௦௧௨௩௪௫௬௭௮௯౦౧౨౩౪౫౬౭౮౯೦೧೨೩೪೫೬೭೮೯൦൧൨൩൪൫൬൭൮൯෦෧෨෩෪෫෬෭෮෯๐๑๒๓๔๕๖๗๘๙໐໑໒໓໔໕໖໗໘໙༠༡༢༣༤༥༦༧༨༩၀၁၂၃၄၅၆၇၈၉႐႑႒႓႔႕႖႗႘႙០១២៣៤៥៦៧៨៩᠐᠑᠒᠓᠔᠕᠖᠗᠘᠙᥆᥇᥈᥉᥊᥋᥌᥍᥎᥏᧐᧑᧒᧓᧔᧕᧖᧗᧘᧙᪀᪁᪂᪃᪄᪅᪆᪇᪈᪉᪐᪑᪒᪓᪔᪕᪖᪗᪘᪙᭐᭑᭒᭓᭔᭕᭖᭗᭘᭙᮰᮱᮲᮳᮴᮵᮶᮷᮸᮹᱀᱁᱂᱃᱄᱅᱆᱇᱈᱉᱐᱑᱒᱓᱔᱕᱖᱗᱘᱙꘠꘡꘢꘣꘤꘥꘦꘧꘨꘩꣐꣑꣒꣓꣔꣕꣖꣗꣘꣙꤀꤁꤂꤃꤄꤅꤆꤇꤈꤉꧐꧑꧒꧓꧔꧕꧖꧗꧘꧙꧰꧱꧲꧳꧴꧵꧶꧷꧸꧹꩐꩑꩒꩓꩔꩕꩖꩗꩘꩙꯰꯱꯲꯳꯴꯵꯶꯷꯸꯹', '01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789');
+  t := regexp_replace(t, '[ً-ٰٟـۖ-ۜ۟-۪ۤۧۨ-ۭ]', '', 'g');
+  t := translate(t, 'أإآٱى', 'ااااي');
+  cam := t;
+  t := lower(t);
+  for n in 1 .. array_length(words, 1) / 2 loop
+    t := regexp_replace(t, '(^|[^' || letter || '])' || words[2 * n - 1] || '(?=[^' || letter || ']|$)', '\1' || words[2 * n], 'g');
   end loop;
-  if t ~ ('(' || word || '[\s,.،-]+){6,}' || word) then return 'phone'; end if;
-  if t ~ '[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}' or t ~ '[a-z0-9._%+-]+\s*(\(at\)|\[at\]|\s+at\s+)\s*[a-z0-9-]+\s*(\(dot\)|\[dot\]|\s+dot\s+)\s*[a-z]{2,}' then return 'email'; end if;
-  if t ~ '(https?://|www\.|wa\.me|t\.me/)' or t ~ '\m[a-z0-9-]{2,}\.(com|net|org|sa|ae|kw|qa|om|bh|in|co|io|me|shop|store|info|biz|ly|gl|link|site|online|app|uk|us)\M' then return 'link'; end if;
-  if t ~ '(^|\s)@[a-z0-9_.]{3,30}' then return 'handle'; end if;
-  squeezed := regexp_replace(t, '[\s._-]', '', 'g');
-  if squeezed ~ '(whatsapp|watsapp|whatsap|telegram|instagram|snapchat|tiktok|facebook|twitter|wechat|viber|واتساب|واتس|وتساب|تلغرام|تلجرام|تليجرام|انستقرام|انستغرام|إنستغرام|سناب|تيكتوك|فيسبوك|تويتر)' then return 'messaging'; end if;
+  for n in 1 .. 3 loop
+    t := regexp_replace(t, '(?<=[0-9])[oq](?=[oqil|]*[0-9])', '0', 'g');
+    t := regexp_replace(t, '(?<=[0-9])[il|](?=[0il|]*[0-9])', '1', 'g');
+  end loop;
+  -- a comma and a space (a list: "sizes 50, 52, 54", "size 56, 12 ml") join only groups of three digits or more
+  t := regexp_replace(t, '(?<![0-9])([0-9]{1,2})\s*[,،]\s+(?=[0-9])', '\1 x ', 'g');
+  t := regexp_replace(t, '([0-9])\s*[,،]\s+(?=[0-9]{1,2}(?![0-9]))', '\1 x ', 'g');
+  -- numbers: digits with up to four non-letters between them
+  for m in select x[1] from regexp_matches(t, '(\+?[0-9](?:[^' || letter || '0-9]{0,4}[0-9])+)', 'g') as x loop
+    n := length(regexp_replace(m, '[^0-9]', '', 'g'));
+    continue when n < 9;
+    if n <= 15 then
+      continue when regexp_replace(m, '[^0-9]', '', 'g') ~ '^97[89][0-9]{10}$' and m !~ '^\+';    -- an ISBN-13
+      return 'phone';
+    end if;
+    return case when t ~ '(iban|account|acct|ايبان|حساب)' then 'bank' else 'phone' end;   -- several numbers together, or an account
+  end loop;
+  -- emails
+  if t ~ '[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}'
+     or t ~ ('[a-z0-9._%+-]{2,}\s*' || at_ || '\s*[a-z0-9-]{2,}(\s*' || dot_ || '\s*[a-z0-9-]{2,})*?\s*' || dot_ || '\s*' || tld || '(?![a-z])')
+     or t ~ ('[a-z0-9._%+-]{2,}\s+at\s+[a-z0-9-]{2,}\s*(\(dot\)|\[dot\]|\{dot\}|<dot>|\s+dot\s+)\s*' || tld || '(?![a-z])')
+     or t ~ ('[a-z0-9._%+-]{2,}\s*(' || at_ || '|\s+at\s+)\s*(gmail|googlemail|hotmail|yahoo|ymail|outlook|icloud|aol|protonmail|proton|yandex|zoho|gmx)(?![a-z])')
+     or cam ~ ('[a-z0-9._-]{2,}AT[a-z0-9-]{2,}DOT' || tld || '(?![a-z])') then
+    return 'email';
+  end if;
+  if t ~ '(https?://|www\.|wa\.me|t\.me/)' or t ~ ('\m[a-z0-9-]{2,}\.' || tld || '\M') then return 'link'; end if;
+  if t ~ '(^|[^a-z0-9._%+-])@[a-z0-9_.]{3,30}' then return 'handle'; end if;
+  if t ~ '(^|[^a-z])(ig|snap|tg|fb)\s*[:/@]+\s*[a-z0-9_.]{3,30}' then return 'handle'; end if;
+  squeezed := regexp_replace(t, '[\s._*·•/|\\-]', '', 'g');
+  if squeezed ~ '(whatsapp|watsapp|whatsap|telegram|instagram|insta|snapchat|tiktok|facebook|twitter|wechat|viber|واتساب|واتس|وتساب|تلغرام|تلجرام|تليجرام|انستقرام|انستغرام|انستا|سناب|تيكتوك|فيسبوك|تويتر)' then
+    return 'messaging';
+  end if;
   if squeezed ~ '(sa|ae|kw|qa|om|bh|gb|de|fr|nl|in|pk|eg|tr)[0-9]{2}[0-9a-z]{10,30}' and squeezed ~ '[0-9]{10}' then return 'bank'; end if;
-  if t ~ '((contact|call|text|message|dm|whatsapp)\s+(me|us)\M|\m(order|buy|pay)\s+(directly|outside)|direct\s+(order|sale|contact)|(bank|wire)\s+transfer|تواصل\s+(معي|معنا)|اتصل\s+(بي|بنا)|راسلني|راسلنا|كلمني|اطلب\s+مباشرة|للطلب\s+(عبر|على)|خارج\s+المنصة|تحويل\s+بنكي|حوالة\s+بنكية)' then
+  if t ~ ('((contact|call|text|message|dm|whatsapp|ring|reach)\s+(me|us)\M|\m(order|buy|pay)\s+(directly|outside)|direct\s+(order|sale|contact)|(bank|wire)\s+transfer'
+          || '|\mpay\s+(me|us)\s+(by|via|with|through)\M|\m(transfer|send)\s+(the\s+)?(money|payment|amount)\s+(to\s+)?(me|us|my|our)\M'
+          || '|\m(send|give|share|text)\s+(me|us)\s+(your\s+)?(number|phone|mobile|whats\s?app|email|e-mail|contact|details)\M'
+          || '|\mwhat(''|’)?s\s+your\s+(number|phone|mobile|whats\s?app|email)\M|\moutside\s+(the\s+)?(app|platform|site|website)\M'
+          || '|تواصل\s+(معي|معنا)|اتصل\s+(بي|بنا)|راسلني|راسلنا|كلمني|كلمنا|اطلب\s+مباشرة|للطلب\s+(عبر|على)|خارج\s+(المنصة|التطبيق|الموقع)'
+          || '|تحويل\s+بنكي|حوالة\s+بنكية|حول\s+لي|ادفع\s+لي|حول\s+(المبلغ|الفلوس|المال|القيمة)|حسابي\s+البنكي|(على|ع)\s+الخاص|بالخاص'
+          || '|(ارسل|ابعث|ابعت|اعطني|عطني|هات)(ي)?\s+(لي\s+)?(رقمك|رقم\s+(جوالك|هاتفك|تلفونك|موبايلك)|ايميلك|بريدك|واتسابك|حسابك))') then
     return 'solicit';
   end if;
   return null;
 end $$;
 
--- A field of the shop page: no contact details, and not our name.
+-- A field of the shop page: no contact details, and not our name. The city is a place name (letters, spaces and
+-- punctuation of names only); the shop's address (slug) is checked with its dashes read as spaces.
 create or replace function private.check_shop_text(p_field text, p_value text) returns void
 language plpgsql immutable set search_path = public as $$
 declare hint text;
 begin
   if coalesce(p_value, '') = '' then return; end if;
-  if p_field = 'website' then return; end if;   -- a link by nature (https only, a check on the table); never shown on the shop page
-  if p_field in ('name_en', 'name_ar') and (lower(p_value) ~ 'mukarram' or regexp_replace(p_value, '[ً-ٰٟـ]', '', 'g') ~ 'مكرم') then
+  if p_field = 'website' then return; end if;   -- a link by nature (https only, a check on the table); never public
+  if p_field = 'city' and p_value !~ '^[A-Za-z\u00C0-\u024F\u0600-\u06FF .''’()-]{2,60}$' then
+    raise exception using message = 'Please write the city''s name only (letters)', detail = 'يُرجى كتابة اسم المدينة فقط (بالحروف)';
+  end if;
+  if p_field in ('name_en', 'name_ar', 'slug') and (lower(p_value) ~ 'mu?kk?arr?am' or lower(p_value) ~ 'mokarr?am'
+      or regexp_replace(p_value, '[ً-ٰٟـ]', '', 'g') ~ 'مكرم') then
     raise exception using message = 'Your shop name cannot include "Al Mukarramah": please choose your own name',
       detail = 'لا يمكن أن يتضمن اسم متجرك «المكرمة»: يُرجى اختيار اسم خاص بمتجرك';
   end if;
@@ -106,7 +161,8 @@ end $$;
 
 create or replace function sellers_guard() returns trigger language plpgsql set search_path = public as $$
 declare
-  fields constant text[] := array['name_en', 'name_ar', 'tagline_en', 'tagline_ar', 'about_en', 'about_ar', 'returns_en', 'returns_ar', 'website'];
+  -- every field of the public shop page a seller writes (the city too: review H5, REVIEW-2), and the website
+  fields constant text[] := array['name_en', 'name_ar', 'tagline_en', 'tagline_ar', 'about_en', 'about_ar', 'returns_en', 'returns_ar', 'city', 'website'];
   f text;
   v_new jsonb;
   v_old jsonb;
@@ -123,6 +179,7 @@ begin
     end if;
     if private.is_end_user() then
       foreach f in array fields loop perform private.check_shop_text(f, to_jsonb(new) ->> f); end loop;
+      perform private.check_shop_text('slug', replace(new.slug, '-', ' '));
       if new.logo is not null or new.banner is not null then raise exception 'Upload your logo and banner through the seller dashboard' using detail = 'ارفع الشعار والغلاف من لوحة البائع'; end if;
     end if;
     return new;
@@ -171,7 +228,10 @@ begin
     new.profile_pending := pend;
     new.profile_submitted_at := now();
   end if;
-  if old.status = 'approved' then new.slug := old.slug; end if;
+  -- the shop's address: fixed once approved; checked like the rest before that (review N10)
+  if old.status = 'approved' then new.slug := old.slug;
+  elsif new.slug is distinct from old.slug then perform private.check_shop_text('slug', replace(new.slug, '-', ' '));
+  end if;
   return new;
 end $$;
 drop trigger if exists sellers_guard on sellers;
@@ -301,8 +361,10 @@ alter table seller_review_events enable row level security;
 create policy "staff read review events" on seller_review_events for select using (private.is_staff());
 create policy "members read messages" on seller_review_events for select using (visible_to_seller and private.is_seller_member(seller_id));
 -- written only by the functions below
-create or replace function seller_review_events_immutable() returns trigger language plpgsql set search_path = public as $$
+create or replace function seller_review_events_immutable() returns trigger language plpgsql security definer set search_path = public as $$
 begin
+  -- a seller the owner deletes takes its history with it (the foreign key's cascade, once the seller is gone; review N4)
+  if tg_op = 'DELETE' and not exists (select 1 from sellers where id = old.seller_id) then return old; end if;
   raise exception 'The review history is never edited or deleted';
 end $$;
 create trigger seller_review_events_immutable before update or delete on seller_review_events for each row execute function seller_review_events_immutable();
@@ -575,6 +637,7 @@ begin
       about_ar = case when profile_pending ? 'about_ar' then profile_pending ->> 'about_ar' else about_ar end,
       returns_en = case when profile_pending ? 'returns_en' then profile_pending ->> 'returns_en' else returns_en end,
       returns_ar = case when profile_pending ? 'returns_ar' then profile_pending ->> 'returns_ar' else returns_ar end,
+      city = case when profile_pending ? 'city' then profile_pending ->> 'city' else city end,
       website = case when profile_pending ? 'website' then profile_pending ->> 'website' else website end,
       profile_pending = null, profile_submitted_at = null
     where id = s.id;
@@ -710,13 +773,18 @@ begin
   return coalesce((
     select jsonb_agg(jsonb_build_object(
       'seller', to_jsonb(s), 'application', to_jsonb(a),
-      -- bank details only for the owner, managers and finance (review M12)
+      -- the seller's private file (bank details, legal and tax numbers, contact details, our notes, the KYC note) only
+      -- for the owner, managers and finance (review M12, N11); other staff see the KYC state and what they plan to sell
       'private', case when p.seller_id is null then null
                       when private.is_staff(array['owner', 'manager', 'finance']::staff_role[]) then to_jsonb(p)
-                      else to_jsonb(p) - 'iban' - 'bank_name' - 'account_holder' end,
+                      else jsonb_build_object('seller_id', p.seller_id, 'kyc_status', p.kyc_status, 'contact_name', p.contact_name,
+                                              'product_summary', p.product_summary, 'legal_entity_type', p.legal_entity_type) end,
       'live', (select count(*) from products x where x.seller_id = s.id and x.listing_status = 'approved' and x.is_active),
       'waiting', (select count(*) from products x where x.seller_id = s.id and x.listing_status = 'pending_review'),
-      'documents', (select coalesce(jsonb_agg(to_jsonb(d) order by d.uploaded_at desc), '[]'::jsonb) from seller_documents d where d.seller_id = s.id),
+      -- KYC papers for the owner, managers and finance; brand papers for marketing too (they review listings)
+      'documents', (select coalesce(jsonb_agg(to_jsonb(d) order by d.uploaded_at desc), '[]'::jsonb) from seller_documents d where d.seller_id = s.id
+                    and (private.is_staff(array['owner', 'manager', 'finance']::staff_role[])
+                         or (private.is_staff(array['marketing']::staff_role[]) and d.path like s.id::text || '/brand/%'))),
       'required', (select coalesce(jsonb_agg(to_jsonb(r) order by r.sort), '[]'::jsonb) from kyc_requirements r where r.country = s.country),
       'categories', (select coalesce(jsonb_agg(jsonb_build_object('category_id', c.category_id, 'status', c.status, 'note', c.note, 'name_en', k.name_en, 'kind', k.kind) order by k.sort), '[]'::jsonb)
                      from seller_categories c join categories k on k.id = c.category_id where c.seller_id = s.id),

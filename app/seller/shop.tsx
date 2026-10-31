@@ -31,7 +31,7 @@ export default function SellerShop() {
   const text = (k: keyof NonNullable<typeof s.profile_pending>) => (k in pend ? pend[k] : s[k]) ?? '';
   const [f, setF] = useState({
     name_ar: text('name_ar'), tagline_en: text('tagline_en'), tagline_ar: text('tagline_ar'), about_en: text('about_en'), about_ar: text('about_ar'),
-    city: s.city ?? '', website: text('website'), returns_en: text('returns_en'), returns_ar: text('returns_ar'),
+    city: text('city'), website: text('website'), returns_en: text('returns_en'), returns_ar: text('returns_ar'),
     handling_days: String(s.handling_days ?? 3),
   });
   const [p, setP] = useState({ contact_name: me.private?.contact_name ?? '', contact_email: me.private?.contact_email ?? '', contact_phone: me.private?.contact_phone ?? '' });

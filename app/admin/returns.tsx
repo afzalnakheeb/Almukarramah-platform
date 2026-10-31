@@ -6,9 +6,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Image, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { Seo } from '@/components/seo';
-import { CheckWithMoyasar, FinishPendingButton, RefundButton } from '@/components/admin-refund';
+import { CheckWithMoyasar, FinishPendingButton, issueLabel, PaymentIssueRow, RefundButton, SettleByHand } from '@/components/admin-refund';
 import { Button, Card, Chip, Field, H1, Notice, T, Tag, useWide } from '@/components/ui';
-import { adminRefundQueue, adminReturns, customerPhotoUrls, returnAction, type RefundQueue, type ReturnRequest, type ReturnStatus } from '@/lib/aftersale';
+import { adminPaymentIssues, adminRefundQueue, adminReturns, customerPhotoUrls, returnAction, type PaymentIssue, type RefundQueue, type ReturnRequest, type ReturnStatus } from '@/lib/aftersale';
 import { MARKET_DEMO } from '@/lib/flags';
 import { formatMoney } from '@/lib/money';
 import { colors } from '@/theme';
@@ -81,11 +81,14 @@ export default function AdminReturns() {
   const [tab, setTab] = useState<ReturnStatus | 'queue'>('queue');
   const [rows, setRows] = useState<ReturnRequest[]>([]);
   const [queue, setQueue] = useState<RefundQueue | null>(null);
+  const [issues, setIssues] = useState<PaymentIssue[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const load = useCallback(() => {
     setErr(null);
-    if (tab === 'queue') adminRefundQueue().then(setQueue).catch((e) => setErr(String(e.message ?? e)));
-    else adminReturns(tab).then(setRows).catch((e) => setErr(String(e.message ?? e)));
+    if (tab === 'queue') {
+      adminRefundQueue().then(setQueue).catch((e) => setErr(String(e.message ?? e)));
+      adminPaymentIssues().then(setIssues).catch(() => setIssues([]));   // support cannot read them: the list is for finance
+    } else adminReturns(tab).then(setRows).catch((e) => setErr(String(e.message ?? e)));
   }, [tab]);
   useEffect(() => { load(); }, [load]);
   return (
@@ -128,6 +131,20 @@ export default function AdminReturns() {
                 <Card key={f.id} pad={14} style={{ gap: 6 }}>
                   <T size={14}>AM-{f.order_number}: {formatMoney(f.amount_minor, f.currency)} since {day(f.created_at)}{f.error ? ` (${f.error})` : ''}</T>
                   <CheckWithMoyasar refundId={f.id} onDone={load} />
+                  <SettleByHand refundId={f.id} onDone={load} />
+                </Card>
+              ))}
+            </>
+          ) : null}
+          {issues.length ? (
+            <>
+              <T w={700} size={17}>Payments to resolve</T>
+              <T size={13} color={colors.muted}>Moyasar took these payments for orders that were no longer waiting for one. Each is kept here until it is refunded, attached to its order or closed.</T>
+              {issues.map((i) => (
+                <Card key={i.id} pad={14} style={{ gap: 6 }}>
+                  <T size={14}>{issueLabel(i)}</T>
+                  <T size={12.5} color={colors.muted}>Since {day(i.created_at)}</T>
+                  <PaymentIssueRow issue={i} onDone={load} />
                 </Card>
               ))}
             </>

@@ -211,6 +211,32 @@ export async function checkWithMoyasar(refundId: string): Promise<Reconciled> {
   if (MARKET_DEMO) return demoOnly();
   return callFunction<Reconciled>('refund-order', { action: 'reconcile', refundId });
 }
+/** Owner, manager, finance: settle a refund still processing by hand, after checking Moyasar's dashboard (review N7).
+ *  The server reads the payment back from Moyasar first and refuses an outcome Moyasar does not show. */
+export async function settleRefundByHand(refundId: string, outcome: 'succeeded' | 'failed', reason: string) {
+  if (MARKET_DEMO) return demoOnly();
+  return callFunction<{ ok: boolean; refund: string; status: string; creditNote: string | null }>('refund-order', { action: 'resolve', refundId, outcome, reason });
+}
+/** A payment Moyasar took for an order that was no longer waiting (cancelled, paid twice, another amount): review N2. */
+export type PaymentIssue = {
+  id: string; payment_id: string; order_id: string | null; kind: 'order_not_waiting' | 'second_payment' | 'amount_mismatch';
+  amount_minor: number; currency: string; status: 'open' | 'refund_pending' | 'refunded' | 'attached' | 'dismissed';
+  note: string | null; error: string | null; created_at: string; orders: { number: number; status: string } | null;
+};
+export async function adminPaymentIssues(): Promise<PaymentIssue[]> {
+  if (MARKET_DEMO) return [];
+  const { data, error } = await supabase.from('payment_issues')
+    .select('id, payment_id, order_id, kind, amount_minor, currency, status, note, error, created_at, orders(number, status)')
+    .in('status', ['open', 'refund_pending']).order('created_at', { ascending: true }).limit(100);
+  if (error) throw fromDb(error);
+  return (data as unknown as PaymentIssue[]) ?? [];
+}
+export type IssueResult = { ok?: boolean; status?: string; invoice?: string | null; reconciled?: boolean; pending?: boolean; code?: string; error?: string };
+/** Refund it in full, attach it to its order (the order is paid with it), or close it with a reason. */
+export async function settlePaymentIssue(issueId: string, action: 'refund' | 'attach' | 'dismiss', reason: string): Promise<IssueResult> {
+  if (MARKET_DEMO) return demoOnly();
+  return callFunction<IssueResult>('refund-order', { action: 'payment_issue', issueId, do: action, reason });
+}
 export type FinishResult = { handed_on: unknown[]; invoices: unknown[]; credit_notes: unknown[]; refunds: unknown[]; left: { step: string; error: string }[] };
 /** Finish what a failure left half done: parcels not handed on, missing tax invoices and credit notes, refunds waiting (review H3). */
 export async function finishPendingWork(): Promise<FinishResult> {
@@ -283,7 +309,7 @@ export type Overview = {
   days: number;
   queues: Record<'sellers_to_review' | 'listings_waiting' | 'listings_checking' | 'photos_checking' | 'returns_to_answer' | 'disputes' | 'refunds_to_make'
     | 'credit_notes_pending' | 'refunds_stuck' | 'reviews_to_publish' | 'conversations_flagged' | 'awaiting_acceptance' | 'late_to_ship' | 'not_collected' | 'delivery_failed'
-    | 'shop_pages_to_approve', number>;
+    | 'shop_pages_to_approve' | 'payments_to_resolve', number>;
   sales: { orders: number; parcels: number; marketplace_parcels: number; marketplace_sar_minor: number; house_sar_minor: number; delivery_sar_minor: number;
     commission_sar_minor: number; refunded_sar_minor: number; cancelled_by_sellers: number; delivered: number };
   owed_to_sellers: { available_sar_minor: number; held_sar_minor: number; balance_sar_minor: number }; paid_out_sar_minor: number;
@@ -291,7 +317,9 @@ export type Overview = {
   top_sellers: { id: string; name_en: string; slug: string; parcels: number; sales_sar_minor: number; commission_sar_minor: number; rating_avg: number | null; standard: string }[];
   destinations: { country: string; parcels: number }[]; notifications_queued: number;
   /** half-done work that finish-pending completes (review H3) */
-  pending_work?: { orders_without_invoice: number; orders_not_handed_on: number; credit_notes_pending: number; refunds_processing: number };
+  pending_work?: { orders_without_invoice: number; orders_not_handed_on: number; credit_notes_pending: number; refunds_processing: number;
+    /** paid more than 7 days ago with no invoice: never invoiced by the job, settled with the accountant (review N5) */
+    orders_without_invoice_old?: number; payment_issues?: number };
   /** the switches Afzal decides (DECISIONS.md, Needs Afzal); all off until he switches them on */
   switches?: { marketplace_open: boolean; sellers_open: boolean; payouts_enabled: boolean; sandbox_carrier: boolean | null; support_refund_limit_minor: number };
 };

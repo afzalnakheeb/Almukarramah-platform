@@ -80,8 +80,9 @@ export async function getSettings() {
 }
 
 // The public columns of a seller (commission and review notes are not readable through the API).
-export const SELLER_COLUMNS = 'id, slug, name_en, name_ar, tagline_en, tagline_ar, about_en, about_ar, country, city, logo, banner, website, handling_days, returns_en, returns_ar, kind, status, created_at';
-export type PublicSeller = Omit<Seller, 'commission_bps' | 'review_note'>;
+// what the public may read of a shop (the website is not public: review H5, REVIEW-2)
+export const SELLER_COLUMNS = 'id, slug, name_en, name_ar, tagline_en, tagline_ar, about_en, about_ar, country, city, logo, banner, handling_days, returns_en, returns_ar, kind, status, created_at';
+export type PublicSeller = Omit<Seller, 'commission_bps' | 'review_note' | 'website'>;
 
 /** Approved marketplace sellers (partners are never listed). */
 export async function getSellers(): Promise<PublicSeller[]> {

@@ -11,10 +11,16 @@
 // function with action "reconcile", or finish-pending), and no other refund can start on the order meanwhile. Only a
 // definite refusal from Moyasar marks it failed (review H2). A credit note that cannot be issued stays pending and is
 // issued by finish-pending; nothing is skipped silently.
-import { MoyasarError, refundPayment } from '../_shared/moyasar.ts';
+//
+// Before any new refund, the payment is read from Moyasar: if Moyasar has refunded more than we recorded (a refund
+// marked failed that Moyasar completed late, or one made in the Moyasar dashboard), nothing new is refunded until
+// finance settles it (review N7, REVIEW-2). Finance settles a refund by hand with a reason ("resolve"), and decides on
+// payments taken for orders no longer waiting ("payment_issue": refund it, revive the order with it, or close it;
+// review N2).
+import { getPayment, MoyasarError, refundPayment } from '../_shared/moyasar.ts';
 import { graceMinutes, reconcileRefund } from '../_shared/refunds.ts';
-import { admin, caller, dbError, fail, handle, json, staffRole, UUID } from '../_shared/util.ts';
-import { issueCreditNote } from '../_shared/zatca.ts';
+import { admin, caller, dbError, type Db, fail, handle, json, staffRole, UUID } from '../_shared/util.ts';
+import { ensureInvoice, issueCreditNote } from '../_shared/zatca.ts';
 
 type Prepared = {
   id: string; status: 'processing' | 'succeeded' | 'failed'; duplicate: boolean; currency: string; amount_minor: number; platform_minor: number;
@@ -30,10 +36,61 @@ Deno.serve(handle(async (req) => {
   const grace = graceMinutes((k) => Deno.env.get(k));
 
   const body = (await req.json()) as {
-    action?: 'refund' | 'reconcile'; refundId?: string;
+    action?: 'refund' | 'reconcile' | 'resolve' | 'payment_issue'; refundId?: string; outcome?: 'failed' | 'succeeded';
+    issueId?: string; do?: 'refund' | 'attach' | 'dismiss';
     orderId?: string; reason?: string; key?: string; returnId?: string; subOrderId?: string;
     lines?: { orderItemId: string; quantity: number }[]; shipping?: string[]; duties?: string[]; orderShipping?: boolean; restock?: boolean;
   };
+  const finance = ['owner', 'manager', 'finance'].includes(role ?? '');
+
+  // ------------------------------------------------ settle a refund by hand (finance, with a reason: N7)
+  if (body.action === 'resolve') {
+    if (!finance) return fail(403, 'Not allowed', 'غير مسموح', 'not_allowed');
+    if (!body.refundId || !UUID.test(body.refundId) || (body.outcome !== 'failed' && body.outcome !== 'succeeded')) return fail(400, 'Refund not found', 'لم يُعثر على الاسترداد');
+    const reason = (body.reason ?? '').trim();
+    if (reason.length < 10) return fail(400, 'Write the reason (what you checked in Moyasar)', 'اكتب السبب (ما تحققت منه في ميسر)');
+    const { data: st, error: stErr } = await db.rpc('mp_refund_state', { p_refund: body.refundId });
+    if (stErr || !st) return fail(404, 'Refund not found', 'لم يُعثر على الاسترداد');
+    const f = st as { id: string; status: string; payment_id: string | null; amount_minor: number; order_refunded_minor: number };
+    // what Moyasar shows decides what may be recorded: a refund is succeeded only if Moyasar holds it
+    let extra: number | null = null;
+    if (f.payment_id) {
+      try {
+        extra = Number((await getPayment(f.payment_id)).refunded ?? 0) - f.order_refunded_minor;
+      } catch (e) {
+        return fail(503, `Moyasar could not be reached: ${(e as Error).message}`, 'تعذّر الوصول إلى ميسر، حاول بعد قليل.', 'moyasar_unreachable');
+      }
+    }
+    if (body.outcome === 'succeeded' && (extra === null || extra < f.amount_minor)) {
+      return fail(409, `Moyasar does not show this refund (it shows ${extra ?? 0} more refunded than we recorded)`, 'لا تُظهر ميسر هذا الاسترداد.', 'not_at_moyasar');
+    }
+    if (body.outcome === 'failed' && extra !== null && extra >= f.amount_minor) {
+      return fail(409, 'Moyasar shows this refund was made: record it as succeeded', 'تُظهر ميسر أن هذا الاسترداد تم: سجّله ناجحًا.', 'at_moyasar');
+    }
+    const { data, error } = await db.rpc('mp_resolve_refund', { p_refund: f.id, p_user: user.id, p_outcome: body.outcome, p_reason: reason });
+    if (error) return dbError(error, 409);
+    const done = data as { id: string; status: string; recorded_late_as?: string };
+    let creditNote: string | null = null;
+    if (body.outcome === 'succeeded') {
+      try {
+        creditNote = (await issueCreditNote(db, done.recorded_late_as ?? f.id))?.number ?? null;
+      } catch (e) {
+        console.error('credit note left pending', f.id, e);   // finish-pending issues it
+      }
+    }
+    await db.from('audit_log').insert({ actor: user.id, actor_label: user.email, table_name: 'refunds', row_id: f.id, action: 'REFUND_SETTLED_BY_HAND',
+                                        new_data: { outcome: body.outcome, reason, moyasar_extra: extra, recorded_as: done.recorded_late_as ?? f.id } });
+    return json({ ok: true, refund: done.recorded_late_as ?? f.id, status: done.status, creditNote });
+  }
+
+  // ------------------------------------------------ a payment for an order no longer waiting (finance: N2)
+  if (body.action === 'payment_issue') {
+    if (!finance) return fail(403, 'Not allowed', 'غير مسموح', 'not_allowed');
+    if (!body.issueId || !UUID.test(body.issueId) || !['refund', 'attach', 'dismiss'].includes(body.do ?? '')) return fail(400, 'Payment not found', 'لم يُعثر على الدفعة');
+    const reason = (body.reason ?? '').trim();
+    if (reason.length < 3) return fail(400, 'Write the reason', 'اكتب السبب');
+    return settleIssue(db, user, body.issueId, body.do!, reason);
+  }
 
   // ------------------------------------------------ settle a refund still waiting for Moyasar's answer
   if (body.action === 'reconcile') {
@@ -55,6 +112,25 @@ Deno.serve(handle(async (req) => {
     p.shipping = (body.shipping ?? []).filter((x) => UUID.test(x));
     p.duties = (body.duties ?? []).filter((x) => UUID.test(x));
     p.order_shipping = body.orderShipping === true;
+  }
+
+  // Moyasar first: a refund it holds that we have not recorded (completed late, or made in its dashboard) is settled
+  // before anything new is refunded, so nothing is ever refunded twice (N7)
+  const { data: ord } = await db.from('orders').select('payment_id, refunded_minor').eq('id', body.orderId).maybeSingle();
+  if (ord?.payment_id) {
+    let moyasarRefunded: number;
+    try {
+      moyasarRefunded = Number((await getPayment(ord.payment_id)).refunded ?? 0);
+    } catch (e) {
+      return fail(503, `Moyasar could not be reached, so nothing was refunded: ${(e as Error).message}`, 'تعذّر الوصول إلى ميسر، ولم يُسترد شيء. حاول بعد قليل.', 'moyasar_unreachable');
+    }
+    if (moyasarRefunded > Number(ord.refunded_minor ?? 0)) {
+      const { data: waiting } = await db.from('refunds').select('id').eq('order_id', body.orderId).eq('status', 'processing').limit(1).maybeSingle();
+      if (!waiting) {
+        return fail(409, `Moyasar shows ${moyasarRefunded - Number(ord.refunded_minor ?? 0)} refunded on this payment that we have not recorded: settle it first ("Settle by hand" on the refund Moyasar completed)`,
+          'تُظهر ميسر مبلغًا مستردًا لم نسجّله: سوِّه أولًا قبل أي استرداد جديد.', 'moyasar_unrecorded');
+      }
+    }
   }
 
   const { data, error } = await db.rpc('mp_prepare_refund', { p_order: body.orderId, p, p_user: user.id });
@@ -114,3 +190,66 @@ Deno.serve(handle(async (req) => {
   });
   return json({ ok: true, refund: prep.id, amount: prep.amount_minor, currency: prep.currency, creditNote, creditNotePending: prep.platform_minor > 0 && !creditNote });
 }));
+
+type Issue = { id: string; payment_id: string; order_id: string | null; kind: string; amount_minor: number; currency: string; status: string; age_seconds: number;
+  order: { id: string; number: number; status: string } | null };
+
+/** Refund a payment to resolve in full, revive its order with it, or close it with a reason (N2). */
+async function settleIssue(db: Db, user: { id: string; email?: string | null }, issueId: string, action: string, reason: string): Promise<Response> {
+  const { data, error } = await db.rpc('mp_payment_issue', { p_issue: issueId });
+  if (error || !data) return fail(404, 'Payment not found', 'لم يُعثر على الدفعة');
+  const i = data as Issue;
+  const settle = (status: string, note: string | null, err: string | null = null) =>
+    db.rpc('mp_settle_payment_issue', { p_issue: i.id, p_user: user.id, p_status: status, p_note: note, p_error: err });
+
+  if (action === 'dismiss') {
+    const { error: e } = await settle('dismissed', reason);
+    if (e) return dbError(e, 409);
+    return json({ ok: true, status: 'dismissed' });
+  }
+  if (action === 'attach') {
+    const { data: r, error: e } = await db.rpc('mp_attach_payment', { p_issue: i.id, p_user: user.id, p_note: reason });
+    if (e) return dbError(e, 409);
+    let invoice: string | null = null;
+    try {
+      invoice = i.order_id ? (await ensureInvoice(db, i.order_id))?.number ?? null : null;
+    } catch (x) {
+      console.error('invoice left pending', i.order_id, x);   // finish-pending issues it
+    }
+    return json({ ok: true, status: 'attached', order: r, invoice });
+  }
+
+  // refund it in full: reserved first (refund_pending), so a second press or a second person never refunds it twice
+  if (i.status === 'refund_pending') {
+    // an earlier refund whose answer was lost: what Moyasar shows decides
+    try {
+      const pay = await getPayment(i.payment_id);
+      if (Number(pay.refunded ?? 0) >= i.amount_minor) {
+        const { error: e } = await settle('refunded', reason);
+        if (e) return dbError(e, 409);
+        return json({ ok: true, status: 'refunded', reconciled: true });
+      }
+    } catch (e) {
+      return fail(503, `Moyasar could not be reached: ${(e as Error).message}`, 'تعذّر الوصول إلى ميسر، حاول بعد قليل.', 'moyasar_unreachable');
+    }
+    if (i.age_seconds < 15 * 60) return fail(409, 'This refund is still waiting for Moyasar: try again in a few minutes', 'هذا الاسترداد بانتظار ميسر: حاول بعد دقائق.', 'refund_processing');
+  } else {
+    const { error: e } = await settle('refund_pending', reason);
+    if (e) return dbError(e, 409);
+  }
+  try {
+    await refundPayment(i.payment_id, i.amount_minor);
+  } catch (e) {
+    if (e instanceof MoyasarError && e.definite) {
+      await settle('open', null, e.message.slice(0, 900));
+      return fail(409, `Moyasar refused the refund: ${e.message}`, 'رفضت ميسر عملية الاسترداد.', 'refund_refused');
+    }
+    // not known: it stays refund_pending, and pressing again reads it back from Moyasar first
+    return fail(202, 'Moyasar did not confirm the refund. It stays waiting: press again in a few minutes to check it.', 'لم تؤكد ميسر الاسترداد: اضغط مرة أخرى بعد دقائق للتحقق.', 'refund_unconfirmed', { pending: true });
+  }
+  const { error: e2 } = await settle('refunded', reason);
+  if (e2) return dbError(e2, 409);
+  await db.from('audit_log').insert({ actor: user.id, actor_label: user.email, table_name: 'payment_issues', row_id: i.id, action: 'STRAY_PAYMENT_REFUNDED',
+                                      new_data: { payment_id: i.payment_id, amount_minor: i.amount_minor, currency: i.currency, reason } });
+  return json({ ok: true, status: 'refunded' });
+}

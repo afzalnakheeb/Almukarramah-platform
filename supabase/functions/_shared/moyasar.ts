@@ -80,11 +80,16 @@ export function refundPayment(id: string, amount?: number) {
   return call<MoyasarPayment>(`/payments/${encodeURIComponent(id)}/refund`, { method: 'POST', body: JSON.stringify(amount ? { amount } : {}) });
 }
 
-/** Merchant-initiated charge on a saved card token (box clubs). Recurring must be enabled on the Moyasar account. */
-export function chargeToken(p: { token: string; amount: number; currency: string; description: string; metadata: Record<string, string> }) {
+/**
+ * Merchant-initiated charge on a saved card token (box clubs). Recurring must be enabled on the Moyasar account.
+ * givenId (a UUID) makes it idempotent: Moyasar uses it as the payment's id, and the same givenId again answers with
+ * that payment instead of charging again (https://docs.moyasar.com/api/idempotency), so a lost answer is asked again.
+ */
+export function chargeToken(p: { token: string; amount: number; currency: string; description: string; metadata: Record<string, string>; givenId?: string }) {
   return call<MoyasarPayment>('/payments', {
     method: 'POST',
     body: JSON.stringify({
+      ...(p.givenId ? { given_id: p.givenId } : {}),
       amount: p.amount,
       currency: p.currency,
       description: p.description,

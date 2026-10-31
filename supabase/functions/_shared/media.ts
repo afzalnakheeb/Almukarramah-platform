@@ -133,6 +133,8 @@ export async function runListingCheck(db: Db, c: Context) {
       category_path: path, category_slug: String(pol.slug ?? ''), price_sar: (Number(p.base_price_sar ?? 0) / 100).toFixed(2),
       attributes: (p.attributes ?? {}) as Record<string, unknown>, made_to_measure: p.made_to_measure === true, seller_country: c.seller?.country ?? '',
       photo_count: c.photos.length,
+      // the design options a customer of a made-to-measure listing chooses from (review N10)
+      tailoring: (p.tailoring ?? null) as never,
     },
     images, quality, rules: setup.rules, documents: c.documents.map((d) => d.doc_type), alwaysReview: pol.always_review === true,
     categories: c.categories, settings: setup.settings, models: setup.models, call: setup.call,

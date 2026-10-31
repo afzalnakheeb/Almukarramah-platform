@@ -43,6 +43,20 @@ alter table mp_settings
   add column support_refund_limit_minor int not null default 0 check (support_refund_limit_minor >= 0),   -- SAR halalas; 0: support does not refund
   add column payout_bank_hold_days int not null default 7 check (payout_bank_hold_days between 0 and 60); -- payouts wait after bank details change
 
+-- The switches and limits are Afzal's decisions: only the owner changes them (a manager edits the other settings;
+-- the server and the database connector too, with Afzal's yes under the approval rule). Review N9, REVIEW-2.
+create or replace function private.mp_settings_guard() returns trigger language plpgsql set search_path = public as $$
+begin
+  if (new.marketplace_open, new.sellers_open, new.payouts_enabled, new.support_refund_limit_minor, new.payout_bank_hold_days)
+     is distinct from (old.marketplace_open, old.sellers_open, old.payouts_enabled, old.support_refund_limit_minor, old.payout_bank_hold_days)
+     and not (private.is_staff(array['owner']::staff_role[]) or coalesce(auth.role(), '') = 'service_role'
+              or (auth.role() is null and session_user not in ('authenticator', 'anon', 'authenticated', 'service_role'))) then
+    raise exception 'Only the owner changes the marketplace switches and limits' using detail = 'لا يغيّر مفاتيح السوق وحدوده إلا المالك';
+  end if;
+  return new;
+end $$;
+create trigger mp_settings_guard before update on mp_settings for each row execute function private.mp_settings_guard();
+
 create or replace function mp_public_settings() returns jsonb
 language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
@@ -315,7 +329,8 @@ create index review_replies_queue on review_replies (created_at) where status = 
 -- ================================================================ messages
 create table message_threads (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users on delete cascade,       -- the customer
+  -- the customer; null once they deleted their account (the conversation stays for the seller and for disputes: N1)
+  user_id uuid references auth.users on delete set null,
   seller_id uuid references sellers on delete cascade,                 -- null: a conversation with Al Mukarramah
   product_id uuid references products on delete set null,              -- a question before buying
   sub_order_id uuid references sub_orders on delete set null,          -- about an order
@@ -429,16 +444,66 @@ revoke insert, update, delete on notification_outbox, return_requests, return_li
 revoke insert, delete on notification_templates from authenticated;
 
 -- ================================================================ never edited
-create or replace function private.immutable_row() returns trigger language plpgsql set search_path = public as $$
+-- Records that never change. The one exception (review N4, REVIEW-2): a record follows a parent row that was deleted,
+-- the way its foreign key says, losing the link (on delete set null) or going with it (on delete cascade). The
+-- arguments after the message name those links, "column=parent table"; the parent must really be gone, so nothing
+-- but the foreign key's own action can use it.
+create or replace function private.followed_deleted_parent(p_old jsonb, p_new jsonb, p_links text[], p_rel regclass default null) returns boolean
+language plpgsql stable security definer set search_path = public as $$
+declare
+  link text;
+  col text;
+  gone boolean;
+  generated text[];
 begin
+  -- generated columns are not computed yet in a BEFORE trigger: left out of the comparison
+  if p_rel is not null and p_new is not null then
+    generated := array(select attname::text from pg_attribute where attrelid = p_rel and attgenerated <> '' and not attisdropped);
+    p_old := p_old - generated;
+    p_new := p_new - generated;
+  end if;
+  foreach link in array coalesce(p_links, '{}') loop
+    col := split_part(link, '=', 1);
+    continue when (p_old ->> col) is null;
+    execute format('select not exists (select 1 from %s where id = $1::uuid)', split_part(link, '=', 2)) into gone using p_old ->> col;
+    continue when not gone;
+    if p_new is null then return true; end if;                                         -- deleted with its parent
+    if (p_new -> col) = 'null'::jsonb and (p_old - col) = (p_new - col) then return true; end if;   -- only the link went
+  end loop;
+  return false;
+end $$;
+revoke all on function private.followed_deleted_parent(jsonb, jsonb, text[], regclass) from public, anon, authenticated;
+
+create or replace function private.immutable_row() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if private.followed_deleted_parent(to_jsonb(old), case when tg_op = 'UPDATE' then to_jsonb(new) end, tg_argv[1:], tg_relid) then
+    return case when tg_op = 'DELETE' then old else new end;
+  end if;
   raise exception '%', coalesce(tg_argv[0], 'These records are never edited or deleted');
 end $$;
 create trigger seller_ledger_immutable before update or delete on seller_ledger for each row
-  execute function private.immutable_row('Statement entries are never edited or deleted; record an adjustment instead');
-create trigger messages_immutable before update or delete on messages for each row
-  execute function private.immutable_row('Messages are never edited or deleted');
+  execute function private.immutable_row('Statement entries are never edited or deleted; record an adjustment instead', 'created_by=auth.users');
 create trigger refund_lines_immutable before update or delete on refund_lines for each row
-  execute function private.immutable_row('Refund lines are never edited or deleted');
+  execute function private.immutable_row('Refund lines are never edited or deleted', 'refund_id=refunds');
+
+-- Messages: never edited or deleted, except when the person who wrote one deletes their account (review N1,
+-- REVIEW-2): the message is kept for the conversation's record and for disputes, unlinked from the person, and a
+-- customer's words are removed (the seller's and our team's stay). A deleted conversation takes its messages.
+create or replace function private.messages_guard() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'DELETE' then
+    if not exists (select 1 from message_threads where id = old.thread_id) then return old; end if;
+  elsif old.sender_id is not null and new.sender_id is null and not exists (select 1 from auth.users where id = old.sender_id)
+        and (to_jsonb(old) - 'sender_id') = (to_jsonb(new) - 'sender_id') then
+    if old.sender = 'customer' then
+      new.body := 'Removed: the customer deleted their account. · حُذفت: حذف العميل حسابه.';
+      new.flags := '{}';
+    end if;
+    return new;
+  end if;
+  raise exception 'Messages are never edited or deleted';
+end $$;
+create trigger messages_immutable before update or delete on messages for each row execute function private.messages_guard();
 create trigger return_lines_immutable before update on return_lines for each row
   execute function private.immutable_row('Return lines are never edited');
 
@@ -457,8 +522,11 @@ begin
 end $$;
 create trigger refunds_guard before update or delete on refunds for each row execute function private.refunds_guard();
 
-create or replace function private.payouts_guard() returns trigger language plpgsql set search_path = public as $$
+create or replace function private.payouts_guard() returns trigger language plpgsql security definer set search_path = public as $$
 begin
+  if tg_op = 'UPDATE' and private.followed_deleted_parent(to_jsonb(old), to_jsonb(new), array['recorded_by=auth.users', 'reversed_by=auth.users'], tg_relid) then
+    return new;
+  end if;
   if tg_op = 'DELETE' then raise exception 'Payouts are never deleted; reverse one instead'; end if;
   if (new.seller_id, new.amount_sar_minor, new.method, new.iban_last4, new.reference, new.paid_on, new.note, new.recorded_by, new.created_at)
      is distinct from (old.seller_id, old.amount_sar_minor, old.method, old.iban_last4, old.reference, old.paid_on, old.note, old.recorded_by, old.created_at)
@@ -483,6 +551,13 @@ create trigger return_requests_touch before update on return_requests for each r
 create trigger product_reviews_touch before update on product_reviews for each row execute function mp_touch();
 create trigger review_replies_touch before update on review_replies for each row execute function mp_touch();
 create trigger message_threads_touch before update on message_threads for each row execute function mp_touch();
+-- a customer who deletes their account: the conversation stays, unlinked, and the subject they may have written goes
+create or replace function private.message_threads_unlinked() returns trigger language plpgsql set search_path = public as $$
+begin
+  if old.user_id is not null and new.user_id is null then new.subject := 'Deleted account · حساب محذوف'; end if;
+  return new;
+end $$;
+create trigger message_threads_unlinked before update of user_id on message_threads for each row execute function private.message_threads_unlinked();
 
 create trigger audit_notification_templates after insert or update or delete on notification_templates for each row execute function audit_keyed('key');
 create trigger audit_return_requests after insert or update or delete on return_requests for each row execute function audit_trigger();
@@ -881,6 +956,29 @@ language sql stable security definer set search_path = public as $$
   from refunds f join orders o on o.id = f.order_id where f.id = p_refund;
 $$;
 
+-- The refund ledger of a line (review H1, REVIEW-2): what is refunded or being refunded of it, by any route; and the
+-- first open return still waiting to refund some of it (its quantity less what was refunded through it).
+create or replace function private.item_refunded(p_item uuid) returns int
+language sql stable security definer set search_path = public as $$
+  select coalesce(sum(rl.quantity), 0)::int from refund_lines rl join refunds rf on rf.id = rl.refund_id
+  where rl.order_item_id = p_item and rl.kind = 'item' and rf.status in ('processing', 'succeeded');
+$$;
+create or replace function private.return_refunded(p_return uuid, p_item uuid) returns int
+language sql stable security definer set search_path = public as $$
+  select coalesce(sum(rl.quantity), 0)::int from refund_lines rl join refunds rf on rf.id = rl.refund_id
+  where rf.return_id = p_return and rl.order_item_id = p_item and rl.kind = 'item' and rf.status in ('processing', 'succeeded');
+$$;
+create or replace function private.open_return_on(p_item uuid) returns text
+language sql stable security definer set search_path = public as $$
+  select format('R-%s-%s', o.number, r.seq)
+  from return_lines rl join return_requests r on r.id = rl.return_id join orders o on o.id = r.order_id
+  where rl.order_item_id = p_item and private.return_open(r.status, r.declined_at) and rl.quantity > private.return_refunded(r.id, p_item)
+  order by r.created_at limit 1;
+$$;
+revoke all on function private.item_refunded(uuid) from public, anon, authenticated;
+revoke all on function private.return_refunded(uuid, uuid) from public, anon, authenticated;
+revoke all on function private.open_return_on(uuid) from public, anon, authenticated;
+
 -- Works out a refund and reserves it (status "processing") before Moyasar is asked. p: {key, reason, and one of
 --   return_id (an approved return: its lines; the delivery too when the whole parcel comes back),
 --   sub_order_id (a parcel: everything left on it, delivery and duties included; a seller's cancellation),
@@ -902,7 +1000,7 @@ declare
   v_ship_order boolean := false;
   v_plan jsonb := '[]';
   l record;
-  rq int; ra int; rc int; q int; amt int; comm int;
+  rq int; ra int; rc int; q int; amt int; comm int; v_want int;
   t_items int := 0; t_ship int := 0; t_duty int := 0; t_platform int := 0;
   rid uuid;
   v_role text := coalesce(private.user_staff_role(p_user)::text, '');
@@ -960,11 +1058,25 @@ begin
     ) x join order_items i on i.id = x.id left join sub_orders s on s.id = i.sub_order_id
   loop
     if l.order_id <> o.id then raise exception 'That item is not in this order'; end if;
+    -- one ledger for every route (review H1, REVIEW-2): what was refunded of this line by lines, parcel, return or full
     select coalesce(sum(rl.quantity), 0), coalesce(sum(rl.amount_minor), 0), coalesce(sum(rl.commission_minor), 0) into rq, ra, rc
     from refund_lines rl join refunds rf on rf.id = rl.refund_id
     where rl.order_item_id = l.id and rl.kind = 'item' and rf.status in ('processing', 'succeeded');
-    q := coalesce(l.want, l.quantity - rq);
-    if l.want is null and q <= 0 then continue; end if;
+    v_want := l.want;
+    if v_mode = 'return' then
+      -- the return's own quantity, less what was refunded through it, and never more than is left of the line
+      v_want := least(v_want - private.return_refunded(rr.id, l.id), l.quantity - rq);
+      continue when v_want <= 0;
+    else
+      -- a unit in an open return is refunded from that return, never another way: a refund that touches the line
+      -- while the return waits could pay for a unit that never came back, and the delivery with it
+      if private.open_return_on(l.id) is not null then
+        raise exception 'This item is in return %: refund it from the return (or close the return first)', private.open_return_on(l.id)
+          using detail = format('هذا المنتج ضمن طلب الإرجاع %s: استرده من طلب الإرجاع (أو أغلق الطلب أولًا)', private.open_return_on(l.id));
+      end if;
+    end if;
+    q := coalesce(v_want, l.quantity - rq);
+    if v_want is null and q <= 0 then continue; end if;
     if q <= 0 or q > l.quantity - rq then raise exception 'Only % of that item can still be refunded', greatest(l.quantity - rq, 0); end if;
     if q = l.quantity - rq then
       amt := l.line_total_minor - ra;               -- the last of a line takes what is left (no rounding drift)
@@ -1231,16 +1343,30 @@ $$;
 -- What a failure left half done (server only; finish-pending works through it, the dashboard counts it): paid orders
 -- with no tax invoice, paid orders whose parcels were not handed on, refunds whose credit note is missing, refunds
 -- still waiting for Moyasar's answer. p_min_age_seconds leaves alone what a request may be finishing right now.
+-- The invoice catch-up covers orders paid in the last 7 days that are still live (review N5, REVIEW-2): an older
+-- order, or a refunded one, without its invoice is never invoiced today by a job; it is listed for our team
+-- (orders_without_invoice_old) to settle with the accountant. Payments to resolve are listed too (review N2).
 create or replace function mp_pending_work(p_limit int default 20, p_min_age_seconds int default 120) returns jsonb
 language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'orders_without_invoice', (select coalesce(jsonb_agg(x.id), '[]'::jsonb) from (
         select o.id from orders o
-        where o.status not in ('pending_payment', 'cancelled') and o.paid_at <= now() - make_interval(secs => p_min_age_seconds)
+        where o.status in ('paid', 'packing', 'shipped', 'delivered') and o.paid_at <= now() - make_interval(secs => p_min_age_seconds)
+          and o.paid_at > now() - interval '7 days'
           and not exists (select 1 from invoices i where i.order_id = o.id and i.doc = 'invoice')
           and exists (select 1 from order_items x left join sub_orders s on s.id = x.sub_order_id
                       where x.order_id = o.id and (x.sub_order_id is null or s.invoicer = 'platform'))
         order by o.paid_at limit p_limit) x),
+    'orders_without_invoice_old', (select coalesce(jsonb_agg(x.id), '[]'::jsonb) from (
+        select o.id from orders o
+        where o.status not in ('pending_payment', 'cancelled') and o.paid_at is not null
+          and (o.paid_at <= now() - interval '7 days' or o.status = 'refunded')
+          and not exists (select 1 from invoices i where i.order_id = o.id and i.doc = 'invoice')
+          and exists (select 1 from order_items x left join sub_orders s on s.id = x.sub_order_id
+                      where x.order_id = o.id and (x.sub_order_id is null or s.invoicer = 'platform'))
+        order by o.paid_at limit p_limit) x),
+    'payment_issues', (select coalesce(jsonb_agg(x.id), '[]'::jsonb) from (
+        select id from payment_issues where status in ('open', 'refund_pending') order by created_at limit p_limit) x),
     'orders_not_handed_on', (select coalesce(jsonb_agg(x.id), '[]'::jsonb) from (
         select o.id from orders o
         where o.status in ('paid', 'packing', 'shipped', 'delivered') and o.paid_at <= now() - make_interval(secs => p_min_age_seconds)
@@ -1258,12 +1384,121 @@ revoke all on function mp_pending_work(int, int) from public, anon, authenticate
 revoke all on function mp_prepare_refund(uuid, jsonb, uuid) from public, anon, authenticated;
 revoke all on function mp_complete_refund(uuid, boolean, text, text) from public, anon, authenticated;
 
+-- Finance settles a refund by hand, with a reason (review N7, REVIEW-2): one still waiting for Moyasar's answer is
+-- marked failed (Moyasar shows no refund for it) or succeeded (Moyasar shows it, for example made in the Moyasar
+-- dashboard); one the reconcile check marked failed that Moyasar completed late after all is recorded as a new
+-- succeeded refund with the same lines (the failed record itself never changes). refund-order checks Moyasar first;
+-- this records the decision, attributed to the person.
+create or replace function mp_resolve_refund(p_refund uuid, p_user uuid, p_outcome text, p_reason text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  f refunds;
+  v_role text := coalesce(private.user_staff_role(p_user)::text, '');
+  v_reason text := nullif(left(trim(coalesce(p_reason, '')), 400), '');
+  nid uuid;
+begin
+  if v_role not in ('owner', 'manager', 'finance') then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  if v_reason is null or char_length(v_reason) < 10 then raise exception 'Write the reason (what you checked in Moyasar)'; end if;
+  perform private.act_as(p_user);
+  select * into f from refunds where id = p_refund for update;
+  if f.id is null then raise exception 'Refund not found'; end if;
+  if p_outcome = 'failed' then
+    if f.status <> 'processing' then raise exception 'Only a refund still waiting for Moyasar can be marked failed'; end if;
+    return mp_complete_refund(f.id, false, null, left(format('Settled by hand: %s', v_reason), 1000));
+  elsif p_outcome = 'succeeded' and f.status = 'processing' then
+    return mp_complete_refund(f.id, true, format('settled-by-hand:%s', p_user), null);
+  elsif p_outcome = 'succeeded' and f.status = 'failed' then
+    if exists (select 1 from refunds where order_id = f.order_id and status = 'processing') then
+      raise exception 'Another refund on this order is waiting for Moyasar: settle that one first';
+    end if;
+    if f.return_id is not null and exists (select 1 from refunds where return_id = f.return_id and status = 'succeeded') then
+      raise exception 'This return has already been refunded';
+    end if;
+    insert into refunds (order_id, return_id, currency, amount_minor, items_minor, shipping_minor, duties_minor, platform_minor, reason, restock,
+                         idempotency_key, created_by)
+    values (f.order_id, f.return_id, f.currency, f.amount_minor, f.items_minor, f.shipping_minor, f.duties_minor, f.platform_minor,
+            left(f.reason || ' (completed late at Moyasar: ' || v_reason || ')', 500), f.restock, left(f.idempotency_key, 74) || '-late', p_user)
+    returning id into nid;
+    insert into refund_lines (refund_id, sub_order_id, order_item_id, kind, quantity, amount_minor, commission_minor, vat_rate_bp, platform_invoiced)
+    select nid, sub_order_id, order_item_id, kind, quantity, amount_minor, commission_minor, vat_rate_bp, platform_invoiced from refund_lines where refund_id = f.id;
+    return mp_complete_refund(nid, true, format('late:%s', f.id), null) || jsonb_build_object('recorded_late_as', nid);
+  elsif p_outcome = 'succeeded' then
+    raise exception 'This refund is already settled';
+  end if;
+  raise exception 'Unknown outcome';
+end $$;
+revoke all on function mp_resolve_refund(uuid, uuid, text, text) from public, anon, authenticated;
+
+-- ================================================================ payments to resolve (review N2, REVIEW-2)
+create or replace function mp_payment_issue(p_issue uuid) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select to_jsonb(i) || jsonb_build_object('age_seconds', extract(epoch from now() - i.updated_at)::int,
+    'order', (select jsonb_build_object('id', o.id, 'number', o.number, 'status', o.status, 'payment_id', o.payment_id, 'total_minor', o.total_minor,
+                                        'currency', o.currency) from orders o where o.id = i.order_id))
+  from payment_issues i where i.id = p_issue;
+$$;
+
+-- Our team's decision on one (server only: refund-order makes the Moyasar refund). The moves: open -> refund_pending
+-- (a refund is being asked) -> refunded, or back to open when Moyasar refused it; open -> attached (the order was
+-- revived with it, mp_attach_payment) or dismissed (settled some other way, with the reason).
+create or replace function mp_settle_payment_issue(p_issue uuid, p_user uuid, p_status text, p_note text default null, p_error text default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  i payment_issues;
+  v_role text := coalesce(private.user_staff_role(p_user)::text, '');
+begin
+  if v_role not in ('owner', 'manager', 'finance') then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  perform private.act_as(p_user);
+  select * into i from payment_issues where id = p_issue for update;
+  if i.id is null then raise exception 'Payment not found'; end if;
+  if not ((i.status = 'open' and p_status in ('refund_pending', 'attached', 'dismissed'))
+       or (i.status = 'refund_pending' and p_status in ('refunded', 'open'))) then
+    raise exception 'This payment is already %', replace(i.status, '_', ' ');
+  end if;
+  if p_status = 'dismissed' and char_length(trim(coalesce(p_note, ''))) < 10 then raise exception 'Write the reason'; end if;
+  update payment_issues set status = p_status, note = coalesce(left(p_note, 500), note), error = left(p_error, 1000), updated_at = now(),
+    resolved_by = case when p_status in ('refunded', 'attached', 'dismissed') then p_user end,
+    resolved_at = case when p_status in ('refunded', 'attached', 'dismissed') then now() end
+  where id = i.id returning * into i;
+  return to_jsonb(i);
+end $$;
+
+-- Revives the order a payment was for: only an order cancelled without a payment, whose parcels were never handed
+-- on, for the same amount. It is then paid as the webhook would have done (parcels handed on, stock taken, a box club
+-- renewed); refund-order issues the tax invoice.
+create or replace function mp_attach_payment(p_issue uuid, p_user uuid, p_note text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  i payment_issues;
+  o orders;
+  r jsonb;
+begin
+  select * into i from payment_issues where id = p_issue for update;
+  if i.id is null then raise exception 'Payment not found'; end if;
+  if i.status <> 'open' or i.kind <> 'order_not_waiting' then raise exception 'Only a payment for a cancelled order can revive it'; end if;
+  select * into o from orders where id = i.order_id for update;
+  if o.id is null or o.status <> 'cancelled' or o.payment_id is not null then raise exception 'The order is not a cancelled, unpaid order'; end if;
+  if i.amount_minor <> o.total_minor or i.currency <> o.currency::text then raise exception 'The payment does not match the order''s amount'; end if;
+  if exists (select 1 from sub_orders s where s.order_id = o.id and s.status <> 'pending_payment') then
+    raise exception 'Parcels of this order were cancelled: refund the payment instead';
+  end if;
+  perform mp_settle_payment_issue(i.id, p_user, 'attached', p_note);
+  update orders set status = 'pending_payment', updated_at = now() where id = o.id;
+  r := mp_payment_received(jsonb_build_object('id', i.payment_id, 'amount', i.amount_minor, 'currency', i.currency, 'order_id', o.id));
+  if coalesce((r ->> 'applied')::boolean, false) is not true then raise exception 'The order could not be revived: %', r; end if;
+  return r;
+end $$;
+revoke all on function mp_payment_issue(uuid) from public, anon, authenticated;
+revoke all on function mp_settle_payment_issue(uuid, uuid, text, text, text) from public, anon, authenticated;
+revoke all on function mp_attach_payment(uuid, uuid, text) from public, anon, authenticated;
+
 -- ================================================================ returns
 -- how many of a line are refunded or in an open return already
 create or replace function private.line_taken(p_item uuid, p_except uuid default null) returns int
 language sql stable security definer set search_path = public as $$
-  select coalesce((select refunded_quantity from order_items where id = p_item), 0)
-       + coalesce((select sum(rl.quantity) from return_lines rl join return_requests r on r.id = rl.return_id
+  -- the refund ledger (refunds being processed count too: review H1, REVIEW-2), and what open returns still hold
+  select private.item_refunded(p_item)
+       + coalesce((select sum(greatest(rl.quantity - private.return_refunded(r.id, p_item), 0)) from return_lines rl join return_requests r on r.id = rl.return_id
                    where rl.order_item_id = p_item and r.id is distinct from p_except and private.return_open(r.status, r.declined_at)), 0)::int;
 $$;
 
@@ -1843,6 +2078,9 @@ begin
     if r.id is null then raise exception 'Return not found' using detail = 'لم يُعثر على طلب الإرجاع'; end if;
     select * into t from message_threads where return_id = r.id for update;
     if t.id is null then
+      if r.user_id is null then
+        raise exception 'This customer has deleted their account: the conversation is closed' using detail = 'حذف هذا العميل حسابه: أُغلقت المحادثة';
+      end if;
       select * into o from orders where id = r.order_id;
       insert into message_threads (user_id, seller_id, sub_order_id, return_id, subject)
       values (r.user_id, r.seller_id, r.sub_order_id, r.id, format('Return R-%s-%s', o.number, r.seq))
@@ -1878,8 +2116,11 @@ begin
     insert into message_threads (user_id, seller_id, subject) values (p_user, null, v_subject) returning * into t;
   end if;
 
-  -- who may write here
-  if v_as = 'customer' and t.user_id <> p_user then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  -- who may write here (nobody, once the customer has deleted their account)
+  if t.user_id is null then
+    raise exception 'This customer has deleted their account: the conversation is closed' using detail = 'حذف هذا العميل حسابه: أُغلقت المحادثة';
+  end if;
+  if v_as = 'customer' and t.user_id is distinct from p_user then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   if v_as = 'seller' and (t.seller_id is null or not private.user_is_member(t.seller_id, p_user)) then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
 
   v_was_flagged := t.flagged;

@@ -23,7 +23,10 @@ alter table orders
   add column idempotency_key text unique check (idempotency_key is null or idempotency_key ~ '^[A-Za-z0-9_-]{8,80}$'),
   add column duties_minor int not null default 0 check (duties_minor >= 0),
   add column payment_url text check (payment_url is null or payment_url ~* '^https://'),   -- Moyasar's hosted page, for a retried checkout
-  add column stock_taken_at timestamptz;   -- when the order's stock came off (mp_order_paid), so it never comes off twice
+  add column stock_taken_at timestamptz,   -- when the order's stock came off (mp_order_paid), so it never comes off twice
+  -- a renewal charged on a saved card: the given_id sent to Moyasar, which becomes the payment's id, so a lost answer
+  -- is asked again with the same id and never charged twice (review N2, REVIEW-2)
+  add column charge_given_id uuid unique;
 
 create type sub_order_status as enum ('pending_payment', 'awaiting_acceptance', 'accepted', 'in_production', 'ready_to_ship', 'shipped',
                                       'delivered', 'delivery_failed', 'cancelled', 'returned');
@@ -69,6 +72,17 @@ create table sub_orders (
 );
 create index sub_orders_seller on sub_orders (seller_id, status, created_at desc);
 create index sub_orders_order on sub_orders (order_id);
+
+-- The sellers' copies of a gift message follow the order's own: when it is cleared (the customer deleted their
+-- account, or our team removed it), every parcel's copy goes too (review N3, REVIEW-2).
+create or replace function private.orders_gift_message_cleared() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if old.gift_message is not null and new.gift_message is null then
+    update sub_orders set gift_message = null where order_id = new.id and gift_message is not null;
+  end if;
+  return null;
+end $$;
+create trigger orders_gift_message_cleared after update of gift_message on orders for each row execute function private.orders_gift_message_cleared();
 
 alter table order_items
   add column sub_order_id uuid references sub_orders on delete cascade,
@@ -129,8 +143,12 @@ create table shipment_events (
   created_at timestamptz not null default now()
 );
 create index shipment_events_shipment on shipment_events (shipment_id, occurred_at);
-create or replace function shipment_events_immutable() returns trigger language plpgsql set search_path = public as $$
-begin raise exception 'Tracking events are never edited or deleted'; end $$;
+create or replace function shipment_events_immutable() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  -- a deleted shipment takes its events (the foreign key's cascade, once the shipment is gone; review N4)
+  if tg_op = 'DELETE' and not exists (select 1 from shipments where id = old.shipment_id) then return old; end if;
+  raise exception 'Tracking events are never edited or deleted';
+end $$;
 create trigger shipment_events_immutable before update or delete on shipment_events for each row execute function shipment_events_immutable();
 
 -- labels: PRIVATE, PDF only; the seller of the sub-order and our operations team open them
@@ -199,6 +217,31 @@ begin
 end $$;
 revoke all on function mp_order_paid(uuid) from public, anon, authenticated;
 
+-- Payments Moyasar took for an order that was no longer waiting for one: cancelled meanwhile (a renewal whose answer
+-- was lost, a checkout that timed out), already paid with another payment, or of the wrong amount. Never dropped
+-- (review N2, REVIEW-2): each is kept here, shown on the dashboard, and our team refunds it, revives the order with it,
+-- or closes it with a reason (refund-order, action payment_issue). Server only; owner, manager and finance read them.
+create table payment_issues (
+  id uuid primary key default gen_random_uuid(),
+  payment_id text not null unique check (char_length(payment_id) between 1 and 200),
+  order_id uuid references orders on delete set null,
+  kind text not null check (kind in ('order_not_waiting', 'second_payment', 'amount_mismatch')),
+  amount_minor bigint not null check (amount_minor >= 0),
+  currency text not null check (char_length(currency) = 3),
+  status text not null default 'open' check (status in ('open', 'refund_pending', 'refunded', 'attached', 'dismissed')),
+  note text check (char_length(note) <= 500),
+  error text check (char_length(error) <= 1000),
+  resolved_by uuid references auth.users on delete set null,
+  resolved_at timestamptz,
+  updated_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+create index payment_issues_open on payment_issues (created_at) where status in ('open', 'refund_pending');
+alter table payment_issues enable row level security;
+create policy "owner, manager and finance read payment issues" on payment_issues for select
+  using (private.is_staff(array['owner', 'manager', 'finance']::staff_role[]));
+create trigger audit_payment_issues after insert or update or delete on payment_issues for each row execute function audit_trigger();
+
 -- The payment webhook (server only), with Moyasar's payment as re-read from Moyasar: {id, amount, currency, token,
 -- invoice_id, order_id}. In one transaction and only if the order was still waiting: the order is marked paid, the
 -- sub-orders move on and stock comes off (mp_order_paid), and a membership or box club starts. Anything else answers
@@ -217,15 +260,31 @@ begin
   for update;
   if o.id is null then return jsonb_build_object('found', false); end if;
   if o.status <> 'pending_payment' then
-    -- already done (a retry or a duplicate): nothing changes; a different payment for the same order is flagged
-    if o.payment_id is distinct from p ->> 'id' and o.payment_id is not null then
-      insert into audit_log (actor_label, table_name, row_id, action, new_data)
-      values ('moyasar-webhook', 'orders', o.id::text, 'SECOND_PAYMENT', jsonb_build_object('payment_id', p ->> 'id', 'amount', p -> 'amount', 'currency', p ->> 'currency'));
+    -- the same payment again (a retry or a duplicate delivery): nothing changes
+    if o.payment_id is not distinct from p ->> 'id' then
+      return jsonb_build_object('found', true, 'order_id', o.id, 'applied', false, 'status', o.status, 'second_payment', false);
     end if;
-    return jsonb_build_object('found', true, 'order_id', o.id, 'applied', false, 'status', o.status, 'second_payment', o.payment_id is distinct from p ->> 'id');
+    -- any other payment for an order no longer waiting (cancelled, or paid with another payment) is money we hold
+    -- without a reason: recorded once for our team, never dropped (review N2)
+    insert into payment_issues (payment_id, order_id, kind, amount_minor, currency)
+    values (p ->> 'id', o.id, case when o.payment_id is null then 'order_not_waiting' else 'second_payment' end,
+            coalesce((p ->> 'amount')::bigint, 0), coalesce(p ->> 'currency', o.currency::text))
+    on conflict (payment_id) do nothing;
+    if found then
+      insert into audit_log (actor_label, table_name, row_id, action, new_data)
+      values ('moyasar-webhook', 'orders', o.id::text, 'STRAY_PAYMENT',
+              jsonb_build_object('payment_id', p ->> 'id', 'amount', p -> 'amount', 'currency', p ->> 'currency', 'order_status', o.status));
+    end if;
+    return jsonb_build_object('found', true, 'order_id', o.id, 'applied', false, 'status', o.status, 'stray', true,
+                              'second_payment', o.payment_id is not null);
   end if;
   if (p ->> 'amount')::bigint is distinct from o.total_minor or (p ->> 'currency') is distinct from o.currency::text then
-    insert into audit_log (actor_label, table_name, row_id, action, new_data) values ('moyasar-webhook', 'orders', o.id::text, 'PAYMENT_MISMATCH', p);
+    insert into payment_issues (payment_id, order_id, kind, amount_minor, currency)
+    values (p ->> 'id', o.id, 'amount_mismatch', coalesce((p ->> 'amount')::bigint, 0), coalesce(p ->> 'currency', o.currency::text))
+    on conflict (payment_id) do nothing;
+    if found then
+      insert into audit_log (actor_label, table_name, row_id, action, new_data) values ('moyasar-webhook', 'orders', o.id::text, 'PAYMENT_MISMATCH', p);
+    end if;
     return jsonb_build_object('found', true, 'order_id', o.id, 'applied', false, 'mismatch', true);
   end if;
   update orders set status = 'paid', payment_id = p ->> 'id', paid_at = now(), updated_at = now() where id = o.id;
@@ -353,6 +412,47 @@ grant execute on function seller_production_done(uuid) to authenticated;
 
 -- ================================================================ shipments and tracking (server only)
 -- create-shipment records the label it bought (idempotent: the same key returns the same shipment).
+-- One label being bought per parcel at a time (review N6, REVIEW-2): create-shipment claims the parcel with its key
+-- before it asks the carrier, so two people pressing at once never buy two labels. The same key may carry on; another
+-- key waits, unless the claim is over 10 minutes old (the first request died). Recording the label, or a carrier that
+-- bought nothing, releases it. Server only.
+create table shipment_claims (
+  sub_order_id uuid primary key references sub_orders on delete cascade,
+  idempotency_key text not null check (idempotency_key ~ '^[A-Za-z0-9_-]{8,80}$'),
+  claimed_by uuid references auth.users on delete set null,
+  claimed_at timestamptz not null default now()
+);
+alter table shipment_claims enable row level security;
+
+create or replace function mp_claim_shipment(p_sub uuid, p_key text, p_user uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  c shipment_claims;
+begin
+  perform 1 from sub_orders where id = p_sub for update;
+  if exists (select 1 from shipments h where h.sub_order_id = p_sub and h.status not in ('cancelled', 'returned')) then
+    return jsonb_build_object('ok', false, 'reason', 'label_exists');
+  end if;
+  select * into c from shipment_claims where sub_order_id = p_sub;
+  if c.sub_order_id is null then
+    insert into shipment_claims (sub_order_id, idempotency_key, claimed_by) values (p_sub, p_key, p_user);
+  elsif c.idempotency_key = p_key then
+    update shipment_claims set claimed_at = now() where sub_order_id = p_sub;
+  elsif c.claimed_at < now() - interval '10 minutes' then
+    update shipment_claims set idempotency_key = p_key, claimed_by = p_user, claimed_at = now() where sub_order_id = p_sub;
+  else
+    return jsonb_build_object('ok', false, 'reason', 'in_progress');
+  end if;
+  return jsonb_build_object('ok', true);
+end $$;
+
+create or replace function mp_release_shipment_claim(p_sub uuid, p_key text) returns void
+language sql security definer set search_path = public as $$
+  delete from shipment_claims where sub_order_id = p_sub and idempotency_key = p_key;
+$$;
+revoke all on function mp_claim_shipment(uuid, text, uuid) from public, anon, authenticated;
+revoke all on function mp_release_shipment_claim(uuid, text) from public, anon, authenticated;
+
 create or replace function mp_record_shipment(p_sub uuid, p jsonb) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
@@ -377,6 +477,7 @@ begin
   insert into shipment_events (shipment_id, status, description_en, description_ar, occurred_at, source, dedupe_key)
   values (sid, 'label_created', 'Label created; waiting for the courier', 'تم إنشاء ملصق الشحن، بانتظار المندوب', now(), 'seller', sid::text || ':label_created');
   update sub_orders set status = 'ready_to_ship', ready_at = now(), made_at = coalesce(made_at, case when production_days > 0 then now() end) where id = s.id;
+  delete from shipment_claims where sub_order_id = s.id;
   return jsonb_build_object('id', sid, 'duplicate', false);
 end $$;
 revoke all on function mp_record_shipment(uuid, jsonb) from public, anon, authenticated;
@@ -394,6 +495,7 @@ declare
   prog shipment_status;
   prog_at timestamptz;
   fail_at timestamptz;
+  end_at timestamptz;
   o uuid;
 begin
   select * into h from shipments where id = p_shipment for update;
@@ -405,10 +507,15 @@ begin
     on conflict (dedupe_key) do nothing;
     if found then added := added + 1; end if;
   end loop;
-  -- Where the parcel is (review M4): a cancellation or a return ends it. Otherwise the furthest step reached, never
-  -- backwards, except that a failed delivery attempt shows when it is the latest news; a later delivery still wins.
-  select ev.status into latest from shipment_events ev where ev.shipment_id = h.id and ev.status in ('cancelled', 'returned')
+  -- Where the parcel is (review M4): a cancellation or a return ends it, unless a delivery came after it at the
+  -- carrier (a late "returned" event dated before the delivery is old news; review N8). Otherwise the furthest step
+  -- reached, never backwards, except that a failed delivery attempt shows when it is the latest news; a later delivery
+  -- still wins.
+  select ev.status, ev.occurred_at into latest, end_at from shipment_events ev where ev.shipment_id = h.id and ev.status in ('cancelled', 'returned')
   order by ev.occurred_at desc limit 1;
+  if latest is not null and exists (select 1 from shipment_events ev where ev.shipment_id = h.id and ev.status = 'delivered' and ev.occurred_at > end_at) then
+    latest := null;
+  end if;
   if latest is null then
     select ev.status, ev.occurred_at into prog, prog_at from shipment_events ev where ev.shipment_id = h.id and ev.status not in ('failed', 'cancelled', 'returned')
     order by (rank_of ->> ev.status::text)::int desc, ev.occurred_at desc limit 1;

@@ -34,12 +34,15 @@ begin
       'late_to_ship', (select count(*) from sub_orders where seller_id is not null and status in ('accepted', 'in_production') and ship_by < today),
       'not_collected', (select count(*) from sub_orders where status = 'ready_to_ship' and ready_at < now() - interval '2 days'),
       'delivery_failed', (select count(*) from sub_orders where status = 'delivery_failed'),
-      'shop_pages_to_approve', (select count(*) from sellers where profile_pending is not null)),
+      'shop_pages_to_approve', (select count(*) from sellers where profile_pending is not null),
+      'payments_to_resolve', (select count(*) from payment_issues where status in ('open', 'refund_pending'))),
     'pending_work', (select jsonb_build_object(
         'orders_without_invoice', jsonb_array_length(w -> 'orders_without_invoice'),
         'orders_not_handed_on', jsonb_array_length(w -> 'orders_not_handed_on'),
         'credit_notes_pending', jsonb_array_length(w -> 'credit_notes'),
-        'refunds_processing', jsonb_array_length(w -> 'refunds_processing'))
+        'refunds_processing', jsonb_array_length(w -> 'refunds_processing'),
+        'orders_without_invoice_old', jsonb_array_length(w -> 'orders_without_invoice_old'),
+        'payment_issues', jsonb_array_length(w -> 'payment_issues'))
       from (select mp_pending_work(1000, 0) as w) x),
     'switches', (select jsonb_build_object('marketplace_open', marketplace_open, 'sellers_open', sellers_open, 'payouts_enabled', payouts_enabled,
         'sandbox_carrier', (select active from carrier_providers where id = 'sandbox'), 'support_refund_limit_minor', support_refund_limit_minor)

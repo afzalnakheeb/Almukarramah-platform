@@ -6,6 +6,8 @@ import { labelPdf } from '../../functions/_shared/carriers/sandbox.ts';
 export const mockCarrier = {
   next: [] as ('timeout' | '5xx')[],
   calls: [] as { op: string; key: string }[],
+  /** how long the carrier takes to answer (two people pressing at once overlap) */
+  delayMs: 0,
 };
 
 registerAdapter('mockcarrier', () => ({
@@ -15,6 +17,7 @@ registerAdapter('mockcarrier', () => ({
   },
   async createShipment(req) {
     mockCarrier.calls.push({ op: 'create', key: req.idempotency_key });
+    if (mockCarrier.delayMs) await new Promise((r) => setTimeout(r, mockCarrier.delayMs));
     const fail = mockCarrier.next.shift();
     if (fail === 'timeout') throw new DOMException('The operation was aborted due to timeout', 'TimeoutError');
     if (fail === '5xx') throw new Error('mockcarrier 503: Service Unavailable');
@@ -24,7 +27,8 @@ registerAdapter('mockcarrier', () => ({
   async track() {
     return [];
   },
-  async cancel() {
+  async cancel(req) {
+    mockCarrier.calls.push({ op: 'cancel', key: String(req.provider_ref) });
     return { ok: true };
   },
   async landedCost() {

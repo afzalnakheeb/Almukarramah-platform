@@ -4,6 +4,10 @@
 // (review M11). A carrier that times out or fails buys nothing here and the same key can be used again. The label PDF
 // is private (labels bucket). 'cancel' voids an unused label (before collection). A carrier must be switched on
 // (carrier_providers.active): the sandbox is off on a live project.
+//
+// Two people pressing at the same moment (review N6, REVIEW-2): the parcel is claimed with the key before the carrier
+// is asked (mp_claim_shipment), so only one label is bought; the other is told one is being bought. A label the
+// carrier sold but we could not record is cancelled at once (an orphan label is never left to be charged).
 import { adapterFor } from '../_shared/carriers/index.ts';
 import { admin, caller, fail, handle, isSellerMember, json, staffRole, UUID } from '../_shared/util.ts';
 
@@ -66,6 +70,16 @@ Deno.serve(handle(async (req) => {
   }
   const loc = c.locations.find((l) => l.id === body.locationId) ?? c.locations[0];
   if (!loc) return fail(409, 'Add a pickup address in your shop settings first', 'أضف عنوان الاستلام في إعدادات متجرك أولًا');
+  // one label being bought per parcel at a time
+  const { data: claim, error: claimErr } = await db.rpc('mp_claim_shipment', { p_sub: c.sub_order.id, p_key: key, p_user: user.id });
+  if (claimErr) throw claimErr;
+  const cl = claim as { ok: boolean; reason?: string };
+  if (!cl.ok) {
+    return cl.reason === 'label_exists'
+      ? fail(409, 'This parcel already has a label: print that one (or cancel it first)', 'لهذا الطرد ملصق شحن بالفعل: اطبعه (أو ألغِه أولًا)', 'label_exists')
+      : fail(409, 'A label is being bought for this parcel right now: wait a moment and reload', 'يجري شراء ملصق لهذا الطرد الآن: انتظر لحظة ثم أعد تحميل الصفحة', 'label_in_progress');
+  }
+  const release = () => db.rpc('mp_release_shipment_claim', { p_sub: c.sub_order.id, p_key: key });
   const weight = Math.max(1, Math.round(Number(body.weightG) || c.sub_order.weight_g || 500));
   const to = c.order.ship_to;
   let result: Awaited<ReturnType<typeof adapter.createShipment>>;
@@ -81,18 +95,28 @@ Deno.serve(handle(async (req) => {
   } catch (e) {
     // nothing is recorded: the same key can be tried again (a real provider deduplicates by the key)
     console.error('carrier failed', c.service.provider_id, e);
+    await release();
     return fail(502, 'The carrier did not answer. Nothing was bought: please try again in a few minutes.', 'لم تردّ شركة الشحن، ولم يُشترَ شيء: حاول مرة أخرى بعد دقائق.', 'carrier_failed');
   }
   const path = `${c.sub_order.id}/${key}.pdf`;
   const { error: upErr } = await db.storage.from('labels').upload(path, result.label.bytes, { contentType: 'application/pdf', upsert: true });
-  if (upErr) throw upErr;
-  const { data: rec, error: rErr } = await db.rpc('mp_record_shipment', {
+  const { data: rec, error: rErr } = upErr ? { data: null, error: upErr } : await db.rpc('mp_record_shipment', {
     p_sub: c.sub_order.id,
     p: { idempotency_key: key, provider_id: c.service.provider_id, service_id: c.service.id, provider_ref: result.provider_ref, tracking_number: result.tracking_number,
          tracking_url: result.tracking_url, label_path: path, pickup_location_id: loc.id, pickup_from: result.pickup?.from ?? null, pickup_to: result.pickup?.to ?? null,
          weight_g: weight, ddp: c.sub_order.duties_mode === 'ddp', declared_value_minor: c.sub_order.items_minor, created_by: user.id },
   });
-  if (rErr) return json({ error: rErr.message, error_ar: 'تعذّر تسجيل الشحنة' }, 409);
+  if (rErr) {
+    // the carrier sold a label nobody can use: cancelled at once, and if the carrier will not, our team is told
+    console.error('label not recorded', c.sub_order.id, rErr);
+    const cancelled = await adapter.cancel({ provider_ref: result.provider_ref, tracking_number: result.tracking_number }).catch((e) => ({ ok: false, reason: String(e) }));
+    if (!cancelled.ok) {
+      await db.from('audit_log').insert({ actor: user.id, actor_label: user.email, table_name: 'sub_orders', row_id: c.sub_order.id, action: 'ORPHAN_LABEL',
+                                          new_data: { provider: c.service.provider_id, provider_ref: result.provider_ref, tracking_number: result.tracking_number, error: rErr.message } });
+    }
+    await release();
+    return fail(409, 'The label could not be recorded and was cancelled: please try again', 'تعذّر تسجيل ملصق الشحن فأُلغي: حاول مرة أخرى', 'label_not_recorded');
+  }
   const { data: signed } = await db.storage.from('labels').createSignedUrl(path, 3600);
   return json({ shipment: rec, tracking_number: result.tracking_number, tracking_url: result.tracking_url, label_url: signed?.signedUrl ?? null, pickup: result.pickup });
 }));

@@ -66,13 +66,13 @@ describe('sellers', () => {
     assert.deepEqual(db.one(`select internal_notes, contact_phone from seller_private where seller_id = '${A}'`), { internal_notes: null, contact_phone: '+966500000000' });
     assert.equal(db.rows(`select 1 from seller_private`, user('customer')).length, 0);
     assert.equal(db.rows(`select 1 from seller_private`, user('marketing')).length, 0);
-    // the row carries the bank details: finance, managers and the owner read it; support gets the contact details
-    // (never the bank details) through admin_sellers (review M12)
+    // the row carries the bank details: finance, managers and the owner read it; other staff get neither the bank
+    // details nor the contact details through admin_sellers (review M12, N11)
     assert.ok(db.rows(`select 1 from seller_private`, user('finance')).length >= 2);
     assert.equal(db.rows(`select 1 from seller_private`, user('support')).length, 0);
     const forSupport = db.val<{ private: Record<string, unknown> | null }[]>(`select admin_sellers()`, user('support'));
-    assert.ok(forSupport.some((x) => x.private?.contact_phone === '+966500000000'));
-    assert.ok(forSupport.every((x) => !x.private || !('iban' in x.private)));
+    assert.ok(forSupport.every((x) => !x.private || (!('iban' in x.private) && !('contact_phone' in x.private))));
+    assert.ok(db.val<{ private: Record<string, unknown> | null }[]>(`select admin_sellers()`, user('finance')).some((x) => x.private?.contact_phone === '+966500000000'));
   });
 
   test('staff powers by role', () => {
