@@ -1,1 +1,1 @@
-Temporary: two start frames for the pitch-film AI test (real product cut-outs composited into AI sets). Deleted after use.
+Temporary branch for the pitch-film AI test. The two start frames were removed after use. The branch itself can be deleted.
