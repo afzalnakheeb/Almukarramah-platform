@@ -1276,6 +1276,7 @@ const en = {
   tk_failed: 'Delivery failed',
   tk_cancelled: 'Cancelled',
   tk_returned: 'Returned to the sender',
+  coVatWhereApplies: 'Prices include VAT where it applies',
 };
 
 const ar: typeof en = {
@@ -2537,6 +2538,7 @@ const ar: typeof en = {
   tk_failed: 'تعذّر التوصيل',
   tk_cancelled: 'أُلغي',
   tk_returned: 'أُعيد إلى المرسل',
+  coVatWhereApplies: 'تشمل الأسعار ضريبة القيمة المضافة حيث تنطبق',
 };
 
 export type Key = keyof typeof en;

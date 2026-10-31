@@ -182,7 +182,7 @@ export function demoRefundQueue(): RefundQueue {
 export function demoAdminReviews(): { reviews: AdminReview[]; replies: AdminReply[] } {
   return {
     reviews: [
-      { id: 'v9', status: 'pending', rating: 5, title: 'Beautiful mat', body: 'Soft and dense. If you want one too, message me on 0551234567 and I will tell you where to buy it cheaper.', lang: 'en',
+      { id: 'v9', status: 'pending', rating: 5, title: 'Beautiful mat', body: 'Soft and dense. If you want one too, message me on ••• and I will tell you where to buy it cheaper.', lang: 'en',
         author: 'Khalid M.', flags: ['contact_phone', 'solicit'], moderation_note: null, created_at: '2026-10-31T06:30:00Z', published_at: null,
         product: { id: 'demo-mat', slug: 'rawdah-mihrab-mat', name_en: 'Mihrab prayer mat, hand-woven wool' }, seller: 'Rawdah Looms', photos: [] },
       { id: 'v8', status: 'pending', rating: 4, title: 'رائحة جميلة', body: 'رائحة العود ثابتة طوال اليوم، والتغليف أنيق. أتمنى لو كانت العبوة أكبر.', lang: 'ar',

@@ -38,9 +38,9 @@ export default function AdminMarketplace() {
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => { adminOverview(30).then(setV).catch((e) => setErr(String(e.message ?? e))); }, []);
   const tile = (label: string, value: string, note?: string) => (
-    <Card key={label} pad={18} style={{ flexGrow: 1, flexBasis: wide ? 200 : '45%', gap: 4 }}>
+    <Card key={label} pad={18} style={{ flexGrow: 1, flexBasis: wide ? 250 : '100%', gap: 4 }}>
       <T size={12.5} color={colors.muted}>{label}</T>
-      <T w={700} size={24} color={colors.navy}>{value}</T>
+      <T w={700} size={wide ? 22 : 20} color={colors.navy} numberOfLines={1}>{value}</T>
       {note ? <T size={12} color={colors.muted}>{note}</T> : null}
     </Card>
   );

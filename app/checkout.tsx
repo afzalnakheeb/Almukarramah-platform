@@ -283,7 +283,8 @@ export default function Checkout() {
             {dutiesSar ? <Row label={t('coDuties')} value={money(dutiesSar)} /> : null}
             <Divider />
             <Row label={t('total')} value={money(total)} bold />
-            <T size={12} color={colors.muted}>{t('vatIncluded')}</T>
+            {/* outside Saudi Arabia the rulebook may apply the destination's VAT (UAE 5%, say): the summary does not name a rate */}
+            <T size={12} color={colors.muted}>{t((MARKET_LIVE || demo) && shipTo.country && shipTo.country !== 'SA' ? 'coVatWhereApplies' : 'vatIncluded')}</T>
             {error && <Notice tone="warn" text={error} />}
             <Button size="lg" label={ratesReady ? `${t('payPrefix')} ${money(total)}` : t('pay')} onPress={pay} busy={busy === 'pay'} disabled={!ratesReady || !checkoutOpen} style={{ marginTop: 6 }}
               icon={<Icon name="lock" size={18} color={ratesReady && checkoutOpen ? colors.white : colors.muted} />} />
