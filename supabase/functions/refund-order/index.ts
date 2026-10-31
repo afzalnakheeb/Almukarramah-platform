@@ -24,6 +24,11 @@
 // Refund, with nothing reserved and Moyasar not asked, and the goodwill already given on the parcel (review R5-2,
 // R6-2). The refund carries the amount the preview showed ("expectedAmount") and is refused if it has changed since.
 // An action this function does not know is refused.
+//
+// Each refund's credit note is the money it paid back on what we invoiced: goodwill it counts that was already on our
+// credit notes is taken off (review R7-2). A return the goodwill already covered is finished as a zero refund by the
+// database ("settledByGoodwill"): Moyasar is not asked and no credit note is issued; the seller's sale is reversed and
+// the stock comes back as for any return (review R7-4).
 import { getPayment, MoyasarError, refundPayment } from '../_shared/moyasar.ts';
 import { graceMinutes, reconcileRefund } from '../_shared/refunds.ts';
 import { admin, caller, dbError, type Db, fail, handle, json, staffRole, UUID } from '../_shared/util.ts';
@@ -33,6 +38,8 @@ type Prepared = {
   id: string; status: 'processing' | 'succeeded' | 'failed'; duplicate: boolean; currency: string; amount_minor: number; platform_minor: number;
   goodwill_deducted_minor?: number; payment_id: string; reason: string; error: string | null; credit_note: string | null; credit_note_status: string;
   order: { id: string; number: number };
+  /** a return the goodwill already given covered: finished at zero, without Moyasar (review R7-4) */
+  settled_by_goodwill?: boolean;
 };
 type Body = {
   action?: 'refund' | 'preview' | 'reconcile' | 'resolve' | 'payment_issue' | 'record_moyasar'; refundId?: string; outcome?: 'failed' | 'succeeded';
@@ -222,11 +229,23 @@ Deno.serve(handle(async (req) => {
   const goodwillDeducted = prep.goodwill_deducted_minor ?? 0;
   if (prep.duplicate) {
     if (prep.status === 'succeeded') {
-      return json({ ok: true, refund: prep.id, amount: prep.amount_minor, currency: prep.currency, creditNote: prep.credit_note, goodwillDeducted, duplicate: true });
+      return json({ ok: true, refund: prep.id, amount: prep.amount_minor, currency: prep.currency, creditNote: prep.credit_note, goodwillDeducted, duplicate: true,
+                    settledByGoodwill: prep.amount_minor === 0 });
     }
     if (prep.status === 'failed') return fail(409, `This refund failed: ${prep.error ?? 'unknown'}. Start a new one.`, 'لم يتم هذا الاسترداد. ابدأ استردادًا جديدًا.', 'refund_failed');
     return fail(409, 'This refund is still waiting for Moyasar\'s answer: use "Check with Moyasar" before trying again.',
       'هذا الاسترداد ما زال بانتظار رد ميسر: استخدم «التحقق مع ميسر» قبل المحاولة مرة أخرى.', 'refund_processing', { refund: prep.id });
+  }
+
+  // a return the goodwill already covered: finished in the database at zero (nothing for Moyasar to pay back, no credit
+  // note), recorded in the audit log like any refund (review R7-4)
+  if (prep.settled_by_goodwill && prep.status === 'succeeded' && prep.amount_minor === 0) {
+    await db.from('audit_log').insert({
+      actor: user.id, actor_label: user.email, table_name: 'orders', row_id: prep.order.id, action: 'REFUND',
+      new_data: { refund: prep.id, amount_minor: 0, goodwill_deducted_minor: goodwillDeducted, currency: prep.currency, reason: prep.reason, credit_note: null,
+                  settled_by_goodwill: true },
+    });
+    return json({ ok: true, refund: prep.id, amount: 0, currency: prep.currency, creditNote: null, goodwillDeducted, settledByGoodwill: true });
   }
 
   try {

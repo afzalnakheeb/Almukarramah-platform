@@ -16,6 +16,12 @@
 
 export type ContactKind = 'phone' | 'email' | 'url' | 'handle' | 'messaging' | 'bank' | 'card' | 'solicit';
 export type ContactHit = { kind: ContactKind; match: string; index: number };
+/**
+ * What is being read. sentBackNote: the customer's "I have sent it back" note on a return (after-sale, do: sent_back),
+ * the one text where a courier's tracking number right after its name is kept (review R6-4, R7-1); everywhere else
+ * (messages, return details, listings, shop pages) a courier's name keeps no number readable.
+ */
+export type ScanOptions = { sentBackNote?: boolean };
 
 // ================================================================ normalising
 /** The first code point of each run of ten digits 0 to 9 (Unicode decimal digits, subscripts, mathematical digits). */
@@ -202,11 +208,13 @@ const BANK_WORDS = /(?:iban|account|acct|a\/c|ايبان|حساب|الحساب)[
 const COUNTRY_SHAPES = '966\\d{9}|971\\d{8,9}|96[58]\\d{8}|97[34]\\d{8}|962\\d{9}|961\\d{7,8}|964\\d{10}|963\\d{9}|967\\d{9}|970\\d{9}'
   + '|20\\d{10}|21[23]\\d{9}|216\\d{8}|218\\d{9}|249\\d{9}|44\\d{10}|1\\d{10}|9[12]\\d{10}|880\\d{10}|90\\d{10}|60\\d{9,10}|62\\d{9,12}'
   + '|63\\d{10}|234\\d{10}|254\\d{9}|27\\d{9}|33\\d{9}|49\\d{10,11}|7\\d{10}|86\\d{11}';
-// (after 00 comes a country code, never 0: "JT0001234567890" is a J&T tracking number: review R6-4)
-const PHONE_SHAPE = new RegExp(`^(?:0\\d{8,10}|5\\d{8}|00[1-9]\\d{7,14}|${COUNTRY_SHAPES})$`);
-/** A run of digits shaped like a phone number (plus: written with a + before it). */
-export function phoneShaped(digits: string, plus = false): boolean {
-  return plus ? digits.length >= 8 && digits.length <= 15 : PHONE_SHAPE.test(digits);
+const PHONE_SHAPE = new RegExp(`^(?:0\\d{8,10}|5\\d{8}|00\\d{8,15}|${COUNTRY_SHAPES})$`);
+// in the sent-back note, after 00 comes a country code, never 0: "JT0001234567890" is a J&T tracking number (review
+// R6-4); elsewhere as before (review R7-1)
+const PHONE_SHAPE_NOTE = new RegExp(`^(?:0\\d{8,10}|5\\d{8}|00[1-9]\\d{7,14}|${COUNTRY_SHAPES})$`);
+/** A run of digits shaped like a phone number (plus: written with a + before it; note: in a sent-back note). */
+export function phoneShaped(digits: string, plus = false, note = false): boolean {
+  return plus ? digits.length >= 8 && digits.length <= 15 : (note ? PHONE_SHAPE_NOTE : PHONE_SHAPE).test(digits);
 }
 /** How no list of sizes or prices starts: a trunk 0, 00, or a Gulf country code. */
 const ANCHORED = /^(?:0|96[5-8]|97[134])/;
@@ -254,33 +262,41 @@ const CODE_WORDS = 'isbn|ean|gtin|barcode|sku|upc|ref|reference|model|batch|lot|
   + '|measurements?|prices?|total|sar|sr|riyals?|ml|cm|kg'
   + '|باركود|الباركود|الدفعة|دفعة|الطلب|طلب|طلبي|الطلبية|طلبية|الطلبات|طلبات|طلباتي|الطلبان|الطلبين|الفاتورة|فاتورة|الشحنة|شحنة|الشحنات|التتبع|تتبع'
   + '|الحجز|حجز|الكود|كود|الرمز|رمز|الخصم|خصم|الكوبون|كوبون|المقاس|مقاس|المقاسات|مقاسات|القياس|قياس|القياسات|قياسات|السعر|سعر|الاسعار|اسعار|ريال|الغرفة|غرفة|القسيمة|قسيمة|البطاقة|بطاقة';
-/** Couriers by name, in English and Arabic (normalised: أرامكس is ارامكس), and "express" (DHL Express, J&T Express). */
-const CARRIER_NAMES = 'smsa|aramex|dhl|fedex|ups|naqel|spl|zajil|ajex|imile|aymakan|j&t|ارامكس|سمسا|ناقل|زاجل|البريد\\s+السعودي|سبل|ايمكان';
-const CARRIERS = `${CARRIER_NAMES}|express`;
-const CODE_BEFORE = new RegExp(`(?:^|[^a-z\\u0621-\\u064a])(?:${CODE_WORDS}|${CARRIERS})(?:[\\s:#.\\-]*(?:number|num|no|nos|is|are|رقم|رقمه|رقمها|هو|هي)(?![a-z\\u0621-\\u064a]))*`
-  + `[\\s:#.\\-]*(?:(?:${CARRIERS})[\\s:#.\\-]*)?$`, 'i');
+/** Couriers by name: after one (or a code word and one) a number is the courier's, unless it is shaped like a phone. */
+const CARRIERS = 'smsa|aramex|dhl|fedex|ups|naqel|spl|zajil|ajex|imile';
+/**
+ * In the sent-back note only (review R6-4, R7-1), couriers also by their other names: in Arabic (normalised: أرامكس is
+ * ارامكس), Aymakan, J&T, and "express" (DHL Express, J&T Express).
+ */
+const NOTE_CARRIER_NAMES = `${CARRIERS}|aymakan|j&t|ارامكس|سمسا|ناقل|زاجل|البريد\\s+السعودي|سبل|ايمكان`;
+const NOTE_CARRIERS = `${NOTE_CARRIER_NAMES}|express`;
+/** A word that says what the number after it is (lead), then "number", "no", رقم..., and maybe a courier's name (tail). */
+const codeBefore = (lead: string, tail: string) => new RegExp(`(?:^|[^a-z\\u0621-\\u064a])(?:${lead})(?:[\\s:#.\\-]*(?:number|num|no|nos|is|are|رقم|رقمه|رقمها|هو|هي)(?![a-z\\u0621-\\u064a]))*`
+  + `[\\s:#.\\-]*(?:(?:${tail})[\\s:#.\\-]*)?$`, 'i');
+const CODE_BEFORE = codeBefore(`${CODE_WORDS}|${CARRIERS}`, CARRIERS);
+const CODE_BEFORE_NOTE = codeBefore(`${CODE_WORDS}|${NOTE_CARRIERS}`, NOTE_CARRIERS);
+/**
+ * Before a Gulf mobile of eight digits, only a code word says it is something else ("Tracking 51234567"): a courier's
+ * name alone does not ("SMSA 99123456" is a Kuwaiti mobile: review R7-1), in the sent-back note too.
+ */
+const GULF_CODE_BEFORE = codeBefore(CODE_WORDS, CARRIERS);
+const GULF_CODE_BEFORE_NOTE = codeBefore(CODE_WORDS, NOTE_CARRIERS);
 /** Barcode words: after them even a number shaped like a phone (a Saudi barcode looks like +62 8...) is a barcode. */
 const BARCODE_BEFORE = /(?:isbn|ean|gtin|barcode|sku|upc|باركود|الرقم الدولي)[\s:#.-]*$/i;
-/** A courier's name right before a number. */
-const COURIER_BEFORE = new RegExp(`(?:^|[^a-z\\u0621-\\u064a])(?:${CARRIER_NAMES})(?:[\\s:#.\\-]*(?:number|num|no|tracking|رقم|التتبع)(?![a-z\\u0621-\\u064a]))*[\\s:#.\\-]*$`, 'i');
-/** A shipping word right before a number: tracking, receipt, waybill, رقم الشحنة... */
-const SHIPPING_BEFORE = new RegExp('(?:^|[^a-z\\u0621-\\u064a])(?:tracking|track|awb|waybill|receipt|shipment|consignment|الشحنة|شحنة|التتبع|تتبع|البوليصة|بوليصة|الايصال|ايصال)'
-  + '(?:[\\s:#.\\-]*(?:number|num|no|is|رقم|رقمها|هو)(?![a-z\\u0621-\\u064a]))*[\\s:#.\\-]*$', 'i');
-/** A courier named anywhere in the text before a number. */
-const COURIER_NAMED = new RegExp(`(?:^|[^a-z\\u0621-\\u064a])(?:${CARRIER_NAMES})(?![a-z\\u0621-\\u064a])`, 'i');
+/** A courier's name right before a number, maybe with "number", "tracking", رقم or التتبع between. */
+const COURIER_BEFORE = new RegExp(`(?:^|[^a-z\\u0621-\\u064a])(?:${NOTE_CARRIER_NAMES})(?:[\\s:#.\\-]*(?:number|num|no|tracking|رقم|التتبع)(?![a-z\\u0621-\\u064a]))*[\\s:#.\\-]*$`, 'i');
 /**
- * A courier's tracking number, not a phone number (review R6-4): right after a courier's name, a number that does not
- * start like a phone number (0, 00, +, a Gulf code) even when it is shaped like one without its 0 ("Naqel 501234567");
- * right after a shipping word in a note that names the courier, any number ("dropped at the SMSA branch, receipt
- * 0512345678"). Read from the start of the word that holds the number ("UPS 1Z999AA10123456784"). A contact word in
- * between, or a whole mobile number right after a courier's name ("SMSA 0501234567"), is still a phone number.
+ * In the customer's sent-back note only (review R6-4, R7-1; Afzal, 31 October), a courier's tracking number right
+ * after its name, read from the start of the word that holds it ("Naqel 501234567", UPS's "1Z999AA10123456784"). Only
+ * one run of nine to fifteen digits, none spelled out, that does not start like a phone number (0, 00, +, a Gulf code):
+ * so a Saudi mobile without its 0 may stay ("Naqel 501234567": the customer's own number, to one seller, during a
+ * return); a whole phone number, a Gulf mobile of eight digits, digits spelled out, spaced or grouped never do. Never
+ * anywhere else: in a message, a listing or a shop page a courier's name keeps no number readable.
  */
-function courierNumber(norm: string, a: number, anchored: boolean): boolean {
+function courierTracking(norm: string, a: number): boolean {
   let t = a;
   while (t > 0 && !/\s/.test(norm[t - 1])) t--;
-  const before = norm.slice(Math.max(0, t - 60), t).toLowerCase();
-  if (!anchored && COURIER_BEFORE.test(before)) return true;
-  return SHIPPING_BEFORE.test(before) && COURIER_NAMED.test(norm.slice(Math.max(0, t - 120), t).toLowerCase());
+  return COURIER_BEFORE.test(norm.slice(Math.max(0, t - 60), t).toLowerCase());
 }
 
 /**
@@ -332,9 +348,11 @@ export function ean13(d: string): boolean {
 
 /** What a run of digits is: a phone number, a bank account, a card number, or nothing to hide. */
 export function classifyNumber(r: { groups: string[]; seps: string[]; plus: boolean; real: number; words: number; before: string; glued: boolean; rtl?: boolean;
-  after?: string }): 'phone' | 'bank' | 'card' | null {
+  after?: string; note?: boolean }): 'phone' | 'bank' | 'card' | null {
   const d = r.groups.join('');
   const n = d.length;
+  const note = r.note === true;
+  const shapedLike = (x: string, plus = false) => phoneShaped(x, plus, note);
   if (r.words >= 7 && n >= 7) return 'phone';                       // a number spelled out
   const bank = BANK_WORDS.test(r.before.slice(-20));
   // a mobile number of Kuwait, Qatar, Bahrain or Oman: eight digits from 3, 5, 6, 7 or 9, in one run or 4+4 (R4-4), not
@@ -342,7 +360,7 @@ export function classifyNumber(r: { groups: string[]; seps: string[]; plus: bool
   // round or a unit or currency follows (review R5-1; Afzal, 31 October, trade-off 1: "Kuwait 9912 3456" is masked,
   // "between 3500 3900 riyals" is not)
   if (n === 8 && /^[35679]/.test(d) && r.real >= 6 && (r.groups.length === 1 || (r.groups.length === 2 && r.groups[0].length === 4))
-      && !r.glued && !CODE_BEFORE.test(r.before) && !DATE8.test(d)) {
+      && !r.glued && !(note ? GULF_CODE_BEFORE_NOTE : GULF_CODE_BEFORE).test(r.before) && !DATE8.test(d)) {
     if (r.groups.length === 2 && isQuantities(r.groups[0], r.groups[1], r.after ?? '')) return null;
     return bank ? 'bank' : 'phone';
   }
@@ -350,7 +368,7 @@ export function classifyNumber(r: { groups: string[]; seps: string[]; plus: bool
   if (n > 15) {
     // an account number, two phone numbers run together, or a card number
     if (bank) return 'bank';
-    for (let k = 9; k <= n - 9; k++) if (phoneShaped(d.slice(0, k), r.plus) && phoneShaped(d.slice(k))) return 'phone';
+    for (let k = 9; k <= n - 9; k++) if (shapedLike(d.slice(0, k), r.plus) && shapedLike(d.slice(k))) return 'phone';
     const lens = r.groups.map((g) => g.length).join(',');
     if (n <= 19 && luhn(d) && (r.groups.length === 1 || r.groups.every((g) => g.length === 4) || lens === '4,6,5' || lens === '4,6,4')) return 'card';
     return null;
@@ -359,8 +377,8 @@ export function classifyNumber(r: { groups: string[]; seps: string[]; plus: bool
   // a right-to-left line (Arabic) shows groups in reverse order: "67 45 23 01 05" reads 05 01 23 45 67; read that way
   // only when it then starts like a phone number (0, 00, a Gulf code)
   const rev = r.rtl && r.groups.length >= 2 ? [...r.groups].reverse().join('') : '';
-  const back = rev !== '' && ANCHORED.test(rev) && phoneShaped(rev);
-  const shaped = (phoneShaped(d, r.plus) && (r.plus || ANCHORED.test(d) || !list)) || back;
+  const back = rev !== '' && ANCHORED.test(rev) && shapedLike(rev);
+  const shaped = (shapedLike(d, r.plus) && (r.plus || ANCHORED.test(d) || !list)) || back;
   if (shaped) {
     const anchored = r.plus || ANCHORED.test(d) || back;
     if (!anchored && (BARCODE_BEFORE.test(r.before) || (n === 13 && ean13(d)) || (!r.plus && /^97[89]\d{10}$/.test(d)))) return null;   // a barcode, an ISBN
@@ -368,7 +386,7 @@ export function classifyNumber(r: { groups: string[]; seps: string[]; plus: bool
   }
   if (list) return null;                                                                      // sizes, measurements, prices
   if (r.groups.length >= 2 && r.groups[0].length >= 5 && r.groups.every((g) => g.length === r.groups[0].length)) return null;   // order numbers, codes
-  if (CODE_BEFORE.test(r.before) || r.glued) return null;                                     // a tracking number, a code
+  if ((note ? CODE_BEFORE_NOTE : CODE_BEFORE).test(r.before) || r.glued) return null;         // a tracking number, a code
   const kinds = r.seps.map((x) => x.replace(/\s+/g, '') || ' ');
   if (r.groups.length > 4 || kinds.some((x) => x !== kinds[0])) return null;                  // not written like a phone number
   if (n === 13 && ean13(d)) return null;
@@ -435,13 +453,12 @@ function phoneRuns(norm: string, work: string): Group[][] {
  * is one however it is grouped, except a range (isRange). An account number (after IBAN or account) is left to
  * numberSpans.
  */
-function phoneParts(norm: string, work: string): Span[] {
+function phoneParts(norm: string, work: string, note: boolean): Span[] {
   const out: Span[] = [];
   for (const g of phoneRuns(norm, work)) {
     const start = g[0].plus ? g[0].a - 1 : g[0].a;
     const before = norm.slice(Math.max(0, start - 40), start).toLowerCase();
     if (BANK_WORDS.test(before.slice(-20))) continue;
-    if (courierNumber(norm, start, true)) continue;                 // a courier's number after a shipping word (R6-4)
     const parts: { i: number; span: Span }[] = [];
     for (let i = 0; i < g.length;) {
       let d = '';
@@ -451,7 +468,7 @@ function phoneParts(norm: string, work: string): Span[] {
         d += g[j].digits;
         free = free || g[j].free;
         if (d.length > 15) break;
-        if ((g[i].plus || ANCHORED.test(d)) && phoneShaped(d, g[i].plus) && free) {
+        if ((g[i].plus || ANCHORED.test(d)) && phoneShaped(d, g[i].plus, note) && free) {
           best = j;
           if (COMPLETE.test(d)) break;          // a whole mobile number: the next group is something else ("(2 bottles)")
         }
@@ -502,10 +519,10 @@ function regexSpans(norm: string, re: RegExp, kind: ContactKind, group = 0): Spa
  * symbols, emoji), each classified by classifyNumber: a phone number, a bank account or a card number to hide, or an
  * ordinary number (a list of sizes, an order number, a date) to leave alone.
  */
-function numberSpans(norm: string, units: Unit[]): Span[] {
+function numberSpans(norm: string, units: Unit[], note: boolean): Span[] {
   const protectedWork = protectTokens(norm);
   // phone numbers inside runs first (phoneParts); what is left of each run is classified on its own
-  const out = phoneParts(norm, protectedWork);
+  const out = phoneParts(norm, protectedWork, note);
   let work = protectedWork;
   for (const s of out) work = work.slice(0, s.a) + 'q'.repeat(s.b - s.a) + work.slice(s.b);
   const rtl = /[\u0621-\u064a]/.test(norm);   // Arabic letters: the line may be shown right to left
@@ -546,15 +563,18 @@ function numberSpans(norm: string, units: Unit[]): Span[] {
     const start = plus ? a - 1 : a;
     const glued = (start > 0 && isLetter(work.codePointAt(start - 1) ?? 0)) || (b < work.length && isLetter(work.codePointAt(b) ?? 0));
     const kind = classifyNumber({ groups, seps, plus, real, words, before: work.slice(Math.max(0, start - 40), start).toLowerCase(), glued, rtl,
-                                  after: norm.slice(b, b + 16) });
-    if (kind === 'phone' && courierNumber(norm, start, plus || ANCHORED.test(groups.join('')))) continue;   // a tracking number (R6-4)
+                                  after: norm.slice(b, b + 16), note });
+    // in the sent-back note only: a courier's tracking number right after its name (review R6-4, R7-1)
+    const d = groups.join('');
+    if (kind === 'phone' && note && !plus && groups.length === 1 && words === 0 && d.length >= 9 && d.length <= 15 && !ANCHORED.test(d)
+        && courierTracking(norm, start)) continue;
     if (kind) out.push({ kind, a: start, b });
   }
   return out;
 }
 
 /** Every contact detail or off-platform attempt, in normalised coordinates (overlapping spans included). */
-function spans(norm: string, units: Unit[]): Span[] {
+function spans(norm: string, units: Unit[], note: boolean): Span[] {
   const emails = EMAIL_RES.flatMap((re) => regexSpans(norm, re, 'email'));
   const inEmail = (s: Span) => emails.some((e) => s.a >= e.a && s.a < e.b);
   const urls = regexSpans(norm, URL_RE, 'url').filter((u) => !inEmail(u));
@@ -581,7 +601,7 @@ function spans(norm: string, units: Unit[]): Span[] {
     APP_HANDLE_RE.lastIndex = at + name.length;
   }
   const ibans = regexSpans(norm, IBAN_RE, 'bank').filter((b) => norm.slice(b.a, b.b).replace(/\D/g, '').length >= 10);
-  const numbers = numberSpans(norm, units).filter((p) => !ibans.some((b) => p.a >= b.a && p.a < b.b) && !inEmail(p));
+  const numbers = numberSpans(norm, units, note).filter((p) => !ibans.some((b) => p.a >= b.a && p.a < b.b) && !inEmail(p));
   // "call me Maryam" gives a name, it does not ask for a call
   const forSolicit = norm.replace(CALL_ME_NAME, (m) => ' '.repeat(m.length));
   return [...emails, ...urls, ...handles, ...apps, ...appHandles, ...ibans, ...numbers, ...regexSpans(forSolicit, SOLICIT_RE, 'solicit')];
@@ -598,11 +618,11 @@ function toHit(text: string, units: Unit[], s: Span): ContactHit {
  * Every contact detail or off-platform attempt in the text, in the original's positions, in order. Overlapping hits
  * of different kinds are all kept (each kind is a flag); a hit inside a longer one of another kind is left out.
  */
-export function detectContacts(text: string | null | undefined): ContactHit[] {
+export function detectContacts(text: string | null | undefined, opts: ScanOptions = {}): ContactHit[] {
   if (!text) return [];
   const { norm, units } = normalize(text);
   if (!norm) return [];
-  const all = spans(norm, units);
+  const all = spans(norm, units, opts.sentBackNote === true);
   const inside = (s: Span) => all.some((o) => o !== s && o.kind !== 'solicit' && s.kind !== 'solicit' && s.a >= o.a && s.b <= o.b && o.b - o.a > s.b - s.a);
   const kept = all.filter((s) => !inside(s));
   const uniq = kept.filter((s, i) => kept.findIndex((x) => x.a === s.a && x.b === s.b && x.kind === s.kind) === i);
@@ -611,16 +631,16 @@ export function detectContacts(text: string | null | undefined): ContactHit[] {
 }
 
 /** The contact details and off-platform attempts in the text, in order (a phrase and the app name inside it are both kept). */
-export function findContacts(text: string | null | undefined): ContactHit[] {
-  return detectContacts(text);
+export function findContacts(text: string | null | undefined, opts: ScanOptions = {}): ContactHit[] {
+  return detectContacts(text, opts);
 }
 
 /** The text with contact details replaced by •••, for messages between customers and sellers. */
-export function maskContacts(text: string): { text: string; masked: number } {
+export function maskContacts(text: string, opts: ScanOptions = {}): { text: string; masked: number } {
   // the solicit phrases stay readable; the contact details inside or next to them are masked on their own (overlapping
   // details are masked as one)
   const merged: { a: number; b: number }[] = [];
-  for (const h of detectContacts(text).filter((x) => x.kind !== 'solicit').sort((x, y) => x.index - y.index)) {
+  for (const h of detectContacts(text, opts).filter((x) => x.kind !== 'solicit').sort((x, y) => x.index - y.index)) {
     const a = h.index;
     const b = h.index + h.match.length;
     const last = merged[merged.length - 1];

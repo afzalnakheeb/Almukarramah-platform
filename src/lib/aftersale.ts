@@ -222,6 +222,8 @@ export type RefundResult = {
   ok?: boolean; amount?: number; currency?: string; creditNote?: string | null; creditNotePending?: boolean; reconciled?: boolean; refund?: string;
   /** the goodwill already given on the order that this refund counted: the amount is that much less than its lines (R5-2) */
   goodwillDeducted?: number;
+  /** a return the goodwill already covered, finished at zero: nothing paid back, Moyasar not asked, no credit note (R7-4) */
+  settledByGoodwill?: boolean;
   /** Moyasar's answer did not come back: the refund stays processing (never refund it again; check with Moyasar) */
   pending?: boolean; recorded?: boolean; code?: string; error?: string; error_ar?: string;
 };
@@ -236,8 +238,10 @@ export type RefundPreview = {
   goodwill_deducted_minor: number; payment_left_minor: number; platform_minor: number;
   /** goodwill already given on the parcel(s) of this refund and not yet counted by one (review R6-2) */
   goodwill_on_parcels_minor?: number;
-  /** decision Z: is goodwill on a parcel taken off a later refund of it (a switch, off until Afzal decides) */
+  /** decision Z: is goodwill on a parcel taken off a later refund of it (an owner-only switch, on since Afzal's yes) */
   parcel_goodwill_deducted?: boolean;
+  /** a return the goodwill already covered: refunding it finishes it at zero, without Moyasar or a credit note (R7-4) */
+  settled_by_goodwill?: boolean;
 };
 export async function previewRefund(p: { orderId: string; returnId?: string; subOrderId?: string }): Promise<RefundPreview> {
   if (MARKET_DEMO) return demo.demoRefundPreview();

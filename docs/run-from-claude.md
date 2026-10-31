@@ -40,10 +40,19 @@ Windsor.ai and the other connectors in the Claude app.
   closing it is finance's decision on `/admin/returns`, never Claude's without approval.
 - "Show me the dispute on R-104902-1 and suggest a decision." Claude reads the return, the conversation and the photos'
   screening; the decision and any refund wait for approval.
-- A return closed on its own (the customer never sent the items back by the date given) or closed by our team holds
-  nothing and cannot be refunded through the return. If the items arrive after all, refund them by line on
-  `/admin/returns` (the preview shows any goodwill already given on that parcel); the customer is pointed to
-  hello@almukarramah.com for this.
+- A return closed on its own (the customer never sent the items back by the date given) or closed by our team is not
+  refunded through the return and holds none of the seller's money (the sale is paid as usual), but it keeps its items:
+  the customer cannot ask to return them again. If the items arrive after all, refund them by line on `/admin/returns`
+  (the preview shows any goodwill already given on that parcel); the customer is pointed to hello@almukarramah.com for
+  this.
+- A return that the goodwill already given covers is not closed: "Refund this return" finishes it as a zero refund.
+  Nothing is paid back, Moyasar is not asked and no credit note is issued; the seller's sale is reversed and the stock
+  comes back as for any return (goodwill is ours), and the customer is told the return is complete. Goodwill recorded
+  on a parcel is never more than the customer paid for it, less what has gone back for it.
+- Each refund's credit note is the money it paid back on what we invoice: goodwill already on a credit note is taken off
+  it, so it is never credited twice.
+- Only the customer's "I have sent it back" note keeps a courier's tracking number readable (never a whole phone
+  number). In messages, return details, listings and shop pages a courier's name keeps no number readable.
 - "Which sellers can be paid this week?" Claude lists what is payable (`admin_payouts()`); finance makes the bank
   transfers and records them. Claude never records a payout or makes a refund without approval. Payouts stay switched
   off until Afzal switches them on (`docs/marketplace/DECISIONS.md`, "Needs Afzal").

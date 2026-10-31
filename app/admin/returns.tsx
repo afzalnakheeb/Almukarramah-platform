@@ -76,7 +76,13 @@ function ReturnRow({ r, onDone }: { r: ReturnRequest; onDone: () => void }) {
       ) : null}
       {r.status === 'approved' ? <RefundButton orderId={r.order_id} returnId={r.id} label="Refund this return" onDone={onDone} /> : null}
       {r.status === 'approved' && !r.refund ? <CloseReturn returnId={r.id} onDone={onDone} /> : null}
-      {r.refund ? <T size={12.5} color={colors.muted}>Refund {r.refund.status}: {formatMoney(r.refund.amount_minor, r.currency)}</T> : null}
+      {r.refund ? (
+        <T size={12.5} color={colors.muted}>
+          {r.refund.amount_minor === 0 && r.refund.status === 'succeeded'
+            ? 'Finished at zero: the goodwill already given covered it (nothing paid back, no credit note)'
+            : `Refund ${r.refund.status}: ${formatMoney(r.refund.amount_minor, r.currency)}`}
+        </T>
+      ) : null}
     </Card>
   );
 }

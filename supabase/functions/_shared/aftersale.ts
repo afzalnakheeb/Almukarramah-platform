@@ -13,16 +13,19 @@ export type Cleaned = { text: string; masked: number; flags: string[] };
  * like contact_phone, solicit. The direction marks and isolates people type to keep mixed Arabic and English in order
  * stay (LRM, RLM, ALM, U+2066 to U+2069: review R3-7), and so do the joiners inside emoji and Persian words.
  * previous: the same person's last message in the conversation, to catch a number split across the two.
+ * sentBackNote: the customer's "I have sent it back" note on a return, the one text where a courier's tracking number
+ * right after its name is kept (review R6-4, R7-1); every full phone number is still masked there.
  */
-export function cleanText(input: unknown, max: number, opts: { previous?: string | null } = {}): Cleaned {
+export function cleanText(input: unknown, max: number, opts: { previous?: string | null; sentBackNote?: boolean } = {}): Cleaned {
   const raw = String(input ?? '')
     // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
     .replace(/[\u00AD\u180E\u200B\u202A-\u202E\u2060-\u2064\u206A-\u206F\uFEFF]/g, '')
     .replace(/\r\n?/g, '\n').trim().slice(0, max);
   if (!raw) return { text: '', masked: 0, flags: [] };
-  const hits = detectContacts(raw);
-  const masking = maskContacts(raw);
+  const scan = { sentBackNote: opts.sentBackNote === true };
+  const hits = detectContacts(raw, scan);
+  const masking = maskContacts(raw, scan);
   let text = masking.text;
   let masked = masking.masked;
   const flags = new Set(hits.map((h) => (h.kind === 'solicit' ? 'solicit' : `contact_${h.kind}`)));

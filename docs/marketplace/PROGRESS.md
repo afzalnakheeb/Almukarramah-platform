@@ -213,3 +213,9 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
 - Seventh pass (Afzal's decisions on REVIEW-6, 31 October; table in `REVIEW-FIXES.md`), tests first: Gulf mobiles
   written 4+4 masked again unless round or followed by a unit; after a contact word a round range needs a unit; goodwill
   on a parcel comes off a later refund of it by default (decision Z); AA, AC, AD and AE approved. Tests: 422 (416 before).
+- Eighth pass (verification REVIEW-7; table in `REVIEW-FIXES.md`), each finding shown by a failing test first: the
+  couriers' exception confined to the customer's sent-back note, on the server and in the database, every whole phone
+  number masked there too (R7-1); each refund's credit note is the money it paid back under decision Z (R7-2); a return
+  accepted again gets a new date and notice (R7-3); goodwill per parcel capped, and a return the goodwill covered is
+  finished at zero with the seller's sale reversed (R7-4); "Settle by hand" checks goodwill parcel by parcel; the staff
+  guide on closed returns. Tests: 441 (422 before).

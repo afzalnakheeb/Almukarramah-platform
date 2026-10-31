@@ -20,6 +20,11 @@ import { colors } from '@/theme';
  */
 export function previewText(p: RefundPreview): string {
   const money = (m: number) => formatMoney(m, p.currency);
+  // a return the goodwill already covered (review R7-4)
+  if (p.settled_by_goodwill && p.amount_minor === 0) {
+    return `Nothing is paid back: the goodwill already given (${money(p.goodwill_deducted_minor)}) covers this return. Refunding it finishes the return `
+      + 'at zero: Moyasar is not asked and no credit note is issued; the seller\'s sale is reversed and the stock comes back as for any return.';
+  }
   const onParcel = p.goodwill_on_parcels_minor ?? 0;
   const parcelNote = !p.parcel_goodwill_deducted && onParcel > p.goodwill_deducted_minor
     ? ` Goodwill of ${money(onParcel)} was already given on this parcel; ${p.goodwill_deducted_minor ? 'only what the payment lacks is' : 'it is not'} taken off this refund (decision Z is open).`
@@ -62,7 +67,11 @@ export function RefundButton({ orderId, label, returnId, subOrderId, onDone }: {
               setMsg({ tone: 'warn', text: r.error ?? 'Moyasar did not confirm the refund. It stays processing: do not refund again; use "Check with Moyasar".' });
             } else {
               const less = r.goodwillDeducted ? ` (less ${formatMoney(r.goodwillDeducted, r.currency ?? 'SAR')} of goodwill already given on this order)` : '';
-              setMsg({ tone: 'ok', text: `Refunded ${formatMoney(r.amount ?? 0, r.currency ?? 'SAR')}${less}.${r.creditNote ? ` Credit note ${r.creditNote}.` : r.creditNotePending ? ' The credit note is pending: "Finish pending work" issues it.' : ''}` });
+              if (r.settledByGoodwill) {
+                setMsg({ tone: 'ok', text: `Finished at zero: the goodwill already given (${formatMoney(r.goodwillDeducted ?? 0, r.currency ?? 'SAR')}) covered it. Nothing was paid back and no credit note was needed.` });
+              } else {
+                setMsg({ tone: 'ok', text: `Refunded ${formatMoney(r.amount ?? 0, r.currency ?? 'SAR')}${less}.${r.creditNote ? ` Credit note ${r.creditNote}.` : r.creditNotePending ? ' The credit note is pending: "Finish pending work" issues it.' : ''}` });
+              }
             }
             onDone();
           } catch (e) {
@@ -79,8 +88,10 @@ export function RefundButton({ orderId, label, returnId, subOrderId, onDone }: {
 
 /**
  * Owner, manager, finance, support: close an approved return that will not be refunded through it, with the reason the
- * customer and the seller read (the goodwill already given covered it, the customer kept the item, it was refunded
- * another way). It then holds nothing: anything still due is refunded by line (review R5-2).
+ * customer and the seller read (the customer kept the item, it was refunded another way; a return the goodwill already
+ * covered is finished by "Refund this return" at zero instead: review R7-4). It then refunds nothing through it and holds
+ * none of the seller's money, but keeps its items (never returned again: review R6-2); anything still due is refunded by
+ * line (review R5-2).
  */
 export function CloseReturn({ returnId, onDone }: { returnId: string; onDone: () => void }) {
   const [open, setOpen] = useState(false);

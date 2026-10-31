@@ -61,10 +61,13 @@ alter table sellers
 -- only when it is written like one (one run, or up to four groups with the same separator), and never a list of sizes,
 -- measurements or prices, codes of the same length, a number after a word that says what it is (tracking, order,
 -- booking, size...), or one glued to letters. Dates, times and amounts never join a number.
-create or replace function private.phone_shaped(d text, plus boolean default false) returns boolean
+-- In the customer's sent-back note (note), after 00 comes a country code, never 0: "JT0001234567890" is a J&T tracking
+-- number (review R6-4); everywhere else as before (review R7-1).
+create or replace function private.phone_shaped(d text, plus boolean default false, note boolean default false) returns boolean
 language sql immutable as $$
   select case when plus then length(d) between 8 and 15
-    else d ~ ('^(0[0-9]{8,10}|5[0-9]{8}|00[1-9][0-9]{7,14}|966[0-9]{9}|971[0-9]{8,9}|96[58][0-9]{8}|97[34][0-9]{8}|962[0-9]{9}|961[0-9]{7,8}'
+    else d ~ ('^(0[0-9]{8,10}|5[0-9]{8}|' || case when note then '00[1-9][0-9]{7,14}' else '00[0-9]{8,15}' end
+              || '|966[0-9]{9}|971[0-9]{8,9}|96[58][0-9]{8}|97[34][0-9]{8}|962[0-9]{9}|961[0-9]{7,8}'
               || '|964[0-9]{10}|963[0-9]{9}|967[0-9]{9}|970[0-9]{9}|20[0-9]{10}|21[23][0-9]{9}|216[0-9]{8}|218[0-9]{9}|249[0-9]{9}|44[0-9]{10}'
               || '|1[0-9]{10}|9[12][0-9]{10}|880[0-9]{10}|90[0-9]{10}|60[0-9]{9,10}|62[0-9]{9,12}|63[0-9]{10}|234[0-9]{10}|254[0-9]{9}'
               || '|27[0-9]{9}|33[0-9]{9}|49[0-9]{10,11}|7[0-9]{10}|86[0-9]{11})$') end;
@@ -96,8 +99,10 @@ begin
 end $$;
 
 -- One run of digits: its groups and separators, a + before it, how many digits were written as digits (real) and as
--- words, the text before it (lower case) and whether letters touch it. 'phone', 'bank', 'card' or null.
-create or replace function private.number_kind(g text[], seps text[], plus boolean, p_real int, p_words int, p_before text, glued boolean, rtl boolean default false) returns text
+-- words, the text before it (lower case) and whether letters touch it; note: the customer's sent-back note, where
+-- couriers are also read by their Arabic and other names (review R6-4, R7-1). 'phone', 'bank', 'card' or null.
+create or replace function private.number_kind(g text[], seps text[], plus boolean, p_real int, p_words int, p_before text, glued boolean, rtl boolean default false,
+                                               note boolean default false) returns text
 language plpgsql immutable as $$
 declare
   d text := array_to_string(g, '');
@@ -112,22 +117,29 @@ declare
   lens text;
   kinds text[];
   anchor constant text := '^(0|96[5-8]|97[134])';
-  carriers constant text := 'smsa|aramex|dhl|fedex|ups|naqel|spl|zajil|ajex|imile|aymakan|j&t|ارامكس|سمسا|ناقل|زاجل|البريد\s+السعودي|سبل|ايمكان|express';
+  -- couriers by name (as contact.ts CARRIERS); in the sent-back note also NOTE_CARRIERS
+  carriers constant text := case when note then 'smsa|aramex|dhl|fedex|ups|naqel|spl|zajil|ajex|imile|aymakan|j&t|ارامكس|سمسا|ناقل|زاجل|البريد\s+السعودي|سبل|ايمكان|express'
+                                 else 'smsa|aramex|dhl|fedex|ups|naqel|spl|zajil|ajex|imile' end;
   code_words constant text := 'isbn|ean|gtin|barcode|sku|upc|ref|reference|model|batch|lot|serial|codes?|items?|orders?|invoices?|inv|receipt|tracking|track|awb'
     || '|waybill|shipments?|parcels?|bookings?|reservations?|confirmation|voucher|coupon|discount|promo|gift\s*card|card|room|sizes?|chest|length|sleeve'
     || '|measurements?|prices?|total|sar|sr|riyals?|ml|cm|kg'
     || '|باركود|الباركود|الدفعة|دفعة|الطلب|طلب|طلبي|الطلبية|طلبية|الطلبات|طلبات|طلباتي|الطلبان|الطلبين|الفاتورة|فاتورة|الشحنة|شحنة|الشحنات|التتبع|تتبع'
     || '|الحجز|حجز|الكود|كود|الرمز|رمز|الخصم|خصم|الكوبون|كوبون|المقاس|مقاس|المقاسات|مقاسات|القياس|قياس|القياسات|قياسات|السعر|سعر|الاسعار|اسعار|ريال|الغرفة|غرفة|القسيمة|قسيمة|البطاقة|بطاقة';
   code_ctx boolean;
+  gulf_ctx boolean;
 begin
   if p_words >= 7 and n >= 7 then return 'phone'; end if;                       -- a number spelled out
   bank := right(p_before, 20) ~* '(iban|account|acct|a/c|ايبان|حساب|الحساب)[^0-9]{0,14}$';
   code_ctx := p_before ~* ('(^|[^a-z\u0621-\u064a])(' || code_words || '|' || carriers || ')([\s:#.-]*(number|num|no|nos|is|are|رقم|رقمه|رقمها|هو|هي)(?![a-z\u0621-\u064a]))*'
                            || '[\s:#.-]*((' || carriers || ')[\s:#.-]*)?$');
+  -- before a Gulf mobile only a code word says it is something else: a courier's name alone does not ("SMSA 99123456"
+  -- is a Kuwaiti mobile: review R7-1)
+  gulf_ctx := p_before ~* ('(^|[^a-z\u0621-\u064a])(' || code_words || ')([\s:#.-]*(number|num|no|nos|is|are|رقم|رقمه|رقمها|هو|هي)(?![a-z\u0621-\u064a]))*'
+                           || '[\s:#.-]*((' || carriers || ')[\s:#.-]*)?$');
   -- a mobile number of Kuwait, Qatar, Bahrain or Oman: eight digits from 3, 5, 6, 7 or 9, in one run or 4+4 (R4-4);
   -- written 4+4 it is two quantities when both halves are round or a unit or currency follows, which number_hint
   -- checks (review R5-1; Afzal, 31 October, trade-off 1)
-  if n = 8 and d ~ '^[35679]' and p_real >= 6 and (ng = 1 or (ng = 2 and length(g[1]) = 4)) and not glued and not code_ctx
+  if n = 8 and d ~ '^[35679]' and p_real >= 6 and (ng = 1 or (ng = 2 and length(g[1]) = 4)) and not glued and not gulf_ctx
      and d !~ '^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19|20)[0-9]{2}$' then
     return case when bank then 'bank' else 'phone' end;
   end if;
@@ -136,7 +148,7 @@ begin
     -- an account number, two phone numbers run together, or a card number
     if bank then return 'bank'; end if;
     for k in 9 .. n - 9 loop
-      if private.phone_shaped(left(d, k), plus) and private.phone_shaped(substr(d, k + 1)) then return 'phone'; end if;
+      if private.phone_shaped(left(d, k), plus, note) and private.phone_shaped(substr(d, k + 1), false, note) then return 'phone'; end if;
     end loop;
     lens := array_to_string(array(select length(x) from unnest(g) x), ',');
     if n <= 19 and private.luhn_ok(d) and (ng = 1 or lens ~ '^4(,4)*$' or lens in ('4,6,5', '4,6,4')) then return 'card'; end if;
@@ -147,8 +159,8 @@ begin
   -- a right-to-left line (Arabic) shows groups in reverse order: "67 45 23 01 05" reads 05 01 23 45 67; read that way
   -- only when it then starts like a phone number (0, 00, a Gulf code)
   if rtl and ng >= 2 then rev := array_to_string(array(select x from unnest(g) with ordinality u(x, i) order by i desc), ''); end if;
-  back := rev <> '' and rev ~ anchor and private.phone_shaped(rev);
-  shaped := (private.phone_shaped(d, plus) and (plus or d ~ anchor or not lst)) or back;
+  back := rev <> '' and rev ~ anchor and private.phone_shaped(rev, false, note);
+  shaped := (private.phone_shaped(d, plus, note) and (plus or d ~ anchor or not lst)) or back;
   if shaped then
     anchored := plus or d ~ anchor or back;
     if not anchored and (p_before ~* '(isbn|ean|gtin|barcode|sku|upc|باركود|الرقم الدولي)[\s:#.-]*$' or (n = 13 and private.ean13_ok(d))
@@ -173,8 +185,9 @@ end $$;
 -- numbers inside runs, before any exclusion (phoneParts: a part starting at a group boundary like a phone number, with
 -- a digit outside a date, time or amount; after a contact word the whole run, unless it is a range of round numbers or
 -- of quantities: review R4-2, R4-4, R5-1), then each run
--- classified (number_kind) with dates, times and amounts kept out of it.
-create or replace function private.number_hint(p text) returns text
+-- classified (number_kind) with dates, times and amounts kept out of it. p_note: the customer's sent-back note, the one
+-- text where a courier's tracking number right after its name is kept (contact.ts courierTracking; review R6-4, R7-1).
+create or replace function private.number_hint(p text, p_note boolean default false) returns text
 language plpgsql immutable as $$
 declare
   t text := p;
@@ -196,13 +209,9 @@ declare
     || '|pcs?|pieces?|units?|sar|sr|riyals?|rials?|aed|usd|kwd|qar|bhd|omr|ريال|ريالات|ر\.?س|درهم|دينار|غ|غم|غرام|جرام|جم|كغ|كجم|كيلو|ملغ|مل|لتر|سم|مم|ملم|متر|م'
     || '|عقدة|عقده|عقد|غرزة|غرزه|حبة|حبه|حبات|قطعة|قطعه|قطع)(?![a-zء-ي])';
   rng boolean;
-  -- a courier's tracking number (contact.ts courierNumber, review R6-4): right after a courier's name, a number that does
-  -- not start like a phone number; right after a shipping word in a text that names the courier, any number
+  -- in the sent-back note only: a courier's name right before a number (contact.ts COURIER_BEFORE)
   carrier_names constant text := 'smsa|aramex|dhl|fedex|ups|naqel|spl|zajil|ajex|imile|aymakan|j&t|ارامكس|سمسا|ناقل|زاجل|البريد\s+السعودي|سبل|ايمكان';
   courier_before constant text := '(^|[^a-z\u0621-\u064a])(' || carrier_names || ')([\s:#.-]*(number|num|no|tracking|رقم|التتبع)(?![a-z\u0621-\u064a]))*[\s:#.-]*$';
-  shipping_before constant text := '(^|[^a-z\u0621-\u064a])(tracking|track|awb|waybill|receipt|shipment|consignment|الشحنة|شحنة|التتبع|تتبع|البوليصة|بوليصة|الايصال|ايصال)'
-    || '([\s:#.-]*(number|num|no|is|رقم|رقمها|هو)(?![a-z\u0621-\u064a]))*[\s:#.-]*$';
-  courier_named constant text := '(^|[^a-z\u0621-\u064a])(' || carrier_names || ')(?![a-z\u0621-\u064a])';
   ts int;
   tb text;
   m text;
@@ -238,12 +247,6 @@ begin
     off := st + length(m);
     ctx := translate(lower(substr(tp, greatest(1, st - 40), st - greatest(1, st - 40))), '٠١٢٣٤٥٦٧٨٩०१२३४५६७८९', '01234567890123456789');
     continue when right(ctx, 20) ~* '(iban|account|acct|a/c|ايبان|حساب|الحساب)[^0-9]{0,14}$';   -- an account number: below, as a whole
-    -- a courier's number after a shipping word, the courier named before it ("SMSA branch, receipt 0512345678"): read
-    -- from the start of the word that holds it
-    ts := st;
-    while ts > 1 and substr(tp, ts - 1, 1) !~ '\s' loop ts := ts - 1; end loop;
-    tb := lower(substr(tp, greatest(1, ts - 60), ts - greatest(1, ts - 60)));
-    continue when tb ~* shipping_before and lower(substr(tp, greatest(1, ts - 120), ts - greatest(1, ts - 120))) ~* courier_named;
     plus := left(m, 1) = '+';
     core := case when plus then substr(m, 2) else m end;
     g := regexp_split_to_array(core, '[^' || da || ']+');
@@ -257,7 +260,7 @@ begin
         d := d || translate(g[j], '٠١٢٣٤٥٦٧٨٩०१२३४५६७८९', '01234567890123456789');
         anyfree := anyfree or g[j] ~ '[0-9٠-٩]';
         exit when length(d) > 15;
-        if (plusi or d ~ anchor) and private.phone_shaped(d, plusi) and anyfree then return 'phone'; end if;
+        if (plusi or d ~ anchor) and private.phone_shaped(d, plusi, p_note) and anyfree then return 'phone'; end if;
       end loop;
     end loop;
     d := translate(array_to_string(g, ''), '٠١٢٣٤٥٦٧٨٩०१२३४५६७८९', '01234567890123456789');
@@ -285,22 +288,21 @@ begin
     ctx := translate(lower(substr(t, greatest(1, st - 40), st - greatest(1, st - 40))), '٠١٢٣٤٥٦٧٨٩', '0123456789');
     k := private.number_kind(array(select translate(x, '٠١٢٣٤٥٦٧٨٩', '0123456789') from unnest(g) x), seps, plus,
                              length(regexp_replace(core, '[^0-9]', '', 'g')), length(regexp_replace(core, '[^٠-٩]', '', 'g')), ctx, glued,
-                             t ~ '[\u0621-\u064A]');
+                             t ~ '[\u0621-\u064A]', p_note);
     -- written 4+4, two quantities rather than a Gulf mobile: both halves round, or a unit or currency after them
     -- (contact.ts isQuantities; Afzal, 31 October, trade-off 1)
     if k = 'phone' and array_length(g, 1) = 2 and length(g[1]) = 4 and length(g[2]) = 4
        and ((right(g[1], 1) ~ '[0٠]' and right(g[2], 1) ~ '[0٠]') or substr(t, en, 16) ~* unit_after) then
       k := null;
     end if;
-    if k = 'phone' then
-      -- a courier's tracking number (as contact.ts courierNumber): "Naqel 501234567", "UPS 1Z999AA10123456784"
+    if k = 'phone' and p_note and not plus and core ~ '^[0-9]{9,15}$' and core !~ anchor then
+      -- in the sent-back note only, a courier's tracking number right after its name, read from the start of the word
+      -- that holds it (contact.ts courierTracking): one run of nine to fifteen digits, none spelled out, not starting
+      -- like a phone number ("Naqel 501234567", "UPS 1Z999AA10123456784")
       ts := st;
       while ts > 1 and substr(t, ts - 1, 1) !~ '\s' loop ts := ts - 1; end loop;
       tb := lower(substr(t, greatest(1, ts - 60), ts - greatest(1, ts - 60)));
-      if (not (plus or translate(core, '٠١٢٣٤٥٦٧٨٩', '0123456789') ~ anchor) and tb ~* courier_before)
-         or (tb ~* shipping_before and lower(substr(t, greatest(1, ts - 120), ts - greatest(1, ts - 120))) ~* courier_named) then
-        k := null;
-      end if;
+      if tb ~* courier_before then k := null; end if;
     end if;
     if k is not null then return k; end if;
   end loop;
@@ -315,8 +317,8 @@ end $$;
 -- between digits read as 0 and 1. Then: numbers (private.number_hint); emails however the @ and the dots are written;
 -- links; handles (also "ig:@name", not "@home"); messaging apps (also spaced out, or a short name with a marked handle:
 -- "snap: name"); IBANs and invitations to deal or pay outside Al Mukarramah, in English and Arabic ("call me Maryam"
--- gives a name: not one).
-create or replace function private.contact_hint(p text) returns text
+-- gives a name: not one). p_note: the customer's sent-back note (number_hint).
+create or replace function private.contact_hint(p text, p_note boolean default false) returns text
 language plpgsql immutable set search_path = public as $$
 declare
   t text;
@@ -354,7 +356,7 @@ begin
     tn := regexp_replace(tn, '(?<=[0-9٠-٩])[oq](?=[oqil|]*[0-9٠-٩])', '0', 'g');
     tn := regexp_replace(tn, '(?<=[0-9٠-٩])[il|](?=[0il|]*[0-9٠-٩])', '1', 'g');
   end loop;
-  hint := private.number_hint(tn);
+  hint := private.number_hint(tn, p_note);
   if hint is not null then return hint; end if;
   -- emails ("ali at outlook" only at the end of a phrase: "we met at Outlook cafe" is not one)
   if t ~ '[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}'

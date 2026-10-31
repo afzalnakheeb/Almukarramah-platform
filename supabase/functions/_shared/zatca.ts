@@ -153,7 +153,7 @@ export async function ensureInvoice(db: Db, orderId: string): Promise<{ id: stri
 
 type CreditNoteContext = {
   refund: {
-    id: string; status: string; reason: string; platform_minor: number; credit_note_status: string; credit_note: string | null;
+    id: string; status: string; reason: string; platform_minor: number; credit_note_status: string; credit_note: string | null; goodwill_deducted_minor?: number;
     order: { id: string; number: number; currency: string; ship_to: OrderForInvoice['ship_to'] };
     lines: { kind: 'item' | 'shipping' | 'duties' | 'goodwill'; quantity: number | null; amount_minor: number; vat_rate_bp: number | null; platform_invoiced: boolean;
              name_en: string | null; name_ar: string | null; unit_price_minor: number | null }[];
@@ -161,6 +161,26 @@ type CreditNoteContext = {
   original: OriginalInvoice | null;
   order_fx_per_sar: number | null;
 };
+
+/**
+ * The lines of a credit note for less than its lines come to (the refund counted goodwill already on our credit notes:
+ * review R7-2): the difference comes off every line in proportion to its amount, the halalas left by rounding off the
+ * lines with the largest remainders, so the lines add up to the credit note exactly.
+ */
+export function allocateReduction(amounts: number[], target: number): number[] {
+  const total = amounts.reduce((n, a) => n + a, 0);
+  const cut = total - target;
+  if (cut <= 0 || total <= 0 || target < 0) return amounts.slice();
+  const exact = amounts.map((a) => (a * cut) / total);
+  const off = exact.map((x) => Math.floor(x));
+  let left = cut - off.reduce((n, x) => n + x, 0);
+  for (const { i } of exact.map((x, i) => ({ i, r: x - off[i] })).sort((p, q) => q.r - p.r || p.i - q.i)) {
+    if (left <= 0) break;
+    off[i] += 1;
+    left -= 1;
+  }
+  return amounts.map((a, i) => a - off[i]);
+}
 
 /** The ZATCA credit note for the part of a refund we invoiced (never duties), against the order's invoice. */
 export async function issueCreditNote(db: Db, refundId: string): Promise<{ id: string; number: string; duplicate: boolean } | null> {
@@ -172,7 +192,14 @@ export async function issueCreditNote(db: Db, refundId: string): Promise<{ id: s
   if (f.credit_note_status === 'issued') return { id: '', number: f.credit_note ?? '', duplicate: true };
   if (f.status !== 'succeeded' || f.credit_note_status !== 'pending' || f.platform_minor <= 0) return null;
   if (!c.original) throw new Error(`Order ${f.order.number} has no tax invoice yet: issue it first`);
-  const ours = f.lines.filter((l) => l.platform_invoiced);
+  let ours = f.lines.filter((l) => l.platform_invoiced);
+  const sum = ours.reduce((n, l) => n + l.amount_minor, 0);
+  // a refund that counted goodwill already credited (review R7-2): its lines, each less its share of that goodwill
+  if (sum > f.platform_minor && (f.goodwill_deducted_minor ?? 0) > 0) {
+    const cut = allocateReduction(ours.map((l) => l.amount_minor), f.platform_minor);
+    ours = ours.map((l, i) => ({ ...l, amount_minor: cut[i], unit_price_minor: l.quantity ? Math.round(cut[i] / l.quantity) : cut[i] }))
+      .filter((l) => l.amount_minor > 0);
+  }
   // the credit note is never more than is left on our invoice (review R4-3): when the refund's part on it was cut to
   // that, the note is one line for that amount, a reduction of the price
   if (ours.reduce((n, l) => n + l.amount_minor, 0) !== f.platform_minor) {

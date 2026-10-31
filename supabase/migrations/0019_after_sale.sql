@@ -213,7 +213,8 @@ create table refunds (
   return_id uuid references return_requests,
   status text not null default 'processing' check (status in ('processing', 'succeeded', 'failed')),
   currency char(3) not null,
-  amount_minor int not null check (amount_minor > 0),
+  -- the money paid back: 0 only for a return the goodwill already given covered, finished without Moyasar (review R7-4)
+  amount_minor int not null check (amount_minor >= 0),
   items_minor int not null default 0 check (items_minor >= 0),
   shipping_minor int not null default 0 check (shipping_minor >= 0),
   duties_minor int not null default 0 check (duties_minor >= 0),
@@ -227,7 +228,9 @@ create table refunds (
   -- which goodwill it counted: [{sub_order_id (null: goodwill on the order), amount_minor}], decided when the refund is
   -- worked out; each parcel's refunded figure takes it off, and no goodwill is ever counted twice
   goodwill_deducted_detail jsonb not null default '[]' check (jsonb_typeof(goodwill_deducted_detail) = 'array'),
-  platform_minor int not null default 0 check (platform_minor >= 0),    -- the part on our tax invoice: the credit note's total
+  -- the part on our tax invoice: the credit note's total, never more than the money the refund pays back (the goodwill it
+  -- counts that was on our credit notes already is taken off: review R7-2)
+  platform_minor int not null default 0 check (platform_minor >= 0),
   reason text not null check (char_length(reason) between 3 and 500),
   restock boolean not null default false,
   idempotency_key text not null unique check (idempotency_key ~ '^[A-Za-z0-9_-]{8,80}$'),
@@ -239,7 +242,9 @@ create table refunds (
   created_at timestamptz not null default now(),
   completed_at timestamptz,
   check (amount_minor = items_minor + shipping_minor + duties_minor + goodwill_minor - goodwill_deducted_minor),
-  check (platform_minor <= items_minor + shipping_minor + goodwill_minor)
+  check (amount_minor > 0 or (return_id is not null and goodwill_deducted_minor > 0)),
+  check (platform_minor <= items_minor + shipping_minor + goodwill_minor),
+  check (platform_minor <= amount_minor)
 );
 create index refunds_order on refunds (order_id, created_at);
 -- One live refund per return (review H1); one refund waiting for Moyasar per order at a time, so reconciling with
@@ -589,10 +594,13 @@ create trigger notification_templates_guard before update on notification_templa
 create trigger notification_templates_touch before update on notification_templates for each row execute function mp_touch();
 create trigger return_requests_touch before update on return_requests for each row execute function mp_touch();
 -- The date to send a return back by, fixed when it is accepted (review R6-3): the acceptance day in Riyadh plus the days
--- set then. Set once: a later change of return_autoclose_days applies only to returns accepted after it.
+-- set then. Fixed at each acceptance: a later change of return_autoclose_days applies only to returns accepted after it,
+-- and a return accepted again (after the customer escalated it) gets a new date from that day, with the days set then
+-- (review R7-3).
 create or replace function private.return_send_back_by() returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if new.status = 'accepted' and new.kind = 'return' and new.send_back_by is null then
+  if new.status = 'accepted' and new.kind = 'return'
+     and (new.send_back_by is null or (tg_op = 'UPDATE' and old.status is distinct from 'accepted')) then
     new.send_back_by := (coalesce(new.accepted_at, now()) at time zone 'Asia/Riyadh')::date + (select return_autoclose_days from mp_settings where id = 1);
   end if;
   return new;
@@ -1079,9 +1087,33 @@ language sql stable security definer set search_path = public as $$
           left join mine on mine.sub_order_id = gw.sub_order_id
   where gw.amt - coalesce(used.amt, 0) > 0;
 $$;
+-- The part of the goodwill a refund counts (its goodwill_deducted_detail) that was on our credit notes when it was given:
+-- goodwill on a parcel we invoice, or on the order when we invoice it; by parcel, in the share of that parcel's goodwill
+-- that was on our invoice (review R7-2). It comes off the refund's credit note, so the same goodwill is never credited
+-- twice.
+create or replace function private.goodwill_on_invoice(p_order uuid, p_detail jsonb) returns int
+language sql stable security definer set search_path = public as $$
+  select coalesce(sum(case when g.tot > 0 then round(d.amt::numeric * g.plat / g.tot) else 0 end), 0)::int
+  from (select nullif(e ->> 'sub_order_id', '')::uuid as sub, (e ->> 'amount_minor')::int as amt
+        from jsonb_array_elements(coalesce(p_detail, '[]'::jsonb)) e) d
+  cross join lateral (
+    select coalesce(sum(l.amount_minor), 0) as tot, coalesce(sum(l.amount_minor) filter (where l.platform_invoiced), 0) as plat
+    from refund_lines l join refunds f on f.id = l.refund_id
+    where f.order_id = p_order and f.status in ('processing', 'succeeded') and l.kind = 'goodwill' and l.sub_order_id is not distinct from d.sub) g;
+$$;
+-- A refund's part on our credit note (review R4-3, R7-2): its lines on our invoice less the goodwill it counts that was
+-- credited already, never more than the money it pays back (so each credit note is the money refunded on what we
+-- invoiced) and never below nothing. The cap at what is left of our invoice is applied by the caller, after it checks
+-- that the invoice exists.
+create or replace function private.credit_part(p_order uuid, p_platform int, p_amount int, p_detail jsonb) returns int
+language sql stable security definer set search_path = public as $$
+  select greatest(least(p_platform - private.goodwill_on_invoice(p_order, p_detail), p_amount), 0);
+$$;
 revoke all on function private.payment_left(uuid) from public, anon, authenticated;
 revoke all on function private.goodwill_undeducted(uuid) from public, anon, authenticated;
 revoke all on function private.goodwill_free(uuid, jsonb) from public, anon, authenticated;
+revoke all on function private.goodwill_on_invoice(uuid, jsonb) from public, anon, authenticated;
+revoke all on function private.credit_part(uuid, int, int, jsonb) from public, anon, authenticated;
 
 -- Works out a refund and reserves it (status "processing") before Moyasar is asked. p: {key, reason, and one of
 --   return_id (an approved return: its lines; the delivery too when the whole parcel comes back),
@@ -1096,6 +1128,11 @@ revoke all on function private.goodwill_free(uuid, jsonb) from public, anon, aut
 -- reserved: the amount, what the lines come to, the goodwill counted and the goodwill already given on this refund's
 -- parcels, for staff to see before refunding (no key or reason needed); the refund then carries that amount
 -- (expected_amount_minor) and is refused if it has changed (REVIEW-6).
+-- The credit note is the money paid back on what we invoiced: the goodwill a refund counts that was on our credit notes
+-- already comes off it (review R7-2). A return the goodwill already covered (nothing left to pay back) is finished as a
+-- zero refund, here and now: no Moyasar, no credit note; its lines are recorded like any refund's, so the seller's sale
+-- is reversed (goodwill is ours: decision T), the stock comes back and the return is refunded (review R7-4). Anything
+-- else the goodwill covered is refused, saying so.
 create or replace function mp_prepare_refund(p_order uuid, p jsonb, p_user uuid) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
@@ -1124,6 +1161,7 @@ declare
   v_duty uuid[] := '{}';
   v_ship_order boolean := false;
   v_plan jsonb := '[]';
+  v_zero boolean := false;
   l record;
   rq int; ra int; rc int; q int; amt int; comm int; v_want int;
   t_items int := 0; t_ship int := 0; t_duty int := 0; t_platform int := 0;
@@ -1145,9 +1183,9 @@ begin
   select * into o from orders where id = p_order for update;          -- one refund at a time on an order
   if o.id is null then raise exception 'Order not found' using detail = 'لم يُعثر على الطلب'; end if;
   if o.payment_id is null or o.status in ('pending_payment', 'cancelled') then raise exception 'Order not paid'; end if;
-  if o.status = 'refunded' then
-    raise exception 'Already refunded: the whole payment for this order has gone back%',
-      case when nullif(p ->> 'return_id', '') is not null then '. Close the return instead ("Close return", with the reason)' else '' end;
+  -- (a return on an order whose whole payment has gone back is looked at below: the goodwill may cover it, R7-4)
+  if o.status = 'refunded' and nullif(p ->> 'return_id', '') is null then
+    raise exception 'Already refunded: the whole payment for this order has gone back';
   end if;
   -- one refund waiting for Moyasar per order: an answer that never came is reconciled first, never retried blind (H2)
   if exists (select 1 from refunds where order_id = o.id and status = 'processing') then
@@ -1291,6 +1329,9 @@ begin
   end if;
 
   v_lines := t_items + t_ship + t_duty;
+  if v_lines <= 0 and o.status = 'refunded' then
+    raise exception 'Already refunded: the whole payment for this order has gone back. Close the return instead ("Close return", with the reason)';
+  end if;
   if v_lines <= 0 then raise exception 'Nothing left to refund'; end if;
   v_left := private.payment_left(o.id);
   -- goodwill given earlier, not yet counted by a refund: by parcel, this refund's own parcels first
@@ -1319,14 +1360,23 @@ begin
         v_need := v_need - v_take;
       end if;
     end loop;
-    if v_left <= 0 or v_need > 0 then
-      raise exception 'The refund is more than what is left of the payment (% left)', to_char(greatest(v_left, 0) / 100.0, 'FM999,990.00');
-    end if;
+  end if;
+  -- the whole payment has gone back: only a return the goodwill covers can still be finished (R7-4)
+  if o.status = 'refunded' and v_lines - v_deduct > 0 then
+    raise exception 'Already refunded: the whole payment for this order has gone back. Close the return instead ("Close return", with the reason)';
+  end if;
+  if v_need > 0 then
+    raise exception 'The refund is more than what is left of the payment (% left)', to_char(greatest(v_left, 0) / 100.0, 'FM999,990.00');
   end if;
   if v_lines - v_deduct <= 0 then
-    raise exception 'Nothing is left to refund on this: the goodwill already given (%) covers it. Close the return instead, with the reason',
-      to_char(v_deduct / 100.0, 'FM999,990.00');
+    if v_mode <> 'return' then
+      raise exception 'Nothing is left to refund on this: the goodwill already given (%) covers it', to_char(v_deduct / 100.0, 'FM999,990.00')
+        using detail = format('لم يبقَ ما يُسترد هنا: التعويض الذي قُدّم من قبل (%s) يغطيه', to_char(v_deduct / 100.0, 'FM999,990.00'));
+    end if;
+    v_zero := true;                                      -- a return the goodwill covered: finished as a zero refund (R7-4)
   end if;
+  -- the credit note: the money paid back on what we invoiced, the goodwill already credited taken off (R7-2)
+  t_platform := private.credit_part(o.id, t_platform, v_lines - v_deduct, v_detail);
   if t_platform > 0 and not exists (select 1 from invoices where order_id = o.id and doc = 'invoice') then
     raise exception 'The tax invoice for this order has not been issued yet: run "Finish pending work" (or wait for it), so the refund can have its credit note';
   end if;
@@ -1341,7 +1391,7 @@ begin
   if v_preview then
     return jsonb_build_object('preview', true, 'order_id', o.id, 'currency', o.currency, 'amount_minor', v_lines - v_deduct, 'lines_minor', v_lines,
       'items_minor', t_items, 'shipping_minor', t_ship, 'duties_minor', t_duty, 'goodwill_deducted_minor', v_deduct, 'payment_left_minor', v_left,
-      'goodwill_on_parcels_minor', v_parcel_gw, 'parcel_goodwill_deducted', v_z, 'platform_minor', t_platform);
+      'goodwill_on_parcels_minor', v_parcel_gw, 'parcel_goodwill_deducted', v_z, 'platform_minor', t_platform, 'settled_by_goodwill', v_zero);
   end if;
   -- the amount staff were shown: refunded only if it is still the amount (review REVIEW-6)
   if v_expected is not null and v_expected <> v_lines - v_deduct then
@@ -1357,7 +1407,12 @@ begin
   select rid, (e ->> 'sub_order_id')::uuid, (e ->> 'order_item_id')::uuid, e ->> 'kind', (e ->> 'quantity')::int, (e ->> 'amount_minor')::int,
          coalesce((e ->> 'commission_minor')::int, 0), (e ->> 'vat_rate_bp')::int, (e ->> 'platform_invoiced')::boolean
   from jsonb_array_elements(v_plan) e;
-  return private.refund_json(rid) || jsonb_build_object('duplicate', false);
+  if v_zero then
+    -- nothing to pay back: recorded and finished at once, like any refund Moyasar made (the return, the lines, the
+    -- parcels, the stock, the seller's statement), without Moyasar and without a credit note (R7-4)
+    return mp_complete_refund(rid, true, 'covered-by-goodwill', null) || jsonb_build_object('duplicate', false, 'settled_by_goodwill', true);
+  end if;
+  return private.refund_json(rid) || jsonb_build_object('duplicate', false, 'settled_by_goodwill', false);
 end $$;
 
 -- Moyasar answered: the refund succeeded (order, lines, parcels, stock, the return, statements, the customer told) or failed.
@@ -1421,8 +1476,16 @@ begin
   for l in select distinct sub_order_id from refund_lines where refund_id = f.id and sub_order_id is not null loop
     perform private.book_refund(f.id, l.sub_order_id);
   end loop;
-  perform private.notify('refund_issued', jsonb_build_object('user_id', o.user_id, 'order_id', o.id),
-    jsonb_build_object('amount', private.money_text(f.amount_minor, f.currency), 'order', o.number, 'order_id', o.id), 'refund:' || f.id);
+  if f.amount_minor > 0 then
+    perform private.notify('refund_issued', jsonb_build_object('user_id', o.user_id, 'order_id', o.id),
+      jsonb_build_object('amount', private.money_text(f.amount_minor, f.currency), 'order', o.number, 'order_id', o.id), 'refund:' || f.id);
+  elsif f.return_id is not null then
+    -- a return the goodwill already given covered (R7-4): finished, nothing more to pay back, never "refunded 0.00"
+    perform private.notify('return_settled', jsonb_build_object('user_id', o.user_id, 'order_id', o.id),
+      jsonb_build_object('return', (select format('R-%s-%s', o.number, r.seq) from return_requests r where r.id = f.return_id), 'order', o.number,
+                         'order_id', o.id, 'return_id', f.return_id, 'goodwill', private.money_text(f.goodwill_deducted_minor, f.currency)),
+      'return:' || f.return_id || ':settled');
+  end if;
   select array_agg(distinct s.seller_id) into v_sellers from refund_lines rl join sub_orders s on s.id = rl.sub_order_id
   where rl.refund_id = f.id and rl.kind = 'item' and s.seller_id is not null;
   for l in select s.seller_id, format('AM-%s-%s', o.number, s.seq) as num, sum(rl.amount_minor)::int as amt
@@ -1642,9 +1705,14 @@ begin
     if f.amount_minor > o.total_minor - coalesce((select sum(amount_minor) from refunds where order_id = o.id and status in ('processing', 'succeeded')), 0) then
       raise exception 'The refund is more than what is left of the payment';
     end if;
-    -- a refund cut by the goodwill already given (R5-2) is recorded with the same cut, while that goodwill is still uncounted
-    if f.goodwill_deducted_minor > private.goodwill_undeducted(o.id) then
-      raise exception 'This refund counted goodwill that a later refund has counted since: record what Moyasar refunded from the refunds page instead';
+    -- a refund cut by the goodwill already given (R5-2) is recorded with the same cut, while that goodwill is still
+    -- uncounted: across the order, and parcel by parcel (REVIEW-7: a retry may have counted one parcel's goodwill since)
+    if f.goodwill_deducted_minor > private.goodwill_undeducted(o.id)
+       or exists (select 1 from jsonb_array_elements(f.goodwill_deducted_detail) d
+                  where (d ->> 'amount_minor')::int > coalesce((select (x ->> 'free')::int from jsonb_array_elements(private.goodwill_free(o.id, '[]')) x
+                                                                where (x ->> 'sub_order_id') is not distinct from (d ->> 'sub_order_id')), 0)) then
+      raise exception 'This refund counted goodwill that a later refund has counted since: record what Moyasar refunded from the refunds page instead'
+        using detail = 'احتسب هذا الاسترداد تعويضًا احتسبه استرداد لاحق منذ ذلك الحين: سجّل ما أعادته ميسر من صفحة الاستردادات بدلًا من ذلك';
     end if;
     if p_moyasar_refunded is null or f.amount_minor > p_moyasar_refunded - o.refunded_minor then
       raise exception 'Moyasar shows % refunded that we have not recorded: not enough for this refund (it may have just been recorded)',
@@ -1692,7 +1760,9 @@ begin
         if l.kind <> 'duties' and l.platform_invoiced then t_platform := t_platform + l.amount_minor - amt; end if;
       end if;
     end loop;
-    t_platform := least(t_platform, greatest(private.invoice_left(o.id), 0));   -- never past our invoice (R4-3)
+    -- the credit note: the money paid back on what we invoiced, the goodwill already credited taken off (R7-2), never
+    -- past our invoice (R4-3)
+    t_platform := least(private.credit_part(o.id, t_platform, f.amount_minor, f.goodwill_deducted_detail), greatest(private.invoice_left(o.id), 0));
     insert into refunds (order_id, return_id, currency, amount_minor, items_minor, shipping_minor, duties_minor, goodwill_minor, goodwill_deducted_minor,
                          goodwill_deducted_detail, platform_minor, reason, restock, idempotency_key, created_by)
     values (f.order_id, case when t_good = 0 then f.return_id end, f.currency, f.amount_minor, t_items, t_ship, t_duty, t_good, f.goodwill_deducted_minor,
@@ -1738,6 +1808,8 @@ declare
   v_role text := coalesce(private.user_staff_role(p_user)::text, '');
   v_sub uuid := nullif(p ->> 'sub_order_id', '')::uuid;
   v_platform boolean;
+  v_parcel_left int;
+  v_num text;
   r jsonb;
   rid uuid;
 begin
@@ -1772,8 +1844,16 @@ begin
         using detail = 'اختر الطرد الذي يخصه هذا التعويض: في هذا الطلب طرود يفوترها البائعون أو رسوم جمركية';
     end if;
     if v_sub is not null then
-      select s.invoicer = 'platform' into v_platform from sub_orders s where s.id = v_sub and s.order_id = o.id;
+      select s.invoicer = 'platform', s.items_minor + s.shipping_minor + s.duties_minor - s.refunded_minor, format('AM-%s-%s', o.number, s.seq)
+        into v_platform, v_parcel_left, v_num from sub_orders s where s.id = v_sub and s.order_id = o.id;
       if v_platform is null then raise exception 'That parcel is not in this order'; end if;
+      -- never more than the customer paid for the parcel, less what has gone back for it (review R7-4)
+      if v_amount > v_parcel_left then
+        raise exception 'Goodwill on % cannot be more than the customer paid for that parcel, less what has gone back for it: % left. Record the rest on the other parcels it was for',
+          v_num, to_char(greatest(v_parcel_left, 0) / 100.0, 'FM999,990.00')
+          using detail = format('لا يمكن أن يتجاوز التعويض على الطرد %s ما دفعه العميل عنه بعد خصم ما أُعيد عنه: المتبقي %s. سجّل الباقي على الطرود الأخرى التي يخصها التعويض',
+                                v_num, to_char(greatest(v_parcel_left, 0) / 100.0, 'FM999,990.00'));
+      end if;
     else
       v_platform := exists (select 1 from invoices i where i.order_id = o.id and i.doc = 'invoice');
     end if;
@@ -1942,7 +2022,9 @@ begin
       perform private.notify('staff_return_requested', jsonb_build_object('staff_roles', array['owner', 'manager', 'support', 'operations']), v, 'return:' || r.id || ':staff');
     end if;
   elsif p_event = 'accepted' then
-    perform private.notify('return_accepted', cust, v, 'return:' || r.id || ':accepted');
+    -- accepted again after the customer escalated it: a notice of its own, with the new date (review R7-3)
+    perform private.notify('return_accepted', cust, v, 'return:' || r.id || ':accepted'
+      || case when r.escalated_at is not null and r.escalated_at < r.accepted_at then ':' || to_char(r.accepted_at at time zone 'UTC', 'YYYYMMDDHH24MISSUS') else '' end);
   elsif p_event = 'approved' then
     perform private.notify('return_approved', cust, v, 'return:' || r.id || ':approved');
     perform private.notify('staff_refund_needed', jsonb_build_object('staff_roles', array['owner', 'manager', 'finance', 'support']),
@@ -2080,10 +2162,12 @@ end $$;
 -- What happens next (server only). Customer: escalate, withdraw. Seller (or our team for them): accept, decline,
 -- received. Our team: approve, reject (final). Only our team refunds, through refund-order. Our team (the people who
 -- refund: owner, manager, finance, support) closes an approved return that will not be refunded through it, with the
--- reason the customer and the seller read: the goodwill already given covered it, the customer kept the item, or it
--- was refunded another way (review R5-2). A closed return holds nothing any more: what is still due is refunded by line.
--- The customer (or our team for them) says the items are on their way back ("sent_back", with the courier and the
--- tracking number if they have them): the return is then in transit and never closes on its own (Afzal, 31 October).
+-- reason the customer and the seller read: the customer kept the item, or it was refunded another way (review R5-2; a
+-- return the goodwill already covered is finished by "Refund this return" at zero instead: review R7-4). A closed return
+-- refunds nothing through it and holds none of the seller's money, but keeps its units (never returned again: review
+-- R6-2); what is still due is refunded by line. The customer (or our team for them) says the items are on their way back
+-- ("sent_back", with the courier and the tracking number if they have them: that note alone keeps a courier's tracking
+-- number readable, review R7-1): the return is then in transit and never closes on its own (Afzal, 31 October).
 create or replace function mp_return_action(p_user uuid, p_return uuid, p_action text, p_note text default null, p_restock boolean default null,
                                             p_flags text[] default '{}') returns jsonb
 language plpgsql security definer set search_path = public as $$
@@ -2200,11 +2284,11 @@ revoke all on function mp_return_action(uuid, uuid, text, text, boolean, text[])
 -- Returns accepted for sending back whose items never came (Afzal, 31 October; review L4): once the date the customer
 -- was given to send them back by (send_back_by, fixed at acceptance) has ended everywhere, with the customer never
 -- saying the items were sent back, the return closes on its own (review R6-3: the end of that date in UTC−12, so no
--- customer anywhere sees it close while the date is still running for them). It then holds nothing, so the seller's
--- sale is paid as usual; the customer and the seller are told in their language, and each closure is in the audit
--- log. A step of finish-pending (server only; p_now only for tests). Safe to repeat and to run twice at once: a return
--- is taken locked and only while it is still accepted, so it closes, is told and is logged once; one in transit,
--- received or decided is never touched.
+-- customer anywhere sees it close while the date is still running for them). It then holds none of the seller's money,
+-- so the sale is paid as usual, but keeps its units (never returned again: review R6-2); the customer and the seller are
+-- told in their language, and each closure is in the audit log. A step of finish-pending (server only; p_now only for
+-- tests). Safe to repeat and to run twice at once: a return is taken locked and only while it is still accepted, so it
+-- closes, is told and is logged once; one in transit, received or decided is never touched.
 create or replace function mp_autoclose_returns(p_limit int default 50, p_now timestamptz default now()) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
@@ -3176,6 +3260,10 @@ insert into notification_templates (key, audience, channels, subject_en, subject
  'Your return {{return}} is closed', 'أُغلق طلب الإرجاع {{return}}',
  'The items were not sent back by {{send_back_by}}, the date given when the return was accepted, so it has closed. If you did send them, email hello@almukarramah.com with the return number {{return}} and our team will look into it.',
  'لم تُعَد المنتجات في موعد أقصاه {{send_back_by}}، وهو الموعد المحدد عند قبول طلب الإرجاع، لذا أُغلق الطلب. إن كنت قد أرسلتها فراسلنا على hello@almukarramah.com مع رقم طلب الإرجاع {{return}} وسيتابع فريقنا الأمر.', '/order?id={{order_id}}'),
+('return_settled', 'customer', '{email,in_app}',
+ 'Your return {{return}} is complete', 'اكتمل طلب الإرجاع {{return}}',
+ 'The {{goodwill}} we refunded to you earlier already covers it, so there is nothing more to refund. The details are on your order page.',
+ 'المبلغ {{goodwill}} الذي أعدناه إليك من قبل يغطيه، فلا يوجد مبلغ آخر يُسترد. التفاصيل في صفحة طلبك.', '/order?id={{order_id}}'),
 ('refund_issued', 'customer', '{email,in_app}',
  'Your refund of {{amount}}', 'استرداد مبلغ {{amount}}',
  'We have refunded {{amount}} for order AM-{{order}} to your original payment method. It may take a few working days to appear, depending on your bank.',

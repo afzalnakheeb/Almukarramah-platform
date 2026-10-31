@@ -59,7 +59,8 @@ Deno.serve(handle(async (req) => {
     }
 
     case 'return_action': {
-      const note = cleanText(body.note, 1000);
+      // the customer's "I have sent it back" note may keep a courier's tracking number; no other note does (review R7-1)
+      const note = cleanText(body.note, 1000, { sentBackNote: body.do === 'sent_back' });
       return rpc('mp_return_action', {
         p_user: user.id, p_return: id(body.returnId), p_action: String(body.do ?? ''), p_note: note.text || null,
         p_restock: typeof body.restock === 'boolean' ? body.restock : null, p_flags: note.flags,

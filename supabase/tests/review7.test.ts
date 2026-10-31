@@ -67,7 +67,8 @@ describe('Trade-off 2 (Afzal, 31 Oct): after a contact word, a round range needs
     assert.deepEqual([...R5_GULF_MASK, ...R6_COURIER_PHONES].filter((t) => !masked(t)), []);
     assert.deepEqual(R4_NATURAL.filter(([p, want]) => cleanText(p, 2000).text !== want).map(([p]) => p), []);
     assert.deepEqual([...R4_ORDINARY, ...EVERYDAY, ...ORDINARY, ...R5_GULF_STAY].filter((t) => !untouched(t)), []);
-    assert.deepEqual(R6_NOTES.filter((n) => cleanText(n, 1000).text !== n), []);
+    // the couriers' notes keep their numbers in the sent-back note only (REVIEW-7, R7-1), the "receipt 05..." one not even there
+    assert.deepEqual(R6_NOTES.filter((n) => !/receipt 05/.test(n) && cleanText(n, 1000, { sentBackNote: true }).text !== n), []);
     for (const [p, leak] of [...CONTACT_PROBES, ...EXTRA_PROBES]) assert.doesNotMatch(cleanText(p, 2000).text, leak, p);
     const texts = [...R7_BARE_MASK, ...R7_BARE_STAY, ...R7_CONTACT_ROUND_MASK, ...R7_CONTACT_UNIT_STAY, ...R5_RANGES, ...R5_LISTINGS, ...R5_GULF_MASK, ...R5_GULF_STAY,
       ...R4_PROBES, ...R4_ORDINARY, ...EVERYDAY, ...LISTING_TEXTS, ...R6_NOTES, ...R6_COURIER_PHONES];

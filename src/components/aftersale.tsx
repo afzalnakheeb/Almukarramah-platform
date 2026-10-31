@@ -116,7 +116,9 @@ export function ReturnCard({ r, side, onDone, messagesHref }: { r: ReturnRequest
           onPress={() => openExternal(`mailto:hello@almukarramah.com?subject=${encodeURIComponent(`${r.number} (${r.sub_order_number})`)}`)} />
       ) : null}
       {r.status === 'approved' ? <T size={13} color={colors.emerald}>{t('rtRefundSoon')}</T> : null}
-      {r.refund?.status === 'succeeded' ? <T size={13} color={colors.emerald}>{t('rtRefunded').replace('{amount}', money(r.refund.amount_minor))}</T> : null}
+      {r.refund?.status === 'succeeded' ? (
+        <T size={13} color={colors.emerald}>{r.refund.amount_minor === 0 ? t('rtSettledByGoodwill') : t('rtRefunded').replace('{amount}', money(r.refund.amount_minor))}</T>
+      ) : null}
 
       {msg ? <Notice tone="warn" text={msg} /> : null}
       {mode ? (

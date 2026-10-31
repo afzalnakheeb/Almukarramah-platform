@@ -176,6 +176,42 @@ export const R7_BARE_STAY = ['my budget is 5000 - 7000', 'between 3500 3900 riya
 export const R7_CONTACT_ROUND_MASK = ['call 9910-3450', 'call me 3500 to 3900', 'تواصل ٣٥٠٠ إلى ٣٩٠٠', 'whatsapp 5000 - 7000', 'my number 6610/7720'];
 export const R7_CONTACT_UNIT_STAY = ['whatsapp 5000 - 7000 riyals', 'واتس ٥٠٠٠ - ٧٠٠٠ ريال', 'Text me 3512 - 3987 knots', 'mobile 6500 / 7500 g'];
 
+/**
+ * The seventh review's courier texts (REVIEW-7, R7-1: js/r7_courier.mts): a whole phone number after a courier's name
+ * and a shipping word, a mobile without its 0 or a Gulf mobile right after a courier's name, and the controls. Outside
+ * the customer's sent-back note every one is masked in a message, refused in a listing and found by the database.
+ */
+export const R8_COURIER_MASK = ['SMSA receipt 0501234567', 'Aramex tracking +966501234567', 'Aramex tracking +966 50 123 4567',
+  'Shipped with DHL. Waybill 0501234567', 'ارامكس رقم الشحنة ٠٥٠١٢٣٤٥٦٧', 'سمسا التتبع ٠٠٩٦٦٥٠١٢٣٤٥٦٧', 'For anything, SMSA receipt 050 123 4567',
+  'My WhatsApp: Aramex receipt 0501234567', 'call me, Aramex tracking 0501234567', 'Aramex receipt 0 5 0 1 2 3 4 5 6 7',
+  'Aramex receipt zero five zero one two three four five six seven', 'Ships with SMSA. Questions? receipt 0501234567',
+  'نشحن مع ارامكس، للاستفسار رقم الشحنة ٠٥٠١٢٣٤٥٦٧', 'Aramex awb +971 50 123 4567', 'Naqel 501234567', 'ناقل ٥٠١٢٣٤٥٦٧', 'SMSA 99123456',
+  'Aramex 9912 3456', 'سمسا ٩٩١٢ ٣٤٥٦', 'DHL 66123456', 'SPL 55512345', 'سبل ٥٠١٢٣٤٥٦٧', 'J&T 501234567',
+  'SMSA 0501234567', 'Aramex +966501234567', 'call 0501234567', 'receipt 0501234567'];
+/**
+ * In the customer's sent-back note only, a mobile without its 0 right after a courier's name may stay readable (Afzal,
+ * 31 October: it is the customer's own number, to one seller, during a return).
+ */
+export const R8_NOTE_BARE = ['Naqel 501234567', 'ناقل ٥٠١٢٣٤٥٦٧', 'سبل ٥٠١٢٣٤٥٦٧', 'J&T 501234567', 'Aramex tracking 501234567'];
+/** What the sent-back note keeps: the couriers' numbers of REVIEW-6 (but the 05... receipt) and those mobiles. */
+export const R8_NOTE_KEEP = [...R6_NOTES.filter((n) => n !== 'dropped at the SMSA branch, receipt 0512345678'), 'سبل ٥٠١٢٣٤٥٦٧', 'J&T 501234567',
+  'Aramex tracking 501234567'];
+/**
+ * ...and what it still masks: everything else above, a whole phone shape (05..., +966, 00966 or 966..., the other Gulf
+ * codes), a Gulf mobile, digits spelled out, spaced or grouped, after a contact word.
+ */
+export const R8_NOTE_MASK = [...R8_COURIER_MASK.filter((t) => !R8_NOTE_BARE.includes(t)), ...R6_COURIER_PHONES, 'dropped at the SMSA branch, receipt 0512345678',
+  'Naqel 966501234567', 'SMSA 00966501234567', 'Aramex 971501234567', 'DHL 96599123456', 'Naqel 97433123456', 'SMSA 96891234567', 'Aramex 97336123456',
+  'Naqel five zero one two three four five six seven', 'ناقل خمسة صفر واحد اثنان ثلاثة اربعة خمسة ستة سبعة', 'Naqel 5 0 1 2 3 4 5 6 7', 'Naqel 50 123 4567',
+  'Aramex tracking 0501234567', 'Naqel +201012345678', 'DHL 0 0 9 6 6 5 0 1 2 3 4 5 6 7', 'Naqel 501234567 or call 0551234567'];
+/**
+ * The couriers' numbers that a message or a listing masks, as before the sixth pass (REVIEW-7, R7-1: "everywhere else,
+ * exactly as before"): only the sent-back note reads them as tracking numbers.
+ */
+export const R8_NOTES_MASKED_ELSEWHERE = ['DHL Express 5012345678', 'J&T JT0001234567890', 'Naqel 501234567', 'UPS 1Z999AA10123456784', 'ارامكس ٣٤٥٦٧٨٩٠١٢٣',
+  'سمسا ٢٩٠٠١٢٣٤٥٦٧٨', 'ناقل ٥٠١٢٣٤٥٦٧', 'أرامكس ٣٤٥٦٧٨٩٠١٢٣', 'زاجل ٧٠١٢٣٤٥٦٧٨', 'ايمكان ٥٠١٢٣٤٥٦٧٨', 'J&T Express 5012345678',
+  'dropped at the SMSA branch, receipt 0512345678', 'سبل ٥٠١٢٣٤٥٦٧', 'J&T 501234567', 'Aramex tracking 501234567'];
+
 /** ...and the numbers next to them that must stay as they are (js/r5_gulf.mts). */
 export const R5_GULF_STAY = ['Delivered on 31102026 to room 1204', 'Order 35001234 arrived', 'رقم الطلب ٥٠٠١٢٣٤٥', 'Invoice INV-50012345', 'Ref 55551234',
   'Tracking 51234567', 'AWB: 71234567', 'Voucher 71234567', 'Hijri date 1447/05/09', 'تاريخ ٣١١٠٢٠٢٦', 'Gift card 9123 4567', 'Booking 51234567 at the Hilton',

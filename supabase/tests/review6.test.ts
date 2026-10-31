@@ -47,9 +47,15 @@ describe('R6-1: a Gulf mobile after على, عبر, معي or معنا is masked
 });
 
 describe('R6-4: a courier\'s tracking number is kept; a phone number next to a courier is not', () => {
-  test('the review\'s 22 notes, and the other courier names, keep their numbers (server and database)', () => {
-    assert.deepEqual(R6_NOTES.filter((n) => cleanText(n, 1000).text !== n).map((n) => `${n} => ${cleanText(n, 1000).text}`), []);
-    assert.deepEqual(R6_NOTES.filter((n) => hint(n) !== null).map((n) => `${n} => ${hint(n)}`), []);
+  // since REVIEW-7 (R7-1) in the customer's sent-back note only, and never a whole phone number there either: the
+  // "receipt 05..." note is masked (review8 has the rest)
+  const RECEIPT_05 = 'dropped at the SMSA branch, receipt 0512345678';
+  const note = (n: string) => cleanText(n, 1000, { sentBackNote: true }).text;
+  test('the review\'s 22 notes, and the other courier names, keep their numbers in the sent-back note (server and database)', () => {
+    const kept = R6_NOTES.filter((n) => n !== RECEIPT_05);
+    assert.deepEqual(kept.filter((n) => note(n) !== n).map((n) => `${n} => ${note(n)}`), []);
+    assert.deepEqual(kept.filter((n) => db.val(`select private.contact_hint(${lit(n)}, true)`) !== null), []);
+    assert.equal(note(RECEIPT_05), 'dropped at the SMSA branch, receipt •••');
   });
 
   test('a whole mobile number after a courier\'s name, or a number after a contact word, is still masked; server and database agree', () => {

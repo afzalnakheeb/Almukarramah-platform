@@ -139,8 +139,11 @@ describe('R4-3: credit notes never go past our invoice', () => {
     // for a seller's parcel: nothing on our invoice, so no credit note of ours
     assert.equal((await goodwill(o, 'r4-gw-000002', 40000, o.a)).status, 200);
     assert.equal(creditNotes(o.o), 0);
-    // for our parcel: on our credit note, never more than is left on our invoice (90.00)
-    assert.equal((await goodwill(o, 'r4-gw-000003', 10000, o.h)).status, 200);
+    // for our parcel: on our credit note, never more than is left on our invoice (90.00); since REVIEW-7 (R7-4) goodwill
+    // on a parcel is also never more than the customer paid for it (the dates and their delivery: 90.00), so 100.00 is
+    // refused and 90.00 is credited in full
+    assert.equal((await goodwill(o, 'r4-gw-000003', 10000, o.h)).status, 409);
+    assert.equal((await goodwill(o, 'r4-gw-000005', 9000, o.h)).status, 200);
     assert.equal(db.val(`select total_incl_vat_minor from invoices where order_id = '${o.o}' and doc = 'credit_note'`), 9000);
   });
 
