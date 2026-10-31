@@ -45,9 +45,9 @@ alter table mp_settings
   -- a return accepted for sending back whose items the customer never sends closes on its own after this many days
   -- (Afzal, 31 October: 30), so it stops holding the seller's sale (review L4; finish-pending, mp_autoclose_returns)
   add column return_autoclose_days int not null default 30 check (return_autoclose_days between 7 and 365),
-  -- decision Z (open, REVIEW-6): goodwill given on a parcel comes off a later refund of that parcel. Off: it is counted
-  -- only when the payment has less left than the refund (review R5-2); the preview shows it either way
-  add column parcel_goodwill_deducted boolean not null default false;
+  -- decision Z (Afzal, 31 October: yes): goodwill given on a parcel comes off a later refund of that parcel. Off, it is
+  -- counted only when the payment has less left than the refund (review R5-2); the preview shows it either way
+  add column parcel_goodwill_deducted boolean not null default true;
 
 -- The switches and limits are Afzal's decisions: only the owner changes them (a manager edits the other settings;
 -- the server and the database connector too, with Afzal's yes under the approval rule). Review N9, REVIEW-2.
@@ -1091,8 +1091,8 @@ revoke all on function private.goodwill_free(uuid, jsonb) from public, anon, aut
 -- Goodwill given earlier on the order (money back without items) counts when these lines come to more than is left of
 -- the payment: the refund is then what is left, the rest counted as the goodwill already given (review R5-2, REVIEW-5),
 -- so the customer gets back what they paid, never more, and the last refund on an order is never stuck. Which goodwill
--- it counted is recorded by parcel (goodwill_deducted_detail). Decision Z (open: a switch, parcel_goodwill_deducted,
--- off) would also take goodwill given on a parcel off a later refund of that parcel. With preview: true nothing is
+-- it counted is recorded by parcel (goodwill_deducted_detail). Decision Z (Afzal, 31 October: a switch,
+-- parcel_goodwill_deducted, on) also takes goodwill given on a parcel off a later refund of that parcel. With preview: true nothing is
 -- reserved: the amount, what the lines come to, the goodwill counted and the goodwill already given on this refund's
 -- parcels, for staff to see before refunding (no key or reason needed); the refund then carries that amount
 -- (expected_amount_minor) and is refused if it has changed (REVIEW-6).
@@ -1299,7 +1299,7 @@ begin
   for gw in select * from jsonb_to_recordset(v_free) as x(sub_order_id uuid, free int, mine int) loop
     if gw.mine > 0 then
       v_parcel_gw := v_parcel_gw + gw.free;                -- shown to staff in the preview (R6-2)
-      -- decision Z (a switch, off until Afzal decides): goodwill on a parcel comes off a later refund of that parcel
+      -- decision Z (Afzal, 31 October: on; an owner-only switch): goodwill on a parcel comes off a later refund of it
       if v_z then
         v_take := least(gw.free, gw.mine);
         v_detail := v_detail || jsonb_build_object('sub_order_id', gw.sub_order_id, 'amount_minor', v_take);

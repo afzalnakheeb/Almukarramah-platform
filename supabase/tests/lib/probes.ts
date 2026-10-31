@@ -132,11 +132,11 @@ export const R5_RANGES = ['my budget is 5000 - 7000', 'between 3500 3900 riyals'
 export const R5_LISTINGS = ['Hand-knotted rugs: 3500 - 3900 knots per square decimetre.', 'Made to order in 5000 - 7000 stitches per piece',
   'سجاد يدوي بكثافة ٣٥٠٠ - ٣٩٠٠ عقدة', 'Weight 6500 / 7500 g depending on size'];
 /**
- * After a contact word, a range joined by a dash, a slash, "to" or إلى, of round numbers or with a unit after it, is
- * still not a phone number (an app's name next to it is masked, as always).
+ * After a contact word, a range joined by a dash, a slash, "to" or إلى, with a unit or currency after it, is still not
+ * a phone number (an app's name next to it is masked, as always). Round numbers alone no longer are (Afzal, 31 October,
+ * trade-off 2: "call me 3500 to 3900" moved to R7_CONTACT_ROUND_MASK).
  */
-export const R5_CONTACT_RANGES = ['whatsapp 5000 - 7000 riyals', 'واتس ٥٠٠٠ - ٧٠٠٠ ريال', 'call me 3500 to 3900', 'تواصل ٣٥٠٠ إلى ٣٩٠٠',
-  'Text me 3512 - 3987 knots', 'mobile 6500 / 7500 g'];
+export const R5_CONTACT_RANGES = ['whatsapp 5000 - 7000 riyals', 'واتس ٥٠٠٠ - ٧٠٠٠ ريال', 'Text me 3512 - 3987 knots', 'mobile 6500 / 7500 g'];
 /**
  * The Gulf mobiles of R4-4 (js/r5_gulf.mts) that must stay masked: one run of eight anywhere, 4+4 after a contact word
  * however joined (a space, a dash, a slash), in either digits.
@@ -161,6 +161,20 @@ export const R6_NOTES = ['Aramex 34567890123', 'Sent with Aramex, tracking 34567
 /** Phone numbers next to a courier's name that must still be masked: a whole mobile, or one after a contact word. */
 export const R6_COURIER_PHONES = ['SMSA 0501234567', 'Aramex call 0501234567', 'ارامكس اتصل ٠٥٠١٢٣٤٥٦٧', 'DHL whatsapp 0551234567', 'سمسا رقمي ٠٥٥١٢٣٤٥٦٧',
   'Naqel, my number 501234567', 'receipt 0512345678', 'Express 0501234567'];
+
+/**
+ * Afzal's decision on trade-off 1 (31 October, REVIEW-6): a Gulf mobile written 4+4 is masked again with no contact
+ * word, unless both halves end in 0 or a unit or currency follows.
+ */
+export const R7_BARE_MASK = ['Kuwait 9912 3456', 'dm 9912 3456', 'telegram 9912 3456', '٩٩١٢ ٣٤٥٦', 'تواصل على ٩٩١٢ ٣٤٥٦', '9912 3456', '9912-3456',
+  'Qatar 3312/3456', 'Oman 7123 4567 thanks', 'مرحبا ٥٥١٢ ٦٦٣٤'];
+/** ...and what the reviewer's measure (js/r6_tradeoff.mts) expects to stay free without a contact word: round halves, or a unit. */
+export const R7_BARE_STAY = ['my budget is 5000 - 7000', 'between 3500 3900 riyals', 'السعر بين ٥٠٠٠ - ٧٠٠٠', 'ابغى ٥٠٠٠ ٧٠٠٠ حبة', 'Prices from 5000 - 9500 riyals',
+  'Budget 3500/3900', 'Weights 3500 4200 g', 'We shipped 5120 3980 units this year', 'Order 5512 6634', 'Model 9912 3456', 'Gift card 9123 4567',
+  'Delivered 31102026', 'Sizes 3640 4250 in stock', 'السعر ٥٢٥٠ ٦٧٥٠ حسب المقاس'];
+/** Trade-off 2: after a contact word, a round range is a phone number unless a unit or currency follows. */
+export const R7_CONTACT_ROUND_MASK = ['call 9910-3450', 'call me 3500 to 3900', 'تواصل ٣٥٠٠ إلى ٣٩٠٠', 'whatsapp 5000 - 7000', 'my number 6610/7720'];
+export const R7_CONTACT_UNIT_STAY = ['whatsapp 5000 - 7000 riyals', 'واتس ٥٠٠٠ - ٧٠٠٠ ريال', 'Text me 3512 - 3987 knots', 'mobile 6500 / 7500 g'];
 
 /** ...and the numbers next to them that must stay as they are (js/r5_gulf.mts). */
 export const R5_GULF_STAY = ['Delivered on 31102026 to room 1204', 'Order 35001234 arrived', 'رقم الطلب ٥٠٠١٢٣٤٥', 'Invoice INV-50012345', 'Ref 55551234',

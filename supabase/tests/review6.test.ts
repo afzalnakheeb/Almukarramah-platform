@@ -91,19 +91,20 @@ describe('R6-2: a closed return keeps its units; staff see the goodwill on the p
     const { o, pay } = await paidAndDelivered();
     const first = askReturn(o.h, o.items.h);
     assert.equal(act(ids.support, first, 'approve', 'Approved: crushed'), null);
-    await goodwill(o, pay, 'r6b-gw-000001', 6000, o.h);
-    assert.equal(act(ids.finance, first, 'close', 'The goodwill already given covered the dates'), null);
+    await goodwill(o, pay, 'r6b-gw-000001', 4000, o.h);
+    assert.equal(act(ids.finance, first, 'close', 'The goodwill already given covered most of the dates'), null);
     // the customer: nothing left to return in that line
     assert.match(db.error(`select mp_return_request('${ids.customer}', ${j({ sub_order_id: o.h, reason: 'damaged', details: 'They arrived crushed, as I said',
       lines: [{ order_item_id: o.items.h, quantity: 1 }] })})`, 'service') ?? 'opened', /Only 0/);
     assert.equal(returnable(o, o.items.h), 0);
-    // our team: still due by line (decision AA), with the goodwill on that parcel in plain sight; not taken off (Z is open)
+    // our team: what is still due by line (decision AA), with the goodwill on that parcel in plain sight and, since
+    // Afzal's yes to decision Z, taken off: 60 for the dates less the 40 given
     const pv = await preview(o, { lines: [{ orderItemId: o.items.h, quantity: 1 }] });
     assert.equal(pv.status, 200, JSON.stringify(pv.body));
-    assert.deepEqual([pv.body.amount_minor, pv.body.goodwill_on_parcels_minor, pv.body.goodwill_deducted_minor, pv.body.parcel_goodwill_deducted], [6000, 6000, 0, false]);
+    assert.deepEqual([pv.body.amount_minor, pv.body.goodwill_on_parcels_minor, pv.body.goodwill_deducted_minor, pv.body.parcel_goodwill_deducted], [2000, 4000, 4000, true]);
     const r = await refund(o, 'r6b-line-0001', { lines: [{ orderItemId: o.items.h, quantity: 1 }] });
     assert.equal(r.status, 200, JSON.stringify(r.body));
-    assert.equal(r.body.amount, 6000);
+    assert.equal(r.body.amount, 2000);
   });
 
   test('units refunded by line after a return was closed do not stop the rest of the line being returned', async () => {
@@ -116,10 +117,9 @@ describe('R6-2: a closed return keeps its units; staff see the goodwill on the p
     assert.equal(returnable(o, o.items.a), 1, 'the other bottle can still be returned');
   });
 
-  test('decision Z is a switch, off: only the owner turns it on, and then goodwill on a parcel comes off a later refund of it', async () => {
-    assert.equal(db.val(`select parcel_goodwill_deducted from mp_settings where id = 1`), false);
-    assert.match(db.error(`update mp_settings set parcel_goodwill_deducted = true where id = 1`, user('manager')) ?? 'changed', /owner/);
-    db.exec(`update mp_settings set parcel_goodwill_deducted = true where id = 1`, user('owner'));
+  test('decision Z is an owner-only switch (on since Afzal\'s yes): goodwill on a parcel comes off a later refund of it', async () => {
+    assert.equal(db.val(`select parcel_goodwill_deducted from mp_settings where id = 1`), true);
+    assert.match(db.error(`update mp_settings set parcel_goodwill_deducted = false where id = 1`, user('manager')) ?? 'changed', /owner/);
     try {
       const { o, pay } = await paidAndDelivered();
       await goodwill(o, pay, 'r6z-gw-000001', 2000, o.a);
@@ -133,7 +133,7 @@ describe('R6-2: a closed return keeps its units; staff see the goodwill on the p
       assert.deepEqual(db.rows<{ refunded_minor: number }>(`select refunded_minor from sub_orders where order_id = '${o.o}' order by seq`).map((x) => x.refunded_minor),
         [53000, 53000, 0], 'parcel A: 20 of goodwill and 510');
     } finally {
-      db.exec(`update mp_settings set parcel_goodwill_deducted = false where id = 1`, user('owner'));
+      db.exec(`update mp_settings set parcel_goodwill_deducted = true where id = 1`, user('owner'));
     }
   });
 });

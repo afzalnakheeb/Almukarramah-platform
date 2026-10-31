@@ -124,10 +124,10 @@ begin
   bank := right(p_before, 20) ~* '(iban|account|acct|a/c|ايبان|حساب|الحساب)[^0-9]{0,14}$';
   code_ctx := p_before ~* ('(^|[^a-z\u0621-\u064a])(' || code_words || '|' || carriers || ')([\s:#.-]*(number|num|no|nos|is|are|رقم|رقمه|رقمها|هو|هي)(?![a-z\u0621-\u064a]))*'
                            || '[\s:#.-]*((' || carriers || ')[\s:#.-]*)?$');
-  -- a mobile number of Kuwait, Qatar, Bahrain or Oman: eight digits from 3, 5, 6, 7 or 9 in one run (R4-4). Written
-  -- 4+4 it is one only after a contact word (number_hint): two numbers of four digits side by side are far more often
-  -- a range or two quantities ("5000 - 7000", "3500 3900 riyals": review R5-1)
-  if n = 8 and d ~ '^[35679]' and p_real >= 6 and ng = 1 and not glued and not code_ctx
+  -- a mobile number of Kuwait, Qatar, Bahrain or Oman: eight digits from 3, 5, 6, 7 or 9, in one run or 4+4 (R4-4);
+  -- written 4+4 it is two quantities when both halves are round or a unit or currency follows, which number_hint
+  -- checks (review R5-1; Afzal, 31 October, trade-off 1)
+  if n = 8 and d ~ '^[35679]' and p_real >= 6 and (ng = 1 or (ng = 2 and length(g[1]) = 4)) and not glued and not code_ctx
      and d !~ '^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19|20)[0-9]{2}$' then
     return case when bank then 'bank' else 'phone' end;
   end if;
@@ -261,8 +261,9 @@ begin
       end loop;
     end loop;
     d := translate(array_to_string(g, ''), '٠١٢٣٤٥٦٧٨٩०१२३४५६७८९', '01234567890123456789');
-    rng := ng = 2 and length(g[1]) = 4 and length(g[2]) = 4 and seps[1] ~* range_sep
-           and ((substr(d, 4, 1) = '0' and substr(d, 8, 1) = '0') or (left(d, 4) < right(d, 4) and substr(tp, off, 16) ~* unit_after));
+    -- after a contact word, a range of prices or quantities needs its unit or currency (Afzal, 31 October, trade-off 2)
+    rng := ng = 2 and length(g[1]) = 4 and length(g[2]) = 4 and seps[1] ~* range_sep and substr(tp, off, 16) ~* unit_after
+           and ((substr(d, 4, 1) = '0' and substr(d, 8, 1) = '0') or left(d, 4) < right(d, 4));
     if not rng and core ~ '[0-9٠-٩]' and ctx ~* contact_before
        and (length(d) between 9 and 15 or (length(d) = 8 and d ~ '^[35679]' and d !~ '^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19|20)[0-9]{2}$')) then
       return 'phone';
@@ -285,6 +286,12 @@ begin
     k := private.number_kind(array(select translate(x, '٠١٢٣٤٥٦٧٨٩', '0123456789') from unnest(g) x), seps, plus,
                              length(regexp_replace(core, '[^0-9]', '', 'g')), length(regexp_replace(core, '[^٠-٩]', '', 'g')), ctx, glued,
                              t ~ '[\u0621-\u064A]');
+    -- written 4+4, two quantities rather than a Gulf mobile: both halves round, or a unit or currency after them
+    -- (contact.ts isQuantities; Afzal, 31 October, trade-off 1)
+    if k = 'phone' and array_length(g, 1) = 2 and length(g[1]) = 4 and length(g[2]) = 4
+       and ((right(g[1], 1) ~ '[0٠]' and right(g[2], 1) ~ '[0٠]') or substr(t, en, 16) ~* unit_after) then
+      k := null;
+    end if;
     if k = 'phone' then
       -- a courier's tracking number (as contact.ts courierNumber): "Naqel 501234567", "UPS 1Z999AA10123456784"
       ts := st;

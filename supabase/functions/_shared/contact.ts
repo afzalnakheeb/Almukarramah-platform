@@ -232,12 +232,21 @@ const UNIT_AFTER = new RegExp('^\\s*(?:g|gm|gms|gr|grams?|kg|kgs|mg|ml|l|ltr|lit
   + '|pcs?|pieces?|units?|sar|sr|riyals?|rials?|aed|usd|kwd|qar|bhd|omr|ريال|ريالات|ر\\.?س|درهم|دينار|غ|غم|غرام|جرام|جم|كغ|كجم|كيلو|ملغ|مل|لتر|سم|مم|ملم|متر|م'
   + '|عقدة|عقده|عقد|غرزة|غرزه|حبة|حبه|حبات|قطعة|قطعه|قطع)(?![a-z\\u0621-\\u064a])', 'i');
 /**
- * Two numbers of four digits written as a range (review R5-1): joined by a dash, a slash, "to" or إلى, and either both
- * round ("5000 - 7000", "3500/3900") or followed by a unit, the smaller first ("3512 - 3987 knots"). A range of prices
- * or quantities, never a Gulf mobile written 4+4, even after a contact word.
+ * After a contact word, two numbers of four digits that are a range of prices or quantities, not a Gulf mobile written
+ * 4+4 (review R5-1; Afzal, 31 October, trade-off 2): joined by a dash, a slash, "to" or إلى, with a unit or currency
+ * after them, and either both round or the smaller first ("whatsapp 5000 - 7000 riyals", "3512 - 3987 knots"). Round
+ * alone is not enough there: "call 9910-3450" is a phone number.
  */
 function isRange(a: string, sep: string, b: string, after: string): boolean {
-  return a.length === 4 && b.length === 4 && RANGE_SEP.test(sep) && ((a.endsWith('0') && b.endsWith('0')) || (a < b && UNIT_AFTER.test(after)));
+  return a.length === 4 && b.length === 4 && RANGE_SEP.test(sep) && UNIT_AFTER.test(after) && ((a.endsWith('0') && b.endsWith('0')) || a < b);
+}
+/**
+ * Without a contact word, two numbers of four digits that are not a Gulf mobile written 4+4 (Afzal, 31 October,
+ * trade-off 1): both round ("5000 - 7000", "between 3500 3900") or with a unit or currency after them ("Weights
+ * 3500 4200 g").
+ */
+function isQuantities(a: string, b: string, after: string): boolean {
+  return a.length === 4 && b.length === 4 && ((a.endsWith('0') && b.endsWith('0')) || UNIT_AFTER.test(after));
 }
 /** Words that say what a number is (not a phone): codes, orders, tracking, bookings, sizes, prices; and carriers. */
 const CODE_WORDS = 'isbn|ean|gtin|barcode|sku|upc|ref|reference|model|batch|lot|serial|codes?|items?|orders?|invoices?|inv|receipt|tracking|track|awb'
@@ -322,16 +331,21 @@ export function ean13(d: string): boolean {
 }
 
 /** What a run of digits is: a phone number, a bank account, a card number, or nothing to hide. */
-export function classifyNumber(r: { groups: string[]; seps: string[]; plus: boolean; real: number; words: number; before: string; glued: boolean; rtl?: boolean }): 'phone' | 'bank' | 'card' | null {
+export function classifyNumber(r: { groups: string[]; seps: string[]; plus: boolean; real: number; words: number; before: string; glued: boolean; rtl?: boolean;
+  after?: string }): 'phone' | 'bank' | 'card' | null {
   const d = r.groups.join('');
   const n = d.length;
   if (r.words >= 7 && n >= 7) return 'phone';                       // a number spelled out
   const bank = BANK_WORDS.test(r.before.slice(-20));
-  // a mobile number of Kuwait, Qatar, Bahrain or Oman: eight digits from 3, 5, 6, 7 or 9 in one run (R4-4). Written
-  // 4+4 it is one only after a contact word (phoneParts): two numbers of four digits side by side are far more often a
-  // range or two quantities ("5000 - 7000", "3500 3900 riyals": review R5-1)
-  if (n === 8 && /^[35679]/.test(d) && r.real >= 6 && r.groups.length === 1
-      && !r.glued && !CODE_BEFORE.test(r.before) && !DATE8.test(d)) return bank ? 'bank' : 'phone';
+  // a mobile number of Kuwait, Qatar, Bahrain or Oman: eight digits from 3, 5, 6, 7 or 9, in one run or 4+4 (R4-4), not
+  // after a code word, glued to letters or a date; written 4+4 it is two quantities, not a phone, when both halves are
+  // round or a unit or currency follows (review R5-1; Afzal, 31 October, trade-off 1: "Kuwait 9912 3456" is masked,
+  // "between 3500 3900 riyals" is not)
+  if (n === 8 && /^[35679]/.test(d) && r.real >= 6 && (r.groups.length === 1 || (r.groups.length === 2 && r.groups[0].length === 4))
+      && !r.glued && !CODE_BEFORE.test(r.before) && !DATE8.test(d)) {
+    if (r.groups.length === 2 && isQuantities(r.groups[0], r.groups[1], r.after ?? '')) return null;
+    return bank ? 'bank' : 'phone';
+  }
   if (n < 9 || (r.real < 6 && r.words < 7)) return null;
   if (n > 15) {
     // an account number, two phone numbers run together, or a card number
@@ -448,7 +462,8 @@ function phoneParts(norm: string, work: string): Span[] {
       } else i++;
     }
     // after a contact word the whole run, unless a phone number starts it (then what follows it stays: "x2"); a range
-    // of round numbers or of quantities is not one ("whatsapp 5000 - 7000 riyals": review R5-1)
+    // of prices or quantities, with its unit or currency, is not one ("whatsapp 5000 - 7000 riyals": review R5-1;
+    // Afzal, 31 October, trade-off 2)
     const all = g.map((x) => x.digits).join('');
     const range = g.length === 2 && isRange(g[0].digits, norm.slice(g[0].b, g[1].a), g[1].digits, norm.slice(g[1].b, g[1].b + 16));
     const contact = !range && g.some((x) => x.free) && CONTACT_BEFORE.test(before)
@@ -530,7 +545,8 @@ function numberSpans(norm: string, units: Unit[]): Span[] {
     for (let x = a; x < b; x++) if (isDigit(x)) { if (units[x].real) real++; else if (units[x].word) words++; }
     const start = plus ? a - 1 : a;
     const glued = (start > 0 && isLetter(work.codePointAt(start - 1) ?? 0)) || (b < work.length && isLetter(work.codePointAt(b) ?? 0));
-    const kind = classifyNumber({ groups, seps, plus, real, words, before: work.slice(Math.max(0, start - 40), start).toLowerCase(), glued, rtl });
+    const kind = classifyNumber({ groups, seps, plus, real, words, before: work.slice(Math.max(0, start - 40), start).toLowerCase(), glued, rtl,
+                                  after: norm.slice(b, b + 16) });
     if (kind === 'phone' && courierNumber(norm, start, plus || ANCHORED.test(groups.join('')))) continue;   // a tracking number (R6-4)
     if (kind) out.push({ kind, a: start, b });
   }
@@ -555,6 +571,9 @@ function spans(norm: string, units: Unit[]): Span[] {
     const app = m[0].slice(0, m[0].length - sep.length - name.length);
     if (!marked && (SHORT_APP.test(app) || !/[_.0-9]/.test(name))) continue;
     if (/^(?:com|net|org|me)$/i.test(name)) continue;
+    // WhatsApp has no usernames: a number after it is a phone number or not by the phone rules ("whatsapp 5000 - 7000
+    // riyals" is a price range: Afzal, 31 October, trade-off 2)
+    if (/^[0-9]+$/.test(name) && /^\s*(?:whats|wa\.me|واتس|وتساب)/i.test(app)) continue;
     const at = m.index + m[0].length - name.length;
     appHandles.push({ kind: 'handle', a: at, b: at + name.length });
     // a short name ("ig", "snap") counts as an app only with a handle after it

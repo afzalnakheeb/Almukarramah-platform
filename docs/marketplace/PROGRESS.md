@@ -210,3 +210,6 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
   acceptance and a return closes only once that date has ended everywhere, "by" in both languages (R6-3); couriers'
   tracking numbers kept (R6-4); the auto-close notice points to hello@almukarramah.com; a refund carries the
   previewed amount. Tests: 416 (404 before).
+- Seventh pass (Afzal's decisions on REVIEW-6, 31 October; table in `REVIEW-FIXES.md`), tests first: Gulf mobiles
+  written 4+4 masked again unless round or followed by a unit; after a contact word a round range needs a unit; goodwill
+  on a parcel comes off a later refund of it by default (decision Z); AA, AC, AD and AE approved. Tests: 422 (416 before).

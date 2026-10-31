@@ -10,7 +10,7 @@ import { after, before, beforeEach, describe, test } from 'node:test';
 import { cleanText } from '../functions/_shared/aftersale.ts';
 import { detectContacts } from '../functions/_shared/contact.ts';
 import { textChecks } from '../functions/_shared/screening.ts';
-import { type Db, freshDb, ids } from './lib/db.ts';
+import { type Db, freshDb, ids, user } from './lib/db.ts';
 import { env, fake, invoke, moyasar, moyasarEvent } from './lib/edge.ts';
 import { type Order, type Shop, seedShop, unpaidOrder } from './lib/market.ts';
 import {
@@ -52,7 +52,7 @@ describe('R5-1: a range of numbers is not a phone number; the Gulf mobiles still
     assert.deepEqual(R5_LISTINGS.filter((t) => hint(t) !== null), []);
   });
 
-  test('after a contact word, a range of round numbers or with a unit is still not a phone number', () => {
+  test('after a contact word, a range with a unit is still not a phone number (round alone no longer is: trade-off 2)', () => {
     assert.deepEqual(R5_CONTACT_RANGES.filter((t) => detectContacts(t).some((h) => h.kind === 'phone')), []);
     assert.deepEqual(R5_CONTACT_RANGES.filter((t) => hint(t) === 'phone'), []);
   });
@@ -128,6 +128,10 @@ const approved = (sub: string, item: string) => {
 const returnNumber = (rid: string) => db.val<string>(`select format('R-%s-%s', o.number, r.seq) from return_requests r join orders o on o.id = r.order_id where r.id = '${rid}'`);
 
 describe('R5-2: after goodwill, the last refund on an order is what is left of the payment', () => {
+  // the payment-cut path on its own: decision Z (goodwill on a parcel off a later refund of it, on since Afzal's yes)
+  // is switched off here, and tested in review6 and review7
+  before(() => db.exec(`update mp_settings set parcel_goodwill_deducted = false where id = 1`, user('owner')));
+  after(() => db.exec(`update mp_settings set parcel_goodwill_deducted = true where id = 1`, user('owner')));
   test('"Refund this return": the items and delivery less the goodwill already given; staff see the amount before refunding', async () => {
     const { o, pay } = await paidAndDelivered();
     await refundSellerParcels(o, 'r5a');
