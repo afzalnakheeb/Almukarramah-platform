@@ -319,3 +319,4 @@ private/pitch-v3/p1.png https://media.weavy.ai/image/upload/v1793427686/uploads/
 private/pitch-v3/p2.png https://media.weavy.ai/image/upload/v1793427686/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/jgbzm7gjnlvoe2l9z1uf.png
 private/pitch-v3/p3.png https://media.weavy.ai/image/upload/v1793427690/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/jcyrjvrpypvqgmnrqzpp.png
 private/pitch-v3/p5.png https://media.weavy.ai/image/upload/v1793427694/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/eyhddqymqvh0t5ckb8sc.png
+private/pitch-v3/p4.png https://media.weavy.ai/image/upload/v1793427795/uploads/Mq6Zbrl5dXeDGdKoR6sjhkxLCy22/ctbnbvic7uv2cvwdsmx6.png
