@@ -94,7 +94,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::pd78g-1793451202897-23fedd7fcd51…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::7wth5-1793455421711-efb137a96ec5…"
 
 ## /sell/guidelines  (HTTP 404)
 title: undefined
@@ -108,7 +108,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::42jlc-1793451202976-fea87c6f9062…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::qcjd2-1793455421827-fd1e7130f339…"
 
 ## /sell/categories  (HTTP 404)
 title: undefined
@@ -122,7 +122,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::n6m7x-1793451203013-40d1362dbb41…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::8t9zx-1793455421862-dd2b4ee4b428…"
 
 ## /sell/islamic-standard  (HTTP 404)
 title: undefined
@@ -136,7 +136,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::jxbvd-1793451203042-f4a4d95e546f…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::8666m-1793455421886-b377938979df…"
 
 ## /sell/premium-standard  (HTTP 404)
 title: undefined
@@ -150,7 +150,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::bztch-1793451203070-a1e337d025b2…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::5tt5f-1793455421952-223da4a7570a…"
 
 ## /sell/photos  (HTTP 404)
 title: undefined
@@ -164,7 +164,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::z8vbv-1793451203103-d8bea143f535…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::wgw2x-1793455421977-4e07b94bd2b0…"
 
 ## /sell/prohibited  (HTTP 404)
 title: undefined
@@ -178,7 +178,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::2njvq-1793451203130-444a6b0fffeb…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::hsxhj-1793455422001-3bcc5d2b6616…"
 
 ## /seller/application  (HTTP 404)
 title: undefined
@@ -192,7 +192,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::pd78g-1793451203154-8af3cc68b14d…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::ldx92-1793455422025-4ad6cc7f7a3f…"
 
 ## /seller/shop  (HTTP 404)
 title: undefined
@@ -206,7 +206,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::fdzt2-1793451203194-254ad1667955…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::8vg97-1793455422050-77e34bc889a1…"
 
 ## /seller/orders  (HTTP 404)
 title: undefined
@@ -220,7 +220,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::2njvq-1793451203221-c8767da6232e…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::877tw-1793455422075-2daee9495e55…"
 
 ## /seller/product?id=demo-blocked  (HTTP 404)
 title: undefined
@@ -234,7 +234,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::wvkf5-1793451203247-aa798a005fd9…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::hbr45-1793455422100-e8dbe57b01d0…"
 
 ## /seller/product?id=demo-queue-oud  (HTTP 404)
 title: undefined
@@ -248,7 +248,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::j4br8-1793451203275-0bf9f71de74a…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::6525v-1793455422132-e1b8040c6431…"
 
 ## /admin/listings  (HTTP 404)
 title: undefined
@@ -262,7 +262,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::8qcmx-1793451203303-bf5cc90323cd…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::zxrw4-1793455422158-489dca99f4a3…"
 
 ## /admin/sellers  (HTTP 404)
 title: undefined
@@ -276,7 +276,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::jxbvd-1793451203330-714e98a19678…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::ldx92-1793455422182-6e9ba76d1d75…"
 
 ## /search?q=oud  (HTTP 200)
 title: All gifts | Al Mukarramah — Islamic gifts from Madinah
@@ -318,7 +318,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::pkt8k-1793451203482-43d30c1b4cce…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::bkkzp-1793455422466-6182a7ad1644…"
 
 ## /sellers  (HTTP 404)
 title: undefined
@@ -332,7 +332,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::p54w5-1793451203518-3861ebaeee4a…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::lql9d-1793455422490-9fdf5dedf97a…"
 
 ## /fashion  (HTTP 404)
 title: undefined
@@ -346,7 +346,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::4zs46-1793451203547-c86a08716f82…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::6thkf-1793455422513-887853dc8479…"
 
 ## /tailoring/measure  (HTTP 404)
 title: undefined
@@ -360,7 +360,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::4qvpj-1793451203580-c3867c967afe…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::7mmjf-1793455422538-7634265d6332…"
 
 ## /seller/statements  (HTTP 404)
 title: undefined
@@ -374,7 +374,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::ff4nq-1793451203607-cc0ed5dee0f1…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::tq7rz-1793455422563-03721643b7f8…"
 
 ## /seller/returns  (HTTP 404)
 title: undefined
@@ -388,7 +388,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::v7v8t-1793451203633-e555d818c75f…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::chmn5-1793455422587-547eb7f84bb5…"
 
 ## /seller/messages  (HTTP 404)
 title: undefined
@@ -402,7 +402,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::x4s5b-1793451203660-32e659126cf4…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::gt8ml-1793455422613-61089682ba5c…"
 
 ## /seller/reviews  (HTTP 404)
 title: undefined
@@ -416,7 +416,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::j4br8-1793451203687-42890c47408b…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::7mmjf-1793455422636-d3eaf1c07715…"
 
 ## /seller/performance  (HTTP 404)
 title: undefined
@@ -430,7 +430,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::2njvq-1793451203714-c21783d5492a…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::bkkzp-1793455422659-869b8e04bd10…"
 
 ## /order?id=demo-order  (HTTP 200)
 title: Order | Al Mukarramah
@@ -458,7 +458,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::ff4nq-1793451203770-7404bc1aebb8…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::mwgpd-1793455422821-c29a5a055baa…"
 
 ## /review?item=i1  (HTTP 404)
 title: undefined
@@ -472,7 +472,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::hv4ct-1793451203795-13c96a48d393…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::mj9bx-1793455422848-8a5020b19c07…"
 
 ## /admin/returns  (HTTP 404)
 title: undefined
@@ -486,7 +486,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::x4s5b-1793451203822-d84ca8f228e9…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::6kjwm-1793455422873-e90f93867506…"
 
 ## /admin/reviews  (HTTP 404)
 title: undefined
@@ -500,7 +500,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::v8gmn-1793451203847-e7641687c950…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::hhznf-1793455422897-f781a12f6624…"
 
 ## /admin/payouts  (HTTP 404)
 title: undefined
@@ -514,7 +514,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::8qcmx-1793451203874-77f9d404f997…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::ftnml-1793455422924-69a5bdf804ec…"
 
 ## /admin/messages  (HTTP 404)
 title: undefined
@@ -528,7 +528,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::j99b7-1793451203901-d5dcaf596aff…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::rcd2k-1793455422948-90f6e195fbff…"
 
 ## /admin/notifications  (HTTP 404)
 title: undefined
@@ -542,7 +542,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::8qcmx-1793451203928-79502fcb8de2…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::cvxnc-1793455422976-d29810a56c7f…"
 
 ## /admin/performance  (HTTP 404)
 title: undefined
@@ -556,7 +556,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::v7v8t-1793451203956-4c83a5ea8196…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::rcd2k-1793455423001-6fd0141e7073…"
 
 ## /admin/marketplace  (HTTP 404)
 title: undefined
@@ -570,7 +570,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::4jtnz-1793451203982-14d7dfe3744a…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::9b97h-1793455423025-bcba905eae0c…"
 
 ## /checkout?demo=ddp  (HTTP 200)
 title: Checkout | Al Mukarramah
@@ -598,7 +598,7 @@ twitter:card: undefined
 html lang/dir: undefined
 h1: NONE
 json-ld: NONE
-visible text without JS: 76 chars: "The page could not be found NOT_FOUND sfo1::n6m7x-1793451204035-8ee20442f2d7…"
+visible text without JS: 76 chars: "The page could not be found NOT_FOUND cle1::hr479-1793455423082-044fa98f1447…"
 
 ## /collections/prayer-mats  (HTTP 200)
 title: Prayer Mats | Al Mukarramah
@@ -642,7 +642,7 @@ h1: Terms of service
 json-ld: NONE
 visible text without JS: 3085 chars: "Terms of service | Al Mukarramah Delivering to Saudi address SAR Terms of service Last updated 29 October 2026 These terms apply when you shop at almukarramah.c…"
 
-/robots.txt: HTTP 200, 760 bytes
+/robots.txt: HTTP 200, 796 bytes
 /sitemap.xml: HTTP 200, 74440 bytes, 148 URLs
 /llms.txt: HTTP 200, 4089 bytes
 /llms-full.txt: HTTP 200, 82253 bytes
