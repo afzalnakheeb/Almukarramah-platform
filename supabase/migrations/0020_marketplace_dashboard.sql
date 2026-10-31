@@ -35,7 +35,10 @@ begin
       'not_collected', (select count(*) from sub_orders where status = 'ready_to_ship' and ready_at < now() - interval '2 days'),
       'delivery_failed', (select count(*) from sub_orders where status = 'delivery_failed'),
       'shop_pages_to_approve', (select count(*) from sellers where profile_pending is not null),
-      'payments_to_resolve', (select count(*) from payment_issues where status in ('open', 'refund_pending'))),
+      'payments_to_resolve', (select count(*) from payment_issues where status in ('open', 'refund_pending')),
+      -- orders where Moyasar shows refunds we have no record of (review R3-2)
+      'moyasar_unrecorded', (select count(*) from moyasar_refund_checks c join orders o on o.id = c.order_id
+                             where c.refunded_minor > o.refunded_minor and not exists (select 1 from refunds f where f.order_id = o.id and f.status = 'processing'))),
     'pending_work', (select jsonb_build_object(
         'orders_without_invoice', jsonb_array_length(w -> 'orders_without_invoice'),
         'orders_not_handed_on', jsonb_array_length(w -> 'orders_not_handed_on'),

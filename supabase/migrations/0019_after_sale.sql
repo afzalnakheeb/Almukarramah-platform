@@ -198,6 +198,9 @@ create table refunds (
   items_minor int not null default 0 check (items_minor >= 0),
   shipping_minor int not null default 0 check (shipping_minor >= 0),
   duties_minor int not null default 0 check (duties_minor >= 0),
+  -- money given back without items coming back: goodwill made in the Moyasar dashboard, or a refund Moyasar completed
+  -- after the same unit was refunded again (review R3-2, REVIEW-3); on the credit note as a price reduction
+  goodwill_minor int not null default 0 check (goodwill_minor >= 0),
   platform_minor int not null default 0 check (platform_minor >= 0),    -- the part on our tax invoice: the credit note's total
   reason text not null check (char_length(reason) between 3 and 500),
   restock boolean not null default false,
@@ -209,8 +212,8 @@ create table refunds (
   created_by uuid references auth.users,
   created_at timestamptz not null default now(),
   completed_at timestamptz,
-  check (amount_minor = items_minor + shipping_minor + duties_minor),
-  check (platform_minor <= items_minor + shipping_minor)
+  check (amount_minor = items_minor + shipping_minor + duties_minor + goodwill_minor),
+  check (platform_minor <= items_minor + shipping_minor + goodwill_minor)
 );
 create index refunds_order on refunds (order_id, created_at);
 -- One live refund per return (review H1); one refund waiting for Moyasar per order at a time, so reconciling with
@@ -224,7 +227,7 @@ create table refund_lines (
   refund_id uuid not null references refunds on delete cascade,
   sub_order_id uuid references sub_orders,
   order_item_id uuid references order_items,
-  kind text not null check (kind in ('item', 'shipping', 'duties')),
+  kind text not null check (kind in ('item', 'shipping', 'duties', 'goodwill')),
   quantity int check (quantity > 0),
   amount_minor int not null check (amount_minor > 0),
   commission_minor int not null default 0 check (commission_minor >= 0),
@@ -235,6 +238,16 @@ create table refund_lines (
 create index refund_lines_refund on refund_lines (refund_id);
 create index refund_lines_item on refund_lines (order_item_id) where order_item_id is not null;
 create index refund_lines_sub_order on refund_lines (sub_order_id) where sub_order_id is not null;
+
+-- What Moyasar last showed as refunded on an order's payment, each time the server read the payment (refund-order,
+-- reconcile, finish-pending). An order where Moyasar shows more than we recorded, and nothing waits for its answer,
+-- is listed for finance on the refunds page (review R3-2, REVIEW-3). Server only.
+create table moyasar_refund_checks (
+  order_id uuid primary key references orders on delete cascade,
+  refunded_minor int not null check (refunded_minor >= 0),
+  checked_at timestamptz not null default now()
+);
+alter table moyasar_refund_checks enable row level security;
 
 -- ================================================================ statements
 create table seller_payouts (
@@ -510,10 +523,10 @@ create trigger return_lines_immutable before update on return_lines for each row
 create or replace function private.refunds_guard() returns trigger language plpgsql set search_path = public as $$
 begin
   if tg_op = 'DELETE' then raise exception 'Refunds are never deleted'; end if;
-  if (new.order_id, new.return_id, new.currency, new.amount_minor, new.items_minor, new.shipping_minor, new.duties_minor, new.platform_minor,
-      new.reason, new.restock, new.idempotency_key, new.created_by, new.created_at)
+  if (new.order_id, new.return_id, new.currency, new.amount_minor, new.items_minor, new.shipping_minor, new.duties_minor, new.goodwill_minor,
+      new.platform_minor, new.reason, new.restock, new.idempotency_key, new.created_by, new.created_at)
      is distinct from (old.order_id, old.return_id, old.currency, old.amount_minor, old.items_minor, old.shipping_minor, old.duties_minor,
-      old.platform_minor, old.reason, old.restock, old.idempotency_key, old.created_by, old.created_at) then
+      old.goodwill_minor, old.platform_minor, old.reason, old.restock, old.idempotency_key, old.created_by, old.created_at) then
     raise exception 'A refund''s amounts never change';
   end if;
   if new.status is distinct from old.status and old.status <> 'processing' then raise exception 'This refund is already %', old.status; end if;
@@ -942,7 +955,7 @@ language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'id', f.id, 'order_id', f.order_id, 'order_number', o.number, 'return_id', f.return_id, 'status', f.status, 'currency', f.currency,
     'amount_minor', f.amount_minor, 'items_minor', f.items_minor, 'shipping_minor', f.shipping_minor, 'duties_minor', f.duties_minor,
-    'platform_minor', f.platform_minor, 'reason', f.reason, 'restock', f.restock, 'payment_id', o.payment_id, 'error', f.error,
+    'goodwill_minor', f.goodwill_minor, 'platform_minor', f.platform_minor, 'reason', f.reason, 'restock', f.restock, 'payment_id', o.payment_id, 'error', f.error,
     'credit_note_status', f.credit_note_status, 'credit_note', (select i.number from invoices i where i.id = f.credit_note_id),
     'created_at', f.created_at, 'completed_at', f.completed_at, 'age_seconds', extract(epoch from now() - f.created_at)::int,
     'order_refunded_minor', o.refunded_minor, 'provider_ref', f.provider_ref,
@@ -1375,7 +1388,13 @@ language sql stable security definer set search_path = public as $$
     'credit_notes', (select coalesce(jsonb_agg(x.id), '[]'::jsonb) from (
         select id from refunds where status = 'succeeded' and credit_note_status = 'pending' order by completed_at limit p_limit) x),
     'refunds_processing', (select coalesce(jsonb_agg(x.id), '[]'::jsonb) from (
-        select id from refunds where status = 'processing' and created_at <= now() - make_interval(secs => p_min_age_seconds) order by created_at limit p_limit) x));
+        select id from refunds where status = 'processing' and created_at <= now() - make_interval(secs => p_min_age_seconds) order by created_at limit p_limit) x),
+    -- a refund marked failed in the last three days: Moyasar is asked again (at most hourly) whether it completed it
+    -- after all; what it shows is listed for finance, never recorded on a guess (review R3-2, REVIEW-3)
+    'orders_to_check', (select coalesce(jsonb_agg(x.order_id), '[]'::jsonb) from (
+        select distinct f.order_id from refunds f left join moyasar_refund_checks c on c.order_id = f.order_id
+        where f.status = 'failed' and f.created_at > now() - interval '3 days' and (c.checked_at is null or c.checked_at < now() - interval '1 hour')
+        limit p_limit) x));
 $$;
 revoke all on function mp_issue_document(jsonb) from public, anon, authenticated;
 revoke all on function mp_invoice_context(uuid) from public, anon, authenticated;
@@ -1387,15 +1406,25 @@ revoke all on function mp_complete_refund(uuid, boolean, text, text) from public
 -- Finance settles a refund by hand, with a reason (review N7, REVIEW-2): one still waiting for Moyasar's answer is
 -- marked failed (Moyasar shows no refund for it) or succeeded (Moyasar shows it, for example made in the Moyasar
 -- dashboard); one the reconcile check marked failed that Moyasar completed late after all is recorded as a new
--- succeeded refund with the same lines (the failed record itself never changes). refund-order checks Moyasar first;
--- this records the decision, attributed to the person.
+-- succeeded refund (the failed record itself never changes). refund-order checks Moyasar first; this records the
+-- decision, attributed to the person.
+-- A late completion is recorded once (review R3-2, REVIEW-3). Its lines that can still be refunded are recorded as
+-- they were; what was refunded again meanwhile (the same unit, the same delivery) is recorded as money given back
+-- without items (goodwill), so no line is ever refunded beyond what was bought, and the order shows exactly what
+-- Moyasar paid back.
 create or replace function mp_resolve_refund(p_refund uuid, p_user uuid, p_outcome text, p_reason text) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
   f refunds;
+  o orders;
+  l record;
   v_role text := coalesce(private.user_staff_role(p_user)::text, '');
   v_reason text := nullif(left(trim(coalesce(p_reason, '')), 400), '');
+  v_key text;
   nid uuid;
+  v_plan jsonb := '[]';
+  q int; amt int; v_left int;
+  t_items int := 0; t_ship int := 0; t_duty int := 0; t_good int := 0; t_platform int := 0;
 begin
   if v_role not in ('owner', 'manager', 'finance') then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
   if v_reason is null or char_length(v_reason) < 10 then raise exception 'Write the reason (what you checked in Moyasar)'; end if;
@@ -1408,19 +1437,67 @@ begin
   elsif p_outcome = 'succeeded' and f.status = 'processing' then
     return mp_complete_refund(f.id, true, format('settled-by-hand:%s', p_user), null);
   elsif p_outcome = 'succeeded' and f.status = 'failed' then
-    if exists (select 1 from refunds where order_id = f.order_id and status = 'processing') then
+    v_key := left(f.idempotency_key, 74) || '-late';
+    if exists (select 1 from refunds where idempotency_key = v_key) then
+      raise exception 'This refund has already been recorded as completed late' using detail = 'سُجّل هذا الاسترداد من قبل على أنه تم متأخرًا';
+    end if;
+    select * into o from orders where id = f.order_id for update;
+    if exists (select 1 from refunds where order_id = o.id and status = 'processing') then
       raise exception 'Another refund on this order is waiting for Moyasar: settle that one first';
     end if;
-    if f.return_id is not null and exists (select 1 from refunds where return_id = f.return_id and status = 'succeeded') then
-      raise exception 'This return has already been refunded';
+    if f.amount_minor > o.total_minor - coalesce((select sum(amount_minor) from refunds where order_id = o.id and status in ('processing', 'succeeded')), 0) then
+      raise exception 'The refund is more than what is left of the payment';
     end if;
-    insert into refunds (order_id, return_id, currency, amount_minor, items_minor, shipping_minor, duties_minor, platform_minor, reason, restock,
-                         idempotency_key, created_by)
-    values (f.order_id, f.return_id, f.currency, f.amount_minor, f.items_minor, f.shipping_minor, f.duties_minor, f.platform_minor,
-            left(f.reason || ' (completed late at Moyasar: ' || v_reason || ')', 500), f.restock, left(f.idempotency_key, 74) || '-late', p_user)
+    for l in select rl.*, s.shipping_minor as s_ship, s.duties_minor as s_duty from refund_lines rl left join sub_orders s on s.id = rl.sub_order_id
+             where rl.refund_id = f.id order by rl.id loop
+      if l.kind = 'item' then
+        -- the money already went back: the unit is recorded as refunded if the ledger has room (an open return on it then
+        -- has nothing left to refund for it)
+        select greatest(i.quantity - private.item_refunded(i.id), 0) into v_left from order_items i where i.id = l.order_item_id;
+        q := least(l.quantity, v_left);
+        amt := case when q = l.quantity then l.amount_minor else round(l.amount_minor::numeric * q / l.quantity)::int end;
+        if q > 0 and amt > 0 then
+          v_plan := v_plan || jsonb_build_object('kind', 'item', 'sub_order_id', l.sub_order_id, 'order_item_id', l.order_item_id, 'quantity', q,
+            'amount_minor', amt, 'commission_minor', case when q = l.quantity then l.commission_minor else round(l.commission_minor::numeric * q / l.quantity)::int end,
+            'vat_rate_bp', l.vat_rate_bp, 'platform_invoiced', l.platform_invoiced);
+          t_items := t_items + amt;
+          if l.platform_invoiced then t_platform := t_platform + amt; end if;
+        else
+          amt := 0;
+        end if;
+      elsif l.kind in ('shipping', 'duties') then
+        select greatest(coalesce(case when l.kind = 'shipping' then coalesce(l.s_ship, o.shipping_minor) else l.s_duty end, 0)
+                        - coalesce(sum(x.amount_minor), 0), 0)::int into v_left
+        from refund_lines x join refunds rf on rf.id = x.refund_id
+        where x.kind = l.kind and rf.status in ('processing', 'succeeded') and rf.order_id = o.id and x.sub_order_id is not distinct from l.sub_order_id;
+        amt := least(l.amount_minor, v_left);
+        if amt > 0 then
+          v_plan := v_plan || jsonb_build_object('kind', l.kind, 'sub_order_id', l.sub_order_id, 'amount_minor', amt, 'platform_invoiced', l.platform_invoiced);
+          if l.kind = 'shipping' then t_ship := t_ship + amt; else t_duty := t_duty + amt; end if;
+          if l.platform_invoiced then t_platform := t_platform + amt; end if;
+        else
+          amt := 0;
+        end if;
+      else
+        amt := 0;   -- goodwill: all of it is goodwill again, below
+      end if;
+      -- what was refunded again meanwhile: money given back without items
+      if l.amount_minor - amt > 0 then
+        v_plan := v_plan || jsonb_build_object('kind', 'goodwill', 'sub_order_id', l.sub_order_id, 'amount_minor', l.amount_minor - amt,
+                                               'platform_invoiced', l.kind <> 'duties' and l.platform_invoiced);
+        t_good := t_good + l.amount_minor - amt;
+        if l.kind <> 'duties' and l.platform_invoiced then t_platform := t_platform + l.amount_minor - amt; end if;
+      end if;
+    end loop;
+    insert into refunds (order_id, return_id, currency, amount_minor, items_minor, shipping_minor, duties_minor, goodwill_minor, platform_minor, reason,
+                         restock, idempotency_key, created_by)
+    values (f.order_id, case when t_good = 0 then f.return_id end, f.currency, f.amount_minor, t_items, t_ship, t_duty, t_good, t_platform,
+            left(f.reason || ' (completed late at Moyasar: ' || v_reason || ')', 500), f.restock and t_good = 0, v_key, p_user)
     returning id into nid;
     insert into refund_lines (refund_id, sub_order_id, order_item_id, kind, quantity, amount_minor, commission_minor, vat_rate_bp, platform_invoiced)
-    select nid, sub_order_id, order_item_id, kind, quantity, amount_minor, commission_minor, vat_rate_bp, platform_invoiced from refund_lines where refund_id = f.id;
+    select nid, (e ->> 'sub_order_id')::uuid, (e ->> 'order_item_id')::uuid, e ->> 'kind', (e ->> 'quantity')::int, (e ->> 'amount_minor')::int,
+           coalesce((e ->> 'commission_minor')::int, 0), (e ->> 'vat_rate_bp')::int, (e ->> 'platform_invoiced')::boolean
+    from jsonb_array_elements(v_plan) e;
     return mp_complete_refund(nid, true, format('late:%s', f.id), null) || jsonb_build_object('recorded_late_as', nid);
   elsif p_outcome = 'succeeded' then
     raise exception 'This refund is already settled';
@@ -1428,6 +1505,88 @@ begin
   raise exception 'Unknown outcome';
 end $$;
 revoke all on function mp_resolve_refund(uuid, uuid, text, text) from public, anon, authenticated;
+
+create or replace function mp_note_moyasar_refunded(p_order uuid, p_refunded int) returns void
+language sql security definer set search_path = public as $$
+  insert into moyasar_refund_checks (order_id, refunded_minor, checked_at) values (p_order, greatest(coalesce(p_refunded, 0), 0), now())
+  on conflict (order_id) do update set refunded_minor = excluded.refunded_minor, checked_at = now();
+$$;
+revoke all on function mp_note_moyasar_refunded(uuid, int) from public, anon, authenticated;
+
+-- A refund made in Moyasar's dashboard (or anywhere else outside Al Mukarramah) that we have no record of (review
+-- R3-2, REVIEW-3). Finance records it with Moyasar's reference and what it was for: items, a delivery or duties
+-- (worked out like any refund, and their amount must be what Moyasar refunded), or goodwill with no items (on our
+-- credit note when it relates to what we invoiced). refund-order reads the payment from Moyasar first and passes
+-- what Moyasar shows that we have not recorded (p_unrecorded): never more than that is recorded, and a key records it
+-- once.
+create or replace function mp_record_moyasar_refund(p_order uuid, p jsonb, p_user uuid, p_unrecorded int) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  o orders;
+  f refunds;
+  v_key text := p ->> 'key';
+  v_amount int := case when coalesce(p ->> 'amount', '') ~ '^[0-9]{1,9}$' then (p ->> 'amount')::int end;
+  v_ref text := nullif(left(trim(coalesce(p ->> 'reference', '')), 120), '');
+  v_reason text := nullif(left(trim(coalesce(p ->> 'reason', '')), 300), '');
+  v_role text := coalesce(private.user_staff_role(p_user)::text, '');
+  v_sub uuid := nullif(p ->> 'sub_order_id', '')::uuid;
+  v_platform boolean;
+  r jsonb;
+  rid uuid;
+begin
+  if v_role not in ('owner', 'manager', 'finance') then raise exception 'Not allowed' using detail = 'غير مسموح'; end if;
+  perform private.act_as(p_user);
+  if v_key is null or v_key !~ '^[A-Za-z0-9_-]{8,80}$' then raise exception 'A refund key is needed'; end if;
+  select * into f from refunds where idempotency_key = v_key;
+  if f.id is not null then
+    if f.order_id <> p_order then raise exception 'Refund key reused for another order'; end if;
+    return private.refund_json(f.id) || jsonb_build_object('duplicate', true);
+  end if;
+  if v_ref is null or char_length(v_ref) < 3 then
+    raise exception 'Write Moyasar''s reference for this refund (its date and amount in the dashboard)' using detail = 'اكتب مرجع ميسر لهذا الاسترداد (تاريخه ومبلغه في لوحة التحكم)';
+  end if;
+  if v_reason is null or char_length(v_reason) < 10 then raise exception 'Write what this refund was for' using detail = 'اكتب سبب هذا الاسترداد'; end if;
+  if v_amount is null or v_amount <= 0 then raise exception 'Enter the amount Moyasar refunded' using detail = 'أدخل المبلغ الذي أعادته ميسر'; end if;
+  if v_amount > coalesce(p_unrecorded, 0) then
+    raise exception 'Moyasar shows % refunded that we have not recorded: never more than that is recorded', to_char(greatest(coalesce(p_unrecorded, 0), 0) / 100.0, 'FM999,990.00')
+      using detail = 'لا يُسجَّل أكثر مما تُظهره ميسر من مبالغ مستردة غير مسجلة';
+  end if;
+  select * into o from orders where id = p_order for update;
+  if o.id is null then raise exception 'Order not found' using detail = 'لم يُعثر على الطلب'; end if;
+  if o.payment_id is null then raise exception 'Order not paid'; end if;
+  if exists (select 1 from refunds where order_id = o.id and status = 'processing') then
+    raise exception 'A refund on this order is waiting for Moyasar: settle that one first';
+  end if;
+  if coalesce((p ->> 'goodwill')::boolean, false) then
+    if v_sub is not null then
+      select s.invoicer = 'platform' into v_platform from sub_orders s where s.id = v_sub and s.order_id = o.id;
+      if v_platform is null then raise exception 'That parcel is not in this order'; end if;
+    else
+      v_platform := exists (select 1 from invoices i where i.order_id = o.id and i.doc = 'invoice');
+    end if;
+    if v_amount > o.total_minor - coalesce((select sum(amount_minor) from refunds where order_id = o.id and status in ('processing', 'succeeded')), 0) then
+      raise exception 'The refund is more than what is left of the payment';
+    end if;
+    if v_platform and not exists (select 1 from invoices where order_id = o.id and doc = 'invoice') then
+      raise exception 'The tax invoice for this order has not been issued yet: run "Finish pending work" (or wait for it), so the refund can have its credit note';
+    end if;
+    insert into refunds (order_id, currency, amount_minor, goodwill_minor, platform_minor, reason, idempotency_key, created_by)
+    values (o.id, o.currency, v_amount, v_amount, case when v_platform then v_amount else 0 end,
+            left(format('%s (refunded in Moyasar: %s)', v_reason, v_ref), 500), v_key, p_user)
+    returning id into rid;
+    insert into refund_lines (refund_id, sub_order_id, kind, amount_minor, platform_invoiced) values (rid, v_sub, 'goodwill', v_amount, v_platform);
+  else
+    -- items, a delivery, duties: worked out like any refund (the same ledger and checks), and the amount must be theirs
+    r := mp_prepare_refund(o.id, (p - 'amount' - 'reference' - 'goodwill') || jsonb_build_object('reason', left(format('%s (refunded in Moyasar: %s)', v_reason, v_ref), 500)), p_user);
+    rid := (r ->> 'id')::uuid;
+    if (r ->> 'amount_minor')::int <> v_amount then
+      raise exception 'Those come to %, not %: choose what Moyasar refunded, or record it as goodwill', to_char((r ->> 'amount_minor')::int / 100.0, 'FM999,990.00'),
+        to_char(v_amount / 100.0, 'FM999,990.00') using detail = 'لا يطابق المبلغ ما اخترته: اختر ما أعادته ميسر، أو سجّله تعويضًا';
+    end if;
+  end if;
+  return mp_complete_refund(rid, true, left('moyasar-dashboard:' || v_ref, 200), null) || jsonb_build_object('duplicate', false);
+end $$;
+revoke all on function mp_record_moyasar_refund(uuid, jsonb, uuid, int) from public, anon, authenticated;
 
 -- ================================================================ payments to resolve (review N2, REVIEW-2)
 create or replace function mp_payment_issue(p_issue uuid) returns jsonb
@@ -2510,6 +2669,25 @@ begin
     'credit_notes', (select coalesce(jsonb_agg(private.refund_json(f.id) order by f.created_at), '[]'::jsonb) from refunds f where f.credit_note_status = 'pending'),
     'stuck', (select coalesce(jsonb_agg(private.refund_json(f.id) order by f.created_at), '[]'::jsonb) from refunds f
               where f.status = 'processing'),
+    -- refunds Moyasar shows that we have no record of (review R3-2, REVIEW-3): made in its dashboard, or a failed
+    -- refund Moyasar completed later (listed with it, to settle by hand); with what can still be recorded against
+    'unrecorded', (select coalesce(jsonb_agg(jsonb_build_object(
+        'order_id', o.id, 'order_number', o.number, 'currency', o.currency, 'moyasar_refunded_minor', c.refunded_minor,
+        'refunded_minor', o.refunded_minor, 'unrecorded_minor', c.refunded_minor - o.refunded_minor, 'checked_at', c.checked_at,
+        'failed', (select coalesce(jsonb_agg(private.refund_json(f.id) order by f.created_at), '[]'::jsonb) from refunds f
+                   where f.order_id = o.id and f.status = 'failed' and f.amount_minor <= c.refunded_minor - o.refunded_minor
+                     and not exists (select 1 from refunds x where x.idempotency_key = left(f.idempotency_key, 74) || '-late')),
+        'lines', (select coalesce(jsonb_agg(jsonb_build_object('order_item_id', i.id, 'name_en', i.name_en, 'quantity', i.quantity,
+                    'refundable', greatest(i.quantity - private.item_refunded(i.id), 0), 'line_total_minor', i.line_total_minor)
+                    order by s.seq nulls first, i.name_en), '[]'::jsonb)
+                  from order_items i left join sub_orders s on s.id = i.sub_order_id where i.order_id = o.id),
+        'parcels', (select coalesce(jsonb_agg(jsonb_build_object('sub_order_id', s.id, 'number', format('AM-%s-%s', o.number, s.seq),
+                    'shipping_left', s.shipping_minor - coalesce((select sum(rl.amount_minor) from refund_lines rl join refunds rf on rf.id = rl.refund_id
+                                                                  where rl.sub_order_id = s.id and rl.kind = 'shipping' and rf.status in ('processing', 'succeeded')), 0))
+                    order by s.seq), '[]'::jsonb)
+                    from sub_orders s where s.order_id = o.id)) order by c.checked_at desc), '[]'::jsonb)
+      from moyasar_refund_checks c join orders o on o.id = c.order_id
+      where c.refunded_minor > o.refunded_minor and not exists (select 1 from refunds p where p.order_id = o.id and p.status = 'processing')),
     'recent', (select coalesce(jsonb_agg(private.refund_json(x.id) order by x.created_at desc), '[]'::jsonb)
                from (select id, created_at from refunds order by created_at desc limit 20) x));
 end $$;

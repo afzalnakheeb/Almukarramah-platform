@@ -14,7 +14,7 @@
 // lookbehind and Unicode property escapes (not every JavaScript engine the apps run on has them); characters are
 // classified with explicit tables instead.
 
-export type ContactKind = 'phone' | 'email' | 'url' | 'handle' | 'messaging' | 'bank' | 'solicit';
+export type ContactKind = 'phone' | 'email' | 'url' | 'handle' | 'messaging' | 'bank' | 'card' | 'solicit';
 export type ContactHit = { kind: ContactKind; match: string; index: number };
 
 // ================================================================ normalising
@@ -146,20 +146,25 @@ const TLD = 'com|net|org|sa|ae|kw|qa|om|bh|in|co|io|me|shop|store|info|biz|ly|gl
 const AT = '(?:@|\\(at\\)|\\[at\\]|\\{at\\}|<at>)';
 const DOT = '(?:\\.|\\(dot\\)|\\[dot\\]|\\{dot\\}|<dot>|\\s+dot\\s+)';
 const PROVIDERS = 'gmail|googlemail|hotmail|yahoo|ymail|outlook|icloud|aol|protonmail|proton|yandex|zoho|gmx';
+/** Providers that are not ordinary words ("we met at Outlook cafe", "bought it at Yahoo shopping" are not emails). */
+const PROVIDERS_SURE = 'gmail|googlemail|hotmail|ymail|icloud|protonmail';
 const EMAIL_RES: RegExp[] = [
   /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g,
   // spaces around @ and dots, the words at/dot in brackets: "ali @ gmail . com", "ali@gmail dot com", "ali {at} gmail {dot} com"
   new RegExp(`[A-Za-z0-9._%+-]{2,}\\s*${AT}\\s*[A-Za-z0-9-]{2,}(?:\\s*${DOT}\\s*[A-Za-z0-9-]{2,})*?\\s*${DOT}\\s*(?:${TLD})(?![A-Za-z])`, 'gi'),
   // the word at with the word dot: "ali at gmail dot com" ("order at shop.com" is a link, found as one below)
   new RegExp(`[A-Za-z0-9._%+-]{2,}\\s+at\\s+[A-Za-z0-9-]{2,}\\s*(?:\\(dot\\)|\\[dot\\]|\\{dot\\}|<dot>|\\s+dot\\s+)\\s*(?:${TLD})(?![A-Za-z])`, 'gi'),
-  // a mail provider is enough: "ali at gmail", "ali @ hotmail"
-  new RegExp(`[A-Za-z0-9._%+-]{2,}\\s*(?:${AT}|\\s+at\\s+)\\s*(?:${PROVIDERS})(?![A-Za-z])`, 'gi'),
+  // a mail provider is enough: "ali @ hotmail", "ali at gmail"; with the word "at", an ordinary-word provider only at the
+  // end of a phrase ("ali at outlook.")
+  new RegExp(`[A-Za-z0-9._%+-]{2,}\\s*${AT}\\s*(?:${PROVIDERS})(?![A-Za-z])`, 'gi'),
+  new RegExp(`[A-Za-z0-9._%+-]{2,}\\s+at\\s+(?:${PROVIDERS_SURE})(?![A-Za-z])`, 'gi'),
+  new RegExp(`[A-Za-z0-9._%+-]{2,}\\s+at\\s+(?:${PROVIDERS})(?=\\s*(?:$|[.,;:!?)\\]،؟]))`, 'gi'),
   // written without spaces: "aliATgmailDOTcom"
   new RegExp(`[a-z0-9._-]{2,}AT[a-z0-9-]{2,}DOT(?:${TLD})(?![a-z])`, 'g'),
 ];
 const URL_RE = new RegExp(`(?:https?:\\/\\/|www\\.)[^\\s<>"'،]+|\\b[A-Za-z][A-Za-z0-9-]{1,62}(?:\\.[A-Za-z0-9-]{2,62})*\\.(?:${TLD})(?:\\/[^\\s<>"'،]*)?\\b`, 'gi');
-/** @name after anything that is not part of an email address: "ig:@name", "IG/@name", "(@name)" */
-const HANDLE_RE = /(^|[^A-Za-z0-9._%+-])(@[A-Za-z0-9_.]{3,30})(?![A-Za-z0-9_])/g;
+/** @name after anything that is not part of an email address: "ig:@name", "IG/@name", "(@name)"; not "@home" */
+const HANDLE_RE = /(^|[^A-Za-z0-9._%+-])(@(?!(?:home|work|school|office|night|noon|gym|mall|mosque|masjid|haram|hotel|airport|beach|park|the|all|once|least|most|last|first|here|there)(?![A-Za-z0-9_.]))[A-Za-z0-9_.]{3,30})(?![A-Za-z0-9_])/gi;
 const APPS_EN = 'whats\\s?app|wa\\.me|telegram|t\\.me|instagram|insta|snapchat|snap\\s?chat|tik\\s?tok|facebook|twitter|wechat|viber';
 const APPS_AR = 'واتساب|واتس\\s?اب|واتس|وتساب|تلغرام|تلجرام|تليجرام|انستقرام|انستغرام|انستا|سناب|تيك\\s?توك|فيسبوك|فيس\\s?بوك|تويتر';
 const MESSAGING_RE = new RegExp(`\\b(?:whats\\s?app|wa\\.me|telegram|t\\.me|instagram|insta|snapchat|snap\\s?chat|tik\\s?tok|facebook|twitter|wechat|viber)\\b|${APPS_AR}`, 'gi');
@@ -181,10 +186,124 @@ const SOLICIT_RE = new RegExp([
   'تحويل\\s+بنكي', 'حوالة\\s+بنكية', 'حول\\s+لي', 'ادفع\\s+لي', 'حول\\s+(?:المبلغ|الفلوس|المال|القيمة)', 'حسابي\\s+البنكي',
   '(?:على|ع)\\s+الخاص', 'بالخاص', '(?:ارسل|ابعث|ابعت|اعطني|عطني|هات)(?:ي)?\\s+(?:لي\\s+)?(?:رقمك|رقم\\s+(?:جوالك|هاتفك|تلفونك|موبايلك)|ايميلك|بريدك|واتسابك|حسابك)',
 ].join('|'), 'gi');
-/** Numbers that are not phones when introduced like this. */
-const NOT_PHONE = /(?:isbn|ean|gtin|barcode|sku|upc|ref|model|batch|lot|باركود|الرقم الدولي|رقم الدفعة)[\s:#.-]*$/i;
+/** "call me" followed by a name (a capital letter, not an app or "on"): how someone gives their name. */
+const CALL_ME_NAME = /\b[Cc]all\s+(?:[Mm]e|[Uu]s)(?=\s+(?!(?:On|At|Via|WhatsApp|Whatsapp|Telegram|Back|Now|Later|Today|Tomorrow)\b)[A-Z][a-z])/g;
 /** Before a long number: it is a bank account. */
 const BANK_WORDS = /(?:iban|account|acct|a\/c|ايبان|حساب|الحساب)[^0-9]{0,14}$/i;
+
+// ================================================================ what a phone number looks like (review R3-1)
+// Digits run together across separators are a phone number only when they look like one: a trunk 0 (05x xxx xxxx),
+// 00 or + and a country code, a Gulf mobile without its 0 (5x xxx xxxx), or a country code with the length of that
+// country's numbers (966 5x xxx xxxx). Anything else of nine to fifteen digits is a phone only when it is written like
+// one: one run, or up to four groups with the same separator, not a list (sizes, measurements, prices), not codes of
+// the same length (order numbers), not after a word that says what it is (tracking, order, booking, size...) and not
+// glued to letters (SBX5501928374). Dates, times and amounts are never part of a number. Mirrored in the database
+// (private.number_hint, 0016).
+const COUNTRY_SHAPES = '966\\d{9}|971\\d{8,9}|96[58]\\d{8}|97[34]\\d{8}|962\\d{9}|961\\d{7,8}|964\\d{10}|963\\d{9}|967\\d{9}|970\\d{9}'
+  + '|20\\d{10}|21[23]\\d{9}|216\\d{8}|218\\d{9}|249\\d{9}|44\\d{10}|1\\d{10}|9[12]\\d{10}|880\\d{10}|90\\d{10}|60\\d{9,10}|62\\d{9,12}'
+  + '|63\\d{10}|234\\d{10}|254\\d{9}|27\\d{9}|33\\d{9}|49\\d{10,11}|7\\d{10}|86\\d{11}';
+const PHONE_SHAPE = new RegExp(`^(?:0\\d{8,10}|5\\d{8}|00\\d{8,15}|${COUNTRY_SHAPES})$`);
+/** A run of digits shaped like a phone number (plus: written with a + before it). */
+export function phoneShaped(digits: string, plus = false): boolean {
+  return plus ? digits.length >= 8 && digits.length <= 15 : PHONE_SHAPE.test(digits);
+}
+/** How no list of sizes or prices starts: a trunk 0, 00, or a Gulf country code. */
+const ANCHORED = /^(?:0|96[5-8]|97[134])/;
+/** What separates the numbers of a list. */
+const LIST_SEP = /^[\s,،/\-–—+|;]+$/;
+/** Words that say what a number is (not a phone): codes, orders, tracking, bookings, sizes, prices; and carriers. */
+const CODE_WORDS = 'isbn|ean|gtin|barcode|sku|upc|ref|reference|model|batch|lot|serial|codes?|items?|orders?|invoices?|inv|receipt|tracking|track|awb'
+  + '|waybill|shipments?|parcels?|bookings?|reservations?|confirmation|voucher|coupon|discount|promo|gift\\s*card|card|room|sizes?|chest|length|sleeve'
+  + '|measurements?|prices?|total|sar|sr|riyals?|ml|cm|kg'
+  + '|باركود|الباركود|الدفعة|دفعة|الطلب|طلب|طلبي|الطلبية|طلبية|الطلبات|طلبات|طلباتي|الطلبان|الطلبين|الفاتورة|فاتورة|الشحنة|شحنة|الشحنات|التتبع|تتبع'
+  + '|الحجز|حجز|الكود|كود|الرمز|رمز|الخصم|خصم|الكوبون|كوبون|المقاس|مقاس|المقاسات|مقاسات|القياس|قياس|القياسات|قياسات|السعر|سعر|الاسعار|اسعار|ريال|الغرفة|غرفة|القسيمة|قسيمة|البطاقة|بطاقة';
+const CARRIERS = 'smsa|aramex|dhl|fedex|ups|naqel|spl|zajil|ajex|imile';
+const CODE_BEFORE = new RegExp(`(?:^|[^a-z\\u0621-\\u064a])(?:${CODE_WORDS}|${CARRIERS})(?:[\\s:#.\\-]*(?:number|num|no|nos|is|are|رقم|رقمه|رقمها|هو|هي)(?![a-z\\u0621-\\u064a]))*`
+  + `[\\s:#.\\-]*(?:(?:${CARRIERS})[\\s:#.\\-]*)?$`, 'i');
+/** Barcode words: after them even a number shaped like a phone (a Saudi barcode looks like +62 8...) is a barcode. */
+const BARCODE_BEFORE = /(?:isbn|ean|gtin|barcode|sku|upc|باركود|الرقم الدولي)[\s:#.-]*$/i;
+
+/**
+ * Dates (with a four-digit year), times and amounts (with decimals or thousands): never part of a phone number. Each
+ * is a whole token: no digit right after it, nor a digit across a point, comma, colon or slash (the same before it is
+ * checked by protectTokens: no lookbehind here).
+ */
+const AFTER = '(?!\\d)(?![.,٫:/]\\d)';
+const PROTECTED_RES = [
+  new RegExp(`(?:(?:19|20)\\d\\d([-/.])(?:0?[1-9]|1[0-2])\\1(?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|[12]\\d|3[01])([-/.])(?:0?[1-9]|1[0-2])\\2(?:19|20)\\d\\d|(?:0?[1-9]|1[0-2])([-/.])(?:0?[1-9]|[12]\\d|3[01])\\3(?:19|20)\\d\\d)${AFTER}`, 'g'),
+  new RegExp(`(?:[01]?\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d)?${AFTER}`, 'g'),
+  new RegExp(`(?:[1-9]\\d{0,2},\\d{3}(?:[.٫]\\d{1,2})?|(?:[1-9]\\d{0,5}|0)[.٫]\\d{1,2})${AFTER}`, 'g'),
+];
+const isAsciiDigit = (s: string, k: number) => k >= 0 && k < s.length && s.charCodeAt(k) >= 48 && s.charCodeAt(k) <= 57;
+const JOINER = /[.,٫:/]/;
+/** The text with dates, times and amounts made letters ("q"), the same length, so they never join a number. */
+function protectTokens(norm: string): string {
+  let out = norm;
+  for (const re of PROTECTED_RES) {
+    re.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(out))) {
+      const a = m.index;
+      const b = a + m[0].length;
+      if (!isAsciiDigit(out, a - 1) && !(JOINER.test(out[a - 1] ?? '') && isAsciiDigit(out, a - 2))) out = out.slice(0, a) + 'q'.repeat(b - a) + out.slice(b);
+      else re.lastIndex = a + 1;
+    }
+  }
+  return out;
+}
+
+/** The Luhn check of a card number. */
+export function luhn(d: string): boolean {
+  let sum = 0;
+  for (let i = 0; i < d.length; i++) {
+    let x = d.charCodeAt(d.length - 1 - i) - 48;
+    if (i % 2 === 1) { x *= 2; if (x > 9) x -= 9; }
+    sum += x;
+  }
+  return d.length > 0 && sum % 10 === 0;
+}
+/** The EAN-13 check digit of a barcode. */
+export function ean13(d: string): boolean {
+  if (!/^\d{13}$/.test(d)) return false;
+  let sum = 0;
+  for (let i = 0; i < 12; i++) sum += (d.charCodeAt(i) - 48) * (i % 2 ? 3 : 1);
+  return (10 - (sum % 10)) % 10 === d.charCodeAt(12) - 48;
+}
+
+/** What a run of digits is: a phone number, a bank account, a card number, or nothing to hide. */
+export function classifyNumber(r: { groups: string[]; seps: string[]; plus: boolean; real: number; words: number; before: string; glued: boolean; rtl?: boolean }): 'phone' | 'bank' | 'card' | null {
+  const d = r.groups.join('');
+  const n = d.length;
+  if (r.words >= 7 && n >= 7) return 'phone';                       // a number spelled out
+  if (n < 9 || (r.real < 6 && r.words < 7)) return null;
+  const bank = BANK_WORDS.test(r.before.slice(-20));
+  if (n > 15) {
+    // an account number, two phone numbers run together, or a card number
+    if (bank) return 'bank';
+    for (let k = 9; k <= n - 9; k++) if (phoneShaped(d.slice(0, k), r.plus) && phoneShaped(d.slice(k))) return 'phone';
+    const lens = r.groups.map((g) => g.length).join(',');
+    if (n <= 19 && luhn(d) && (r.groups.length === 1 || r.groups.every((g) => g.length === 4) || lens === '4,6,5' || lens === '4,6,4')) return 'card';
+    return null;
+  }
+  const list = r.groups.length >= 3 && r.groups.every((g) => g.length >= 2 && g.length <= 3) && r.seps.every((x) => LIST_SEP.test(x));
+  // a right-to-left line (Arabic) shows groups in reverse order: "67 45 23 01 05" reads 05 01 23 45 67; read that way
+  // only when it then starts like a phone number (0, 00, a Gulf code)
+  const rev = r.rtl && r.groups.length >= 2 ? [...r.groups].reverse().join('') : '';
+  const back = rev !== '' && ANCHORED.test(rev) && phoneShaped(rev);
+  const shaped = (phoneShaped(d, r.plus) && (r.plus || ANCHORED.test(d) || !list)) || back;
+  if (shaped) {
+    const anchored = r.plus || ANCHORED.test(d) || back;
+    if (!anchored && (BARCODE_BEFORE.test(r.before) || (n === 13 && ean13(d)) || (!r.plus && /^97[89]\d{10}$/.test(d)))) return null;   // a barcode, an ISBN
+    return bank ? 'bank' : 'phone';
+  }
+  if (list) return null;                                                                      // sizes, measurements, prices
+  if (r.groups.length >= 2 && r.groups[0].length >= 5 && r.groups.every((g) => g.length === r.groups[0].length)) return null;   // order numbers, codes
+  if (CODE_BEFORE.test(r.before) || r.glued) return null;                                     // a tracking number, a code
+  const kinds = r.seps.map((x) => x.replace(/\s+/g, '') || ' ');
+  if (r.groups.length > 4 || kinds.some((x) => x !== kinds[0])) return null;                  // not written like a phone number
+  if (n === 13 && ean13(d)) return null;
+  return bank ? 'bank' : 'phone';
+}
 /** An IBAN: two letters, two check digits, then the account, with spaces or dashes allowed between groups. */
 const IBAN_RE = /\b(?:SA|AE|KW|QA|OM|BH|GB|DE|FR|NL|BE|IE|ES|IT|IN|PK|EG|TR|JO|LB)[0-9]{2}(?:[ -]?[A-Z0-9]){10,30}\b/gi;
 
@@ -210,62 +329,51 @@ function regexSpans(norm: string, re: RegExp, kind: ContactKind, group = 0): Spa
 
 /**
  * Runs of digits with anything but letters between them (up to four characters at a time: spaces, punctuation,
- * symbols, emoji). Nine to fifteen digits are a phone number; more are several numbers run together, or an account.
+ * symbols, emoji), each classified by classifyNumber: a phone number, a bank account or a card number to hide, or an
+ * ordinary number (a list of sizes, an order number, a date) to leave alone.
  */
 function numberSpans(norm: string, units: Unit[]): Span[] {
   const out: Span[] = [];
-  const isDigit = (k: number) => norm.charCodeAt(k) >= 48 && norm.charCodeAt(k) <= 57;
-  const isSep = (k: number) => !isDigit(k) && !isLetter(norm.codePointAt(k) ?? 0x41);
+  const work = protectTokens(norm);
+  const rtl = /[\u0621-\u064a]/.test(norm);   // Arabic letters: the line may be shown right to left
+  const isDigit = (k: number) => isAsciiDigit(work, k);
+  const isSep = (k: number) => !isDigit(k) && !isLetter(work.codePointAt(k) ?? 0x41);
   let k = 0;
-  while (k < norm.length) {
+  while (k < work.length) {
     if (!isDigit(k)) { k++; continue; }
     const a = k;
     let b = k + 1;
-    const groups: number[] = [1];
+    const groups: string[] = [work[a]];
+    const seps: string[] = [];
     // a "+" right before the number belongs to it
-    const plus = a > 0 && norm[a - 1] === '+';
-    for (let j = b; j < norm.length;) {
-      if (isDigit(j)) { groups[groups.length - 1]++; j++; b = j; continue; }
+    const plus = a > 0 && work[a - 1] === '+';
+    for (let j = b; j < work.length;) {
+      if (isDigit(j)) { groups[groups.length - 1] += work[j]; j++; b = j; continue; }
       let s = j;
-      while (s < norm.length && s - j < 4 && isSep(s)) s++;
-      if (s > j && s < norm.length && isDigit(s) && s - j <= 4) {
+      while (s < work.length && s - j < 4 && isSep(s)) s++;
+      if (s > j && s < work.length && isDigit(s) && s - j <= 4) {
         // a comma and a space (a list: "size 56, 12 ml", "sizes 52, 54, 56") join only groups of three digits or more
-        const sep = norm.slice(j, s);
+        const sep = work.slice(j, s);
         if (/[,،]/.test(sep) && /\s/.test(sep)) {
           let next = 0;
-          while (s + next < norm.length && isDigit(s + next)) next++;
-          if (groups[groups.length - 1] < 3 || next < 3) break;
+          while (s + next < work.length && isDigit(s + next)) next++;
+          if (groups[groups.length - 1].length < 3 || next < 3) break;
         }
-        groups.push(0);
+        seps.push(sep);
+        groups.push('');
         j = s;
         continue;
       }
       break;
     }
     k = b;
-    const digits = groups.reduce((n, g) => n + g, 0);
     let real = 0;
     let words = 0;
     for (let x = a; x < b; x++) if (isDigit(x)) { if (units[x].real) real++; else if (units[x].word) words++; }
-    const span = { a: plus ? a - 1 : a, b };
-    const before = norm.slice(Math.max(0, a - 16), a);
-    if (words >= 7 && digits >= 7) { out.push({ kind: 'phone', ...span }); continue; }   // a number spelled out
-    if (digits < 9 || (real < 6 && words < 7)) continue;
-    const text = norm.slice(a, b);
-    if (NOT_PHONE.test(before)) continue;
-    if (digits <= 15) {
-      const plain = text.replace(/\D/g, '');
-      if (/^97[89]\d{10}$/.test(plain) && !plus) continue;              // an ISBN-13
-      if (/^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}$/.test(text)) continue;        // a date
-      out.push({ kind: BANK_WORDS.test(norm.slice(Math.max(0, a - 20), a)) ? 'bank' : 'phone', ...span });
-      continue;
-    }
-    // more than fifteen digits: two phone numbers together, or an account number
-    let split = false;
-    for (let g = 1, left = groups[0]; g < groups.length; left += groups[g], g++) {
-      if (left >= 9 && left <= 15 && digits - left >= 9 && digits - left <= 15) { split = true; break; }
-    }
-    out.push({ kind: split && !BANK_WORDS.test(norm.slice(Math.max(0, a - 20), a)) ? 'phone' : 'bank', ...span });
+    const start = plus ? a - 1 : a;
+    const glued = (start > 0 && isLetter(work.codePointAt(start - 1) ?? 0)) || (b < work.length && isLetter(work.codePointAt(b) ?? 0));
+    const kind = classifyNumber({ groups, seps, plus, real, words, before: work.slice(Math.max(0, start - 40), start).toLowerCase(), glued, rtl });
+    if (kind) out.push({ kind, a: start, b });
   }
   return out;
 }
@@ -296,7 +404,9 @@ function spans(norm: string, units: Unit[]): Span[] {
   }
   const ibans = regexSpans(norm, IBAN_RE, 'bank').filter((b) => norm.slice(b.a, b.b).replace(/\D/g, '').length >= 10);
   const numbers = numberSpans(norm, units).filter((p) => !ibans.some((b) => p.a >= b.a && p.a < b.b) && !inEmail(p));
-  return [...emails, ...urls, ...handles, ...apps, ...appHandles, ...ibans, ...numbers, ...regexSpans(norm, SOLICIT_RE, 'solicit')];
+  // "call me Maryam" gives a name, it does not ask for a call
+  const forSolicit = norm.replace(CALL_ME_NAME, (m) => ' '.repeat(m.length));
+  return [...emails, ...urls, ...handles, ...apps, ...appHandles, ...ibans, ...numbers, ...regexSpans(forSolicit, SOLICIT_RE, 'solicit')];
 }
 
 /** A normalised span as the part of the original text it came from. */
@@ -358,6 +468,8 @@ export function splitNumber(previous: string | null | undefined, text: string): 
   const a = tail[1].replace(/\D/g, '');
   const b = head[1].replace(/\D/g, '');
   if (a.length < 3 || b.length < 3 || a.length + b.length < 9 || a.length + b.length > 15) return null;
+  // only a number shaped like a phone (two order numbers in a row are not one: review R3-1)
+  if (!phoneShaped(a + b, tail[1].startsWith('+'))) return null;
   const from = head[0].length - head[1].length;
   const start = units[from].start;
   const end = units[from + head[1].length - 1].end;

@@ -179,13 +179,24 @@ export async function sellerPerformance(sellerId: string): Promise<Performance> 
 export type RefundJson = {
   id: string; order_id: string; order_number: number; return_id: string | null; status: 'processing' | 'succeeded' | 'failed'; currency: string; amount_minor: number;
   items_minor: number; shipping_minor: number; duties_minor: number; platform_minor: number; reason: string; restock: boolean; error: string | null;
+  /** money given back without items (goodwill made in Moyasar's dashboard, a refund Moyasar made twice) */
+  goodwill_minor?: number;
   credit_note_status: 'not_needed' | 'pending' | 'issued'; credit_note: string | null; created_at: string; completed_at: string | null;
   lines: { kind: string; quantity: number | null; amount_minor: number; name_en: string | null }[];
+};
+/** An order where Moyasar shows refunds we have no record of (review R3-2): what can be recorded against it. */
+export type UnrecordedRefund = {
+  order_id: string; order_number: number; currency: string; moyasar_refunded_minor: number; refunded_minor: number; unrecorded_minor: number; checked_at: string;
+  /** refunds marked failed that Moyasar may have completed later */
+  failed: RefundJson[];
+  lines: { order_item_id: string; name_en: string; quantity: number; refundable: number; line_total_minor: number }[];
+  parcels: { sub_order_id: string; number: string; shipping_left: number }[];
 };
 export type RefundQueue = {
   returns: ReturnRequest[];
   cancelled: { sub_order_id: string; number: string; order_id: string; order_number: number; seller: string | null; cancel_reason: string | null; cancelled_at: string; currency: string; amount_minor: number }[];
   credit_notes: RefundJson[]; stuck: RefundJson[]; recent: RefundJson[];
+  unrecorded?: UnrecordedRefund[];
 };
 export async function adminReturns(status?: ReturnStatus): Promise<ReturnRequest[]> {
   if (MARKET_DEMO) return demo.demoReturns('staff').filter((r) => !status || r.status === status);
@@ -217,9 +228,9 @@ export async function settleRefundByHand(refundId: string, outcome: 'succeeded' 
   if (MARKET_DEMO) return demoOnly();
   return callFunction<{ ok: boolean; refund: string; status: string; creditNote: string | null }>('refund-order', { action: 'resolve', refundId, outcome, reason });
 }
-/** A payment Moyasar took for an order that was no longer waiting (cancelled, paid twice, another amount): review N2. */
+/** A payment Moyasar took for an order that was no longer waiting (cancelled, paid twice, another amount, or gone): review N2, R3-4. */
 export type PaymentIssue = {
-  id: string; payment_id: string; order_id: string | null; kind: 'order_not_waiting' | 'second_payment' | 'amount_mismatch';
+  id: string; payment_id: string; order_id: string | null; kind: 'order_not_waiting' | 'second_payment' | 'amount_mismatch' | 'order_not_found';
   amount_minor: number; currency: string; status: 'open' | 'refund_pending' | 'refunded' | 'attached' | 'dismissed';
   note: string | null; error: string | null; created_at: string; orders: { number: number; status: string } | null;
 };
@@ -232,6 +243,16 @@ export async function adminPaymentIssues(): Promise<PaymentIssue[]> {
   return (data as unknown as PaymentIssue[]) ?? [];
 }
 export type IssueResult = { ok?: boolean; status?: string; invoice?: string | null; reconciled?: boolean; pending?: boolean; code?: string; error?: string };
+/**
+ * Owner, manager, finance: record a refund made in Moyasar's dashboard that we have no record of (review R3-2): its
+ * amount (minor units), Moyasar's reference, and what it was for: items, a parcel's delivery, or goodwill with no items.
+ * The server reads Moyasar first and never records more than Moyasar shows refunded and we have not recorded.
+ */
+export async function recordMoyasarRefund(p: { orderId: string; key: string; amount: number; reference: string; reason: string;
+  goodwill?: boolean; subOrderId?: string; lines?: { orderItemId: string; quantity: number }[]; shipping?: string[] }) {
+  if (MARKET_DEMO) return demoOnly();
+  return callFunction<{ ok: boolean; refund: string; amount: number; currency: string; creditNote: string | null; duplicate?: boolean }>('refund-order', { action: 'record_moyasar', ...p });
+}
 /** Refund it in full, attach it to its order (the order is paid with it), or close it with a reason. */
 export async function settlePaymentIssue(issueId: string, action: 'refund' | 'attach' | 'dismiss', reason: string): Promise<IssueResult> {
   if (MARKET_DEMO) return demoOnly();
@@ -309,7 +330,7 @@ export type Overview = {
   days: number;
   queues: Record<'sellers_to_review' | 'listings_waiting' | 'listings_checking' | 'photos_checking' | 'returns_to_answer' | 'disputes' | 'refunds_to_make'
     | 'credit_notes_pending' | 'refunds_stuck' | 'reviews_to_publish' | 'conversations_flagged' | 'awaiting_acceptance' | 'late_to_ship' | 'not_collected' | 'delivery_failed'
-    | 'shop_pages_to_approve' | 'payments_to_resolve', number>;
+    | 'shop_pages_to_approve' | 'payments_to_resolve' | 'moyasar_unrecorded', number>;
   sales: { orders: number; parcels: number; marketplace_parcels: number; marketplace_sar_minor: number; house_sar_minor: number; delivery_sar_minor: number;
     commission_sar_minor: number; refunded_sar_minor: number; cancelled_by_sellers: number; delivered: number };
   owed_to_sellers: { available_sar_minor: number; held_sar_minor: number; balance_sar_minor: number }; paid_out_sar_minor: number;

@@ -4,10 +4,11 @@
 // with Moyasar" settles it.
 import React, { useRef, useState } from 'react';
 import { View } from 'react-native';
-import { Button, Field, Notice } from '@/components/ui';
-import { checkWithMoyasar, finishPendingWork, freshKey, refund, settlePaymentIssue, settleRefundByHand, type PaymentIssue } from '@/lib/aftersale';
+import { Button, Chip, Field, Notice, T } from '@/components/ui';
+import { checkWithMoyasar, finishPendingWork, freshKey, recordMoyasarRefund, refund, settlePaymentIssue, settleRefundByHand, type PaymentIssue, type UnrecordedRefund } from '@/lib/aftersale';
 import { MARKET_DEMO } from '@/lib/flags';
 import { formatMoney } from '@/lib/money';
+import { colors } from '@/theme';
 
 /** One Refund button: a fresh key per confirmed press, the reason required, the result shown. */
 export function RefundButton({ orderId, label, returnId, subOrderId, onDone }: { orderId: string; label: string; returnId?: string; subOrderId?: string; onDone: () => void }) {
@@ -75,12 +76,12 @@ export function CheckWithMoyasar({ refundId, onDone }: { refundId: string; onDon
 
 /** Owner, manager, finance: a refund "Check with Moyasar" cannot settle (review N7). Record what Moyasar's dashboard
  *  shows, with what was checked; the server reads Moyasar back first and refuses an outcome Moyasar does not show. */
-export function SettleByHand({ refundId, onDone }: { refundId: string; onDone: () => void }) {
+export function SettleByHand({ refundId, onDone, completedLate }: { refundId: string; onDone: () => void; completedLate?: boolean }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'warn'; text: string } | null>(null);
-  if (!open) return <Button size="sm" kind="text" label="Settle by hand" onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start' }} />;
+  if (!open) return <Button size="sm" kind={completedLate ? 'secondary' : 'text'} label={completedLate ? 'Settle by hand: Moyasar completed it' : 'Settle by hand'} onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start' }} />;
   const go = async (outcome: 'succeeded' | 'failed') => {
     if (MARKET_DEMO) { setMsg({ tone: 'warn', text: 'Example data: nothing is saved here.' }); return; }
     setBusy(outcome); setMsg(null);
@@ -96,7 +97,7 @@ export function SettleByHand({ refundId, onDone }: { refundId: string; onDone: (
       {msg ? <Notice tone={msg.tone} text={msg.text} /> : null}
       <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
         <Button size="sm" kind="secondary" label="Moyasar shows it refunded" busy={busy === 'succeeded'} disabled={reason.trim().length < 10} onPress={() => go('succeeded')} />
-        <Button size="sm" kind="secondary" label="Moyasar shows no refund" busy={busy === 'failed'} disabled={reason.trim().length < 10} onPress={() => go('failed')} />
+        {completedLate ? null : <Button size="sm" kind="secondary" label="Moyasar shows no refund" busy={busy === 'failed'} disabled={reason.trim().length < 10} onPress={() => go('failed')} />}
         <Button size="sm" kind="text" label="Cancel" onPress={() => setOpen(false)} />
       </View>
     </View>
@@ -107,7 +108,85 @@ const ISSUE: Record<PaymentIssue['kind'], string> = {
   order_not_waiting: 'paid after the order was cancelled or closed',
   second_payment: 'a second payment for an order already paid',
   amount_mismatch: 'an amount that does not match the order',
+  order_not_found: 'paid for an order that no longer exists',
 };
+
+/**
+ * Owner, manager, finance: a refund Moyasar made that we have no record of, made in its dashboard (review R3-2).
+ * Recorded with its amount, Moyasar's reference and what it was for: goodwill (no items), items, or a parcel's
+ * delivery. The server reads Moyasar first: never more than Moyasar shows refunded and we have not recorded.
+ */
+export function RecordMoyasarRefund({ u, onDone }: { u: UnrecordedRefund; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [what, setWhat] = useState<'goodwill' | 'items' | 'delivery'>('goodwill');
+  const [amount, setAmount] = useState((u.unrecorded_minor / 100).toFixed(2));
+  const [reference, setReference] = useState('');
+  const [reason, setReason] = useState('');
+  const [qty, setQty] = useState<Record<string, string>>({});
+  const [parcel, setParcel] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ tone: 'ok' | 'warn'; text: string } | null>(null);
+  const key = useRef(freshKey('rm'));
+  if (!open) return <Button size="sm" kind="secondary" label="Record a refund made in Moyasar" onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start' }} />;
+  const minor = Math.round(Number(amount.replace(/[^0-9.]/g, '')) * 100);
+  const lines = u.lines.filter((l) => Number(qty[l.order_item_id] ?? 0) > 0).map((l) => ({ orderItemId: l.order_item_id, quantity: Math.floor(Number(qty[l.order_item_id])) }));
+  const ready = minor > 0 && reference.trim().length >= 3 && reason.trim().length >= 10 && (what === 'goodwill' || (what === 'items' ? lines.length > 0 : parcel !== null));
+  return (
+    <View style={{ gap: 8, alignSelf: 'stretch' }}>
+      <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+        <Chip size="sm" label="Goodwill (no items come back)" active={what === 'goodwill'} onPress={() => setWhat('goodwill')} />
+        <Chip size="sm" label="Items" active={what === 'items'} onPress={() => setWhat('items')} />
+        <Chip size="sm" label="A parcel's delivery" active={what === 'delivery'} onPress={() => setWhat('delivery')} />
+      </View>
+      {what === 'items' ? u.lines.filter((l) => l.refundable > 0).map((l) => (
+        <Field key={l.order_item_id} label={`${l.name_en}: how many (up to ${l.refundable})`} value={qty[l.order_item_id] ?? ''} keyboardType="number-pad"
+          onChangeText={(v) => setQty({ ...qty, [l.order_item_id]: v.replace(/[^0-9]/g, '') })} />
+      )) : null}
+      {what === 'delivery' ? (
+        <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+          {u.parcels.filter((x) => x.shipping_left > 0).map((x) => (
+            <Chip key={x.sub_order_id} size="sm" label={`${x.number}: ${formatMoney(x.shipping_left, u.currency)}`} active={parcel === x.sub_order_id} onPress={() => setParcel(x.sub_order_id)} />
+          ))}
+        </View>
+      ) : null}
+      <Field label={`Amount Moyasar refunded (${u.currency})`} value={amount} onChangeText={setAmount} keyboardType="decimal-pad" dirLtr />
+      <Field label="Moyasar's reference (the date and amount in its dashboard)" value={reference} onChangeText={setReference} maxLength={120} />
+      <Field label="What it was for (on the credit note and the audit log)" value={reason} onChangeText={setReason} maxLength={300} />
+      {msg ? <Notice tone={msg.tone} text={msg.text} /> : null}
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <Button size="sm" label="Record it" busy={busy} disabled={!ready} onPress={async () => {
+          if (MARKET_DEMO) { setMsg({ tone: 'warn', text: 'Example data: nothing is saved here.' }); return; }
+          setBusy(true); setMsg(null);
+          try {
+            const r = await recordMoyasarRefund({ orderId: u.order_id, key: key.current, amount: minor, reference: reference.trim(), reason: reason.trim(),
+              ...(what === 'goodwill' ? { goodwill: true } : what === 'items' ? { lines } : { shipping: [parcel!] }) });
+            key.current = freshKey('rm');
+            setMsg({ tone: 'ok', text: `Recorded ${formatMoney(r.amount, r.currency)}.${r.creditNote ? ` Credit note ${r.creditNote}.` : ''}` });
+            onDone();
+          } catch (e) { setMsg({ tone: 'warn', text: e instanceof Error ? e.message : String(e) }); } finally { setBusy(false); }
+        }} />
+        <Button size="sm" kind="text" label="Cancel" onPress={() => setOpen(false)} />
+      </View>
+    </View>
+  );
+}
+
+/** One order with refunds Moyasar made that we have not recorded: the failed refunds it may have completed, and the form. */
+export function UnrecordedRow({ u, onDone }: { u: UnrecordedRefund; onDone: () => void }) {
+  return (
+    <View style={{ gap: 8 }}>
+      <T size={14}>AM-{u.order_number}: Moyasar shows {formatMoney(u.moyasar_refunded_minor, u.currency)} refunded; we recorded {formatMoney(u.refunded_minor, u.currency)}.
+        {' '}{formatMoney(u.unrecorded_minor, u.currency)} is not recorded, and no new refund can be made on this order until it is.</T>
+      {u.failed.map((f) => (
+        <View key={f.id} style={{ gap: 6 }}>
+          <T size={13} color={colors.muted}>Marked failed: {formatMoney(f.amount_minor, f.currency)} on {f.created_at.slice(0, 10)} ({f.reason}). If Moyasar completed it later, settle it here.</T>
+          <SettleByHand refundId={f.id} onDone={onDone} completedLate />
+        </View>
+      ))}
+      <RecordMoyasarRefund u={u} onDone={onDone} />
+    </View>
+  );
+}
 
 /** Owner, manager, finance: a payment Moyasar took for an order no longer waiting (review N2). Refund it in full,
  *  attach it to its order (the order is paid with it and invoiced), or close it with a reason. */

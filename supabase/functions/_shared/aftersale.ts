@@ -8,15 +8,17 @@ import { detectContacts, maskContacts, splitNumber } from './contact.ts';
 export type Cleaned = { text: string; masked: number; flags: string[] };
 
 /**
- * Trimmed to max characters, control characters and invisible tricks removed (zero-width characters and direction
- * overrides; the joiners inside emoji and Persian words stay), contact details masked; flags like contact_phone, solicit.
+ * Trimmed to max characters, control characters and invisible tricks removed (zero-width characters, embeddings and
+ * direction overrides, which can show digits in another order than they are stored), contact details masked; flags
+ * like contact_phone, solicit. The direction marks and isolates people type to keep mixed Arabic and English in order
+ * stay (LRM, RLM, ALM, U+2066 to U+2069: review R3-7), and so do the joiners inside emoji and Persian words.
  * previous: the same person's last message in the conversation, to catch a number split across the two.
  */
 export function cleanText(input: unknown, max: number, opts: { previous?: string | null } = {}): Cleaned {
   const raw = String(input ?? '')
     // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
-    .replace(/[\u00AD\u061C\u180E\u200B\u200E\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF]/g, '')
+    .replace(/[\u00AD\u180E\u200B\u202A-\u202E\u2060-\u2064\u206A-\u206F\uFEFF]/g, '')
     .replace(/\r\n?/g, '\n').trim().slice(0, max);
   if (!raw) return { text: '', masked: 0, flags: [] };
   const hits = detectContacts(raw);

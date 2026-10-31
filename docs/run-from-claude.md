@@ -32,8 +32,11 @@ Windsor.ai and the other connectors in the Claude app.
   Moyasar ("Check with Moyasar" on `/admin/returns`, or finance's "Settle by hand" after checking Moyasar's dashboard).
   Orders paid more than 7 days ago without an invoice (`orders_without_invoice_old`) are never invoiced by the job:
   Claude lists them for the accountant.
-- "Payments to resolve" (`payment_issues`): a payment Moyasar took for an order that was cancelled, already paid or of
-  another amount. Claude reports each one with its order and amount; refunding it, attaching it to its order or
+- "Refunds in Moyasar we have not recorded" (`admin_refund_queue().unrecorded`): money Moyasar shows refunded that is
+  not in our records (made in its dashboard, or a refund marked failed that Moyasar completed later). Until it is
+  recorded no new refund can be made on that order. Claude reports each one; finance records it on `/admin/returns`.
+- "Payments to resolve" (`payment_issues`): a payment Moyasar took for an order that was cancelled, already paid, of
+  another amount, or no longer exists. Claude reports each one with its order and amount; refunding it, attaching it to its order or
   closing it is finance's decision on `/admin/returns`, never Claude's without approval.
 - "Show me the dispute on R-104902-1 and suggest a decision." Claude reads the return, the conversation and the photos'
   screening; the decision and any refund wait for approval.

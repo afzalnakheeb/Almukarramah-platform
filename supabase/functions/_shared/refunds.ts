@@ -38,6 +38,8 @@ export async function reconcileRefund(db: Db, refundId: string, grace: number): 
   } catch (e) {
     return { refund: f.id, state: 'unreachable', detail: (e as Error).message };
   }
+  // what Moyasar shows is noted: the refunds page lists money Moyasar refunded that we have not recorded (R3-2)
+  await db.rpc('mp_note_moyasar_refunded', { p_order: f.order_id, p_refunded: refunded });
   const extra = refunded - f.order_refunded_minor;
   if (extra === f.amount_minor) {
     const { error: e2 } = await db.rpc('mp_complete_refund', { p_refund: f.id, p_ok: true, p_provider_ref: `${payId}:${f.amount_minor}:reconciled`, p_error: null });

@@ -7,11 +7,25 @@
 // 5xx, a dropped connection) the card may have been charged: the renewal stays waiting, never cancelled on a guess,
 // and the next run asks Moyasar again with the same given_id, which answers with that payment instead of charging
 // again (review N2, REVIEW-2). Moyasar's webhook for the payment completes it too, whichever comes first.
+//
+// A renewal still waiting is asked about before anything else, also when the customer has cancelled since: Moyasar may
+// have charged the card. Paid, the next period follows the paid one and the cancellation still stands (the paid month
+// runs, nothing more is charged); declined, a cancelled subscription simply ends (review R3-6, REVIEW-3).
 import { chargeToken, MoyasarError, type MoyasarPayment } from '../_shared/moyasar.ts';
 import { admin, env, handle, json, vatIncluded } from '../_shared/util.ts';
 import { ensureInvoice } from '../_shared/zatca.ts';
 
 type Plan = { name_en: string; name_ar: string; price_sar: number; kind: string };
+
+/** One calendar month later, the day kept where the month has it (31 October -> 30 November), as Postgres adds a month. */
+function addMonth(d: Date): Date {
+  const r = new Date(d);
+  const day = r.getUTCDate();
+  r.setUTCDate(1);
+  r.setUTCMonth(r.getUTCMonth() + 1);
+  r.setUTCDate(Math.min(day, new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth() + 1, 0)).getUTCDate()));
+  return r;
+}
 
 Deno.serve(handle(async (req) => {
   if (req.headers.get('x-cron-secret') !== env('CRON_SECRET')) return json({ error: 'unauthorised' }, 401);
@@ -28,15 +42,15 @@ Deno.serve(handle(async (req) => {
   const results = [];
   for (const sub of due ?? []) {
     const plan = sub.plans as unknown as Plan;
+    // a renewal still waiting from an earlier run (its answer was lost) is asked again with the same given_id, first
+    const { data: waiting } = await db.from('orders').select('*').eq('subscription_id', sub.id).eq('kind', 'subscription')
+      .eq('status', 'pending_payment').not('charge_given_id', 'is', null).order('created_at', { ascending: false }).limit(1).maybeSingle();
     // Cancelled by the customer: ends at the close of the paid period, no further charge.
-    if (sub.cancel_at_period_end) {
+    if (!waiting && sub.cancel_at_period_end) {
       await db.from('subscriptions').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', sub.id);
       results.push({ id: sub.id, ok: true, ended: 'cancelled by customer' });
       continue;
     }
-    // a renewal still waiting from an earlier run (its answer was lost) is asked again with the same given_id
-    const { data: waiting } = await db.from('orders').select('*').eq('subscription_id', sub.id).eq('kind', 'subscription')
-      .eq('status', 'pending_payment').not('charge_given_id', 'is', null).order('created_at', { ascending: false }).limit(1).maybeSingle();
     if (!waiting && sub.status === 'past_due' && Date.now() - new Date(sub.current_period_end!).getTime() > GRACE_DAYS * 864e5) {
       await db.from('subscriptions').update({ status: 'expired', updated_at: new Date().toISOString() }).eq('id', sub.id);
       results.push({ id: sub.id, ok: false, ended: 'renewal failed for a week' });
@@ -82,9 +96,8 @@ Deno.serve(handle(async (req) => {
       const { data: paid } = await db.from('orders').update({ status: plan.kind === 'box' ? 'paid' : 'delivered', payment_id: pay.id, paid_at: new Date().toISOString() })
         .eq('id', order!.id).eq('status', 'pending_payment').select('id').maybeSingle();
       if (paid) {
-        const end = new Date(sub.current_period_end!);
-        end.setMonth(end.getMonth() + 1);
-        await db.from('subscriptions').update({ status: 'active', current_period_end: end.toISOString(), updated_at: new Date().toISOString() }).eq('id', sub.id);
+        // the next period follows the paid one (as the webhook does it: one calendar month, 31 Oct -> 30 Nov)
+        await db.from('subscriptions').update({ status: 'active', current_period_end: addMonth(new Date(sub.current_period_end!)).toISOString(), updated_at: new Date().toISOString() }).eq('id', sub.id);
       }
       // the card was charged: an invoice that fails now is issued later by finish-pending, never a reason to cancel
       try {
@@ -105,7 +118,9 @@ Deno.serve(handle(async (req) => {
 
   async function declined(orderId: string, subId: string, reason: string) {
     await db.from('orders').update({ status: 'cancelled' }).eq('id', orderId).eq('status', 'pending_payment');
-    await db.from('subscriptions').update({ status: 'past_due' }).eq('id', subId);
+    // a customer who cancelled meanwhile is not tried again: the subscription ends
+    const { data: s } = await db.from('subscriptions').select('cancel_at_period_end').eq('id', subId).maybeSingle();
+    await db.from('subscriptions').update({ status: s?.cancel_at_period_end ? 'cancelled' : 'past_due', updated_at: new Date().toISOString() }).eq('id', subId);
     await db.from('audit_log').insert({ actor_label: 'charge-subscriptions', table_name: 'orders', row_id: orderId, action: 'CHARGE_DECLINED', new_data: { reason } });
   }
 }));

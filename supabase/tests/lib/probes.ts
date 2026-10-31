@@ -56,6 +56,113 @@ export const CONTACT_PROBES: [string, RegExp][] = [
 /** Invitations to deal or pay outside Al Mukarramah: flagged for our team (the words stay readable). */
 export const SOLICIT_PROBES = ['حوّل المبلغ على حسابي', 'كلمني على الخاص', 'ارسل لي رقمك', 'send me your number'];
 
+/**
+ * More disguises that the stricter number rules of the third review (R3-1) must still catch: a phone number whatever
+ * its grouping (also after a word like "order", glued to a word, or written in reverse group order, which a
+ * right-to-left line shows the right way round), a foreign number without +, a card number.
+ */
+export const EXTRA_PROBES: [string, RegExp][] = [
+  ['رقمي 67 45 23 01 05', /67 45 23/],
+  ['call 5 0 1 2 3 4 5 6 7', /5 0 1 2 3/],
+  ['whatsapp 966 50 123 4567', /123 4567/],
+  ['966 501 234 567', /501 234/],
+  ['+966 501 234 567', /501 234/],
+  ['00966 50 123 4567', /123 4567/],
+  ['+44 7911 123456', /7911/],
+  ['my US number 555 123 4567', /555 123 4567/],
+  ['4567 123 050', /4567 123/],
+  ['card 4111 1111 1111 1111', /1111 1111/],
+  ['call0501234567', /0501234567/],
+  ['Order 0501234567', /0501234567/],
+  ['Tracking: 0501234567', /0501234567/],
+  ['Sizes 52 54 56, call 0501234567', /0501234567/],
+  ['Prices 450 / 650 / 950, my number 0551234567', /0551234567/],
+  ['٠٥٠١٢٣٤٥٦٧ على الواتس', /١٢٣٤/],
+  ['ali at hotmail', /hotmail/],
+  ['ali@outlook', /outlook/],
+  ['Call me on 0501234567, Maryam', /0501234567/],
+];
+
+/**
+ * The re-review's everyday texts (REVIEW-3, R3-1: js/ordinary.mts): messages, return details and cancellation
+ * reasons that must reach the other person untouched and unflagged, and that a shop page may say.
+ */
+export const EVERYDAY = [
+  'Order AM-104912-1 arrived, thank you',
+  'My orders 104912, 104913 both arrived',
+  'Orders 104912 and 104913',
+  'Return R-104912-1 and R-104912-2',
+  'Your tracking number is 7701234567890',
+  'Tracking: SMSA 290012345678',
+  'Thobe sizes 52 54 56 58 60',
+  'sizes 50, 52, 54, 56, 58',
+  'المقاسات ٥٢ ٥٤ ٥٦ ٥٨ ٦٠',
+  'Measurements chest/length/sleeve: 104/140/60/45',
+  'chest 104 cm, length 140 cm, sleeve 60 cm',
+  'Height 170 cm, weight 65 kg, shoe size 42',
+  'Total 1,250.00 + 30.00 delivery = 1,280.00 SAR',
+  'Prices: 450 / 650 / 950 SAR',
+  'Price SAR 1,250.00',
+  'From 31/10/2026 - 05/11/2026 we are closed',
+  'Dates 2026-10-31 to 2026-11-05',
+  'Pick up between 10:00-12:00 or 16:00-18:00',
+  'Surah Al-Baqarah 2:255',
+  'Booking number 4567-8901-2345 at the Pullman Zamzam',
+  'Hotel room 1204, floor 12, tower 3, check-in 2026-11-02',
+  'Product codes 10234 10235 10236',
+  'I bought 3 x 12 ml and 2 x 6 ml',
+  'I have one, two, three, four, five, six and seven kids',
+  'one or two bottles, maybe three',
+  'أريد ثلاث علب، وواحدة لأختي، خلال سبعة أيام',
+  'السعر ٤٥٠ ريال والتوصيل ٣٠ ريال',
+  'وصلت الطلبية رقم ١٠٤٩١٢ شكرا جزيلا',
+  'الطلبان ١٠٤٩١٢-١٠٤٩١٣ وصلا',
+  'We met at Outlook cafe',
+  'I bought it at Yahoo shopping years ago',
+  'I am @home all day',
+  'Lot 2024-11 batch 778899001',
+  'Gift card 4829 1734 5521',
+  'Model 2024, 2025 and 2026 editions',
+  '12 ml, 24 ml, 36 ml, 48 ml',
+  'Order 104912 (2 items) and order 104913 (1 item)',
+  'Call me Maryam please 🙂',
+  'Price 1450 SAR, was 1950 SAR, save 500',
+  '٢٠٢٦/١٠/٣١ - ٢٠٢٦/١١/٠٥',
+  '3 bottles × 450 = 1350 SAR',
+  'Delivery 2-3 days, returns 7-14 days',
+  // and the Arabic ones (js/arabic_fp.mts), with the direction marks people type around an English name
+  'المقاسات المتوفرة: ٥٢،٥٤،٥٦،٥٨،٦٠',
+  'المقاسات المتوفرة: ٥٢، ٥٤، ٥٦، ٥٨، ٦٠',
+  'الصدر ١٠٤ والطول ١٤٠ والكم ٦٠',
+  'القياسات: ١٠٤/١٤٠/٦٠/٤٥',
+  'طلبي رقم ١٠٤٩١٢ وطلب أختي ١٠٤٩١٣',
+  'الأسعار ٤٥٠ - ٦٥٠ - ٩٥٠ ريال',
+  'من ٣١/١٠ إلى ٥/١١',
+  'ست الحبايب، شكرًا على العطر 🌹',
+  'طلبت ‏Royal Oud‏ حجم ١٢ مل',
+];
+
+/** Listing descriptions with size charts and measurements (js/listing_fp.mts): never blocked as contact details. */
+export const LISTING_TEXTS = [
+  'Classic Saudi thobe in Japanese fabric. Available in sizes 52 54 56 58 60.',
+  'Size chart (chest/length): 104/140, 108/145, 112/150',
+  'Chest 104 / 108 / 112 / 116 cm',
+  'Prayer mat 70 x 110 cm, 1.2 kg. Colours: green, blue.',
+  'ثوب سعودي، المقاسات ٥٢ ٥٤ ٥٦ ٥٨ ٦٠',
+  'Pack of 3: 12 ml, 24 ml and 36 ml',
+  'Ajwa dates 500 g / 1 kg / 2 kg / 5 kg',
+  'Batch 2026-10 harvested 2026-09-15 / packed 2026-10-01',
+];
+
+/** Two messages in a row (js/split_fp.mts): ordinary pairs stay untouched; a phone number split across them is caught. */
+export const SPLIT_PAIRS: [string, string, boolean][] = [
+  ['My order number is 104912', '104913 is my sister\'s order', false],
+  ['It was delivered on 2026-10-30', '2026-10-31 I opened it', false],
+  ['Chest 104', '140 length please', false],
+  ['The price was 450', '650 for the bigger one', false],
+  ['my number is 05012', '34567 thanks', true],
+];
+
 /** Ordinary text: never masked or flagged. */
 export const ORDINARY = [
   'The 3 ml bottle arrived on 2026-10-30, thank you.',

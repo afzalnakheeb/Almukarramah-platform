@@ -55,27 +55,182 @@ alter table sellers
   add column profile_pending jsonb check (profile_pending is null or jsonb_typeof(profile_pending) = 'object'),
   add column profile_submitted_at timestamptz;
 
--- The first contact detail in a text ('phone', 'email', 'link', 'handle', 'messaging', 'bank', 'solicit'), or null.
--- The same rules as the server's contact.ts (review M3): invisible characters (zero-width, direction marks) are
+-- Numbers (review R3-1, REVIEW-3): the same rules as contact.ts (phoneShaped, classifyNumber), so the server and the
+-- database agree on every text. A run of digits is a phone number only when it looks like one: a trunk 0, 00 or +,
+-- a Gulf mobile without its 0, or a country code with that country's length; anything else of nine to fifteen digits
+-- only when it is written like one (one run, or up to four groups with the same separator), and never a list of sizes,
+-- measurements or prices, codes of the same length, a number after a word that says what it is (tracking, order,
+-- booking, size...), or one glued to letters. Dates, times and amounts never join a number.
+create or replace function private.phone_shaped(d text, plus boolean default false) returns boolean
+language sql immutable as $$
+  select case when plus then length(d) between 8 and 15
+    else d ~ ('^(0[0-9]{8,10}|5[0-9]{8}|00[0-9]{8,15}|966[0-9]{9}|971[0-9]{8,9}|96[58][0-9]{8}|97[34][0-9]{8}|962[0-9]{9}|961[0-9]{7,8}'
+              || '|964[0-9]{10}|963[0-9]{9}|967[0-9]{9}|970[0-9]{9}|20[0-9]{10}|21[23][0-9]{9}|216[0-9]{8}|218[0-9]{9}|249[0-9]{9}|44[0-9]{10}'
+              || '|1[0-9]{10}|9[12][0-9]{10}|880[0-9]{10}|90[0-9]{10}|60[0-9]{9,10}|62[0-9]{9,12}|63[0-9]{10}|234[0-9]{10}|254[0-9]{9}'
+              || '|27[0-9]{9}|33[0-9]{9}|49[0-9]{10,11}|7[0-9]{10}|86[0-9]{11})$') end;
+$$;
+
+create or replace function private.luhn_ok(d text) returns boolean
+language plpgsql immutable as $$
+declare
+  s int := 0;
+  x int;
+  n int := length(d);
+begin
+  if coalesce(d, '') !~ '^[0-9]+$' then return false; end if;
+  for i in 0 .. n - 1 loop
+    x := substr(d, n - i, 1)::int;
+    if i % 2 = 1 then x := x * 2; if x > 9 then x := x - 9; end if; end if;
+    s := s + x;
+  end loop;
+  return s % 10 = 0;
+end $$;
+
+create or replace function private.ean13_ok(d text) returns boolean
+language plpgsql immutable as $$
+declare s int := 0;
+begin
+  if coalesce(d, '') !~ '^[0-9]{13}$' then return false; end if;
+  for i in 1 .. 12 loop s := s + substr(d, i, 1)::int * case when i % 2 = 0 then 3 else 1 end; end loop;
+  return (10 - s % 10) % 10 = substr(d, 13, 1)::int;
+end $$;
+
+-- One run of digits: its groups and separators, a + before it, how many digits were written as digits (real) and as
+-- words, the text before it (lower case) and whether letters touch it. 'phone', 'bank', 'card' or null.
+create or replace function private.number_kind(g text[], seps text[], plus boolean, p_real int, p_words int, p_before text, glued boolean, rtl boolean default false) returns text
+language plpgsql immutable as $$
+declare
+  d text := array_to_string(g, '');
+  n int := length(d);
+  ng int := coalesce(array_length(g, 1), 0);
+  bank boolean;
+  lst boolean;
+  rev text := '';
+  back boolean := false;
+  shaped boolean;
+  anchored boolean;
+  lens text;
+  kinds text[];
+  anchor constant text := '^(0|96[5-8]|97[134])';
+  carriers constant text := 'smsa|aramex|dhl|fedex|ups|naqel|spl|zajil|ajex|imile';
+  code_words constant text := 'isbn|ean|gtin|barcode|sku|upc|ref|reference|model|batch|lot|serial|codes?|items?|orders?|invoices?|inv|receipt|tracking|track|awb'
+    || '|waybill|shipments?|parcels?|bookings?|reservations?|confirmation|voucher|coupon|discount|promo|gift\s*card|card|room|sizes?|chest|length|sleeve'
+    || '|measurements?|prices?|total|sar|sr|riyals?|ml|cm|kg'
+    || '|باركود|الباركود|الدفعة|دفعة|الطلب|طلب|طلبي|الطلبية|طلبية|الطلبات|طلبات|طلباتي|الطلبان|الطلبين|الفاتورة|فاتورة|الشحنة|شحنة|الشحنات|التتبع|تتبع'
+    || '|الحجز|حجز|الكود|كود|الرمز|رمز|الخصم|خصم|الكوبون|كوبون|المقاس|مقاس|المقاسات|مقاسات|القياس|قياس|القياسات|قياسات|السعر|سعر|الاسعار|اسعار|ريال|الغرفة|غرفة|القسيمة|قسيمة|البطاقة|بطاقة';
+begin
+  if p_words >= 7 and n >= 7 then return 'phone'; end if;                       -- a number spelled out
+  if n < 9 or (p_real < 6 and p_words < 7) then return null; end if;
+  bank := right(p_before, 20) ~* '(iban|account|acct|a/c|ايبان|حساب|الحساب)[^0-9]{0,14}$';
+  if n > 15 then
+    -- an account number, two phone numbers run together, or a card number
+    if bank then return 'bank'; end if;
+    for k in 9 .. n - 9 loop
+      if private.phone_shaped(left(d, k), plus) and private.phone_shaped(substr(d, k + 1)) then return 'phone'; end if;
+    end loop;
+    lens := array_to_string(array(select length(x) from unnest(g) x), ',');
+    if n <= 19 and private.luhn_ok(d) and (ng = 1 or lens ~ '^4(,4)*$' or lens in ('4,6,5', '4,6,4')) then return 'card'; end if;
+    return null;
+  end if;
+  lst := ng >= 3 and not exists (select 1 from unnest(g) x where length(x) not between 2 and 3)
+         and not exists (select 1 from unnest(seps) x where x !~ '^[\s,،/–—+|;-]+$');
+  -- a right-to-left line (Arabic) shows groups in reverse order: "67 45 23 01 05" reads 05 01 23 45 67; read that way
+  -- only when it then starts like a phone number (0, 00, a Gulf code)
+  if rtl and ng >= 2 then rev := array_to_string(array(select x from unnest(g) with ordinality u(x, i) order by i desc), ''); end if;
+  back := rev <> '' and rev ~ anchor and private.phone_shaped(rev);
+  shaped := (private.phone_shaped(d, plus) and (plus or d ~ anchor or not lst)) or back;
+  if shaped then
+    anchored := plus or d ~ anchor or back;
+    if not anchored and (p_before ~* '(isbn|ean|gtin|barcode|sku|upc|باركود|الرقم الدولي)[\s:#.-]*$' or (n = 13 and private.ean13_ok(d))
+                         or (not plus and d ~ '^97[89][0-9]{10}$')) then
+      return null;                                                               -- a barcode, an ISBN
+    end if;
+    return case when bank then 'bank' else 'phone' end;
+  end if;
+  if lst then return null; end if;                                               -- sizes, measurements, prices
+  if ng >= 2 and length(g[1]) >= 5 and not exists (select 1 from unnest(g) x where length(x) <> length(g[1])) then return null; end if;   -- codes
+  if glued or p_before ~* ('(^|[^a-zء-ي])(' || code_words || '|' || carriers || ')([\s:#.-]*(number|num|no|nos|is|are|رقم|رقمه|رقمها|هو|هي)(?![a-zء-ي]))*'
+                         || '[\s:#.-]*((' || carriers || ')[\s:#.-]*)?$') then
+    return null;                                                                 -- a tracking number, a code
+  end if;
+  kinds := array(select coalesce(nullif(regexp_replace(x, '\s+', '', 'g'), ''), ' ') from unnest(seps) x);
+  if ng > 4 or exists (select 1 from unnest(kinds) x where x <> kinds[1]) then return null; end if;   -- not written like a phone number
+  if n = 13 and private.ean13_ok(d) then return null; end if;
+  return case when bank then 'bank' else 'phone' end;
+end $$;
+
+-- The numbers of a normalised text (digits 0-9; digits written as words are ٠-٩ here, so they can be counted):
+-- the first that is a phone, a bank account or a card number, or null.
+create or replace function private.number_hint(p text) returns text
+language plpgsql immutable as $$
+declare
+  t text := p;
+  letter constant text := 'a-zÀ-ɏͰ-ԯ֐-׿ؠ-يٮ-ۓەۺ-ۿ';
+  dg constant text := '0-9٠-٩';
+  after_ constant text := '(?![0-9])(?![.,٫:/][0-9])';
+  before_ constant text := '(?<![0-9])(?<![0-9][.,٫:/])';
+  m text;
+  core text;
+  g text[];
+  seps text[];
+  plus boolean;
+  off int := 1;
+  st int;
+  en int;
+  k text;
+  ctx text;
+  glued boolean;
+begin
+  -- dates (a four-digit year), times and amounts (decimals or thousands) never join a number
+  t := regexp_replace(t, before_ || '(?:(?:19|20)[0-9]{2}([-/.])(?:0?[1-9]|1[0-2])\1(?:0?[1-9]|[12][0-9]|3[01])|(?:0?[1-9]|[12][0-9]|3[01])([-/.])'
+                         || '(?:0?[1-9]|1[0-2])\2(?:19|20)[0-9]{2}|(?:0?[1-9]|1[0-2])([-/.])(?:0?[1-9]|[12][0-9]|3[01])\3(?:19|20)[0-9]{2})' || after_, 'q', 'g');
+  t := regexp_replace(t, before_ || '(?:[01]?[0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?' || after_, 'q', 'g');
+  t := regexp_replace(t, before_ || '(?:[1-9][0-9]{0,2},[0-9]{3}(?:[.٫][0-9]{1,2})?|(?:[1-9][0-9]{0,5}|0)[.٫][0-9]{1,2})' || after_, 'q', 'g');
+  -- a comma and a space (a list: "sizes 50, 52, 54", "size 56, 12 ml") join only groups of three digits or more
+  t := regexp_replace(t, '(?<![' || dg || '])([' || dg || ']{1,2})\s*[,،]\s+(?=[' || dg || '])', '\1 x ', 'g');
+  t := regexp_replace(t, '([' || dg || '])\s*[,،]\s+(?=[' || dg || ']{1,2}(?![' || dg || ']))', '\1 x ', 'g');
+  -- digits with up to four non-letters between them
+  for m in select x[1] from regexp_matches(t, '(\+?[' || dg || '](?:[^' || letter || dg || ']{0,4}[' || dg || '])*)', 'g') as x loop
+    st := strpos(substr(t, off), m) + off - 1;
+    en := st + length(m);
+    off := en;
+    plus := left(m, 1) = '+';
+    core := case when plus then substr(m, 2) else m end;
+    g := regexp_split_to_array(core, '[^' || dg || ']+');
+    seps := coalesce(array(select y[1] from regexp_matches(core, '([^' || dg || ']+)', 'g') y), '{}');
+    glued := (st > 1 and substr(t, st - 1, 1) ~ ('[' || letter || ']')) or (en <= length(t) and substr(t, en, 1) ~ ('[' || letter || ']'));
+    ctx := translate(lower(substr(t, greatest(1, st - 40), st - greatest(1, st - 40))), '٠١٢٣٤٥٦٧٨٩', '0123456789');
+    k := private.number_kind(array(select translate(x, '٠١٢٣٤٥٦٧٨٩', '0123456789') from unnest(g) x), seps, plus,
+                             length(regexp_replace(core, '[^0-9]', '', 'g')), length(regexp_replace(core, '[^٠-٩]', '', 'g')), ctx, glued,
+                             t ~ '[\u0621-\u064A]');
+    if k is not null then return k; end if;
+  end loop;
+  return null;
+end $$;
+-- (pure functions without side effects: the shop page guard runs them as the person editing it, like contact_hint)
+
+-- The first contact detail in a text ('phone', 'email', 'link', 'handle', 'messaging', 'bank', 'card', 'solicit'), or null.
+-- The same rules as the server's contact.ts (review M3, R3-1): invisible characters (zero-width, direction marks) are
 -- dropped; look-alike forms made plain (NFKC: full-width, mathematical, circled and superscript digits and letters);
 -- every digit system made 0-9; Arabic marks dropped and alef forms made plain; number words made digits; o and l
--- between digits read as 0 and 1. Then: nine or more digits with anything but letters between them (several numbers
--- run together, or an account number, count too); emails however the @ and the dots are written; links; handles
--- (also "ig:@name"); messaging apps (also spaced out, or a short name with a marked handle: "snap: name"); IBANs and
--- invitations to deal or pay outside Al Mukarramah, in English and Arabic.
+-- between digits read as 0 and 1. Then: numbers (private.number_hint); emails however the @ and the dots are written;
+-- links; handles (also "ig:@name", not "@home"); messaging apps (also spaced out, or a short name with a marked handle:
+-- "snap: name"); IBANs and invitations to deal or pay outside Al Mukarramah, in English and Arabic ("call me Maryam"
+-- gives a name: not one).
 create or replace function private.contact_hint(p text) returns text
 language plpgsql immutable set search_path = public as $$
 declare
   t text;
+  tn text;
   cam text;
   squeezed text;
-  m text;
+  hint text;
   n int;
-  w text[];
-  letter constant text := 'a-z\u00C0-\u024F\u0370-\u052F\u0590-\u05FF\u0620-\u064A\u066E-\u06D3\u06D5\u06FA-\u06FF';
+  letter constant text := 'a-zÀ-ɏͰ-ԯ֐-׿ؠ-يٮ-ۓەۺ-ۿ';
   tld constant text := '(com|net|org|sa|ae|kw|qa|om|bh|in|co|io|me|shop|store|info|biz|ly|gl|link|site|online|app|uk|us|pk|eg|tr|my|id|tv|page|website|ru|de|fr)';
   at_ constant text := '(@|\(at\)|\[at\]|\{at\}|<at>)';
   dot_ constant text := '(\.|\(dot\)|\[dot\]|\{dot\}|<dot>|\s+dot\s+)';
+  providers constant text := '(gmail|googlemail|hotmail|yahoo|ymail|outlook|icloud|aol|protonmail|proton|yandex|zoho|gmx)';
   words constant text[] := array['zero', '0', 'oh', '0', 'one', '1', 'two', '2', 'three', '3', 'four', '4', 'five', '5', 'six', '6', 'seven', '7',
     'eight', '8', 'nine', '9', 'صفر', '0', 'واحد', '1', 'اثنان', '2', 'اثنين', '2', 'اثنتان', '2', 'ثلاثة', '3', 'ثلاث', '3', 'اربعة', '4', 'اربع', '4',
     'خمسة', '5', 'خمس', '5', 'ستة', '6', 'ست', '6', 'سبعة', '7', 'سبع', '7', 'ثمانية', '8', 'ثماني', '8', 'ثمان', '8', 'تسعة', '9', 'تسع', '9'];
@@ -88,42 +243,45 @@ begin
   t := translate(t, 'أإآٱى', 'ااااي');
   cam := t;
   t := lower(t);
+  tn := t;
+  -- number words become digits (for the numbers, as ٠-٩: digits written as words are counted apart)
   for n in 1 .. array_length(words, 1) / 2 loop
     t := regexp_replace(t, '(^|[^' || letter || '])' || words[2 * n - 1] || '(?=[^' || letter || ']|$)', '\1' || words[2 * n], 'g');
+    tn := regexp_replace(tn, '(^|[^' || letter || '])' || words[2 * n - 1] || '(?=[^' || letter || ']|$)', '\1' || translate(words[2 * n], '0123456789', '٠١٢٣٤٥٦٧٨٩'), 'g');
   end loop;
   for n in 1 .. 3 loop
     t := regexp_replace(t, '(?<=[0-9])[oq](?=[oqil|]*[0-9])', '0', 'g');
     t := regexp_replace(t, '(?<=[0-9])[il|](?=[0il|]*[0-9])', '1', 'g');
+    tn := regexp_replace(tn, '(?<=[0-9٠-٩])[oq](?=[oqil|]*[0-9٠-٩])', '0', 'g');
+    tn := regexp_replace(tn, '(?<=[0-9٠-٩])[il|](?=[0il|]*[0-9٠-٩])', '1', 'g');
   end loop;
-  -- a comma and a space (a list: "sizes 50, 52, 54", "size 56, 12 ml") join only groups of three digits or more
-  t := regexp_replace(t, '(?<![0-9])([0-9]{1,2})\s*[,،]\s+(?=[0-9])', '\1 x ', 'g');
-  t := regexp_replace(t, '([0-9])\s*[,،]\s+(?=[0-9]{1,2}(?![0-9]))', '\1 x ', 'g');
-  -- numbers: digits with up to four non-letters between them
-  for m in select x[1] from regexp_matches(t, '(\+?[0-9](?:[^' || letter || '0-9]{0,4}[0-9])+)', 'g') as x loop
-    n := length(regexp_replace(m, '[^0-9]', '', 'g'));
-    continue when n < 9;
-    if n <= 15 then
-      continue when regexp_replace(m, '[^0-9]', '', 'g') ~ '^97[89][0-9]{10}$' and m !~ '^\+';    -- an ISBN-13
-      return 'phone';
-    end if;
-    return case when t ~ '(iban|account|acct|ايبان|حساب)' then 'bank' else 'phone' end;   -- several numbers together, or an account
-  end loop;
-  -- emails
+  hint := private.number_hint(tn);
+  if hint is not null then return hint; end if;
+  -- emails ("ali at outlook" only at the end of a phrase: "we met at Outlook cafe" is not one)
   if t ~ '[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}'
      or t ~ ('[a-z0-9._%+-]{2,}\s*' || at_ || '\s*[a-z0-9-]{2,}(\s*' || dot_ || '\s*[a-z0-9-]{2,})*?\s*' || dot_ || '\s*' || tld || '(?![a-z])')
      or t ~ ('[a-z0-9._%+-]{2,}\s+at\s+[a-z0-9-]{2,}\s*(\(dot\)|\[dot\]|\{dot\}|<dot>|\s+dot\s+)\s*' || tld || '(?![a-z])')
-     or t ~ ('[a-z0-9._%+-]{2,}\s*(' || at_ || '|\s+at\s+)\s*(gmail|googlemail|hotmail|yahoo|ymail|outlook|icloud|aol|protonmail|proton|yandex|zoho|gmx)(?![a-z])')
+     or t ~ ('[a-z0-9._%+-]{2,}\s*' || at_ || '\s*' || providers || '(?![a-z])')
+     or t ~ '[a-z0-9._%+-]{2,}\s+at\s+(gmail|googlemail|hotmail|ymail|icloud|protonmail)(?![a-z])'
+     or t ~ ('[a-z0-9._%+-]{2,}\s+at\s+' || providers || '(?=\s*($|[.,;:!?)\]،؟]))')
      or cam ~ ('[a-z0-9._-]{2,}AT[a-z0-9-]{2,}DOT' || tld || '(?![a-z])') then
     return 'email';
   end if;
   if t ~ '(https?://|www\.|wa\.me|t\.me/)' or t ~ ('\m[a-z0-9-]{2,}\.' || tld || '\M') then return 'link'; end if;
-  if t ~ '(^|[^a-z0-9._%+-])@[a-z0-9_.]{3,30}' then return 'handle'; end if;
+  if t ~ '(^|[^a-z0-9._%+-])@(?!(home|work|school|office|night|noon|gym|mall|mosque|masjid|haram|hotel|airport|beach|park|the|all|once|least|most|last|first|here|there)(?![a-z0-9_.]))[a-z0-9_.]{3,30}' then
+    return 'handle';
+  end if;
   if t ~ '(^|[^a-z])(ig|snap|tg|fb)\s*[:/@]+\s*[a-z0-9_.]{3,30}' then return 'handle'; end if;
   squeezed := regexp_replace(t, '[\s._*·•/|\\-]', '', 'g');
   if squeezed ~ '(whatsapp|watsapp|whatsap|telegram|instagram|insta|snapchat|tiktok|facebook|twitter|wechat|viber|واتساب|واتس|وتساب|تلغرام|تلجرام|تليجرام|انستقرام|انستغرام|انستا|سناب|تيكتوك|فيسبوك|تويتر)' then
     return 'messaging';
   end if;
-  if squeezed ~ '(sa|ae|kw|qa|om|bh|gb|de|fr|nl|in|pk|eg|tr)[0-9]{2}[0-9a-z]{10,30}' and squeezed ~ '[0-9]{10}' then return 'bank'; end if;
+  -- an IBAN as a word of its own (not "SMSA 29...", not "from 31..."), as contact.ts's IBAN_RE; spaced out letters
+  -- ("S A 0 3 8 ...") are a long number after "IBAN" (number_hint)
+  hint := substring(t from '\m(?:sa|ae|kw|qa|om|bh|gb|de|fr|nl|be|ie|es|it|in|pk|eg|tr|jo|lb)[0-9]{2}(?:[ -]?[0-9a-z]){10,30}\M');
+  if hint is not null and length(regexp_replace(hint, '[^0-9]', '', 'g')) >= 10 then return 'bank'; end if;
+  -- invitations ("call me Maryam" gives a name: left out)
+  t := lower(regexp_replace(cam, '\m[Cc]all\s+(?:[Mm]e|[Uu]s)\s+(?!(?:On|At|Via|WhatsApp|Whatsapp|Telegram|Back|Now|Later|Today|Tomorrow)\M)([A-Z][a-z])', ' \1', 'g'));
   if t ~ ('((contact|call|text|message|dm|whatsapp|ring|reach)\s+(me|us)\M|\m(order|buy|pay)\s+(directly|outside)|direct\s+(order|sale|contact)|(bank|wire)\s+transfer'
           || '|\mpay\s+(me|us)\s+(by|via|with|through)\M|\m(transfer|send)\s+(the\s+)?(money|payment|amount)\s+(to\s+)?(me|us|my|our)\M'
           || '|\m(send|give|share|text)\s+(me|us)\s+(your\s+)?(number|phone|mobile|whats\s?app|email|e-mail|contact|details)\M'

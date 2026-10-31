@@ -4,15 +4,18 @@
 //   handed on and stock taken, once (mp_order_paid only moves sub-orders still waiting for payment);
 // * paid orders with no ZATCA tax invoice: issued (once per order; the counter never skips a number);
 // * refunds with no credit note: issued from the order's invoice;
-// * refunds still waiting for Moyasar's answer: reconciled with Moyasar (never marked failed on a guess).
+// * refunds still waiting for Moyasar's answer: reconciled with Moyasar (never marked failed on a guess);
+// * orders with a refund marked failed in the last three days: Moyasar is asked again whether it completed it after
+//   all (at most hourly); what it shows is listed for finance on the refunds page, never recorded on a guess (R3-2).
 // What cannot be finished (a multi-rate order, Moyasar unreachable, a refund made outside the platform) stays on the
 // dashboard with the reason in the answer.
+import { getPayment } from '../_shared/moyasar.ts';
 import { graceMinutes, reconcileRefund } from '../_shared/refunds.ts';
 import { admin, caller, cronAuthorized, fail, handle, json, staffRole } from '../_shared/util.ts';
 import { ensureInvoice, issueCreditNote } from '../_shared/zatca.ts';
 
 type Work = { orders_without_invoice: string[]; orders_not_handed_on: string[]; credit_notes: string[]; refunds_processing: string[];
-  orders_without_invoice_old?: string[]; payment_issues?: string[] };
+  orders_without_invoice_old?: string[]; payment_issues?: string[]; orders_to_check?: string[] };
 
 Deno.serve(handle(async (req) => {
   const db = admin();
@@ -55,6 +58,17 @@ Deno.serve(handle(async (req) => {
       (r.state === 'succeeded' || r.state === 'failed' ? done.refunds : done.left).push(r);
     } catch (e) {
       done.left.push({ refund: id, step: 'reconcile', error: String((e as Error).message ?? e) });
+    }
+  }
+  for (const id of w.orders_to_check ?? []) {
+    const { data: o } = await db.from('orders').select('payment_id, refunded_minor').eq('id', id).maybeSingle();
+    if (!o?.payment_id) continue;
+    try {
+      const refunded = Number((await getPayment(o.payment_id)).refunded ?? 0);
+      await db.rpc('mp_note_moyasar_refunded', { p_order: id, p_refunded: refunded });
+      if (refunded > Number(o.refunded_minor ?? 0)) done.left.push({ order: id, step: 'refund in Moyasar not recorded', error: 'for finance: record it on the refunds page' });
+    } catch (e) {
+      done.left.push({ order: id, step: 'check with Moyasar', error: String((e as Error).message ?? e) });
     }
   }
   // what only our team can settle, listed every time until it is (review N2, N5): an old or refunded order without its

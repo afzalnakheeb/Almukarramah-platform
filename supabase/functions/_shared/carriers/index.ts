@@ -6,7 +6,7 @@ import { sandboxAdapter } from './sandbox.ts';
 import { NotConnected, type CarrierAdapter } from './types.ts';
 
 export type { CarrierAdapter } from './types.ts';
-export { NotConnected } from './types.ts';
+export { CarrierError, definiteRefusal, NotConnected } from './types.ts';
 
 type Env = (name: string) => string | undefined;
 const registry = new Map<string, (env: Env) => CarrierAdapter>([

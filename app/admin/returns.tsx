@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Image, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { Seo } from '@/components/seo';
-import { CheckWithMoyasar, FinishPendingButton, issueLabel, PaymentIssueRow, RefundButton, SettleByHand } from '@/components/admin-refund';
+import { CheckWithMoyasar, FinishPendingButton, issueLabel, PaymentIssueRow, RefundButton, SettleByHand, UnrecordedRow } from '@/components/admin-refund';
 import { Button, Card, Chip, Field, H1, Notice, T, Tag, useWide } from '@/components/ui';
 import { adminPaymentIssues, adminRefundQueue, adminReturns, customerPhotoUrls, returnAction, type PaymentIssue, type RefundQueue, type ReturnRequest, type ReturnStatus } from '@/lib/aftersale';
 import { MARKET_DEMO } from '@/lib/flags';
@@ -132,6 +132,17 @@ export default function AdminReturns() {
                   <T size={14}>AM-{f.order_number}: {formatMoney(f.amount_minor, f.currency)} since {day(f.created_at)}{f.error ? ` (${f.error})` : ''}</T>
                   <CheckWithMoyasar refundId={f.id} onDone={load} />
                   <SettleByHand refundId={f.id} onDone={load} />
+                </Card>
+              ))}
+            </>
+          ) : null}
+          {queue.unrecorded?.length ? (
+            <>
+              <T w={700} size={17}>Refunds in Moyasar we have not recorded</T>
+              <T size={13} color={colors.muted}>Moyasar shows money refunded on these payments that is not in our records: made in its dashboard, or a refund marked failed that Moyasar completed later. Record each one (finance), so it gets its credit note and the order can be refunded again.</T>
+              {queue.unrecorded.map((u) => (
+                <Card key={u.order_id} pad={14} style={{ gap: 6 }}>
+                  <UnrecordedRow u={u} onDone={load} />
                 </Card>
               ))}
             </>

@@ -225,7 +225,7 @@ create table payment_issues (
   id uuid primary key default gen_random_uuid(),
   payment_id text not null unique check (char_length(payment_id) between 1 and 200),
   order_id uuid references orders on delete set null,
-  kind text not null check (kind in ('order_not_waiting', 'second_payment', 'amount_mismatch')),
+  kind text not null check (kind in ('order_not_waiting', 'second_payment', 'amount_mismatch', 'order_not_found')),
   amount_minor bigint not null check (amount_minor >= 0),
   currency text not null check (char_length(currency) = 3),
   status text not null default 'open' check (status in ('open', 'refund_pending', 'refunded', 'attached', 'dismissed')),
@@ -258,7 +258,19 @@ begin
   order by (payment_ref is not distinct from p ->> 'invoice_id') desc
   limit 1
   for update;
-  if o.id is null then return jsonb_build_object('found', false); end if;
+  if o.id is null then
+    -- a payment whose order no longer exists (an unpaid order removed, then its payment page paid): kept for our
+    -- team to refund, never dropped (review R3-4, REVIEW-3)
+    insert into payment_issues (payment_id, order_id, kind, amount_minor, currency)
+    values (p ->> 'id', null, 'order_not_found', coalesce((p ->> 'amount')::bigint, 0), coalesce(nullif(p ->> 'currency', ''), 'SAR'))
+    on conflict (payment_id) do nothing;
+    if found then
+      insert into audit_log (actor_label, table_name, row_id, action, new_data)
+      values ('moyasar-webhook', 'payment_issues', p ->> 'id', 'STRAY_PAYMENT',
+              jsonb_build_object('payment_id', p ->> 'id', 'amount', p -> 'amount', 'currency', p ->> 'currency', 'order_id', p ->> 'order_id', 'order', 'not found'));
+    end if;
+    return jsonb_build_object('found', false, 'applied', false, 'stray', true);
+  end if;
   if o.status <> 'pending_payment' then
     -- the same payment again (a retry or a duplicate delivery): nothing changes
     if o.payment_id is not distinct from p ->> 'id' then
@@ -290,7 +302,12 @@ begin
   update orders set status = 'paid', payment_id = p ->> 'id', paid_at = now(), updated_at = now() where id = o.id;
   r := mp_order_paid(o.id);
   if o.kind = 'subscription' and o.subscription_id is not null then
-    update subscriptions set status = 'active', current_period_end = now() + interval '1 month', moyasar_token = nullif(p ->> 'token', ''), updated_at = now()
+    -- a renewal (charge-subscriptions' order, charge_given_id) follows the paid period; a first payment starts now.
+    -- The saved card stays unless the payment brings a new one, and a cancellation made meanwhile stands: the paid
+    -- month runs, and the next renewal is not charged (review R3-6, REVIEW-3)
+    update subscriptions set status = 'active',
+      current_period_end = case when o.charge_given_id is not null then coalesce(current_period_end, now()) + interval '1 month' else now() + interval '1 month' end,
+      moyasar_token = coalesce(nullif(p ->> 'token', ''), moyasar_token), updated_at = now()
     where id = o.subscription_id;
   end if;
   return jsonb_build_object('found', true, 'order_id', o.id, 'applied', true, 'sub_orders', coalesce((r ->> 'sub_orders')::int, 0));
@@ -420,7 +437,9 @@ create table shipment_claims (
   sub_order_id uuid primary key references sub_orders on delete cascade,
   idempotency_key text not null check (idempotency_key ~ '^[A-Za-z0-9_-]{8,80}$'),
   claimed_by uuid references auth.users on delete set null,
-  claimed_at timestamptz not null default now()
+  claimed_at timestamptz not null default now(),
+  -- buying: a request is asking the carrier; unknown: the carrier's answer was lost (it may have sold the label)
+  state text not null default 'buying' check (state in ('buying', 'unknown'))
 );
 alter table shipment_claims enable row level security;
 
@@ -437,19 +456,31 @@ begin
   if c.sub_order_id is null then
     insert into shipment_claims (sub_order_id, idempotency_key, claimed_by) values (p_sub, p_key, p_user);
   elsif c.idempotency_key = p_key then
-    update shipment_claims set claimed_at = now() where sub_order_id = p_sub;
-  elsif c.claimed_at < now() - interval '10 minutes' then
-    update shipment_claims set idempotency_key = p_key, claimed_by = p_user, claimed_at = now() where sub_order_id = p_sub;
+    update shipment_claims set claimed_at = now(), state = 'buying' where sub_order_id = p_sub;
+  elsif c.state = 'unknown' or c.claimed_at < now() - interval '10 minutes' then
+    -- the last purchase's outcome is unknown (its answer was lost, or the request never finished): the carrier is asked
+    -- again with THAT key, and answers with the label if it sold one, so a second label is never bought (review R3-5)
+    update shipment_claims set claimed_by = p_user, claimed_at = now(), state = 'buying' where sub_order_id = p_sub;
+    return jsonb_build_object('ok', true, 'key', c.idempotency_key, 'reused', true);
   else
     return jsonb_build_object('ok', false, 'reason', 'in_progress');
   end if;
-  return jsonb_build_object('ok', true);
+  return jsonb_build_object('ok', true, 'key', p_key);
 end $$;
+
+-- The carrier did not answer (a timeout, a 5xx): the claim stays, marked unknown, so the next press asks again with
+-- the same key; only a definite refusal releases it (mp_release_shipment_claim).
+create or replace function mp_shipment_claim_unknown(p_sub uuid, p_key text) returns void
+language sql security definer set search_path = public as $$
+  update shipment_claims set state = 'unknown' where sub_order_id = p_sub and idempotency_key = p_key;
+$$;
+revoke all on function mp_shipment_claim_unknown(uuid, text) from public, anon, authenticated;
 
 create or replace function mp_release_shipment_claim(p_sub uuid, p_key text) returns void
 language sql security definer set search_path = public as $$
   delete from shipment_claims where sub_order_id = p_sub and idempotency_key = p_key;
 $$;
+
 revoke all on function mp_claim_shipment(uuid, text, uuid) from public, anon, authenticated;
 revoke all on function mp_release_shipment_claim(uuid, text) from public, anon, authenticated;
 

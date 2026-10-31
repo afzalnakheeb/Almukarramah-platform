@@ -155,7 +155,7 @@ type CreditNoteContext = {
   refund: {
     id: string; status: string; reason: string; platform_minor: number; credit_note_status: string; credit_note: string | null;
     order: { id: string; number: number; currency: string; ship_to: OrderForInvoice['ship_to'] };
-    lines: { kind: 'item' | 'shipping' | 'duties'; quantity: number | null; amount_minor: number; vat_rate_bp: number | null; platform_invoiced: boolean;
+    lines: { kind: 'item' | 'shipping' | 'duties' | 'goodwill'; quantity: number | null; amount_minor: number; vat_rate_bp: number | null; platform_invoiced: boolean;
              name_en: string | null; name_ar: string | null; unit_price_minor: number | null }[];
   };
   original: OriginalInvoice | null;
@@ -176,10 +176,16 @@ export async function issueCreditNote(db: Db, refundId: string): Promise<{ id: s
   const forNote: OrderForInvoice = {
     id: f.order.id, number: f.order.number, currency: f.order.currency, ship_to: f.order.ship_to, total_minor: f.platform_minor,
     shipping_minor: ours.filter((l) => l.kind === 'shipping').reduce((n, l) => n + l.amount_minor, 0),
-    order_items: ours.filter((l) => l.kind === 'item').map((l) => ({
-      name_en: l.name_en ?? 'Item', name_ar: l.name_ar ?? 'منتج', unit_price_minor: l.unit_price_minor ?? l.amount_minor,
-      quantity: l.quantity ?? 1, line_total_minor: l.amount_minor, vat_rate_bp: l.vat_rate_bp,
-    })),
+    order_items: [
+      ...ours.filter((l) => l.kind === 'item').map((l) => ({
+        name_en: l.name_en ?? 'Item', name_ar: l.name_ar ?? 'منتج', unit_price_minor: l.unit_price_minor ?? l.amount_minor,
+        quantity: l.quantity ?? 1, line_total_minor: l.amount_minor, vat_rate_bp: l.vat_rate_bp,
+      })),
+      // money given back without items coming back (goodwill, or a refund Moyasar made twice): a reduction of the price
+      ...ours.filter((l) => l.kind === 'goodwill').map((l) => ({
+        name_en: 'Price reduction (refund)', name_ar: 'تخفيض في السعر (استرداد)', unit_price_minor: l.amount_minor, quantity: 1, line_total_minor: l.amount_minor, vat_rate_bp: null,
+      })),
+    ],
     fx_per_sar: c.order_fx_per_sar,
   };
   return issueInvoice(db, forNote, { doc: 'credit_note', original: c.original, refundId: f.id, reason: f.reason || 'Refund' });

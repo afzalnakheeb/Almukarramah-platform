@@ -39,6 +39,26 @@ export interface CarrierAdapter {
   parseWebhook(rawBody: string): { tracking_number: string; events: TrackingEvent[] }[];
 }
 
+/**
+ * A carrier's failure. definite: the carrier answered and refused (a 4xx: the address, the weight), so nothing was
+ * bought; otherwise (a timeout, a dropped connection, a 5xx) the label may have been sold and the answer lost
+ * (review R3-5). Adapters throw it for refusals; anything else thrown counts as unknown.
+ */
+export class CarrierError extends Error {
+  readonly definite: boolean;
+  readonly status: number | null;
+  constructor(message: string, definite: boolean, status: number | null = null) {
+    super(message);
+    this.name = 'CarrierError';
+    this.definite = definite;
+    this.status = status;
+  }
+}
+/** Whether a carrier failure is a definite refusal (nothing bought): CarrierError, NotConnected, or an object that says so. */
+export function definiteRefusal(e: unknown): boolean {
+  return e instanceof NotConnected || (typeof e === 'object' && e !== null && (e as { definite?: unknown }).definite === true);
+}
+
 export class NotConnected extends Error {
   constructor(provider: string) {
     super(`${provider} is not connected yet (see docs/marketplace/SWITCH-ON.md)`);

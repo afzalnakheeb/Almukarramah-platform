@@ -33,7 +33,8 @@ Deno.serve(async (req) => {
   // nothing was changed: Moyasar retries, and the retry does it all
   if (error) return json({ error: error.message }, 500);
   const r = data as { found: boolean; order_id?: string; applied?: boolean; status?: string; mismatch?: boolean; second_payment?: boolean; stray?: boolean };
-  if (!r.found) return json({ error: 'order not found' }, 404);
+  // a payment whose order no longer exists: kept for our team (payment_issues), so Moyasar need not send it again (R3-4)
+  if (!r.found) return r.stray ? json({ ok: true, applied: false, stray: true, order: 'not found' }) : json({ error: 'order not found' }, 404);
   if (r.mismatch) {
     // recorded for our team (payment_issues): refunded or settled from the dashboard
     console.error('Amount mismatch', payment.id, r.order_id);

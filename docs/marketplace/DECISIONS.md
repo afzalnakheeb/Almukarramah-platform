@@ -26,6 +26,16 @@ The re-review (REVIEW-2) led to these choices. Each is the conservative one; say
 | Q | **A shop's city** is checked and, on a live shop, waits for our team's approval like the other shop text. **A shop's website** is not shown to the public. | Both appear on the public shop page; a website takes customers away from Al Mukarramah. | Say if the website should be shown (we would check and hold it like the text). |
 | R | **Seller details for staff**: notes, legal, registration and tax numbers, KYC notes and contact details are for owner, manager and finance; marketing, support and operations see the rest. | They have no need for them (re-review N11). | Name a role that should see them. |
 
+## Chosen in the third fix pass (please confirm)
+
+| # | Choice | Why | To change it |
+|---|---|---|---|
+| S | **A refund made in the Moyasar dashboard** is recorded by finance on `/admin/returns` (amount, Moyasar's reference, what it was for), never more than Moyasar shows. Until it is, no new refund can be made on that order. | Our records, the credit notes and the sellers' statements must match Moyasar (review R3-2). | Avoid refunding in the dashboard: refund from `/admin/returns`. |
+| T | **Goodwill, and a refund Moyasar made twice**, are borne by Al Mukarramah: they are not taken from the seller's statement. | The seller did nothing wrong. | Finance can add a statement adjustment with a reason for a case where the seller should bear it. |
+| U | **Refunds marked failed** are checked with Moyasar again for three days (at most hourly). What Moyasar shows is listed for finance; nothing is recorded automatically. | A refund can complete late at Moyasar. | Tell us a longer or shorter window. |
+| V | **A renewal paid after the customer cancelled**: the paid month runs, then the subscription ends; nothing more is charged and nothing is refunded automatically. | The customer paid for that month. | Say if such a renewal should be refunded instead. |
+| W | **Card numbers typed into messages** are masked, like phone numbers. | Card data never touches our database (rule 2). | Nothing to decide. |
+
 | # | Decision | Default now | To change it |
 |---|---|---|---|
 | A | **Open the marketplace** to the public: sellers' listings and shop pages, marketplace checkout, online returns, reviews and messages. | Off (`marketplace_open = false`). The public sees only our own products, as today. | After the steps in SWITCH-ON.md: `update mp_settings set marketplace_open = true where id = 1;` |

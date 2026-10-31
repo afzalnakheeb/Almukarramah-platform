@@ -20,6 +20,7 @@ const QUEUES: { key: keyof Overview['queues']; label: string; href: Href; urgent
   { key: 'disputes', label: 'Disputes to decide', href: '/admin/returns', urgent: true },
   { key: 'refunds_stuck', label: 'Refunds still processing', href: '/admin/returns', urgent: true },
   { key: 'payments_to_resolve', label: 'Payments to resolve', href: '/admin/returns', urgent: true },
+  { key: 'moyasar_unrecorded', label: 'Refunds in Moyasar not recorded', href: '/admin/returns', urgent: true },
   { key: 'credit_notes_pending', label: 'Credit notes to issue', href: '/admin/returns', urgent: true },
   { key: 'late_to_ship', label: 'Parcels late to ship', href: '/admin/orders', urgent: true },
   { key: 'delivery_failed', label: 'Deliveries failed', href: '/admin/orders', urgent: true },

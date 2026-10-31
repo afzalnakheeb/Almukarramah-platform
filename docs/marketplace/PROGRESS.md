@@ -183,3 +183,10 @@ npm's registry is blocked in the build sandbox, so the app is type-checked by CI
   orders never invoiced automatically; one label at a time per parcel; refunds settled by hand with Moyasar read back;
   only the owner changes the switches; seller details for owner, manager and finance only. Staff pages for payments
   to resolve and refunds settled by hand. Tests: 350 (272 before).
+- Third fix pass (re-review REVIEW-3; table in `REVIEW-FIXES.md`), each finding shown by a failing test first: the
+  contact detector leaves everyday text alone (sizes, measurements, prices, dates, tracking and order numbers: the
+  reviewer's 42 texts, in the server and the database) and still catches every disguise; refunds made in the Moyasar
+  dashboard, or completed late, are recorded against Moyasar's figures from "Refunds in Moyasar we have not
+  recorded" on `/admin/returns`; attaching a payment reads Moyasar first; a payment whose order is gone is kept; a
+  label claim survives a lost carrier answer; a renewal completed by the webhook follows the paid period and keeps
+  the card and the customer's cancellation; direction marks stay in messages. Tests: 370 (350 before).

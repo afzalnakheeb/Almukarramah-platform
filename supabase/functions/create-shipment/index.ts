@@ -1,14 +1,18 @@
 // The seller (or our operations team) buys the label for a packed sub-order through the approved carrier: the
 // parcel is collected from the seller's pickup address. A parcel has one live label: the same key returns it, and a
 // new key (a reload, a second person) is refused BEFORE the carrier is asked, so a second label is never bought
-// (review M11). A carrier that times out or fails buys nothing here and the same key can be used again. The label PDF
+// (review M11). A carrier that refuses buys nothing here and the parcel is free again (see below for a lost answer). The label PDF
 // is private (labels bucket). 'cancel' voids an unused label (before collection). A carrier must be switched on
 // (carrier_providers.active): the sandbox is off on a live project.
 //
 // Two people pressing at the same moment (review N6, REVIEW-2): the parcel is claimed with the key before the carrier
 // is asked (mp_claim_shipment), so only one label is bought; the other is told one is being bought. A label the
 // carrier sold but we could not record is cancelled at once (an orphan label is never left to be charged).
-import { adapterFor } from '../_shared/carriers/index.ts';
+//
+// When the carrier's answer is lost (a timeout, a 5xx), the label may have been sold: the claim is kept, and the next
+// press, whoever makes it, asks the carrier again with the same key, which answers with that label instead of selling
+// another (review R3-5, REVIEW-3). Only a definite refusal frees the parcel for a new key.
+import { adapterFor, definiteRefusal } from '../_shared/carriers/index.ts';
 import { admin, caller, fail, handle, isSellerMember, json, staffRole, UUID } from '../_shared/util.ts';
 
 type Body = { subOrderId?: string; idempotencyKey?: string; locationId?: string; weightG?: number; action?: 'create' | 'cancel' };
@@ -73,19 +77,21 @@ Deno.serve(handle(async (req) => {
   // one label being bought per parcel at a time
   const { data: claim, error: claimErr } = await db.rpc('mp_claim_shipment', { p_sub: c.sub_order.id, p_key: key, p_user: user.id });
   if (claimErr) throw claimErr;
-  const cl = claim as { ok: boolean; reason?: string };
+  const cl = claim as { ok: boolean; reason?: string; key?: string; reused?: boolean };
   if (!cl.ok) {
     return cl.reason === 'label_exists'
       ? fail(409, 'This parcel already has a label: print that one (or cancel it first)', 'لهذا الطرد ملصق شحن بالفعل: اطبعه (أو ألغِه أولًا)', 'label_exists')
       : fail(409, 'A label is being bought for this parcel right now: wait a moment and reload', 'يجري شراء ملصق لهذا الطرد الآن: انتظر لحظة ثم أعد تحميل الصفحة', 'label_in_progress');
   }
-  const release = () => db.rpc('mp_release_shipment_claim', { p_sub: c.sub_order.id, p_key: key });
+  // the key the carrier is asked with: this press's, or the one an earlier press used when its answer was lost
+  const useKey = cl.key ?? key;
+  const release = () => db.rpc('mp_release_shipment_claim', { p_sub: c.sub_order.id, p_key: useKey });
   const weight = Math.max(1, Math.round(Number(body.weightG) || c.sub_order.weight_g || 500));
   const to = c.order.ship_to;
   let result: Awaited<ReturnType<typeof adapter.createShipment>>;
   try {
     result = await adapter.createShipment({
-    idempotency_key: key, reference: `AM-${c.order.number}`, service_code: c.service.code,
+    idempotency_key: useKey, reference: `AM-${c.order.number}`, service_code: c.service.code,
     from: { name: loc.contact_name, phone: loc.phone, country: loc.country, city: loc.city, district: loc.district, line1: loc.line1, line2: loc.line2, postal_code: loc.postal_code, short_address: loc.short_address },
     to: { name: to.recipient_name ?? '', phone: to.phone ?? '', country: to.country, city: to.city, line1: to.kind === 'hotel' ? `${to.hotel_name ?? ''} ${to.line1 ?? ''}`.trim() : to.line1 ?? '', line2: to.line2 ?? null },
     parcel: { weight_g: weight }, ddp: c.sub_order.duties_mode === 'ddp', declared_value_minor: c.sub_order.items_minor, currency: c.sub_order.currency,
@@ -93,16 +99,22 @@ Deno.serve(handle(async (req) => {
     pickup_window: pickupWindow(loc),
     });
   } catch (e) {
-    // nothing is recorded: the same key can be tried again (a real provider deduplicates by the key)
     console.error('carrier failed', c.service.provider_id, e);
-    await release();
-    return fail(502, 'The carrier did not answer. Nothing was bought: please try again in a few minutes.', 'لم تردّ شركة الشحن، ولم يُشترَ شيء: حاول مرة أخرى بعد دقائق.', 'carrier_failed');
+    if (definiteRefusal(e)) {
+      // the carrier refused: nothing was bought, and the parcel is free for the next try
+      await release();
+      return fail(502, `The carrier refused the label: ${(e as Error).message}. Nothing was bought.`, 'رفضت شركة الشحن إصدار الملصق، ولم يُشترَ شيء.', 'carrier_refused');
+    }
+    // the label may have been sold: the claim stays with this key, and the next press asks again with it
+    await db.rpc('mp_shipment_claim_unknown', { p_sub: c.sub_order.id, p_key: useKey });
+    return fail(502, 'The carrier did not confirm the label. Press again in a minute: the carrier is asked with the same request, so a second label is never bought.',
+      'لم تؤكد شركة الشحن الملصق. اضغط مرة أخرى بعد دقيقة: يُسأل الناقل بالطلب نفسه، فلا يُشترى ملصق ثانٍ.', 'carrier_unconfirmed');
   }
-  const path = `${c.sub_order.id}/${key}.pdf`;
+  const path = `${c.sub_order.id}/${useKey}.pdf`;
   const { error: upErr } = await db.storage.from('labels').upload(path, result.label.bytes, { contentType: 'application/pdf', upsert: true });
   const { data: rec, error: rErr } = upErr ? { data: null, error: upErr } : await db.rpc('mp_record_shipment', {
     p_sub: c.sub_order.id,
-    p: { idempotency_key: key, provider_id: c.service.provider_id, service_id: c.service.id, provider_ref: result.provider_ref, tracking_number: result.tracking_number,
+    p: { idempotency_key: useKey, provider_id: c.service.provider_id, service_id: c.service.id, provider_ref: result.provider_ref, tracking_number: result.tracking_number,
          tracking_url: result.tracking_url, label_path: path, pickup_location_id: loc.id, pickup_from: result.pickup?.from ?? null, pickup_to: result.pickup?.to ?? null,
          weight_g: weight, ddp: c.sub_order.duties_mode === 'ddp', declared_value_minor: c.sub_order.items_minor, created_by: user.id },
   });
