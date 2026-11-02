@@ -1,13 +1,13 @@
 {
   "note": "Encrypted investor bundle for /investors (deck, film, files). Replaced whenever a new bundle is published.",
-  "version": "inv-5",
-  "sha256": "ee1d14bca35642530a4390b68ebce417b73c641635d80ea32e93a269fd5a48f5",
-  "bytes": 34201628,
+  "version": "inv-6",
+  "sha256": "3efdb7a4cc55facdbffd910c807a76b6a4906a97a63941b947f6e27eca0f342c",
+  "bytes": 34129948,
   "parts": [
     {
-      "url": "https://raw.githubusercontent.com/afzalnakheeb/Almukarramah-platform/b6cf8f8c0ed3e68cf18edee0a1aab0f7a5c015f2/investors/inv-5/part-00.enc",
-      "sha256": "ee1d14bca35642530a4390b68ebce417b73c641635d80ea32e93a269fd5a48f5",
-      "bytes": 34201628
+      "url": "https://raw.githubusercontent.com/afzalnakheeb/Almukarramah-platform/010612d86db5c3c2d41ea5bca5e313a107062e52/investors/inv-6/part-00.enc",
+      "sha256": "3efdb7a4cc55facdbffd910c807a76b6a4906a97a63941b947f6e27eca0f342c",
+      "bytes": 34129948
     }
   ]
 }
