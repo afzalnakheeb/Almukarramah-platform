@@ -30,6 +30,7 @@ const FILM = {
   poster: '/investors/film/poster.jpg',
 };
 const DECK = '/investors/deck';
+const DECK_COVER = '/investors/deck/cover.jpg';
 type Doc = { href: string; label: Key; type: Key };
 const DOCS: Doc[] = [
   { href: '/investors/files/Al-Mukarramah-investor-deck.pdf', label: 'investorsDocDeck', type: 'investorsTypePdf' },
@@ -333,22 +334,35 @@ export default function Investors() {
         </Container>
       </View>
 
-      <Container style={{ paddingTop: wide ? 64 : 40, paddingBottom: wide ? 88 : 56, gap: wide ? 64 : 44 }}>
-        <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 72 : 44 }}>
-          <View style={{ flex: wide ? 5 : undefined, gap: 12 }}>
+      {/* The animated deck comes first: it is how we present. */}
+      <Container style={{ paddingTop: wide ? 64 : 40 }}>
+        {deckMissing ? (
+          <View style={{ gap: 10 }}>
             <Serif size={wide ? 34 : 26} role="h2">{t('investorsDeck')}</Serif>
-            <T size={15} lh={1.65} color={colors.body}>{t('investorsDeckBody')}</T>
-            {deckMissing ? (
-              <T size={14} lh={1.6} color={colors.muted} style={{ marginTop: 8 }}>{t('investorsDeckSoon')}</T>
-            ) : (
-              <a href={DECK} style={{ textDecoration: 'none', alignSelf: 'flex-start', marginTop: 12 }}>
-                <View {...data({ btn: 'primary' })} style={{ minHeight: 56, paddingHorizontal: 34, justifyContent: 'center', borderRadius: 1, borderWidth: 1, borderColor: colors.emerald, backgroundColor: colors.emerald }}>
+            <T size={14} lh={1.6} color={colors.muted}>{t('investorsDeckSoon')}</T>
+          </View>
+        ) : (
+          <a href={DECK} style={{ textDecoration: 'none' }} aria-label={t('investorsOpenDeck')}>
+            <View {...data({ hover: 'door' })} style={{ flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'stretch', gap: wide ? 44 : 18, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.ivory, padding: wide ? 8 : 6 }}>
+              <View style={{ flex: wide ? 7 : undefined, width: wide ? undefined : '100%', aspectRatio: 16 / 9, backgroundColor: colors.sand, overflow: 'hidden' }}>
+                <img src={DECK_COVER} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              </View>
+              <View style={{ flex: wide ? 5 : undefined, gap: 12, paddingHorizontal: wide ? 8 : 12, paddingRight: wide ? 36 : 12, paddingBottom: wide ? 0 : 16 }}>
+                <T w={600} size={11} caps color={colors.brassText}>{t('investorsDeckKicker')}</T>
+                <Serif size={wide ? 40 : 28} role="h2">{t('investorsDeck')}</Serif>
+                <T size={15} lh={1.65} color={colors.body}>{t('investorsDeckBody')}</T>
+                <View {...data({ btn: 'primary' })} style={{ alignSelf: wide ? 'flex-start' : 'stretch', alignItems: 'center', marginTop: 10, minHeight: 56, paddingHorizontal: 34, justifyContent: 'center', borderRadius: 1, borderWidth: 1, borderColor: colors.emerald, backgroundColor: colors.emerald }}>
                   <T w={isRTL ? 500 : 600} size={12.5} caps color={colors.ivory}>{t('investorsOpenDeck')}</T>
                 </View>
-              </a>
-            )}
-          </View>
-          <View style={{ flex: wide ? 7 : undefined, gap: 12 }}>
+              </View>
+            </View>
+          </a>
+        )}
+      </Container>
+
+      <Container style={{ paddingTop: wide ? 64 : 40, paddingBottom: wide ? 88 : 56, gap: wide ? 64 : 44 }}>
+        <View style={{ gap: 0 }}>
+          <View style={{ gap: 12, maxWidth: 820 }}>
             <Serif size={wide ? 34 : 26} role="h2">{t('investorsDocuments')}</Serif>
             <T size={15} lh={1.65} color={colors.body}>{t('investorsDocumentsBody')}</T>
             <View style={{ marginTop: 10, borderTopWidth: 1, borderColor: colors.goldLine }}>
