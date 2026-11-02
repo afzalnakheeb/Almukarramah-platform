@@ -242,7 +242,7 @@ export default function Investors() {
           returnKeyType="go"
           maxLength={64}
           accessibilityLabel={t('investorsPasscode')}
-          placeholder="• • • • •"
+          placeholder="• • • •"
           placeholderTextColor={colors.muted}
           {...data({ field: error ? 'error' : 1 })}
           style={[sans(500, isRTL), {
