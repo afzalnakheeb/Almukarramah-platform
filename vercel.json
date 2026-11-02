@@ -74,7 +74,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!api/|decks/).*)",
+      "source": "/((?!api/|decks/|investors/).*)",
       "destination": "/index.html"
     }
   ],
@@ -110,6 +110,28 @@
     },
     {
       "source": "/decks/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/investors",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/investors/(.*)",
       "headers": [
         {
           "key": "X-Robots-Tag",

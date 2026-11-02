@@ -98,6 +98,7 @@ Disallow: /cart
 Disallow: /pay
 Disallow: /subscribe
 Disallow: /decks/
+Disallow: /investors
 
 # AI assistants and answer engines may read and cite the catalogue (same private areas excluded)
 User-agent: GPTBot
@@ -121,6 +122,7 @@ Disallow: /cart
 Disallow: /pay
 Disallow: /subscribe
 Disallow: /decks/
+Disallow: /investors
 
 Sitemap: ${SITE}/sitemap.xml
 `);

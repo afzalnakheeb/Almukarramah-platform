@@ -5,23 +5,33 @@ Disallow: /admin
 Disallow: /account
 Disallow: /checkout
 Disallow: /cart
+Disallow: /pay
+Disallow: /subscribe
+Disallow: /decks/
+Disallow: /investors
 
-# AI assistants and answer engines may read and cite the catalogue
+# AI assistants and answer engines may read and cite the catalogue (same private areas excluded)
 User-agent: GPTBot
-Allow: /
 User-agent: OAI-SearchBot
-Allow: /
 User-agent: ChatGPT-User
-Allow: /
 User-agent: ClaudeBot
-Allow: /
 User-agent: Claude-SearchBot
-Allow: /
+User-agent: Claude-User
 User-agent: PerplexityBot
-Allow: /
+User-agent: Perplexity-User
 User-agent: Google-Extended
-Allow: /
 User-agent: Applebot-Extended
+User-agent: CCBot
 Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin
+Disallow: /account
+Disallow: /checkout
+Disallow: /cart
+Disallow: /pay
+Disallow: /subscribe
+Disallow: /decks/
+Disallow: /investors
 
-Sitemap: https://almukarramah-platform.vercel.app/sitemap.xml
+Sitemap: https://almukarramah.com/sitemap.xml
