@@ -379,3 +379,9 @@ art2-mtn-2.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea7
 art2-sculpt-1.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/FJExn88x6w1RT1dv0gON/HSoqjzchVgwJh7mBjYUz/content.png?Expires=1793862000&KeyName=assets-cdn-key-1&Signature=8aPaTztvhMwR3nEHGDC2WFaljXE=
 art2-sculpt-2.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/W5bDi6q0SjPl4ShSiof5/yfKF5daHG42xFIwktyBC/content.png?Expires=1793862000&KeyName=assets-cdn-key-1&Signature=zXbAECKHye3bnF10PqhAQAqKhKg=
 EDSR_x4.pb https://raw.githubusercontent.com/Saafke/EDSR_Tensorflow/master/models/EDSR_x4.pb
+rs-coffee-set.jpg https://www.royalselangor.com/media/catalog/product/5/2/5250_1.jpg
+rs-trinket.jpg https://www.royalselangor.com/media/catalog/product/6/8/6810_trinket_box_360_01.jpg
+rs-nut-tray-4.jpg https://www.lifelongcollectibles.com/cdn/shop/products/4398_nut_tray_360_04_1200x1200.jpg?v=1661909357
+rs-nut-tray-1.jpg https://www.lifelongcollectibles.com/cdn/shop/products/4398_nut_tray_360_01_1024x1024@2x.jpg?v=1661909357
+rs-plate-3.jpg https://www.lifelongcollectibles.com/cdn/shop/products/3839_3_1200x1200.jpg?v=1661906981
+rs-plate-1.jpg https://www.lifelongcollectibles.com/cdn/shop/products/3839_1_1024x1024@2x.jpg?v=1661906981
