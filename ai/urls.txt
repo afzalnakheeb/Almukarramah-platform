@@ -690,3 +690,7 @@ chw-95013-0482.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e
 kiswah-store.json https://kiswahjewellery.com/wp-json/wc/store/v1/products?per_page=100
 kiswah-shop.html https://kiswahjewellery.com/shop/
 kiswah-home.html https://kiswahjewellery.com/
+lomar-sa.html https://lomar.sa/
+lomar-comsa.html https://www.lomar.com.sa/
+lomar-sa-pj.json https://lomar.sa/products.json?limit=250
+lomar-shop.html https://shop.lomar.com/
