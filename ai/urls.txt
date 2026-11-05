@@ -399,3 +399,9 @@ kiswah-bracelets.webp https://kiswahjewellery.com/wp-content/uploads/2026/05/sig
 kiswah-rings.webp https://kiswahjewellery.com/wp-content/uploads/2026/05/signature-collection-rings-main-banner.webp
 kiswah-dene29.webp https://kiswahjewellery.com/wp-content/uploads/2026/05/dene29.webp
 kiswah-dene34.webp https://kiswahjewellery.com/wp-content/uploads/2026/05/dene34.webp
+c-abaya-black.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/ALJ5mevgxhYQfpB5Wusu/vXZtCsGCjuKM8L81ascM/content.png?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=15YG1XASOYZEFdXkUVTnptA2WcY=
+c-abaya-sand.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/mRHmOhrqqZDfbh7hoigf/eNhdXaYh1DEI08KLJMUH/content.png?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=XIkdiJ90a2fpXxkvuxirJSG0-s8=
+c-sharshaf.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/a2SckpcEF8ve384Gx3LA/iIdGxxQDlmeiqbCyqoxo/content.png?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=ElhIvC1VUmiPS2Eyw_UVj_NN6GE=
+c-pendant.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/OxuN9O8vCJNMFmRo0kU4/1TJtPhZA4y6pgp5srRUg/content.png?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=qH71jL0ES0_FKGyjBIKkQmVP3tU=
+c-earrings.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/ivHZT5336H0NnIm5vBR0/e4J2PUxaYnEPM3hYrUWz/content.png?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=RsfJfoE0SdBfx7CWPpUaDyN8uro=
+c-mens.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/IZeq8PqLwMAIopDwSFrk/y9Xep2MAogE88TVyX6Bw/content.png?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=BooDEqAsx1f-KTaLZxkq5YkviCE=
