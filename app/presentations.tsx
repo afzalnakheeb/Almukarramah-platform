@@ -14,7 +14,7 @@ import { colors } from '@/theme';
 type Item = { title: Key; body: Key; open: Key; href: string; poster: string; external?: boolean };
 const ITEMS: Item[] = [
   { title: 'presInvTitle', body: 'presInvBody', open: 'presInvOpen', href: '/investors', poster: '/investors/film/poster.jpg' },
-  { title: 'presDeckTitle', body: 'presDeckBody', open: 'presDeckOpen', href: '/investors/deck/', poster: '/investors/deck/cover.jpg', external: true },
+  { title: 'presDeckTitle', body: 'presDeckBody', open: 'presDeckOpen', href: '/investors/deck', poster: '/investors/deck/cover.jpg', external: true },
   { title: 'presBrandTitle', body: 'presBrandBody', open: 'presBrandOpen', href: '/decks', poster: '/decks/film/poster.jpg' },
 ];
 
