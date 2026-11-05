@@ -795,3 +795,11 @@ pr-ch-95013-0480.html https://www.chopard.com/en-ae/pen/95013-0480.html
 pr-ch-95013-0482.html https://www.chopard.com/en-ae/pen/95013-0482.html
 pr-ch-95013-0483.html https://www.chopard.com/en-ae/pen/95013-0483.html
 pr-ch-95013-0499.html https://www.chopard.com/en-ae/pen/95013-0499.html
+pr-bateel-sig2.html https://bateel.com/en_ae/signature.html
+pr-bateel-midas2.html https://bateel.com/en_ae/gifts/midas.html
+pr-bateel-hamper.html https://bateel.com/en_ae/gifts/bateel-signature-hamper.html
+pr-rs-vase.json https://www.lifelongcollectibles.com/products/royal-selangor-atiya-vase.json
+pr-rs-container.json https://www.lifelongcollectibles.com/products/royal-selangor-atiya-container.json
+pr-rs-plate.json https://www.lifelongcollectibles.com/products/royal-selangor-atiya-plate-lg.json
+pr-rs-cur.json https://www.lifelongcollectibles.com/cart.js
+pr-sinwan2.html https://floward.com/en-ae/buy-and-send-sinwan-gif-box-medjool-dates-assorted-stuffed--online-214829.html
