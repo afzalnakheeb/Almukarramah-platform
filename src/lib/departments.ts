@@ -41,7 +41,7 @@ export const DEPARTMENTS: Department[] = [
     slug: 'prayer', title: 'dPrayer', short: 'dPrayerShort', intro: 'dPrayerIntro',
     examples: ['dPrayerEx1', 'dPrayerEx2', 'dPrayerEx3'], gift: 'dPrayerGift',
     cover: '/images/dept/cover-prayer.jpg',
-    categories: ['prayer-mats', 'woven-rugs', 'gift-sets'],
+    categories: ['prayer-mats', 'misbaha', 'mushaf-and-islamic-gifts', 'woven-rugs', 'gift-sets'],
     collections: [
     ],
   },
@@ -59,7 +59,7 @@ export const DEPARTMENTS: Department[] = [
     cover: '/images/dept/cover-dates.jpg',
     // The live dates listings (Ajwa, Sukkari) are not shown here, at the founder's request: the department leads with
     // the premium gift boxes until listings of that level are in the catalogue.
-    categories: [],
+    categories: ['gourmet-gifts'],
     collections: [
     ],
   },
@@ -67,7 +67,7 @@ export const DEPARTMENTS: Department[] = [
     slug: 'art-and-home', title: 'dArt', short: 'dArtShort', intro: 'dArtIntro',
     examples: ['dArtEx1', 'dArtEx2', 'dArtEx3'], gift: 'dArtGift',
     cover: '/images/dept/cover-art.jpg',
-    categories: ['keepsakes'],
+    categories: ['art-and-decor', 'home-and-hospitality', 'keepsakes'],
     collections: [
       concept('cArtCalligraphy', '/images/dept/concept-art-brushwork.jpg'),
       concept('cArtRelief', '/images/dept/concept-art-relief.jpg'),
@@ -81,7 +81,7 @@ export const DEPARTMENTS: Department[] = [
     slug: 'modest-style', title: 'dModest', short: 'dModestShort', intro: 'dModestIntro',
     examples: ['dModestEx1', 'dModestEx2', 'dModestEx3'], gift: 'dModestGift',
     cover: '/images/dept/cover-modest.jpg',
-    categories: [],
+    categories: ['modest-wear'],
     collections: [
       concept('cAbayaCouture', '/images/dept/concept-abaya-black.jpg'),
       concept('cAbayaDay', '/images/dept/concept-abaya-sand.jpg'),
@@ -100,7 +100,7 @@ export const DEPARTMENTS: Department[] = [
     slug: 'jewellery-for-her', parent: 'jewellery-and-accessories', title: 'dHer', short: 'dHerShort', intro: 'dHerIntro',
     examples: ['dHerEx1', 'dHerEx2', 'dHerEx3'], gift: 'dHerGift',
     cover: '/images/dept/concept-callig-set.jpg',
-    categories: [],
+    categories: ['jewellery'],
     collections: [
       concept('cJewelNour', '/images/dept/concept-callig-set.jpg'),
       concept('cJewelNour', '/images/dept/concept-callig-cuff.jpg'),
@@ -112,7 +112,7 @@ export const DEPARTMENTS: Department[] = [
     slug: 'jewellery-for-him', parent: 'jewellery-and-accessories', title: 'dHim', short: 'dHimShort', intro: 'dHimIntro',
     examples: ['dHimEx1', 'dHimEx2', 'dHimEx3'], gift: 'dHimGift',
     cover: '/images/partners/chopard/alpine-eagle-gold.jpg',
-    categories: [],
+    categories: ['mens-accessories'],
     collections: [
       concept('cJewelMens', '/images/dept/concept-mens.jpg'),
     ],

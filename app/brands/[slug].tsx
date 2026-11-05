@@ -1,5 +1,5 @@
-// A partner house's own page (/brands/luban …): who they are, their pieces in the store (when listed), and the
-// collection in their own photographs (src/lib/partners.ts). The whole site is behind the site passcode.
+// A partner house's own page (/brands/luban …): who they are, their pieces in our store (priced, add to cart), and
+// any further photographs of the house (src/lib/partners.ts). We never send customers to the house's own website. The whole site is behind the site passcode.
 import { Link, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Pressable, View } from 'react-native';
@@ -8,8 +8,7 @@ import { Seo } from '@/components/seo';
 import { Breadcrumb, Container, Eyebrow, Grid, Photo, ProductTile, Serif, T, useWide } from '@/components/ui';
 import { DEPARTMENTS, departmentHref } from '@/lib/departments';
 import { useI18n } from '@/lib/i18n';
-import { openExternal } from '@/lib/links';
-import { PARTNERS, partnerCover, partnerHref } from '@/lib/partners';
+import { PARTNERS, houseIsShown, partnerCover, partnerHref } from '@/lib/partners';
 import { snapshot } from '@/lib/snapshot';
 import { colors } from '@/theme';
 
@@ -26,7 +25,9 @@ export default function BrandPage() {
   const cover = partnerCover(p) ?? products[0]?.images?.[0];
   const depts = DEPARTMENTS.filter((d) => !d.parent && p.items.some((i) => i.depts.includes(d.slug)));
   const name = lang === 'ar' ? p.nameAr : p.name;
-  const others = PARTNERS.filter((x) => x.slug !== p.slug);
+  const others = PARTNERS.filter((x) => x.slug !== p.slug && houseIsShown(x));
+  // Pieces we sell appear once, as products with price and add-to-cart; the gallery keeps only the house's photographs.
+  const gallery = p.items.filter((it) => !it.product);
 
   return (
     <Screen>
@@ -54,9 +55,6 @@ export default function BrandPage() {
                 ))}
               </View>
             )}
-            <Pressable accessibilityRole="link" onPress={() => openExternal(p.site)} style={{ paddingTop: 4 }}>
-              <T w={600} size={11.5} caps color={colors.brassText}>{`${t('brandVisit')} · ${p.site.replace(/^https?:\/\/(www\.)?/, '')}`}</T>
-            </Pressable>
           </View>
         </View>
       </Container>
@@ -70,15 +68,16 @@ export default function BrandPage() {
         </Container>
       )}
 
-      {p.items.length > 0 && (
+      {gallery.length > 0 && (
         <Container style={{ paddingTop: 72 }}>
           <Serif size={wide ? 36 : 28}>{t('brandCollection')}</Serif>
           <T size={14} lh={1.65} color={colors.muted} style={{ maxWidth: 640, marginTop: 10, marginBottom: 28 }}>{t('brandCollectionNote')}</T>
           <Grid min={wide ? 240 : 150} gap={wide ? 28 : 14} rowGap={36}>
-            {p.items.map((it) => (
+            {gallery.map((it) => (
               <View key={it.id} style={{ gap: 10 }}>
                 <Photo uri={it.img} ratio={4 / 5} tone={colors.white} label={`${p.name}, ${it.en}`} />
                 <Serif size={19}>{lang === 'ar' ? it.ar : it.en}</Serif>
+                {it.onRequest ? <T size={13} color={colors.muted}>{t('priceOnRequest')}</T> : null}
               </View>
             ))}
           </Grid>

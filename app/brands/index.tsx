@@ -6,7 +6,7 @@ import { Screen } from '@/components/chrome';
 import { Seo } from '@/components/seo';
 import { Container, Eyebrow, Grid, Photo, Serif, T, useWide } from '@/components/ui';
 import { useI18n } from '@/lib/i18n';
-import { PARTNERS, partnerCover, partnerHref } from '@/lib/partners';
+import { PARTNERS, houseIsShown, partnerCover, partnerHref } from '@/lib/partners';
 import { snapshot } from '@/lib/snapshot';
 import { colors } from '@/theme';
 
@@ -22,7 +22,7 @@ export default function Brands() {
         <T size={wide ? 17 : 15.5} lh={1.7} color={colors.body} style={{ maxWidth: 640, marginTop: 14 }}>{t('brandsBody')}</T>
         <View style={{ marginTop: 40 }}>
         <Grid min={wide ? 260 : 150} gap={wide ? 28 : 14} rowGap={40}>
-          {PARTNERS.map((p) => {
+          {PARTNERS.filter(houseIsShown).map((p) => {
             const img = partnerCover(p) ?? snapshot.products.find((x) => x.brand === p.catalogueBrand)?.images?.[0];
             return (
               <Link key={p.slug} href={partnerHref(p.slug)} asChild>

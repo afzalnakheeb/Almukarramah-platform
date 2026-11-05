@@ -41,6 +41,7 @@ export function PartnerCard({ it, partner }: { it: PartnerItem; partner: Partner
         <Photo uri={it.img} ratio={4 / 5} tone={colors.white} label={`${partner.name}, ${it.en}`} />
         <T w={600} size={11.5} caps color={colors.brassText}>{lang === 'ar' ? partner.nameAr : partner.name}</T>
         <Serif size={20}>{name}</Serif>
+        {it.onRequest ? <T size={13} color={colors.muted}>{t('priceOnRequest')}</T> : null}
       </Pressable>
     </Link>
   );
@@ -60,11 +61,11 @@ export default function DepartmentPage() {
   }
   const lists = [...byBrand.values()];
   const products = Array.from({ length: Math.max(0, ...lists.map((l) => l.length)) }, (_, i) => lists.map((l) => l[i]))
-    .flat().filter(Boolean).slice(0, 12) as ReturnType<typeof snapshotByCategory>;
+    .flat().filter(Boolean).slice(0, 60) as ReturnType<typeof snapshotByCategory>;
   const credit = COVER_CREDIT[d.slug];
   const subs = subDepartments(d.slug);
   const parent = d.parent ? DEPARTMENTS.find((x) => x.slug === d.parent) : undefined;
-  const fromPartners = [d.slug, ...subs.map((x) => x.slug)].flatMap((s) => partnerItemsFor(s));
+  const fromPartners = [d.slug, ...subs.map((x) => x.slug)].flatMap((s) => partnerItemsFor(s)).filter((it) => !it.product);
   const others = TOP_DEPARTMENTS.filter((x) => x.slug !== d.slug && x.slug !== d.parent);
 
   return (
