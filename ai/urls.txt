@@ -647,3 +647,11 @@ vo3-gtm-2.mp3 https://elevenlabsusercontent.com/database/workspace/607e35f9aea74
 vo3-vision-1.mp3 https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/FGA3yc5DLRRNTm13YZuL/cmVFbyW9TgUIjpoi7Hwj/content.mp3?Expires=1793869200&KeyName=assets-cdn-key-1&Signature=mLqjJEHmj3tUsKs3XkOGOm0yOcg=
 vo3-vision-2.mp3 https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/pXj365OT7b0lAb6cPh3d/QUm1L3pMSxtM8D26g2r0/content.mp3?Expires=1793869200&KeyName=assets-cdn-key-1&Signature=-PX0C57SHHFmUg6nU7M66J4GS9A=
 amouage-pj.json https://amouage.com/products.json?limit=250
+am-attar-oud-ulya-1-0.img https://cdn.shopify.com/s/files/1/0823/5099/7796/files/Amouage_Attars_2025_CS_Photo_OudUlya_1.jpg?v=1759211079&width=1400
+am-attar-oud-ulya-1-1.img https://cdn.shopify.com/s/files/1/0823/5099/7796/files/Amouage_Attars_2025_CS_Photo_OudUlya_2.jpg?v=1759211079&width=1400
+am-opus-xiii-silver-oud-0.img https://cdn.shopify.com/s/files/1/0823/5099/7796/files/Amouage_Library_CS_Photo_OpusXIII_SilverOud_1.jpg?v=1759220320&width=1400
+am-opus-xiii-silver-oud-1.img https://cdn.shopify.com/s/files/1/0823/5099/7796/files/Amouage_CS_Photo_Box_Library_SilverOud_fa5b7ba6-b5f4-4d07-8e25-8393304514d7.jpg?v=1759220320&width=1400
+am-reflection45-man-0.img https://cdn.shopify.com/s/files/1/0823/5099/7796/files/Amouage_Extraits_CS_Reflection45_Photo_1_2048x2048px.png?v=1780301992&width=1400
+am-reflection45-man-1.img https://cdn.shopify.com/s/files/1/0823/5099/7796/files/REFLECTION_45_MAN_BOX.jpg?v=1758524750&width=1400
+am-new-attar-luban-al-akhdar-0.img https://cdn.shopify.com/s/files/1/0823/5099/7796/files/Amouage_Attars_2025_CS_Photo_LubanAlAkhdar_1.jpg?v=1759210868&width=1400
+am-new-attar-luban-al-akhdar-1.img https://cdn.shopify.com/s/files/1/0823/5099/7796/files/Amouage_Attars_2025_CS_Photo_LubanAlAkhdar_2.jpg?v=1759210868&width=1400
