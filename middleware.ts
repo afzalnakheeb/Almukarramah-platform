@@ -13,8 +13,13 @@ import * as investors from './src/server/investors-auth';
 
 export const config = { matcher: ['/((?!api/).*)'] };
 
-/** Paths that stay open: the robots file (it says "do not index") and the files browsers and app stores fetch on their own. */
-const OPEN = [/^\/robots\.txt$/, /^\/favicon\.ico$/, /^\/\.well-known\//];
+/** Paths that stay open: the robots file (it says "do not index"), the files browsers and app stores fetch on their own,
+ *  and the link-preview card (/share/…: the logo picture WhatsApp and others show under a shared link). */
+const OPEN = [/^\/robots\.txt$/, /^\/favicon\.ico$/, /^\/\.well-known\//, /^\/share\/[a-z0-9-]+\.jpg$/];
+
+/** Link-preview fetchers (WhatsApp, iMessage, Telegram, Slack, LinkedIn, X, Facebook) skip pages answered with an error,
+ *  so they get the same passcode page with status 200: it carries only the title, the line and the logo card. */
+const PREVIEW_BOT = /WhatsApp|facebookexternalhit|Facebot|TelegramBot|Slackbot|LinkedInBot|Twitterbot|Discordbot|SkypeUriPreview|Applebot|redditbot/i;
 
 export default async function middleware(request: Request): Promise<Response | undefined> {
   const url = new URL(request.url);
@@ -23,8 +28,9 @@ export default async function middleware(request: Request): Promise<Response | u
   if (url.pathname.startsWith('/decks/') && (await decks.unlocked(request, decks.decksEnv()))) return undefined; // old /decks links
 
   const headers: Record<string, string> = { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' };
-  if (request.method === 'GET' && (request.headers.get('accept') ?? '').includes('text/html')) {
-    return new Response(GATE_HTML, { status: 401, headers: { ...headers, 'Content-Type': 'text/html; charset=utf-8' } });
+  const bot = PREVIEW_BOT.test(request.headers.get('user-agent') ?? '');
+  if ((request.method === 'GET' || (bot && request.method === 'HEAD')) && (bot || (request.headers.get('accept') ?? '').includes('text/html'))) {
+    return new Response(GATE_HTML, { status: bot ? 200 : 401, headers: { ...headers, 'Content-Type': 'text/html; charset=utf-8' } });
   }
   return new Response('Passcode required: https://almukarramah.com', {
     status: 401,
@@ -35,7 +41,16 @@ export default async function middleware(request: Request): Promise<Response | u
 /** The passcode page: one self-contained file (no scripts or fonts from elsewhere), in English and Arabic. */
 export const GATE_HTML = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Al Mukarramah</title><meta name="robots" content="noindex, nofollow">
+<title>Al Mukarramah · المكرّمة</title><meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Where your deen and dunya meet · حيث يلتقي دينك ودنياك. Private preview.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Al Mukarramah">
+<meta property="og:title" content="Al Mukarramah · المكرّمة">
+<meta property="og:description" content="Where your deen and dunya meet · حيث يلتقي دينك ودنياك. Private preview.">
+<meta property="og:url" content="https://almukarramah.com/">
+<meta property="og:image" content="https://almukarramah.com/share/almukarramah.jpg"><meta property="og:image:secure_url" content="https://almukarramah.com/share/almukarramah.jpg">
+<meta property="og:image:type" content="image/jpeg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Al Mukarramah logo"><meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://almukarramah.com/share/almukarramah.jpg">
 <style>
 :root{--ivory:#F7F3EC;--ink:#1C1A17;--gold:#B08D52;--brass:#7D6237;--line:#E3DACB;--muted:#6E675E;--emerald:#14392F}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--ivory);color:var(--ink)}
