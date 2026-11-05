@@ -394,3 +394,8 @@ vo-subs.mp3 https://elevenlabsusercontent.com/database/workspace/607e35f9aea742f
 vo-apps.mp3 https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/3wdC3rZaaxNwIxcBJFRL/lrnYVwHbTJtWlRB44Dd1/content.mp3?Expires=1793862000&KeyName=assets-cdn-key-1&Signature=6MuGG0NRSEav119-kugeAYy-UU4=
 vo-solution.mp3 https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/J3AM0MOXD0xv10z9rvAQ/snfUBHcCyTYFlGygHS4h/content.mp3?Expires=1793862000&KeyName=assets-cdn-key-1&Signature=gmuysLlGmmDwMEzKVuUXlic59wQ=
 vo-path.mp3 https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/2MWDRowSdtl1QdVXWyPd/HCdDaPCQL9OwoJthY60g/content.mp3?Expires=1793862000&KeyName=assets-cdn-key-1&Signature=Jigk5F7Bvcn_GX77swzkodAMfLQ=
+kiswah-necklaces.webp https://kiswahjewellery.com/wp-content/uploads/2026/05/signature-collection-necklaces-main-banner.webp
+kiswah-bracelets.webp https://kiswahjewellery.com/wp-content/uploads/2026/05/signature-collection-bracelets-main-banner.webp
+kiswah-rings.webp https://kiswahjewellery.com/wp-content/uploads/2026/05/signature-collection-rings-main-banner.webp
+kiswah-dene29.webp https://kiswahjewellery.com/wp-content/uploads/2026/05/dene29.webp
+kiswah-dene34.webp https://kiswahjewellery.com/wp-content/uploads/2026/05/dene34.webp
