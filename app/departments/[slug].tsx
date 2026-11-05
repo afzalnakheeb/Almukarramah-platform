@@ -7,7 +7,8 @@ import { Pressable, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { Seo } from '@/components/seo';
 import { Breadcrumb, Button, Container, Eyebrow, Grid, Photo, ProductTile, Serif, T, Tag, useWide } from '@/components/ui';
-import { COVER_CREDIT, DEPARTMENTS, departmentHref, type Collection } from '@/lib/departments';
+import { COVER_CREDIT, DEPARTMENTS, TOP_DEPARTMENTS, departmentHref, subDepartments, type Collection } from '@/lib/departments';
+import { partnerHref, partnerItemsFor, type Partner, type PartnerItem } from '@/lib/partners';
 import { useI18n } from '@/lib/i18n';
 import { snapshot, snapshotByCategory } from '@/lib/snapshot';
 import { colors } from '@/theme';
@@ -25,8 +26,24 @@ function CollectionCard({ c }: { c: Collection }) {
       <Photo uri={c.img} ratio={4 / 5} tone={colors.white} label={label} />
       <View style={{ flexDirection: 'row' }}><Tag label={tag} tone={c.status === 'signed' ? 'ok' : 'mute'} /></View>
       <Serif size={22}>{t(c.title)}</Serif>
-      <T size={13} lh={1.5} color={colors.muted}>{c.status === 'concept' ? t('deptConceptLine') : `${t('deptRef')}: ${c.maker} · ${c.piece}`}</T>
+      <T size={13} lh={1.5} color={colors.muted}>{c.status === 'concept' ? t('deptConceptLine') : `${c.status === 'signed' ? t('deptSigned') : t('deptRef')}: ${c.maker} · ${c.piece}`}</T>
     </View>
+  );
+}
+
+/** A piece from one of our partner houses: opens the house's own page. */
+export function PartnerCard({ it, partner }: { it: PartnerItem; partner: Partner }) {
+  const { t, lang } = useI18n();
+  const name = lang === 'ar' ? it.ar : it.en;
+  return (
+    <Link href={partnerHref(partner.slug)} asChild>
+      <Pressable accessibilityRole="link" {...{ dataSet: { hover: 'door' } }} style={{ gap: 10 }}>
+        <Photo uri={it.img} ratio={4 / 5} tone={colors.white} label={`${partner.name}, ${it.en}`} />
+        <View style={{ flexDirection: 'row' }}><Tag label={t('deptSigned')} tone="ok" /></View>
+        <T w={600} size={11.5} caps color={colors.brassText}>{lang === 'ar' ? partner.nameAr : partner.name}</T>
+        <Serif size={20}>{name}</Serif>
+      </Pressable>
+    </Link>
   );
 }
 
@@ -36,15 +53,26 @@ export default function DepartmentPage() {
   const wide = useWide();
   const d = DEPARTMENTS.find((x) => x.slug === slug) ?? DEPARTMENTS[0];
   const cats = d.categories.map((s) => snapshot.categories.find((c) => c.slug === s)).filter(Boolean) as typeof snapshot.categories;
-  const products = d.categories.flatMap((s) => snapshotByCategory(s)).slice(0, 12);
+  // Houses side by side: one piece from each brand in turn, so a large range does not crowd out a smaller one.
+  const byBrand = new Map<string, ReturnType<typeof snapshotByCategory>>();
+  for (const p of d.categories.flatMap((s) => snapshotByCategory(s))) {
+    const k = p.brand ?? '';
+    byBrand.set(k, [...(byBrand.get(k) ?? []), p]);
+  }
+  const lists = [...byBrand.values()];
+  const products = Array.from({ length: Math.max(0, ...lists.map((l) => l.length)) }, (_, i) => lists.map((l) => l[i]))
+    .flat().filter(Boolean).slice(0, 12) as ReturnType<typeof snapshotByCategory>;
   const credit = COVER_CREDIT[d.slug];
-  const others = DEPARTMENTS.filter((x) => x.slug !== d.slug);
+  const subs = subDepartments(d.slug);
+  const parent = d.parent ? DEPARTMENTS.find((x) => x.slug === d.parent) : undefined;
+  const fromPartners = [d.slug, ...subs.map((x) => x.slug)].flatMap((s) => partnerItemsFor(s));
+  const others = TOP_DEPARTMENTS.filter((x) => x.slug !== d.slug && x.slug !== d.parent);
 
   return (
     <Screen>
       <Seo title={t(d.title)} description={t(d.intro)} path={`/departments/${d.slug}`} image={d.cover} noindex />
       <Container style={{ paddingTop: wide ? 28 : 16 }}>
-        <Breadcrumb items={[{ label: t('deptAll'), href: '/' }, { label: t(d.title) }]} />
+        <Breadcrumb items={[{ label: t('deptAll'), href: '/' }, ...(parent ? [{ label: t(parent.title), href: departmentHref(parent.slug) }] : []), { label: t(d.title) }]} />
         <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 64 : 24, alignItems: wide ? 'center' : 'stretch', paddingTop: 20 }}>
           <View style={{ flex: wide ? 5 : undefined, gap: 6 }}>
             <Photo uri={d.cover} ratio={4 / 5} label={t(d.title)} />
@@ -78,6 +106,33 @@ export default function DepartmentPage() {
           </View>
         </View>
       </Container>
+
+      {subs.length > 0 && (
+        <Container style={{ paddingTop: 64 }}>
+          <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 28 : 24 }}>
+            {subs.map((x) => (
+              <Link key={x.slug} href={departmentHref(x.slug)} asChild>
+                <Pressable accessibilityRole="link" {...{ dataSet: { hover: 'door' } }} style={{ flex: 1, gap: 12 }}>
+                  <Photo uri={x.cover} ratio={4 / 5} label={t(x.title)} />
+                  <Serif size={wide ? 32 : 26}>{t(x.title)}</Serif>
+                  <T size={14.5} lh={1.6} color={colors.body}>{t(x.intro)}</T>
+                  <T w={600} size={11.5} caps color={colors.emerald}>{t('deptOpen')}</T>
+                </Pressable>
+              </Link>
+            ))}
+          </View>
+        </Container>
+      )}
+
+      {fromPartners.length > 0 && (
+        <Container style={{ paddingTop: 72 }}>
+          <Serif size={wide ? 36 : 28}>{t('deptFromPartners')}</Serif>
+          <T size={14} lh={1.65} color={colors.muted} style={{ maxWidth: 640, marginTop: 10, marginBottom: 28 }}>{t('deptFromPartnersNote')}</T>
+          <Grid min={wide ? 240 : 150} gap={wide ? 28 : 14} rowGap={36}>
+            {fromPartners.map((it) => <PartnerCard key={it.partner.slug + it.id} it={it} partner={it.partner} />)}
+          </Grid>
+        </Container>
+      )}
 
       {products.length > 0 && (
         <Container style={{ paddingTop: 72 }}>

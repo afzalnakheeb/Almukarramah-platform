@@ -16,7 +16,7 @@ import { Faq } from '@/components/faq';
 import { faqLd, itemListLd, organizationLd, Seo, websiteLd } from '@/components/seo';
 import { getFeatured, getProducts } from '@/lib/catalogue';
 import { snapshotByCategory, snapshotFeatured } from '@/lib/snapshot';
-import { DEPARTMENTS, departmentHref } from '@/lib/departments';
+import { TOP_DEPARTMENTS, departmentHref } from '@/lib/departments';
 import { strings, useI18n, type Key } from '@/lib/i18n';
 import { imageUrl } from '@/lib/images';
 import { usePrefs } from '@/lib/prefs';
@@ -88,7 +88,7 @@ function FragranceHouse() {
 
 
 /** The doors into the house: the six departments (src/lib/departments.ts), each with its concept image. */
-const DOORS = DEPARTMENTS.map((d) => ({ title: d.title, examples: d.examples, img: d.cover, href: departmentHref(d.slug) }));
+const DOORS = TOP_DEPARTMENTS.map((d) => ({ title: d.title, examples: d.examples, img: d.cover, href: departmentHref(d.slug) }));
 
 /** A framed photograph: a pale panel that zooms slowly on hover, with Kaaba corners that draw in (or always show). */
 function Framed({ uri, ratio, label, corners = 'draw', position }: { uri: string; ratio: number; label: string; corners?: 'draw' | 'on' | 'none'; position?: 'center' | 'top' | 'bottom' }) {
