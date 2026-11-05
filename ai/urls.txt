@@ -599,3 +599,10 @@ ch-happyhearts.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e
 ch-myhappyhearts.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e_trim/w_iw,h_ih,c_lpad,g_center/c_pad,ar_4:5,w_1200,b_rgb:F7F5F2/ProductsAssets/Web/81A088-5501_01.png
 ch-pendant.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e_trim/w_iw,h_ih,c_lpad,g_center/c_pad,ar_4:5,w_1200,b_rgb:F7F5F2/ProductsAssets/Web/797482-5304_01.png
 kashida-watchbox.img https://cdn.shopify.com/s/files/1/0635/6588/9764/files/Calligraffiti_C_2_3994bf6f-8928-4073-abb2-ce0ef6cd10ea.jpg?v=1793624129&width=1400
+rihal-home.html https://rihal.sa/
+rihal-pj.json https://rihal.sa/products.json?limit=250
+lomar-home.html https://lomar.com/
+lomar-pj.json https://www.lomar.com/products.json?limit=250
+salaam-home.html https://salaamgifts.com/
+salaam-pj.json https://salaamgifts.com/products.json?limit=250
+dairman-home.html https://dairman.com/
