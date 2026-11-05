@@ -413,3 +413,5 @@ ba-yaein-necklace.png https://cdn.shopify.com/s/files/1/0693/2817/5383/files/88.
 ba-hobb-cuff.png https://cdn.shopify.com/s/files/1/0693/2817/5383/files/100.png?v=1766577181
 ba-najlaa-pendant.png https://cdn.shopify.com/s/files/1/0693/2817/5383/files/32_353e5ed7-60af-4e5f-994a-93e6006d5b20.png?v=1724997441
 af2.json https://eg.azzafahmy.com/products/kufic-script-necklace.json
+c-callig-2.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/Ge7qjk8SMM4ABZEJQGND/59TLOVpwfzD1yq9ZZpSA/content.png?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=tuS4aY_2XcGkJeCtVBX005QIfo0=
+c-callig-1.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/ypY9zT7V7hwIPUcG5YMF/qVmFXaA2JL225xAA8AKT/content.png?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=dpW4sJ8ZY7eXmvGQE6zkIhGUi2k=
