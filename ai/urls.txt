@@ -761,3 +761,5 @@ cur-orient.json https://orient499.com/cart.js
 cur-teeb.json https://www.teebmade.com/cart.js
 cur-mirzam.json https://mirzam.com/cart.js
 cur-amouage.json https://amouage.com/cart.js
+or-prod.html https://orient499.com/products/abaya-loro-piana-leather-camel-navy
+cp-w1.html https://www.chopard.com/en-ae/watch/295363-0001.html
