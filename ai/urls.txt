@@ -646,3 +646,4 @@ vo3-gtm-1.mp3 https://elevenlabsusercontent.com/database/workspace/607e35f9aea74
 vo3-gtm-2.mp3 https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/VxHhsa9kwEiJHcUG7F4x/aXvUk3icjPZdtWj0rUN9/content.mp3?Expires=1793869200&KeyName=assets-cdn-key-1&Signature=R6KeLKhW4AzQ7sWyvh5G0mKKS9U=
 vo3-vision-1.mp3 https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/FGA3yc5DLRRNTm13YZuL/cmVFbyW9TgUIjpoi7Hwj/content.mp3?Expires=1793869200&KeyName=assets-cdn-key-1&Signature=mLqjJEHmj3tUsKs3XkOGOm0yOcg=
 vo3-vision-2.mp3 https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/pXj365OT7b0lAb6cPh3d/QUm1L3pMSxtM8D26g2r0/content.mp3?Expires=1793869200&KeyName=assets-cdn-key-1&Signature=-PX0C57SHHFmUg6nU7M66J4GS9A=
+amouage-pj.json https://amouage.com/products.json?limit=250
