@@ -14,8 +14,12 @@ export type Collection = {
   /** Who made the piece in the photograph: a real maker, credited as written here. */
   maker: string;
   piece: string;
-  status: 'reference' | 'signed' | 'second-wave';
+  /** concept: an AI concept image of a piece we would commission (no maker; shown as a concept, never as stock). */
+  status: 'reference' | 'signed' | 'second-wave' | 'concept';
 };
+
+/** A concept image: what we would commission, labelled as a concept on the page. */
+const concept = (title: Key, img: string): Collection => ({ title, img, maker: '', piece: '', status: 'concept' });
 
 export type Department = {
   slug: string;
@@ -53,7 +57,9 @@ export const DEPARTMENTS: Department[] = [
     slug: 'dates-and-gourmet', title: 'dDates', short: 'dDatesShort', intro: 'dDatesIntro',
     examples: ['dDatesEx1', 'dDatesEx2', 'dDatesEx3'], gift: 'dDatesGift',
     cover: '/images/dept/cover-dates.jpg',
-    categories: ['dates'],
+    // The live dates listings (Ajwa, Sukkari) are not shown here, at the founder's request: the department leads with
+    // the premium gift boxes until listings of that level are in the catalogue.
+    categories: [],
     collections: [
       { title: 'cGiftBoxes', img: '/images/dept/ref-bateel-signature.jpg', maker: 'Bateel', piece: 'Signature Collection', status: 'reference' },
       { title: 'cGourmet', img: '/images/dept/ref-sinwan-medjool.jpg', maker: 'Sinwan', piece: 'Filled Medjool assortment', status: 'reference' },
@@ -68,6 +74,12 @@ export const DEPARTMENTS: Department[] = [
     categories: ['keepsakes'],
     collections: [
       { title: 'cPewter', img: '/images/dept/ref-royalselangor-vase.jpg', maker: 'Royal Selangor', piece: 'Atiya II vase', status: 'signed' },
+      concept('cArtCalligraphy', '/images/dept/concept-art-brushwork.jpg'),
+      concept('cArtRelief', '/images/dept/concept-art-relief.jpg'),
+      concept('cArtSculpture', '/images/dept/concept-art-sculpture.jpg'),
+      concept('cArtLandscape', '/images/dept/concept-art-mountains.jpg'),
+      { title: 'cArtContemporary', img: '/images/dept/ref-alhomoud-alnoor.jpg', maker: 'Lulwah Al Homoud', piece: 'Al Noor, 2022', status: 'reference' },
+      { title: 'cArtMasters', img: '/images/dept/ref-uthmantaha.jpg', maker: 'Uthman Taha (photo: Youm7)', piece: 'Madinah calligraphy heritage', status: 'reference' },
       { title: 'cBookends', img: '/images/dept/ref-kashida-bookends.jpg', maker: 'Kashida', piece: 'Name Bookends', status: 'reference' },
       { title: 'cKeepsakes', img: '/images/dept/ref-orient499-tarbouch.jpg', maker: 'Orient 499', piece: 'Mini Tarbouch Box', status: 'reference' },
       { title: 'cLibrary', img: '/images/dept/ref-assouline-alula.jpg', maker: 'Assouline', piece: 'AlUla Ever', status: 'reference' },
@@ -79,6 +91,10 @@ export const DEPARTMENTS: Department[] = [
     cover: '/images/dept/cover-modest.jpg',
     categories: [],
     collections: [
+      concept('cAbayaCouture', '/images/dept/concept-abaya-black.jpg'),
+      concept('cAbayaDay', '/images/dept/concept-abaya-sand.jpg'),
+      concept('cSharshaf', '/images/dept/concept-sharshaf.jpg'),
+      concept('cThobe', '/images/dept/concept-thobe.jpg'),
       { title: 'cModestWear', img: '/images/dept/ref-bouguessa-jacket.jpg', maker: 'Bouguessa', piece: 'Iconic Long Jacket', status: 'reference' },
       { title: 'cShawls', img: '/images/dept/ref-loropiana-shawl.jpg', maker: 'Loro Piana', piece: 'Cashmere shawl (archive)', status: 'reference' },
       { title: 'cChildren', img: '/images/dept/ref-littlebambah-kaftan.jpg', maker: 'Little Bambah', piece: 'Blue Bella Kaftan', status: 'reference' },
@@ -87,9 +103,16 @@ export const DEPARTMENTS: Department[] = [
   {
     slug: 'jewellery-and-accessories', title: 'dAccessories', short: 'dAccessoriesShort', intro: 'dAccessoriesIntro',
     examples: ['dAccessoriesEx1', 'dAccessoriesEx2', 'dAccessoriesEx3'], gift: 'dAccessoriesGift',
-    cover: '/images/dept/cover-accessories.jpg',
+    cover: '/images/dept/concept-pendant.jpg',
     categories: [],
     collections: [
+      concept('cJewelPendant', '/images/dept/concept-pendant.jpg'),
+      concept('cJewelEarrings', '/images/dept/concept-earrings.jpg'),
+      concept('cJewelMens', '/images/dept/concept-mens.jpg'),
+      { title: 'cCalligraphyJewellery', img: '/images/dept/ref-bilarabi-hobb-necklace.jpg', maker: 'Bil Arabi', piece: 'HOBB 18K gold and emerald "Love" necklace', status: 'reference' },
+      { title: 'cCalligraphyJewellery', img: '/images/dept/ref-bilarabi-hobb-cuff.jpg', maker: 'Bil Arabi', piece: 'HOBB 18K gold and diamond multi-word cuff', status: 'reference' },
+      { title: 'cKiswah', img: '/images/dept/ref-kiswah-necklace.jpg', maker: 'Kiswah Jewellery', piece: 'Necklace with Kaaba Kiswah thread', status: 'reference' },
+      { title: 'cKiswah', img: '/images/dept/ref-kiswah-bracelet.jpg', maker: 'Kiswah Jewellery', piece: 'Bracelet with Kaaba Kiswah thread', status: 'reference' },
       { title: 'cClutch', img: '/images/dept/ref-teebmade-clutch.jpg', maker: 'Teeb Made', piece: 'Saudi Door Clutch', status: 'reference' },
       { title: 'cWriting', img: '/images/dept/ref-chopard-pen.jpg', maker: 'Chopard', piece: 'Classic Rollerball', status: 'reference' },
     ],
@@ -97,7 +120,7 @@ export const DEPARTMENTS: Department[] = [
 ];
 
 /** The cover of this department is a photograph of a real maker's piece, not a concept image. */
-export const COVER_CREDIT: Record<string, string> = { 'jewellery-and-accessories': 'Teeb Made' };
+export const COVER_CREDIT: Record<string, string> = {};
 
 export const departmentHref = (slug: string): Href => ({ pathname: '/departments/[slug]', params: { slug } });
 

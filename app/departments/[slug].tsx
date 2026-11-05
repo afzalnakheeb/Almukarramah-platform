@@ -18,13 +18,14 @@ export function generateStaticParams(): { slug: string }[] {
 
 function CollectionCard({ c }: { c: Collection }) {
   const { t } = useI18n();
-  const tag = c.status === 'signed' ? t('deptSigned') : c.status === 'second-wave' ? t('deptSecondWave') : t('deptRef');
+  const tag = c.status === 'signed' ? t('deptSigned') : c.status === 'second-wave' ? t('deptSecondWave') : c.status === 'concept' ? t('deptConceptTag') : t('deptRef');
+  const label = c.status === 'concept' ? `${t(c.title)}: ${t('deptConceptLine')}` : `${c.maker}, ${c.piece}`;
   return (
     <View style={{ gap: 10 }}>
-      <Photo uri={c.img} ratio={4 / 5} tone={colors.white} label={`${c.maker}, ${c.piece}`} />
+      <Photo uri={c.img} ratio={4 / 5} tone={colors.white} label={label} />
       <View style={{ flexDirection: 'row' }}><Tag label={tag} tone={c.status === 'signed' ? 'ok' : 'mute'} /></View>
       <Serif size={22}>{t(c.title)}</Serif>
-      <T size={13} lh={1.5} color={colors.muted}>{`${t('deptRef')}: ${c.maker} · ${c.piece}`}</T>
+      <T size={13} lh={1.5} color={colors.muted}>{c.status === 'concept' ? t('deptConceptLine') : `${t('deptRef')}: ${c.maker} · ${c.piece}`}</T>
     </View>
   );
 }
