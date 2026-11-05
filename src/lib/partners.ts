@@ -152,8 +152,6 @@ export const PARTNERS: Partner[] = [
   {
     slug: "orient-499", name: "Orient 499", nameAr: "أورينت ٤٩٩", site: "https://orient499.com", blurb: 'pbOrient499',
     items: [
-      { id: "camel-embroidery", img: '/images/partners/orient-499/camel-embroidery.jpg', en: "Embroidered camel-hair abaya", ar: "عباية من وبر الجمل مطرّزة", depts: ["modest-style"] },
-      { id: "navy-tassel", img: '/images/partners/orient-499/navy-tassel.jpg', en: "Navy abaya, tassel detail", ar: "عباية كحلية، تفصيل الشرّابة", depts: ["modest-style"] },
       { id: "leather-tassel", img: '/images/partners/orient-499/leather-tassel.jpg', en: "Camel hair and leather abaya", ar: "عباية من وبر الجمل والجلد", depts: ["modest-style"] },
       { id: "tareq-gold", img: '/images/partners/orient-499/tareq-gold.jpg', en: "Tareq gold cotton abaya", ar: "عباية طارق القطنية الذهبية", depts: ["modest-style"] },
       { id: "poncho", img: '/images/partners/orient-499/poncho.jpg', en: "Cashmere poncho", ar: "بونشو من الكشمير", depts: ["modest-style"] },
