@@ -405,3 +405,6 @@ c-sharshaf.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea7
 c-pendant.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/OxuN9O8vCJNMFmRo0kU4/1TJtPhZA4y6pgp5srRUg/content.png?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=qH71jL0ES0_FKGyjBIKkQmVP3tU=
 c-earrings.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/ivHZT5336H0NnIm5vBR0/e4J2PUxaYnEPM3hYrUWz/content.png?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=RsfJfoE0SdBfx7CWPpUaDyN8uro=
 c-mens.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/IZeq8PqLwMAIopDwSFrk/y9Xep2MAogE88TVyX6Bw/content.png?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=BooDEqAsx1f-KTaLZxkq5YkviCE=
+af-kufic.json https://azzafahmy.com/products/kufic-script-necklace.json
+af-multi.json https://azzafahmy.com/products/multi-layered-calligraphy-necklace.json
+ba-products.json https://bilarabi.com/products.json?limit=60
