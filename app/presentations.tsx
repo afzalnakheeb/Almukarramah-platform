@@ -17,7 +17,7 @@ const ITEMS: Item[] = [
   { title: 'presInvTitle', body: 'presInvBody', open: 'presInvOpen', href: '/investors', poster: '/investors/film/poster.jpg' },
   { title: 'presDeckTitle', body: 'presDeckBody', open: 'presDeckOpen', href: '/investors/deck', poster: '/investors/deck/cover.jpg', external: true },
   { title: 'presDeckArTitle', body: 'presDeckArBody', open: 'presDeckArOpen', href: '/investors/deck-ar', poster: '/investors/deck-ar/cover.jpg', external: true },
-  { title: 'presBrandTitle', body: 'presBrandBody', open: 'presBrandOpen', href: '/decks', poster: '/decks/film/poster.jpg' },
+  { title: 'presBrandTitle', body: 'presBrandBody', open: 'presBrandOpen', href: '/decks', poster: '/investors/film/poster.jpg' },
 ];
 
 function Card({ it }: { it: Item }) {

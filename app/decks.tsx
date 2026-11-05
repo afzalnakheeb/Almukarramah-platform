@@ -15,9 +15,10 @@ import { colors } from '@/theme';
 const API = '/api/decks';
 const PAGE = `${SITE_URL}/decks`;
 const FILM = {
-  hd: '/decks/film/al-mukarramah-film-1080p.mp4',
-  sd: '/decks/film/al-mukarramah-film-720p.mp4',
-  poster: '/decks/film/poster.jpg',
+  // The main film is the investor film (v10), served from the investor bundle; the site passcode opens it.
+  hd: '/investors/film/al-mukarramah-investor-film-v10-1080p.mp4',
+  sd: '/investors/film/al-mukarramah-investor-film-v10-720p.mp4',
+  poster: '/investors/film/poster.jpg',
   file: 'Al-Mukarramah-film.mp4',
 };
 const DECK = '/decks/deck';
