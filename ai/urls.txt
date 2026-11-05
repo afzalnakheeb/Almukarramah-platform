@@ -416,3 +416,8 @@ af2.json https://eg.azzafahmy.com/products/kufic-script-necklace.json
 c-callig-2.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/Ge7qjk8SMM4ABZEJQGND/59TLOVpwfzD1yq9ZZpSA/content.png?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=tuS4aY_2XcGkJeCtVBX005QIfo0=
 c-callig-1.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/ypY9zT7V7hwIPUcG5YMF/qVmFXaA2JL225xAA8AKT/content.png?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=dpW4sJ8ZY7eXmvGQE6zkIhGUi2k=
 sharshaf-film.mp4 https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe963962d7088edbc9/content_generation/wslLi8NdSXN98sgBKjdg/AONtmvWgROiqHU6JsY5c/content.mp4?Expires=1793865600&KeyName=assets-cdn-key-1&Signature=1jjwei9VQJt4ccpvCs8BDPoQQ20=
+kajal-products.json https://kajalperfumes.com/products.json?limit=250
+kashida-products.json https://www.kashidadesign.com/products.json?limit=250
+orient499-products.json https://orient499.com/products.json?limit=250
+teeb-products.json https://www.teebmade.com/products.json?limit=250
+mirzam-products.json https://mirzam.com/products.json?limit=250
