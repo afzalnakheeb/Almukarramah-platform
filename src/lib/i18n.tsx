@@ -1375,7 +1375,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   // The website starts in English to match its pre-rendered pages (React must hydrate the same HTML),
   // then switches to the saved or device language straight after. The apps use the device language at once.
   const [lang, setLangState] = useState<Lang>(Platform.OS === 'web' ? 'en' : device);
-  const [currency, setCurrencyState] = useState('SAR');
+  const [currency, setCurrencyState] = useState('AED');
   const [settled, setSettled] = useState(Platform.OS !== 'web');
 
   useEffect(() => {

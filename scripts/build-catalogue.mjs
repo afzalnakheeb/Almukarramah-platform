@@ -26,7 +26,7 @@ async function snapshot() {
   const products = await fetchJson(
     'products?select=id,slug,sku,brand,ship_class,name_en,name_ar,description_en,description_ar,base_price_sar,stock,images,is_featured,restricted_countries,' +
       'seo_title_en,seo_title_ar,seo_description_en,seo_description_ar,updated_at,category_id,categories(slug,name_en,name_ar),' +
-      'product_tags(tags(id,kind,slug,name_en,name_ar,icon))&is_active=eq.true&order=is_featured.desc,created_at',
+      'product_prices(currency,amount_minor),product_tags(tags(id,kind,slug,name_en,name_ar,icon))&is_active=eq.true&order=is_featured.desc,created_at',
   );
   return { categories, products, generated_at: new Date().toISOString() };
 }
