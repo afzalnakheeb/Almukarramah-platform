@@ -756,3 +756,8 @@ sg-03.img https://media.zid.store/17fbf68a-ee39-4eb0-8217-a700ac12c4ba/55a072bd-
 sg-10.img https://media.zid.store/17fbf68a-ee39-4eb0-8217-a700ac12c4ba/7b9fcb28-b5c5-42de-8cff-456b79e6eacd.jpg
 sg-08.img https://media.zid.store/17fbf68a-ee39-4eb0-8217-a700ac12c4ba/965a33ac-eb30-496f-be89-62c93449bfa2.jpg
 sg-09.img https://media.zid.store/17fbf68a-ee39-4eb0-8217-a700ac12c4ba/6337f723-ef9a-40c8-8621-237fa8cc58b5.jpg
+cur-kashida.json https://www.kashidadesign.com/cart.js
+cur-orient.json https://orient499.com/cart.js
+cur-teeb.json https://www.teebmade.com/cart.js
+cur-mirzam.json https://mirzam.com/cart.js
+cur-amouage.json https://amouage.com/cart.js
