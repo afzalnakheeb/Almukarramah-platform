@@ -525,3 +525,6 @@ ch-w2.html https://www.chopard.com/en-us/watch/298600-3001.html
 ch-j1.html https://www.chopard.com/en-intl/necklace/%40819482-5200.html
 ch-j2.html https://www.chopard.com/en-intl/necklace/81A088-5501.html
 ch-j3.html https://www.chopard.com/pendant/797482-5304.html
+luban-store.json https://lubanoman.com/wp-json/wc/store/v1/products?per_page=100
+luban-home.html https://lubanoman.com/
+luban-about.html https://lubanoman.com/about-us/
