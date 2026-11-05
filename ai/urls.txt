@@ -520,3 +520,8 @@ p-kajal-dahab-by-kajal-2.img https://cdn.shopify.com/s/files/1/1884/9319/files/D
 p-kajal-kajal-v-edp-100ml-0.img https://cdn.shopify.com/s/files/1/1884/9319/files/Kajal_V.jpg?v=1789199643&width=1400
 p-kajal-kajal-v-edp-100ml-1.img https://cdn.shopify.com/s/files/1/1884/9319/files/Kajal_V_Box_Bottle.jpg?v=1789199692&width=1400
 p-kajal-kajal-v-edp-100ml-2.img https://cdn.shopify.com/s/files/1/1884/9319/files/Kajal_V_Front.jpg?v=1789199713&width=1400
+ch-w1.html https://www.chopard.com/en-us/watch/295363-0001.html
+ch-w2.html https://www.chopard.com/en-us/watch/298600-3001.html
+ch-j1.html https://www.chopard.com/en-intl/necklace/%40819482-5200.html
+ch-j2.html https://www.chopard.com/en-intl/necklace/81A088-5501.html
+ch-j3.html https://www.chopard.com/pendant/797482-5304.html
