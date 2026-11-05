@@ -408,3 +408,8 @@ c-mens.png https://elevenlabsusercontent.com/database/workspace/607e35f9aea742fe
 af-kufic.json https://azzafahmy.com/products/kufic-script-necklace.json
 af-multi.json https://azzafahmy.com/products/multi-layered-calligraphy-necklace.json
 ba-products.json https://bilarabi.com/products.json?limit=60
+ba-hobb-emerald.png https://cdn.shopify.com/s/files/1/0693/2817/5383/files/24_fca410aa-5f6e-4381-a300-2faf22eb5ee9.png?v=1774608339
+ba-yaein-necklace.png https://cdn.shopify.com/s/files/1/0693/2817/5383/files/88.png?v=1766577551
+ba-hobb-cuff.png https://cdn.shopify.com/s/files/1/0693/2817/5383/files/100.png?v=1766577181
+ba-najlaa-pendant.png https://cdn.shopify.com/s/files/1/0693/2817/5383/files/32_353e5ed7-60af-4e5f-994a-93e6006d5b20.png?v=1724997441
+af2.json https://eg.azzafahmy.com/products/kufic-script-necklace.json
