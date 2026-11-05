@@ -659,3 +659,4 @@ kiswah-pj.json https://kiswahjewellery.com/products.json?limit=250
 ch-men.html https://www.chopard.com/en-intl/watches/men
 ch-pens.html https://www.chopard.com/en-intl/accessories/writing-instruments
 ch-acc.html https://www.chopard.com/en-intl/accessories/men
+kiswah-store.json https://kiswahjewellery.com/wp-json/wc/store/v1/products?per_page=100
