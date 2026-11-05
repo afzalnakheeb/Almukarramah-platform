@@ -657,8 +657,11 @@ const en = {
   presBrandBody: 'The story of the house: the store, the departments, tailoring and our apps, with its deck.',
   presBrandOpen: 'Open the brand film',
   presDeckTitle: 'The animated deck',
-  presDeckBody: 'Forty slides that play with their numbers. Use the arrow keys to present.',
+  presDeckBody: 'Forty slides in English that play with their numbers. Use the arrow keys to present.',
   presDeckOpen: 'Present the deck',
+  presDeckArTitle: 'The deck in Arabic',
+  presDeckArBody: 'The same forty slides, in Arabic, right to left, with its own PDF.',
+  presDeckArOpen: 'Present in Arabic',
 };
 
 const ar: typeof en = {
@@ -1301,6 +1304,9 @@ const ar: typeof en = {
   presDeckTitle: 'العرض المتحرك',
   presDeckBody: 'أربعون شريحة تتحرك أرقامها. استخدم مفاتيح الأسهم للعرض.',
   presDeckOpen: 'اعرض الشرائح',
+  presDeckArTitle: 'العرض بالعربية',
+  presDeckArBody: 'الشرائح الأربعون نفسها بالعربية، من اليمين إلى اليسار، مع ملف PDF خاص بها.',
+  presDeckArOpen: 'اعرض بالعربية',
 };
 
 export type Key = keyof typeof en;

@@ -15,13 +15,14 @@ type Item = { title: Key; body: Key; open: Key; href: string; poster: string; ex
 const ITEMS: Item[] = [
   { title: 'presInvTitle', body: 'presInvBody', open: 'presInvOpen', href: '/investors', poster: '/investors/film/poster.jpg' },
   { title: 'presDeckTitle', body: 'presDeckBody', open: 'presDeckOpen', href: '/investors/deck', poster: '/investors/deck/cover.jpg', external: true },
+  { title: 'presDeckArTitle', body: 'presDeckArBody', open: 'presDeckArOpen', href: '/investors/deck-ar', poster: '/investors/deck-ar/cover.jpg', external: true },
   { title: 'presBrandTitle', body: 'presBrandBody', open: 'presBrandOpen', href: '/decks', poster: '/decks/film/poster.jpg' },
 ];
 
 function Card({ it }: { it: Item }) {
   const { t } = useI18n();
   const inner = (
-    <Pressable accessibilityRole="link" {...{ dataSet: { hover: 'door' } }} style={{ gap: 14, flex: 1 }}>
+    <Pressable accessibilityRole="link" {...{ dataSet: { hover: 'door' } }} style={{ gap: 14, flexGrow: 1, flexBasis: 420 }}>
       <Photo uri={it.poster} ratio={16 / 9} tone={colors.sand} label={t(it.title)} />
       <Serif size={26}>{t(it.title)}</Serif>
       <T size={14.5} lh={1.65} color={colors.body}>{t(it.body)}</T>
@@ -29,7 +30,7 @@ function Card({ it }: { it: Item }) {
     </Pressable>
   );
   // The animated deck is a static page outside the app router: open it as a plain link.
-  return it.external ? <a href={it.href} style={{ textDecoration: 'none', display: 'flex', flex: 1 }}>{inner}</a> : <Link href={it.href as never} asChild>{inner}</Link>;
+  return it.external ? <a href={it.href} style={{ textDecoration: 'none', display: 'flex', flexGrow: 1, flexBasis: 420 }}>{inner}</a> : <Link href={it.href as never} asChild>{inner}</Link>;
 }
 
 export default function Presentations() {
@@ -42,7 +43,7 @@ export default function Presentations() {
         <Eyebrow rule>{t('presKicker')}</Eyebrow>
         <Serif role="h1" size={wide ? 54 : 38} style={{ marginTop: 14 }}>{t('presTitle')}</Serif>
         <T size={wide ? 17 : 15.5} lh={1.7} color={colors.body} style={{ maxWidth: 620, marginTop: 14 }}>{t('presBody')}</T>
-        <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 36 : 40, marginTop: 44 }}>
+        <View style={{ flexDirection: wide ? 'row' : 'column', flexWrap: 'wrap', gap: wide ? 36 : 40, marginTop: 44 }}>
           {ITEMS.map((it) => <Card key={it.title} it={it} />)}
         </View>
       </Container>
