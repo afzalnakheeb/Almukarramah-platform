@@ -49,7 +49,7 @@ export const DEPARTMENTS: Department[] = [
     slug: 'oud-and-fragrance', title: 'dFragrance', short: 'dFragranceShort', intro: 'dFragranceIntro',
     examples: ['dFragranceEx1', 'dFragranceEx2', 'dFragranceEx3'], gift: 'dFragranceGift',
     cover: '/images/dept/cover-fragrance.jpg',
-    categories: ['perfumes', 'oud-oils', 'bakhoor'],
+    categories: ['perfumes', 'oud-oils', 'bakhoor', 'frankincense-care'],
     collections: [
     ],
   },

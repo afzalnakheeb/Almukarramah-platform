@@ -21,6 +21,7 @@ export type Partner = {
 export const PARTNERS: Partner[] = [
   {
     slug: "luban", name: "Luban", nameAr: "لُبان", site: "https://lubanoman.com", blurb: 'pbLuban',
+    catalogueBrand: "Luban",
     items: [
       { id: "face", img: '/images/partners/luban/face.jpg', en: "The face collection", ar: "مجموعة الوجه", depts: ["oud-and-fragrance"] },
       { id: "face-essentials", img: '/images/partners/luban/face-essentials.jpg', en: "Face Essentials gift box", ar: "علبة هدايا أساسيات الوجه", depts: ["oud-and-fragrance"] },
