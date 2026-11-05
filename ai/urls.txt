@@ -688,3 +688,5 @@ chw-95013-0499.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e
 chw-95013-0414.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e_trim/w_iw,h_ih,c_lpad,g_center/c_pad,ar_4:5,w_1200,b_rgb:F7F5F2/ProductsAssets/Web/95013-0414_01.png
 chw-95013-0482.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e_trim/w_iw,h_ih,c_lpad,g_center/c_pad,ar_4:5,w_1200,b_rgb:F7F5F2/ProductsAssets/Web/95013-0482_01.png
 kiswah-store.json https://kiswahjewellery.com/wp-json/wc/store/v1/products?per_page=100
+kiswah-shop.html https://kiswahjewellery.com/shop/
+kiswah-home.html https://kiswahjewellery.com/
