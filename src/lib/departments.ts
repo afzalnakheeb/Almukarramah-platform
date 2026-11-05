@@ -15,7 +15,7 @@ export type Collection = {
   maker: string;
   piece: string;
   /** concept: an AI concept image of a piece we would commission (no maker; shown as a concept, never as stock). */
-  status: 'reference' | 'signed' | 'second-wave' | 'concept';
+  status: 'reference' | 'signed' | 'second-wave' | 'concept' | 'discussion';
 };
 
 /** A concept image: what we would commission, labelled as a concept on the page. */
@@ -87,8 +87,6 @@ export const DEPARTMENTS: Department[] = [
       concept('cAbayaDay', '/images/dept/concept-abaya-sand.jpg'),
       concept('cSharshaf', '/images/dept/concept-sharshaf.jpg'),
       concept('cThobe', '/images/dept/concept-thobe.jpg'),
-      { title: 'cModestWear', img: '/images/dept/ref-bouguessa-jacket.jpg', maker: 'Bouguessa', piece: 'Iconic Long Jacket', status: 'reference' },
-      { title: 'cChildren', img: '/images/dept/ref-littlebambah-kaftan.jpg', maker: 'Little Bambah', piece: 'Blue Bella Kaftan', status: 'reference' },
     ],
   },
   {
@@ -108,10 +106,6 @@ export const DEPARTMENTS: Department[] = [
       concept('cJewelNour', '/images/dept/concept-callig-cuff.jpg'),
       concept('cJewelPendant', '/images/dept/concept-pendant.jpg'),
       concept('cJewelEarrings', '/images/dept/concept-earrings.jpg'),
-      { title: 'cCalligraphyJewellery', img: '/images/dept/ref-bilarabi-hobb-necklace.jpg', maker: 'Bil Arabi', piece: 'HOBB 18K gold and emerald "Love" necklace', status: 'reference' },
-      { title: 'cCalligraphyJewellery', img: '/images/dept/ref-bilarabi-hobb-cuff.jpg', maker: 'Bil Arabi', piece: 'HOBB 18K gold and diamond multi-word cuff', status: 'reference' },
-      { title: 'cKiswah', img: '/images/dept/ref-kiswah-necklace.jpg', maker: 'Kiswah Jewellery', piece: 'Necklace with Kaaba Kiswah thread', status: 'signed' },
-      { title: 'cKiswah', img: '/images/dept/ref-kiswah-bracelet.jpg', maker: 'Kiswah Jewellery', piece: 'Bracelet with Kaaba Kiswah thread', status: 'signed' },
     ],
   },
   {

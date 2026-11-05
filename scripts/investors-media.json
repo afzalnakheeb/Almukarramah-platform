@@ -1,23 +1,23 @@
 {
   "note": "Encrypted investor bundle for /investors (deck, film, files). Replaced whenever a new bundle is published.",
-  "version": "inv-8",
-  "sha256": "b05347abcdaa4d099a7b07784e1aec83f832d62b6e7d98d4ea839194a1edc307",
-  "bytes": 119091228,
+  "version": "inv-9",
+  "sha256": "92171134370177b72cc0770b09c2e5506487d7595d2a1eadf7cc5c70b1d02553",
+  "bytes": 125061148,
   "parts": [
     {
-      "url": "https://raw.githubusercontent.com/afzalnakheeb/Almukarramah-platform/910a6fdaa39d3f26be47df1c0dae260260c030f0/investors/inv-8/part-00.enc",
-      "sha256": "bfdb1119514b0f762b39042124958dc6f19d5e0f747d5983a86a9df188e15e21",
+      "url": "https://raw.githubusercontent.com/afzalnakheeb/Almukarramah-platform/ce69611f3e5038a42007bf8648a5a0a8d2b13c53/investors/inv-9/part-00.enc",
+      "sha256": "b5bc97b8229bdf796f57aac4090ac59b24fbf23cc99c02b86ab67bfc918f2908",
       "bytes": 47185920
     },
     {
-      "url": "https://raw.githubusercontent.com/afzalnakheeb/Almukarramah-platform/910a6fdaa39d3f26be47df1c0dae260260c030f0/investors/inv-8/part-01.enc",
-      "sha256": "05d8d59dca871980f8a2dfd6bf2b1a28bf3b8fa47af9e48b3d49a51f686b3f0e",
+      "url": "https://raw.githubusercontent.com/afzalnakheeb/Almukarramah-platform/ce69611f3e5038a42007bf8648a5a0a8d2b13c53/investors/inv-9/part-01.enc",
+      "sha256": "f486e6cb6d52669b67b4c5d6b2acb1bdab671171603fa5c6bfa8545c32836b19",
       "bytes": 47185920
     },
     {
-      "url": "https://raw.githubusercontent.com/afzalnakheeb/Almukarramah-platform/910a6fdaa39d3f26be47df1c0dae260260c030f0/investors/inv-8/part-02.enc",
-      "sha256": "a4c2ebbb9cd3929c15b2b502d0fb315ff0dd1f70ba6a2c5af104bcd512210271",
-      "bytes": 24719388
+      "url": "https://raw.githubusercontent.com/afzalnakheeb/Almukarramah-platform/ce69611f3e5038a42007bf8648a5a0a8d2b13c53/investors/inv-9/part-02.enc",
+      "sha256": "9cdc2b47000fed6d2dbdba1fcabe1146c919d3d8e8607be3e35fd4dc95054f55",
+      "bytes": 30689308
     }
   ]
 }

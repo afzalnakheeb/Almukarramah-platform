@@ -9,6 +9,7 @@ import { Screen } from '@/components/chrome';
 import { Seo } from '@/components/seo';
 import { Container, Eyebrow, Photo, Serif, T, useWide } from '@/components/ui';
 import { useI18n, type Key } from '@/lib/i18n';
+import { CONCEPTS } from '@/lib/concepts';
 import { colors } from '@/theme';
 
 type Item = { title: Key; body: Key; open: Key; href: string; poster: string; external?: boolean };
@@ -45,6 +46,20 @@ export default function Presentations() {
         <T size={wide ? 17 : 15.5} lh={1.7} color={colors.body} style={{ maxWidth: 620, marginTop: 14 }}>{t('presBody')}</T>
         <View style={{ flexDirection: wide ? 'row' : 'column', flexWrap: 'wrap', gap: wide ? 36 : 40, marginTop: 44 }}>
           {ITEMS.map((it) => <Card key={it.title} it={it} />)}
+        </View>
+        <View style={{ marginTop: wide ? 72 : 56 }}>
+          <Eyebrow rule>{t('presConceptsKicker')}</Eyebrow>
+          <View style={{ flexDirection: wide ? 'row' : 'column', flexWrap: 'wrap', gap: wide ? 28 : 36, marginTop: 24 }}>
+            {CONCEPTS.map((c) => (
+              <Link key={c.slug} href={{ pathname: '/concepts/[slug]', params: { slug: c.slug } }} asChild>
+                <Pressable accessibilityRole="link" {...{ dataSet: { hover: 'door' } }} style={{ gap: 12, flexGrow: 1, flexBasis: 280 }}>
+                  <Photo uri={`/investors/clips/${c.clip}.jpg`} ratio={16 / 9} tone={colors.sand} label={t(c.title)} />
+                  <T w={600} size={11.5} caps color={colors.brassText}>{t(c.kicker)}</T>
+                  <Serif size={22}>{t(c.title)}</Serif>
+                </Pressable>
+              </Link>
+            ))}
+          </View>
         </View>
       </Container>
     </Screen>

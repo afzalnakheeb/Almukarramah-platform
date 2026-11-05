@@ -5,7 +5,7 @@ import React from 'react';
 import { Pressable, View } from 'react-native';
 import { Screen } from '@/components/chrome';
 import { Seo } from '@/components/seo';
-import { Breadcrumb, Container, Eyebrow, Grid, Photo, ProductTile, Serif, T, Tag, useWide } from '@/components/ui';
+import { Breadcrumb, Container, Eyebrow, Grid, Photo, ProductTile, Serif, T, useWide } from '@/components/ui';
 import { DEPARTMENTS, departmentHref } from '@/lib/departments';
 import { useI18n } from '@/lib/i18n';
 import { openExternal } from '@/lib/links';
@@ -42,7 +42,6 @@ export default function BrandPage() {
           <View style={{ flex: wide ? 6 : undefined, gap: 18 }}>
             <Eyebrow rule>{t('brandKicker')}</Eyebrow>
             <Serif role="h1" size={wide ? 58 : 40}>{name}</Serif>
-            <View style={{ flexDirection: 'row' }}><Tag label={t('deptSigned')} tone="ok" /></View>
             <T size={wide ? 17 : 15.5} lh={1.75} color={colors.body} style={{ maxWidth: 560 }}>{t(p.blurb)}</T>
             {depts.length > 0 && (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingTop: 4 }}>

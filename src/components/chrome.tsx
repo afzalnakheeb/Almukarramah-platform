@@ -7,7 +7,7 @@ import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View, ty
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCart } from '@/lib/cart';
 import { getSettings } from '@/lib/catalogue';
-import { TOP_DEPARTMENTS, departmentHref } from '@/lib/departments';
+import { TOP_DEPARTMENTS, departmentHref, subDepartments } from '@/lib/departments';
 import { useI18n, type Key } from '@/lib/i18n';
 import { CURRENCIES } from '@/lib/money';
 import { openExternal } from '@/lib/links';
@@ -137,7 +137,8 @@ type NavItem = { label: string; href: Href; match?: string; external?: boolean }
 function useNav(): NavItem[] {
   const { t } = useI18n();
   // The six departments (src/lib/departments.ts). A department is current on its own page and on its categories.
-  return TOP_DEPARTMENTS.map((d) => ({
+  // Jewellery appears as its two pages, for her and for him.
+  return TOP_DEPARTMENTS.flatMap((d) => (subDepartments(d.slug).length ? subDepartments(d.slug) : [d])).map((d) => ({
     label: t(d.short),
     href: departmentHref(d.slug),
     match: [`/departments/${d.slug}`, ...d.categories.map((c) => `/collections/${c}`)].join('|'),

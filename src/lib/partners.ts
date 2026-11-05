@@ -1,4 +1,4 @@
-// The partner houses of Al Mukarramah: brands under contract with us (confirmed by the founder, 5 November 2026).
+// The partner houses of Al Mukarramah (confirmed by the founder, 5 November 2026).
 // Each has its own page (/brands/[slug]) with its photographs, and its pieces also appear in the departments they
 // belong to. Photographs are the partners' own, used under our agreements with them. Item names are given in English
 // and Arabic; the house descriptions live in src/lib/i18n.tsx (keys pb…).
@@ -83,6 +83,25 @@ export const PARTNERS: Partner[] = [
     ],
   },
   {
+    slug: "amouage", name: "Amouage", nameAr: "أمواج", site: "https://amouage.com", blurb: 'pbAmouage',
+    items: [
+      { id: "oud-ulya", img: '/images/partners/amouage/oud-ulya.jpg', en: "Oud Ulya attar", ar: "عطر عود عُليا", depts: ["oud-and-fragrance"] },
+      { id: "opus-xiii", img: '/images/partners/amouage/opus-xiii.jpg', en: "Opus XIII Silver Oud", ar: "أوبوس ١٣ سيلفر عود", depts: ["oud-and-fragrance", "jewellery-for-him"] },
+      { id: "reflection-45", img: '/images/partners/amouage/reflection-45.jpg', en: "Reflection 45", ar: "ريفليكشن ٤٥", depts: ["oud-and-fragrance"] },
+    ],
+  },
+  {
+    slug: "kiswah-jewellery", name: "Kiswah Jewellery", nameAr: "مجوهرات كسوة", site: "https://kiswahjewellery.com", blurb: 'pbKiswahJewellery',
+    items: [
+      { id: "necklace", img: '/images/partners/kiswah-jewellery/necklace.jpg', en: "Pendant with Kaaba Kiswah thread", ar: "قلادة بخيط من كسوة الكعبة", depts: ["jewellery-for-her"] },
+      { id: "bracelet", img: '/images/partners/kiswah-jewellery/bracelet.jpg', en: "Bracelet with Kaaba Kiswah thread", ar: "سوار بخيط من كسوة الكعبة", depts: ["jewellery-for-her"] },
+      { id: "rings", img: '/images/partners/kiswah-jewellery/rings.jpg', en: "Ring with Kaaba Kiswah thread", ar: "خاتم بخيط من كسوة الكعبة", depts: ["jewellery-for-her"] },
+      { id: "necklaces", img: '/images/partners/kiswah-jewellery/necklaces.jpg', en: "The necklace collection", ar: "مجموعة القلائد", depts: ["jewellery-for-her"] },
+      { id: "bracelets", img: '/images/partners/kiswah-jewellery/bracelets.jpg', en: "The bracelet collection", ar: "مجموعة الأساور", depts: [] },
+      { id: "kiswa", img: '/images/partners/kiswah-jewellery/kiswa.jpg', en: "The Kiswah of the Kaaba", ar: "كسوة الكعبة المشرفة", depts: [] },
+    ],
+  },
+  {
     slug: "royal-selangor", name: "Royal Selangor", nameAr: "رويال سيلانجور", site: "https://www.royalselangor.com", blurb: 'pbRoyalSelangor',
     items: [
       { id: "atiya-vase", img: '/images/partners/royal-selangor/atiya-vase.jpg', en: "Atiya II vase", ar: "مزهرية عطية ٢", depts: ["art-and-home"] },
@@ -121,6 +140,19 @@ export const PARTNERS: Partner[] = [
     items: [
       { id: "alpine-eagle-gold", img: '/images/partners/chopard/alpine-eagle-gold.jpg', en: "Alpine Eagle 41, 18k gold", ar: "ألباين إيغل ٤١، ذهب عيار ١٨", depts: ["jewellery-for-him"] },
       { id: "alpine-eagle-steel", img: '/images/partners/chopard/alpine-eagle-steel.jpg', en: "Alpine Eagle 41, blue dial", ar: "ألباين إيغل ٤١، بميناء أزرق", depts: ["jewellery-for-him"] },
+      { id: "alpine-eagle-rose", img: '/images/partners/chopard/alpine-eagle-rose.jpg', en: "Alpine Eagle 41, rose gold, blue dial", ar: "ألباين إيغل ٤١، ذهب وردي بميناء أزرق", depts: ["jewellery-for-him"] },
+      { id: "alpine-eagle-two-tone", img: '/images/partners/chopard/alpine-eagle-two-tone.jpg', en: "Alpine Eagle 41, steel and rose gold", ar: "ألباين إيغل ٤١، فولاذ وذهب وردي", depts: ["jewellery-for-him"] },
+      { id: "alpine-eagle-green", img: '/images/partners/chopard/alpine-eagle-green.jpg', en: "Alpine Eagle 41, green dial", ar: "ألباين إيغل ٤١، بميناء أخضر", depts: ["jewellery-for-him"] },
+      { id: "alpine-eagle-grey", img: '/images/partners/chopard/alpine-eagle-grey.jpg', en: "Alpine Eagle 41, grey dial", ar: "ألباين إيغل ٤١، بميناء رمادي", depts: ["jewellery-for-him"] },
+      { id: "luc-1860", img: '/images/partners/chopard/luc-1860.jpg', en: "L.U.C 1860, rose gold", ar: "إل.يو.سي ١٨٦٠، ذهب وردي", depts: ["jewellery-for-him"] },
+      { id: "mille-miglia-black", img: '/images/partners/chopard/mille-miglia-black.jpg', en: "Mille Miglia chronograph, black dial", ar: "ميل ميليا كرونوغراف، بميناء أسود", depts: ["jewellery-for-him"] },
+      { id: "mille-miglia-silver", img: '/images/partners/chopard/mille-miglia-silver.jpg', en: "Mille Miglia chronograph, silver dial", ar: "ميل ميليا كرونوغراف، بميناء فضي", depts: ["jewellery-for-him"] },
+      { id: "pen-classic-black", img: '/images/partners/chopard/pen-classic-black.jpg', en: "Classic rollerball, black", ar: "قلم كلاسيك رولربول، أسود", depts: ["jewellery-for-him"] },
+      { id: "pen-classic-rose", img: '/images/partners/chopard/pen-classic-rose.jpg', en: "Classic rollerball, black and rose gold", ar: "قلم كلاسيك رولربول، أسود وذهبي وردي", depts: ["jewellery-for-him"] },
+      { id: "pen-silver", img: '/images/partners/chopard/pen-silver.jpg', en: "Ballpoint pen, black and silver", ar: "قلم حبر جاف، أسود وفضي", depts: ["jewellery-for-him"] },
+      { id: "pen-rose-gold", img: '/images/partners/chopard/pen-rose-gold.jpg', en: "Ballpoint pen, rose gold", ar: "قلم حبر جاف، ذهبي وردي", depts: ["jewellery-for-him"] },
+      { id: "alpine-eagle-rainbow", img: '/images/partners/chopard/alpine-eagle-rainbow.jpg', en: "Alpine Eagle, diamonds and rainbow sapphires", ar: "ألباين إيغل، ألماس وياقوت بألوان قوس قزح", depts: ["jewellery-for-her"] },
+      { id: "alpine-eagle-36", img: '/images/partners/chopard/alpine-eagle-36.jpg', en: "Alpine Eagle 36, blue dial", ar: "ألباين إيغل ٣٦، بميناء أزرق", depts: ["jewellery-for-her"] },
       { id: "rollerball", img: '/images/partners/chopard/rollerball.jpg', en: "Classic rollerball pen", ar: "قلم كلاسيك رولربول", depts: ["jewellery-for-him"] },
       { id: "happy-hearts-pendant", img: '/images/partners/chopard/happy-hearts-pendant.jpg', en: "Happy Hearts pendant", ar: "قلادة هابي هارتس", depts: ["jewellery-for-her"] },
       { id: "my-happy-hearts", img: '/images/partners/chopard/my-happy-hearts.jpg', en: "My Happy Hearts necklace", ar: "عقد ماي هابي هارتس", depts: ["jewellery-for-her"] },

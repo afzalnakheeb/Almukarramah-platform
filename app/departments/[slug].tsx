@@ -19,14 +19,14 @@ export function generateStaticParams(): { slug: string }[] {
 
 function CollectionCard({ c }: { c: Collection }) {
   const { t } = useI18n();
-  const tag = c.status === 'signed' ? t('deptSigned') : c.status === 'second-wave' ? t('deptSecondWave') : c.status === 'concept' ? t('deptConceptTag') : t('deptRef');
-  const label = c.status === 'concept' ? `${t(c.title)}: ${t('deptConceptLine')}` : `${c.maker}, ${c.piece}`;
+  const concept = c.status === 'concept';
+  const label = concept ? `${t(c.title)}: ${t('deptConceptLine')}` : `${c.maker}, ${c.piece}`;
   return (
     <View style={{ gap: 10 }}>
       <Photo uri={c.img} ratio={4 / 5} tone={colors.white} label={label} />
-      <View style={{ flexDirection: 'row' }}><Tag label={tag} tone={c.status === 'signed' ? 'ok' : 'mute'} /></View>
+      {concept ? <View style={{ flexDirection: 'row' }}><Tag label={t('deptConceptTag')} tone="mute" /></View> : null}
       <Serif size={22}>{t(c.title)}</Serif>
-      <T size={13} lh={1.5} color={colors.muted}>{c.status === 'concept' ? t('deptConceptLine') : `${c.status === 'signed' ? t('deptSigned') : t('deptRef')}: ${c.maker} · ${c.piece}`}</T>
+      <T size={13} lh={1.5} color={colors.muted}>{concept ? t('deptConceptLine') : `${c.maker} · ${c.piece}`}</T>
     </View>
   );
 }
@@ -39,7 +39,6 @@ export function PartnerCard({ it, partner }: { it: PartnerItem; partner: Partner
     <Link href={partnerHref(partner.slug)} asChild>
       <Pressable accessibilityRole="link" {...{ dataSet: { hover: 'door' } }} style={{ gap: 10 }}>
         <Photo uri={it.img} ratio={4 / 5} tone={colors.white} label={`${partner.name}, ${it.en}`} />
-        <View style={{ flexDirection: 'row' }}><Tag label={t('deptSigned')} tone="ok" /></View>
         <T w={600} size={11.5} caps color={colors.brassText}>{lang === 'ar' ? partner.nameAr : partner.name}</T>
         <Serif size={20}>{name}</Serif>
       </Pressable>
@@ -76,7 +75,7 @@ export default function DepartmentPage() {
         <View style={{ flexDirection: wide ? 'row' : 'column', gap: wide ? 64 : 24, alignItems: wide ? 'center' : 'stretch', paddingTop: 20 }}>
           <View style={{ flex: wide ? 5 : undefined, gap: 6 }}>
             <Photo uri={d.cover} ratio={4 / 5} label={t(d.title)} />
-            <T size={11.5} color={colors.muted}>{credit ? `${t('deptRef')}: ${credit}` : t('deptConcept')}</T>
+            <T size={11.5} color={colors.muted}>{credit ? credit : t('deptConcept')}</T>
           </View>
           <View style={{ flex: wide ? 6 : undefined, gap: 18 }}>
             <Eyebrow rule>{t('deptKicker')}</Eyebrow>
