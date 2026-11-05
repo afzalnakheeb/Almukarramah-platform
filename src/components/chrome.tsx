@@ -7,6 +7,7 @@ import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View, ty
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCart } from '@/lib/cart';
 import { getSettings } from '@/lib/catalogue';
+import { DEPARTMENTS, departmentHref } from '@/lib/departments';
 import { useI18n, type Key } from '@/lib/i18n';
 import { CURRENCIES } from '@/lib/money';
 import { openExternal } from '@/lib/links';
@@ -135,13 +136,12 @@ function IconLink({ href, icon, label, badge, onPress }: { href?: Href; icon: Ic
 type NavItem = { label: string; href: Href; match?: string; external?: boolean };
 function useNav(): NavItem[] {
   const { t } = useI18n();
-  return [
-    { label: t('navPerfumeOud'), href: { pathname: '/collections/[slug]', params: { slug: 'perfumes' } }, match: '/collections/perfumes|/collections/oud-oils|/collections/bakhoor' },
-    { label: t('navPrayer'), href: { pathname: '/collections/[slug]', params: { slug: 'prayer-mats' } }, match: '/collections/prayer-mats|/collections/woven-rugs' },
-    { label: t('navGifts'), href: { pathname: '/collections/[slug]', params: { slug: 'gift-sets' } }, match: '/collections/gift-sets|/collections/keepsakes' },
-    { label: t('navDates'), href: { pathname: '/collections/[slug]', params: { slug: 'dates' } }, match: '/collections/dates' },
-    { label: t('ourApps'), href: '/apps', match: '/apps' },
-  ];
+  // The six departments (src/lib/departments.ts). A department is current on its own page and on its categories.
+  return DEPARTMENTS.map((d) => ({
+    label: t(d.short),
+    href: departmentHref(d.slug),
+    match: [`/departments/${d.slug}`, ...d.categories.map((c) => `/collections/${c}`)].join('|'),
+  }));
 }
 const isCurrent = (path: string, match?: string) => !!match && match.split('|').some((m) => path === m || path.startsWith(`${m}/`));
 
@@ -192,6 +192,8 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
                 </Pressable>
               </View>
               <View style={{ flexDirection: 'row', gap: 22, alignItems: 'center' }}>
+                <Link href="/presentations" {...data({ foot: 1 })}><T w={600} {...util()} color={colors.emerald}>{t('navDecks')}</T></Link>
+                <Link href="/apps" {...data({ foot: 1 })}><T {...util()}>{t('ourApps')}</T></Link>
                 <Link href={SELL_HREF as Href} {...data({ foot: 1 })}><T w={500} {...util()} color={colors.emerald}>{t('sellWithUs')}</T></Link>
                 <Link href="/membership" {...data({ foot: 1 })}><T {...util()}>{t('membership')}</T></Link>
                 <Link href="/concierge" {...data({ foot: 1 })}><T {...util()}>{t('concierge')}</T></Link>
@@ -283,6 +285,7 @@ function MenuPanel({ open, nav, onClose, onSheet }: { open: boolean; nav: NavIte
   const { destination } = usePrefs();
   const go = (href: Href, external?: boolean) => { onClose(); if (external) openExternal(String(href)); else router.push(href); };
   const small: NavItem[] = [
+    { label: t('navDecks'), href: '/presentations' }, { label: t('ourApps'), href: '/apps' },
     { label: t('concierge'), href: '/concierge' }, { label: t('membership'), href: '/membership' },
     { label: t('account'), href: '/account' }, { label: t('sellWithUs'), href: SELL_HREF as Href, external: true },
   ];

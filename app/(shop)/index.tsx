@@ -16,6 +16,7 @@ import { Faq } from '@/components/faq';
 import { faqLd, itemListLd, organizationLd, Seo, websiteLd } from '@/components/seo';
 import { getFeatured, getProducts } from '@/lib/catalogue';
 import { snapshotByCategory, snapshotFeatured } from '@/lib/snapshot';
+import { DEPARTMENTS, departmentHref } from '@/lib/departments';
 import { strings, useI18n, type Key } from '@/lib/i18n';
 import { imageUrl } from '@/lib/images';
 import { usePrefs } from '@/lib/prefs';
@@ -86,11 +87,8 @@ function FragranceHouse() {
 }
 
 
-const DOORS: { title: Key; line: Key; img: string; href: Href }[] = [
-  { title: 'doorPerfume', line: 'doorPerfumeLine', img: '/images/door-perfume.jpg', href: { pathname: '/collections/[slug]', params: { slug: 'perfumes' } } },
-  { title: 'doorPrayer', line: 'doorPrayerLine', img: '/images/door-prayer.jpg', href: { pathname: '/collections/[slug]', params: { slug: 'prayer-mats' } } },
-  { title: 'doorGifts', line: 'doorGiftsLine', img: '/images/door-gifts.jpg', href: { pathname: '/collections/[slug]', params: { slug: 'gift-sets' } } },
-];
+/** The doors into the house: the six departments (src/lib/departments.ts), each with its concept image. */
+const DOORS = DEPARTMENTS.map((d) => ({ title: d.title, examples: d.examples, img: d.cover, href: departmentHref(d.slug) }));
 
 /** A framed photograph: a pale panel that zooms slowly on hover, with Kaaba corners that draw in (or always show). */
 function Framed({ uri, ratio, label, corners = 'draw', position }: { uri: string; ratio: number; label: string; corners?: 'draw' | 'on' | 'none'; position?: 'center' | 'top' | 'bottom' }) {
@@ -201,17 +199,17 @@ export default function Home() {
         </View>
       </Container>
 
-      {/* 2 · Three doors into the marketplace: each a sunlit niche */}
+      {/* 2 · Six doors into the house: the departments */}
       <Container style={{ paddingTop: gap }}>
-        <SectionHead center kicker={t('doorsKicker')} title={t('doorsTitle')} reveal />
+        <SectionHead center kicker={t('deptKicker')} title={t('deptTitle')} reveal />
         {wide ? (
-          <View style={{ flexDirection: 'row', gap: 36 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 36, rowGap: 56 }}>
             {DOORS.map((d, i) => (
               <Link key={d.title} href={d.href} asChild>
-                <Pressable accessibilityRole="link" {...reveal(i + 1, { hover: 'door' })} style={{ flex: 1, gap: 12, alignItems: 'center' }}>
+                <Pressable accessibilityRole="link" {...reveal((i % 3) + 1, { hover: 'door' })} style={{ flexBasis: '30%', flexGrow: 1, gap: 12, alignItems: 'center' }}>
                   <View style={{ alignSelf: 'stretch', marginBottom: 18 }}><Framed uri={d.img} ratio={4 / 5} label={t(d.title)} /></View>
-                  <Serif size={30} center>{t(d.title)}</Serif>
-                  <T size={14} lh={1.6} color={colors.body} center style={{ maxWidth: 290 }}>{t(d.line)}</T>
+                  <Serif size={28} center>{t(d.title)}</Serif>
+                  <T size={14} lh={1.6} color={colors.body} center style={{ maxWidth: 320 }}>{d.examples.map((k) => t(k)).join(' · ')}</T>
                   {/* the gold underline draws in when the door is hovered (web) */}
                   <View {...data({ ul: 'center' })} style={{ marginTop: 6, paddingBottom: 4 }}>
                     <T w={600} size={11} caps color={colors.emerald}>{t('discover')}</T>
@@ -227,7 +225,7 @@ export default function Home() {
                 <Pressable accessibilityRole="link" style={{ width: 282, gap: 10 }}>
                   <View style={{ marginBottom: 6 }}><Framed uri={d.img} ratio={4 / 5} label={t(d.title)} corners="none" /></View>
                   <Serif size={25}>{t(d.title)}</Serif>
-                  <T size={13.5} lh={1.55} color={colors.body}>{t(d.line)}</T>
+                  <T size={13.5} lh={1.55} color={colors.body}>{d.examples.map((k) => t(k)).join(' · ')}</T>
                   <T w={600} size={10.5} caps color={colors.emerald} style={{ marginTop: 2 }}>{t('discover')}</T>
                 </Pressable>
               </Link>

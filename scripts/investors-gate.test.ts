@@ -108,29 +108,30 @@ async function main() {
   ok(/^am_investors=; Path=\/; Max-Age=0; HttpOnly; SameSite=Lax; Secure$/.test((await call('DELETE', { cookie })).headers.get('set-cookie') ?? ''), 'DELETE clears the cookie');
   ok((await call('PUT')).status === 405, 'other methods: 405');
 
-  console.log('Routing middleware (middleware.ts)');
+  console.log('Routing middleware (middleware.ts): the whole site is behind the site passcode');
   const decksCookie = `am_decks=${await decks.issueToken({ passcode: decksCode, secret })}`;
   const visit = (path: string, c?: string, accept = 'text/html', method = 'GET') =>
     middleware(new Request(`${site}${path}`, { method, headers: { accept, ...(c ? { cookie: c } : {}) } }));
-  const toForm = await visit('/investors/files/Al-Mukarramah-financial-model.xlsx');
-  ok(toForm?.status === 302 && toForm.headers.get('location') === '/investors?next=%2Finvestors%2Ffiles%2FAl-Mukarramah-financial-model.xlsx',
-    'a private link without the cookie goes to /investors?next=…');
+  const home = await visit('/');
+  ok(home?.status === 401 && (home.headers.get('content-type') ?? '').startsWith('text/html') && (await home.text()).includes('/api/investors'),
+    'the home page without the cookie: the passcode page (401, HTML)');
+  ok((await visit('/product/anything'))?.status === 401, 'any store page without the cookie: the passcode page');
+  ok((await visit('/', cookie)) === undefined, 'the site cookie opens the store');
   const file = await visit('/investors/film/poster.jpg', undefined, 'image/avif,image/webp,*/*');
-  ok(file?.status === 401 && (await file.text()) === 'Passcode required: https://almukarramah.com/investors', 'a private file without the cookie: 401');
-  ok((await visit('/investors/deck', cookie)) === undefined, 'the /investors cookie opens /investors files');
-  ok((await visit('/investors/deck', decksCookie))?.status === 302, 'the /decks cookie does not');
-  ok((await visit('/decks/deck', cookie))?.status === 302, 'the /investors cookie does not open /decks files');
-  ok((await visit('/decks/deck', decksCookie)) === undefined, '/decks still opens with its own cookie');
-  const decksForm = await visit('/decks/film/al-mukarramah-film-1080p.mp4');
-  ok(decksForm?.status === 302 && decksForm.headers.get('location') === '/decks?next=%2Fdecks%2Ffilm%2Fal-mukarramah-film-1080p.mp4',
-    '/decks without the cookie still goes to /decks?next=…');
+  ok(file?.status === 401 && (await file.text()) === 'Passcode required: https://almukarramah.com', 'a private file without the cookie: 401, plain text');
+  ok((await visit('/investors/deck', cookie)) === undefined, 'the site cookie opens /investors files');
+  ok((await visit('/decks/deck', cookie)) === undefined, 'and /decks files');
+  ok((await visit('/decks/deck', decksCookie)) === undefined, '/decks files still open with their own cookie');
+  ok((await visit('/investors/deck', decksCookie))?.status === 401, 'the /decks cookie does not open /investors');
+  ok((await visit('/', decksCookie))?.status === 401, 'nor the store');
+  ok((await visit('/robots.txt')) === undefined && (await visit('/.well-known/apple-app-site-association')) === undefined, 'robots.txt and .well-known stay open');
   const decksFile = await visit('/decks/film/al-mukarramah-film-1080p.mp4', undefined, '*/*', 'HEAD');
-  ok(decksFile?.status === 401 && (await decksFile.text()) === 'Passcode required: https://almukarramah.com/decks', '/decks files without the cookie: still 401');
+  ok(decksFile?.status === 401, '/decks files without a cookie: 401');
 
   console.log('Misconfigured: /investors stays locked');
   process.env.INVESTORS_PASSCODE = decksCode;
   ok((await call('GET', { cookie })).status === 503, 'with the /decks passcode, the unlock function answers 503');
-  ok((await visit('/investors/deck', cookie))?.status === 302, 'and even a valid cookie no longer opens the files');
+  ok((await visit('/investors/deck', cookie))?.status === 401, 'and even a valid cookie no longer opens the files');
   delete process.env.INVESTORS_PASSCODE;
   ok((await call('POST', { body: { passcode: invCode } })).status === 503, 'without a passcode, the unlock function answers 503');
 

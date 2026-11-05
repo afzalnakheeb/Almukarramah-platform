@@ -5,6 +5,7 @@
 //   DELETE                        "Lock this page": clears the cookie on this device
 // The passcode is returned only to visitors who already have it, so the page can put it in the share message.
 import { clearCookieHeader, cookieHeader, decksEnv, issueToken, normalise, same, unlocked } from '../src/server/decks-auth';
+import * as site from '../src/server/investors-auth';
 
 const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
@@ -21,7 +22,9 @@ export default {
     const secure = new URL(request.url).protocol === 'https:';
 
     if (request.method === 'GET') {
-      return (await unlocked(request, e)) ? json({ unlocked: true, code: e.passcode }) : json({ unlocked: false });
+      // The site passcode (the /investors cookie, see middleware.ts) opens /decks too.
+      const open = (await unlocked(request, e)) || (await site.unlocked(request, site.investorsEnv()));
+      return open ? json({ unlocked: true, code: e.passcode }) : json({ unlocked: false });
     }
     if (request.method === 'DELETE') {
       return json({ unlocked: false }, 200, { 'Set-Cookie': clearCookieHeader(secure) });
