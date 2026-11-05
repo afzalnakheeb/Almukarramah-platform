@@ -103,9 +103,11 @@ export const DEPARTMENTS: Department[] = [
   {
     slug: 'jewellery-and-accessories', title: 'dAccessories', short: 'dAccessoriesShort', intro: 'dAccessoriesIntro',
     examples: ['dAccessoriesEx1', 'dAccessoriesEx2', 'dAccessoriesEx3'], gift: 'dAccessoriesGift',
-    cover: '/images/dept/concept-pendant.jpg',
+    cover: '/images/dept/concept-callig-set.jpg',
     categories: [],
     collections: [
+      concept('cJewelNour', '/images/dept/concept-callig-set.jpg'),
+      concept('cJewelNour', '/images/dept/concept-callig-cuff.jpg'),
       concept('cJewelPendant', '/images/dept/concept-pendant.jpg'),
       concept('cJewelEarrings', '/images/dept/concept-earrings.jpg'),
       concept('cJewelMens', '/images/dept/concept-mens.jpg'),
