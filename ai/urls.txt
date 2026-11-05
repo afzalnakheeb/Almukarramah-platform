@@ -742,3 +742,5 @@ lo-14-2.img https://media.zid.store/cdn-cgi/image/fit=scale-down,width=1000,heig
 lo-15-0.img https://media.zid.store/cdn-cgi/image/fit=scale-down,width=1000,height=1000/https://media.zid.store/f2b548d1-6330-4921-8527-ea65bedbdf83/f36db32c-9387-4c63-ac23-a1e4efd12c9b.png
 lo-15-1.img https://media.zid.store/cdn-cgi/image/fit=scale-down,width=1000,height=1000/https://media.zid.store/f2b548d1-6330-4921-8527-ea65bedbdf83/1dd1d3a6-17a1-411b-b7ba-8f3ec6b2e6c9.png
 lo-15-2.img https://media.zid.store/cdn-cgi/image/fit=scale-down,width=1000,height=1000/https://media.zid.store/f2b548d1-6330-4921-8527-ea65bedbdf83/4d20ece7-b144-4a08-96f7-dd11c201a665.png
+salam-home.html https://salamgifts.net/
+salam-pj.json https://salamgifts.net/products.json?limit=250
