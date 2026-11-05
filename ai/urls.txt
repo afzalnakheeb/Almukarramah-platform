@@ -660,3 +660,13 @@ ch-men.html https://www.chopard.com/en-intl/watches/men
 ch-pens.html https://www.chopard.com/en-intl/accessories/writing-instruments
 ch-acc.html https://www.chopard.com/en-intl/accessories/men
 kiswah-store.json https://kiswahjewellery.com/wp-json/wc/store/v1/products?per_page=100
+ch2-168592-3001.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e_trim/w_iw,h_ih,c_lpad,g_center/c_pad,ar_4:5,w_1200,b_rgb:F7F5F2/ProductsAssets/Web/168592-3001_01.png
+ch2-168591-3001.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e_trim/w_iw,h_ih,c_lpad,g_center/c_pad,ar_4:5,w_1200,b_rgb:F7F5F2/ProductsAssets/Web/168591-3001_01.png
+ch2-168589-3001.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e_trim/w_iw,h_ih,c_lpad,g_center/c_pad,ar_4:5,w_1200,b_rgb:F7F5F2/ProductsAssets/Web/168589-3001_01.png
+ch2-168619-4001.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e_trim/w_iw,h_ih,c_lpad,g_center/c_pad,ar_4:5,w_1200,b_rgb:F7F5F2/ProductsAssets/Web/168619-4001_01.png
+ch2-161948-5001.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e_trim/w_iw,h_ih,c_lpad,g_center/c_pad,ar_4:5,w_1200,b_rgb:F7F5F2/ProductsAssets/Web/161948-5001_01.png
+ch2-168629-3001.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e_trim/w_iw,h_ih,c_lpad,g_center/c_pad,ar_4:5,w_1200,b_rgb:F7F5F2/ProductsAssets/Web/168629-3001_01.png
+ch2-95013-0470.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e_trim/w_iw,h_ih,c_lpad,g_center/c_pad,ar_4:5,w_1200,b_rgb:F7F5F2/ProductsAssets/Web/95013-0470_01.png
+ch2-95013-0467.png https://objects-prod.cdn.chopard.com/q_auto,f_auto,dpr_auto/e_trim/w_iw,h_ih,c_lpad,g_center/c_pad,ar_4:5,w_1200,b_rgb:F7F5F2/ProductsAssets/Web/95013-0467_01.png
+kiswah-shop.html https://kiswahjewellery.com/shop/
+kiswah-home.html https://kiswahjewellery.com/
